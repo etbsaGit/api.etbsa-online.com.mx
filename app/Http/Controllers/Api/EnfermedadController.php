@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Enfermedad;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Enfermedad\PutRequest;
 use App\Http\Requests\Enfermedad\StoreRequest;
 
-class EnfermedadController extends Controller
+class EnfermedadController extends ApiController
 {
     public function index()
     {

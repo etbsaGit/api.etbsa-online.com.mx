@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Alergia;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Alergia\PutRequest;
 use App\Http\Requests\Alergia\StoreRequest;
 
-class AlergiaController extends Controller
+class AlergiaController extends ApiController
 {
     public function index()
     {

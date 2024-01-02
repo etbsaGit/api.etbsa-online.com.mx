@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\ReferenciaPersonal;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\ReferenciaPersonal\PutRequest;
 use App\Http\Requests\ReferenciaPersonal\StoreRequest;
 
-class ReferenciaPersonalController extends Controller
+class ReferenciaPersonalController extends ApiController
 {
     public function index()
     {

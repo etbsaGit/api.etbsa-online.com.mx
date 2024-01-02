@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Medicamento;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Medicamento\PutRequest;
 use App\Http\Requests\Medicamento\StoreRequest;
 
-class MedicamentoController extends Controller
+class MedicamentoController extends ApiController
 {
     public function index()
     {

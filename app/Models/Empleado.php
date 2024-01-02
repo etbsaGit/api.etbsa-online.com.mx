@@ -30,36 +30,36 @@ class Empleado extends Model
 
     protected $fillable = [
         'nombre',
-        'segundoNombre',
-        'apellidoPaterno',
-        'apellidoMaterno',
+        'segundo_nombre',
+        'apellido_paterno',
+        'apellido_materno',
         'telefono',
-        'telefonoInstitucional',
-        'fechaDeNacimiento',
+        'telefono_institucional',
+        'fecha_de_nacimiento',
         'curp',
         'rfc',
         'ine',
-        'licenciaDeManejo',
+        'licencia_de_manejo',
         'nss',
-        'fechaDeIngreso',
+        'fecha_de_ingreso',
         'hijos',
-        'dependientesEconomicos',
-        'cedulaProfesional',
+        'dependientes_economicos',
+        'cedula_profesional',
         'matriz',
-        'sueldoBase',
+        'sueldo_base',
         'comision',
         'foto',
-        'numeroExterior',
-        'numeroInterior',
+        'numero_exterior',
+        'numero_interior',
         'calle',
         'colonia',
-        'codigoPostal',
+        'codigo_postal',
         'ciudad',
         'estado',
-        'cuentaBancaria',
-        'constelacionFamiliar',
+        'cuenta_bancaria',
+        'constelacion_familiar',
         'status',
-        'correoInstitucional',
+        'correo_institucional',
 
         'escolaridad_id',
         'user_id',
@@ -67,11 +67,11 @@ class Empleado extends Model
         'sucursal_id',
         'linea_id',
         'departamento_id',
-        'estadoCivil_id',
-        'tipoDeSangre_id',
+        'estado_civil_id',
+        'tipo_de_sangre_id',
         'expediente_id',
         'desvinculacion_id',
-        'jefeDirecto_id',
+        'jefe_directo_id',
     ];
 
     public function user_id(){
@@ -98,12 +98,12 @@ class Empleado extends Model
         return $this->belongsTo(Departamento::class,'departamento_id');
     }
 
-    public function estadoCivil_id(){
-        return $this->belongsTo(EstadoCivil::class,'estadoCivil_id');
+    public function estado_civil_id(){
+        return $this->belongsTo(EstadoCivil::class,'estado_civil_id');
     }
 
-    public function tipoDeSangre_id(){
-        return $this->belongsTo(TipoDeSangre::class,'tipoDeSangre_id');
+    public function tipo_de_sangre_id(){
+        return $this->belongsTo(TipoDeSangre::class,'tipo_de_sangre_id');
     }
 
     public function antiguedad_id(){
@@ -118,8 +118,8 @@ class Empleado extends Model
         return $this->belongsTo(Desvinculacion::class,'desvinculacion_id');
     }
 
-    public function jefeDirecto_id(){
-        return $this->belongsTo(Empleado::class,'jefeDirecto_id');
+    public function jefe_directo_id(){
+        return $this->belongsTo(Empleado::class,'jefe_directo_id');
     }
 
     public function estudio(){
@@ -154,7 +154,7 @@ class Empleado extends Model
     }
 
     public function empleado(){
-        return $this->hasMany(Empleado::class,'jefeDirecto_id');
+        return $this->hasMany(Empleado::class,'jefe_directo_id');
     }
 
     // ----------------------------------------------------------------------------------

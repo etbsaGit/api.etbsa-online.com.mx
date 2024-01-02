@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\TipoDeSangre;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\TipoDeSangre\PutRequest;
 use App\Http\Requests\TipoDeSangre\StoreRequest;
 
-class TipoDeSangreController extends Controller
+class TipoDeSangreController extends ApiController
 {
     public function index()
     {

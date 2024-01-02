@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Requisito;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Requisito\PutRequest;
 use App\Http\Requests\Requisito\StoreRequest;
 
-class RequisitoController extends Controller
+class RequisitoController extends ApiController
 {
     public function index()
     {

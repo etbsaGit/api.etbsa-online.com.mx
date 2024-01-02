@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\TipoDeDesvinculacion;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\TipoDeDesvinculacion\PutRequest;
 use App\Http\Requests\TipoDeDesvinculacion\StoreRequest;
 
-class TipoDeSangreController extends Controller
+class TipoDeSangreController extends ApiController
 {
     public function index()
     {

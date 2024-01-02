@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Escuela;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Escuela\PutRequest;
 use App\Http\Requests\Escuela\StoreRequest;
 
-class EscuelaController extends Controller
+class EscuelaController extends ApiController
 {
     public function index()
     {

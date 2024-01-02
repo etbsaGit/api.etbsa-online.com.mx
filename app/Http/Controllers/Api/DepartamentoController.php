@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Departamento;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Departamento\PutRequest;
 use App\Http\Requests\Departamento\StoreRequest;
 
-class DepartamentoController extends Controller
+class DepartamentoController extends ApiController
 {
     public function index()
     {

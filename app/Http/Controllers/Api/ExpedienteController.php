@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Expediente;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Expediente\PutRequest;
 use App\Http\Requests\Expediente\StoreRequest;
 
-class ExpedienteController extends Controller
+class ExpedienteController extends ApiController
 {
     public function index()
     {

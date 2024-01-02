@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Antiguedad;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Antiguedad\PutRequest;
 use App\Http\Requests\Antiguedad\StoreRequest;
 
-class AntiguedadController extends Controller
+class AntiguedadController extends ApiController
 {
     public function index()
     {

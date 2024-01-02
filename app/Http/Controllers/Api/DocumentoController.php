@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Documento;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Documento\PutRequest;
 use App\Http\Requests\Documento\StoreRequest;
 
-class DocumentoController extends Controller
+class DocumentoController extends ApiController
 {
     public function index()
     {

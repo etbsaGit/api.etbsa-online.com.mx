@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Linea;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Linea\PutRequest;
 use App\Http\Requests\Linea\StoreRequest;
 
-class LineaController extends Controller
+class LineaController extends ApiController
 {
     public function index()
     {

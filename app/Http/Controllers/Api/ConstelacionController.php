@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Constelacion;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Constelacion\PutRequest;
 use App\Http\Requests\Constelacion\StoreRequest;
 
-class ConstelacionController extends Controller
+class ConstelacionController extends ApiController
 {
     public function index()
     {

@@ -17,6 +17,6 @@ class EstadoCivil extends Model
     ];
 
     public function empleado(){
-        return $this->hasMany(Empleado::class,'estadoCivil_id');
+        return $this->hasMany(Empleado::class,'estado_civil_id');
     }
 }

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Empleado;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
 
-class EmpleadoController extends Controller
+class EmpleadoController extends ApiController
 {
     public function index()
     {
@@ -16,7 +16,7 @@ class EmpleadoController extends Controller
 
     public function all()
     {
-        return response()->json(Empleado::with(['escolaridad_id','departamento_id','desvinculacion_id','estadoCivil_id','expediente_id','jefeDirecto_id', 'linea_id','puesto_id','sucursal_id','tipoDeSangre_id','user_id'])->get());
+        return response()->json(Empleado::with(['escolaridad_id','departamento_id','desvinculacion_id','estado_civil_id','expediente_id','jefe_directo_id', 'linea_id','puesto_id','sucursal_id','tipo_de_sangre_id','user_id'])->get());
     }
 
     public function store(StoreRequest $request)

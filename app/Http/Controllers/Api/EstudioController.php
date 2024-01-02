@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Estudio;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Estudio\PutRequest;
 use App\Http\Requests\Estudio\StoreRequest;
 
-class EstudioController extends Controller
+class EstudioController extends ApiController
 {
     public function index()
     {

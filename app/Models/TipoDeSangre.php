@@ -19,6 +19,6 @@ class TipoDeSangre extends Model
     ];
 
     public function empleado(){
-        return $this->hasMany(Empleado::class,'tipoDeSangre_id');
+        return $this->hasMany(Empleado::class,'tipo_de_sangre_id');
     }
 }

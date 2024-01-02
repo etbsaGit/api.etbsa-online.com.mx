@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\TipoDeAsignacion;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\TipoDeAsignacion\PutRequest;
 use App\Http\Requests\TipoDeAsignacion\StoreRequest;
 
-class TipoDeAsignacionController extends Controller
+class TipoDeAsignacionController extends ApiController
 {
     public function index()
     {

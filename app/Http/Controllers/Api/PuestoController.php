@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Puesto;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Puesto\PutRequest;
 use App\Http\Requests\Puesto\StoreRequest;
 
-class PuestoController extends Controller
+class PuestoController extends ApiController
 {
     public function index()
     {

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\EstadoCivil;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\EstadoCivil\PutRequest;
 use App\Http\Requests\EstadoCivil\StoreRequest;
 
-class EstadoCivilController extends Controller
+class EstadoCivilController extends ApiController
 {
     public function index()
     {

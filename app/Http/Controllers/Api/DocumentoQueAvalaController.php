@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\DocumentoQueAvala;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\DocumentoQueAvala\PutRequest;
 use App\Http\Requests\DocumentoQueAvala\StoreRequest;
 
-class DocumentoQueAvalaController extends Controller
+class DocumentoQueAvalaController extends ApiController
 {
     public function index()
     {
