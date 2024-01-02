@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('estado');
             $table->string('cuentaBancaria');
             $table->string('constelacionFamiliar')->nullable();
-            $table->enum('status', ['Activo','Baja','Pencionado','Suspendido'])->default('Activo');
+            $table->STRING('status');
 
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('puesto_id')->nullable();
