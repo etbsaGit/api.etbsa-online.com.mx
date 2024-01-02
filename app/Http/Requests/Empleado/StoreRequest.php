@@ -30,7 +30,8 @@ class StoreRequest extends FormRequest
             "apellidoPaterno" => ['required', 'string', 'max:255'],
             "apellidoMaterno" => ['required', 'string', 'max:255'],
             "fechaDeNacimiento" => ['required', 'date'],
-            "telefono"=>['required','numeric','digits:10','unique:referencias_personales,telefono'],
+            "telefono"=>['required','numeric','digits:10','unique:empleados,telefono'],
+            "telefonoInstitucional"=>['nullable','numeric','digits:10','unique:empleados,telefonoInstitucional'],
             "curp" => ['required', 'string', 'min:18', 'max:18', 'unique:empleados,curp'],
             "rfc" => ['required', 'string', 'min:13', 'max:13', 'unique:empleados,rfc'],
             "ine" => ['required', 'string', 'min:18', 'max:18', 'unique:empleados,ine'],
@@ -56,6 +57,7 @@ class StoreRequest extends FormRequest
             "cuentaBancaria" => ['required','string','min:18','max:18'],
             "constelacionFamiliar"=>['nullable','string','max:255'],
             "status"=>['nullable','string','max:255'],
+            'correoInstitucional' => ['nullable','email','unique:empleados,correoInstitucional'],
 
             "user_id"=>['nullable','integer','unique:empleados,user_id'],
             "escolaridad_id"=>['nullable','integer'],

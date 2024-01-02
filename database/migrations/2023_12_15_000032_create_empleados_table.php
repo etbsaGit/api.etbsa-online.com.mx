@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('apellidoPaterno');
             $table->string('apellidoMaterno');
             $table->string('telefono');
+            $table->string('telefonoInstitucional')->nullable();
             $table->date('fechaDeNacimiento');
             $table->string('curp');
             $table->string('rfc');
@@ -44,7 +45,8 @@ return new class extends Migration
             $table->string('estado');
             $table->string('cuentaBancaria');
             $table->string('constelacionFamiliar')->nullable();
-            $table->STRING('status')->nullable();
+            $table->string('status')->nullable();
+            $table->string('correoInstitucional')->nullable();
 
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('puesto_id')->nullable();

@@ -32,7 +32,7 @@ class PutRequest extends FormRequest
             "apellidoMaterno" => ['required', 'string', 'max:255'],
             "fechaDeNacimiento" => ['required', 'date'],
             "telefono" => ['required', 'numeric', 'digits:10', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
-
+            "telefonoInstitucional"=>['nullable','numeric','digits:10',Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "curp" => ['required', 'string', 'min:18', 'max:18', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "rfc" => ['required', 'string', 'min:13', 'max:13', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "ine" => ['required', 'string', 'min:18', 'max:18', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
@@ -56,6 +56,7 @@ class PutRequest extends FormRequest
             "cuentaBancaria" => ['required','string','min:18','max:18'],
             "constelacionFamiliar"=>['nullable','string','max:255'],
             "status"=>['nullable','string','max:255'],
+            'correoInstitucional' => ['nullable','email',Rule::unique('empleados')->ignore($this->route("empleado")->id)],
 
             "user_id" => ['nullable', 'integer', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "escolaridad_id"=>['nullable','integer'],

@@ -34,6 +34,7 @@ class Empleado extends Model
         'apellidoPaterno',
         'apellidoMaterno',
         'telefono',
+        'telefonoInstitucional',
         'fechaDeNacimiento',
         'curp',
         'rfc',
@@ -58,6 +59,7 @@ class Empleado extends Model
         'cuentaBancaria',
         'constelacionFamiliar',
         'status',
+        'correoInstitucional',
 
         'escolaridad_id',
         'user_id',
