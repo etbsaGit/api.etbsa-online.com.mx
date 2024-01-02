@@ -55,7 +55,7 @@ class PutRequest extends FormRequest
             "estado" => ['required','string','max:255'],
             "cuentaBancaria" => ['required','string','min:18','max:18'],
             "constelacionFamiliar"=>['nullable','string','max:255'],
-            "status"=>['required','string','max:255'],
+            "status"=>['nullable','string','max:255'],
 
             "user_id" => ['nullable', 'integer', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "escolaridad_id"=>['nullable','integer'],

@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('estado');
             $table->string('cuentaBancaria');
             $table->string('constelacionFamiliar')->nullable();
-            $table->STRING('status');
+            $table->STRING('status')->nullable();
 
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('puesto_id')->nullable();
