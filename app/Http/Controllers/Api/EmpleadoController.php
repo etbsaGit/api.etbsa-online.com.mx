@@ -16,7 +16,7 @@ class EmpleadoController extends ApiController
 
     public function all()
     {
-        return response()->json(Empleado::with(['escolaridad_id','departamento_id','desvinculacion_id','estado_civil_id','expediente_id','jefe_directo_id', 'linea_id','puesto_id','sucursal_id','tipo_de_sangre_id','user_id'])->get());
+        return response()->json(Empleado::with(['escolaridad','departamento','desvinculacion','estado_civil','expediente','jefe_directo', 'linea','puesto','sucursal','tipo_de_sangre','user'])->get());
     }
 
     public function store(StoreRequest $request)
