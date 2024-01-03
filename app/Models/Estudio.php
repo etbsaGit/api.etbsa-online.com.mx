@@ -13,30 +13,30 @@ class Estudio extends Model
         'inicio',
         'termino',
 
-        'documentoQueAvala_id',
-        'estadoDelEstudio_id',
+        'documento_que_avala_id',
+        'estado_del_estudio_id',
         'escuela_id',
         'escolaridad_id',
         'empleado_id'
     ];
 
-    public function documentoQueAvala_id(){
-        return $this->belongsTo(DocumentoQueAvala::class,'documentoQueAvala_id');
+    public function documento_que_avala(){
+        return $this->belongsTo(DocumentoQueAvala::class,'documento_que_avala_id');
     }
 
-    public function estadoDelEstudio_id(){
-        return $this->belongsTo(EstadoDeEstudio::class,'estadoDelEstudio_id');
+    public function estado_del_estudio(){
+        return $this->belongsTo(EstadoDeEstudio::class,'estado_del_estudio_id');
     }
 
-    public function escuela_id(){
+    public function escuela(){
         return $this->belongsTo(Escuela::class,'escuela_id');
     }
 
-    public function escolaridad_id(){
+    public function escolaridad(){
         return $this->belongsTo(Escolaridad::class,'escolaridad_id');
     }
 
-    public function empleado_id(){
+    public function empleado(){
         return $this->belongsTo(Empleado::class,'empleado_id');
     }
 

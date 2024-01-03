@@ -14,7 +14,7 @@ class Enfermedad extends Model
         'medicamento_id'
     ];
 
-    public function medicamento_id(){
+    public function medicamento(){
         return $this->belongsTo(Medicamento::class,'medicamento_id');
     }
 

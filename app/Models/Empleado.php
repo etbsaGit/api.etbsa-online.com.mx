@@ -74,51 +74,47 @@ class Empleado extends Model
         'jefe_directo_id',
     ];
 
-    public function user_id(){
+    public function user(){
         return $this->belongsTo(User::class,'user_id');
     }
 
-    public function escolaridad_id(){
+    public function escolaridad(){
         return $this->belongsTo(Escolaridad::class,'escolaridad_id');
     }
 
-    public function puesto_id(){
+    public function puesto(){
         return $this->belongsTo(Puesto::class,'puesto_id');
     }
 
-    public function sucursal_id(){
+    public function sucursal(){
         return $this->belongsTo(Sucursal::class,'sucursal_id');
     }
 
-    public function linea_id(){
+    public function linea(){
         return $this->belongsTo(Linea::class,'linea_id');
     }
 
-    public function departamento_id(){
+    public function departamento(){
         return $this->belongsTo(Departamento::class,'departamento_id');
     }
 
-    public function estado_civil_id(){
+    public function estado_civil(){
         return $this->belongsTo(EstadoCivil::class,'estado_civil_id');
     }
 
-    public function tipo_de_sangre_id(){
+    public function tipo_de_sangre(){
         return $this->belongsTo(TipoDeSangre::class,'tipo_de_sangre_id');
     }
 
-    public function antiguedad_id(){
-        return $this->belongsTo(Antiguedad::class,'antiguedad_id');
-    }
-
-    public function expediente_id(){
+    public function expediente(){
         return $this->belongsTo(Expediente::class,'expediente_id');
     }
 
-    public function desvinculacion_id(){
+    public function desvinculacion(){
         return $this->belongsTo(Desvinculacion::class,'desvinculacion_id');
     }
 
-    public function jefe_directo_id(){
+    public function jefe_directo(){
         return $this->belongsTo(Empleado::class,'jefe_directo_id');
     }
 
@@ -126,11 +122,11 @@ class Empleado extends Model
         return $this->hasMany(Estudio::class,'empleado_id');
     }
 
-    public function referenciaPersonal(){
+    public function referencia_personal(){
         return $this->hasMany(ReferenciaPersonal::class,'empleado_id');
     }
 
-    public function experienciaLaboral(){
+    public function experiencia_laboral(){
         return $this->hasMany(ExperienciaLaboral::class,'empleado_id');
     }
 
@@ -141,17 +137,6 @@ class Empleado extends Model
 
     // -----------------------------------------------------------------
 
-    public function departamento(){
-        return $this->hasOne(Departamento::class,'encargado_id');
-    }
-
-    public function linea(){
-        return $this->hasOne(Linea::class,'encargado_id');
-    }
-
-    public function sucursal(){
-        return $this->hasOne(Sucursal::class,'encargado_id');
-    }
 
     public function empleado(){
         return $this->hasMany(Empleado::class,'jefe_directo_id');

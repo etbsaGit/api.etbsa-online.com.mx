@@ -16,12 +16,12 @@ class Asignacion extends Model
         'nombre',
         'descripcion',
 
-        'tipoDeAsignacion_id',
+        'tipo_de_asignacion_id',
         'empleado_id'
     ];
 
-    public function tipoDeAsignacion_id(){
-        return $this->belongsTo(TipoDeAsignacion::class,'tipoDeAsignacion_id');
+    public function tipo_de_asignacion(){
+        return $this->belongsTo(TipoDeAsignacion::class,'tipo_de_asignacion_id');
     }
 
     public function empleado(){

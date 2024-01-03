@@ -16,6 +16,6 @@ class EstadoDeEstudio extends Model
     ];
 
     public function estudio(){
-        return $this->hasMany(Estudio::class,'estadoDelEstudio_id');
+        return $this->hasMany(Estudio::class,'estado_del_estudio_id');
     }
 }

@@ -12,12 +12,7 @@ class Linea extends Model
     protected $fillable = [
         'nombre',
 
-        'encargado_id'
     ];
-
-    public function encargado_id(){
-        return $this->belongsTo(Empleado::class,'encargado_id');
-    }
 
     public function empleado(){
         return $this->hasMany(Empleado::class,'linea_id');

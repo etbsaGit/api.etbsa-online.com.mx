@@ -22,12 +22,12 @@ class ExperienciaLaboral extends Model
         'empleado_id',
     ];
 
-    public function puesto_id(){
+    public function puesto(){
         return $this->belongsTo(Puesto::class,'puesto_id');
     }
 
 
-    public function empleado_id(){
+    public function empleado(){
         return $this->belongsTo(Empleado::class,'empleado_id');
     }
 

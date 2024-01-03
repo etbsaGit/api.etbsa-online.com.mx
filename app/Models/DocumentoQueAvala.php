@@ -16,6 +16,6 @@ class DocumentoQueAvala extends Model
     ];
 
     public function estudio(){
-        return $this->hasMany(Estudio::class,'documentoQueAvala_id');
+        return $this->hasMany(Estudio::class,'documento_que_avala_id');
     }
 }

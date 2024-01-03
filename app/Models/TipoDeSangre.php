@@ -14,8 +14,8 @@ class TipoDeSangre extends Model
 
     protected $fillable = [
         'nombre',
-        'puedeRecibir',
-        'puedeDonar',
+        'puede_recibir',
+        'puede_donar',
     ];
 
     public function empleado(){

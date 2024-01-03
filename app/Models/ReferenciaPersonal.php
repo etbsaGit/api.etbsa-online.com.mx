@@ -21,7 +21,7 @@ class ReferenciaPersonal extends Model
     ];
 
 
-    public function empleado_id(){
+    public function empleado(){
         return $this->belongsTo(Empleado::class,'empleado_id');
     }
 }

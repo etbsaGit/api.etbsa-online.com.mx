@@ -13,12 +13,7 @@ class Departamento extends Model
     protected $fillable = [
         'nombre',
 
-        'encargado_id'
     ];
-
-    public function encargado_id(){
-        return $this->belongsTo(Empleado::class,'encargado_id');
-    }
 
     public function empleado(){
         return $this->hasMany(Empleado::class,'departamento_id');

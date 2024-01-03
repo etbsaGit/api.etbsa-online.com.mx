@@ -14,11 +14,11 @@ class Desvinculacion extends Model
     protected $fillable = [
         'fecha',
         'comentarios',
-        'tipoDeDesvinculacion_id'
+        'tipo_de_desvinculacion_id'
     ];
 
-    public function tipoDeDesvinculacion(){
-        return $this->belongsTo(TipoDeDesvinculacion::class,'tipoDeDesvinculacion_id');
+    public function tipo_de_desvinculacion(){
+        return $this->belongsTo(TipoDeDesvinculacion::class,'tipo_de_desvinculacion_id');
     }
 
 
