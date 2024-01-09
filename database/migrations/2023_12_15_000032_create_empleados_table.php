@@ -55,7 +55,6 @@ return new class extends Migration
             $table->unsignedBigInteger('departamento_id')->nullable();
             $table->unsignedBigInteger('estado_civil_id')->nullable();
             $table->unsignedBigInteger('tipo_de_sangre_id')->nullable();
-            $table->unsignedBigInteger('expediente_id')->nullable();
             $table->unsignedBigInteger('desvinculacion_id')->nullable();
             $table->unsignedBigInteger('escolaridad_id')->nullable();
 
@@ -67,7 +66,6 @@ return new class extends Migration
             $table->foreign('departamento_id')->references('id')->on('departamentos')->onDelete('set null');
             $table->foreign('estado_civil_id')->references('id')->on('estados_civiles')->onDelete('set null');
             $table->foreign('tipo_de_sangre_id')->references('id')->on('tipos_de_sangre')->onDelete('set null');
-            $table->foreign('expediente_id')->references('id')->on('expedientes')->onDelete('set null');
             $table->foreign('desvinculacion_id')->references('id')->on('desvinculaciones')->onDelete('set null');
 
             $table->timestamps();

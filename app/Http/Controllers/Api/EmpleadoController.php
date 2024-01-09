@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Empleado;
+use App\Models\Expediente;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
@@ -21,7 +23,13 @@ class EmpleadoController extends ApiController
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Empleado::create($request->validated()));
+        return DB::transaction(function () use ($request) {
+            return tap(
+                Empleado::create($request->validated()),
+                function (Empleado $empleado) {
+                    $empleado->archivable()->create(['nombre'=>$empleado->rfc. ' expediente']);
+                });
+        });
     }
 
     public function show(Empleado $empleado)
