@@ -18,27 +18,51 @@ class TipoDeSangreSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         TipoDeSangre::create([
-            'nombre' => 'A',
-            'puedeRecibir' => 'A, O',
-            'puedeDonar' => 'A, AB',
+            'nombre' => 'A+',
+            'puedeDonar' => 'A+, AB+',
+            'puedeRecibir' => 'A+, A-, O+, O-',
         ]);
 
         TipoDeSangre::create([
-            'nombre' => 'B',
-            'puedeRecibir' => 'B, O',
-            'puedeDonar' => 'B, AB',
+            'nombre' => 'O+',
+            'puedeDonar' => 'O+, A+, B+, AB+',
+            'puedeRecibir' => 'O+, O-',
         ]);
 
         TipoDeSangre::create([
-            'nombre' => 'AB',
-            'puedeRecibir' => 'A, B, AB, O',
-            'puedeDonar' => 'AB',
+            'nombre' => 'B+',
+            'puedeDonar' => 'B+, AB+',
+            'puedeRecibir' => 'B+, B-, O+, O-',
         ]);
 
         TipoDeSangre::create([
-            'nombre' => 'O',
-            'puedeRecibir' => 'O',
-            'puedeDonar' => 'A, B, AB, O',
+            'nombre' => 'AB+',
+            'puedeDonar' => 'AB+',
+            'puedeRecibir' => 'Todos',
         ]);
-    }
+
+        TipoDeSangre::create([
+            'nombre' => 'A-',
+            'puedeDonar' => 'A+, A- AB+, AB-',
+            'puedeRecibir' => 'A-, O-',
+        ]);
+
+        TipoDeSangre::create([
+            'nombre' => 'O-',
+            'puedeDonar' => 'Todos',
+            'puedeRecibir' => 'O-',
+        ]);
+
+        TipoDeSangre::create([
+            'nombre' => 'B-',
+            'puedeDonar' => 'B+, B-, AB+, AB-',
+            'puedeRecibir' => 'B-, O-',
+        ]);
+
+        TipoDeSangre::create([
+            'nombre' => 'AB-',
+            'puedeDonar' => 'AB+, AB-',
+            'puedeRecibir' => 'AB-, A-, B-, O-',
+        ]);
+}
 }
