@@ -10,6 +10,8 @@ class Expediente extends Model
 {
     use HasFactory;
 
+    protected $table = 'expedientes';
+
     protected $fillable = [
         'nombre',
         'archivable_id',

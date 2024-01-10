@@ -15,17 +15,22 @@ class Documento extends Model
     protected $fillable = [
         'nombre',
         'fecha_de_vencimiento',
+        'descripcion',
 
         'requisito_id',
-        'expediente_id'
+        'expediente_id',
+        'estatus_id'
     ];
 
     public function requisito(){
         return $this->belongsTo(Requisito::class,'requisito_id');
     }
 
-
     public function expediente(){
         return $this->belongsTo(Expediente::class,'expediente_id');
+    }
+
+    public function estatus(){
+        return $this->belongsTo(Expediente::class,'estatus_id');
     }
 }

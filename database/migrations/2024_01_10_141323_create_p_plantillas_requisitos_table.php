@@ -11,20 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('documentos', function (Blueprint $table) {
+        Schema::create('p_plantillas_requisitos', function (Blueprint $table) {
             $table->id();
 
-            $table->string('nombre');
-            $table->date('fecha_de_vencimiento');
-            $table->string('descripcion');
-
+            $table->unsignedBigInteger('plantilla_id')->nullable();
             $table->unsignedBigInteger('requisito_id')->nullable();
-            $table->unsignedBigInteger('expediente_id')->nullable();
-            $table->unsignedBigInteger('estatus_id')->nullable();
 
+            $table->foreign('plantilla_id')->references('id')->on('plantillas')->onDelete('set null');
             $table->foreign('requisito_id')->references('id')->on('requisitos')->onDelete('set null');
-            $table->foreign('expediente_id')->references('id')->on('expedientes')->onDelete('set null');
-            $table->foreign('estatus_id')->references('id')->on('estatus')->onDelete('set null');
 
             $table->timestamps();
         });
@@ -35,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('documentos');
+        Schema::dropIfExists('p_plantillas_requisitos');
     }
 };

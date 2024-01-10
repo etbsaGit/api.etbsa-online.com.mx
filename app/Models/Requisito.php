@@ -17,4 +17,9 @@ class Requisito extends Model
      public function documento(){
         return $this->hasMany(Documento::class,'requisito_id');
     }
+
+    public function plantilla()
+    {
+        return $this->belongsToMany(Plantilla::class, 'p_plantillas_requisitos', 'plantilla_id', 'requisito_id');
+    }
 }
