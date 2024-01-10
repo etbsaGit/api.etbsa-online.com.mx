@@ -45,7 +45,8 @@ class PuestoSeeder extends Seeder
             'Jefe',
             'Vendedor',
             'Vigilante',
-            'Supervisor'
+            'Supervisor',
+            'Programador'
         ];
 
         foreach ($puestos as $puesto) {

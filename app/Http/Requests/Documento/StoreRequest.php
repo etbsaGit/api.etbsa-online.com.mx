@@ -26,10 +26,12 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre" => ['required', 'string', 'max:255', 'unique:documentos,nombre'],
-            "fechaDeVencimiento" => ['required', 'date'],
+            "fecha_de_vencimiento" => ['required', 'date'],
+            "descripcion"=>['nullable', 'string', 'max:255'],
 
             "requisito_id" => ['required', 'integer'],
             "expediente_id" => ['required', 'integer'],
+            "estatus_id" => ['required', 'integer'],
         ];
     }
 

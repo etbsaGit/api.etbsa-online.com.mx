@@ -22,8 +22,8 @@ class AntiguedadSeeder extends Seeder
 
         for ($i = 1; $i <= 5; $i++){
             Antiguedad::create([
-                'añosCumplidos'=>$i,
-                'diasCorrespondientes' => $diasInicial,
+                'años_cumplidos'=>$i,
+                'dias_correspondientes' => $diasInicial,
                 //'regimen'=>2023
             ]);
             $diasInicial = $diasInicial+2;
@@ -31,8 +31,8 @@ class AntiguedadSeeder extends Seeder
 
         for ($i = 6; $i <= 10; $i++){
             Antiguedad::create([
-                'añosCumplidos'=>$i,
-                'diasCorrespondientes' => $diasInicial,
+                'años_cumplidos'=>$i,
+                'dias_correspondientes' => $diasInicial,
                 //'regimen'=>2023
             ]);
         }
@@ -40,40 +40,40 @@ class AntiguedadSeeder extends Seeder
 
         for ($i = 11; $i <= 15; $i++){
             Antiguedad::create([
-                'añosCumplidos'=>$i,
-                'diasCorrespondientes' => 24,
+                'años_cumplidos'=>$i,
+                'dias_correspondientes' => 24,
                 //'regimen'=>2023
             ]);
         }
 
         for ($i = 16; $i <= 20; $i++){
             Antiguedad::create([
-                'añosCumplidos'=>$i,
-                'diasCorrespondientes' => 26,
+                'años_cumplidos'=>$i,
+                'dias_correspondientes' => 26,
                 //'regimen'=>2023
             ]);
         }
 
         for ($i = 21; $i <= 25; $i++){
             Antiguedad::create([
-                'añosCumplidos'=>$i,
-                'diasCorrespondientes' => 28,
+                'años_cumplidos'=>$i,
+                'dias_correspondientes' => 28,
                 //'regimen'=>2023
             ]);
         }
 
         for ($i = 26; $i <= 30; $i++){
             Antiguedad::create([
-                'añosCumplidos'=>$i,
-                'diasCorrespondientes' => 30,
+                'años_cumplidos'=>$i,
+                'dias_correspondientes' => 30,
                 //'regimen'=>2023
             ]);
         }
 
         for ($i = 31; $i <= 35; $i++){
             Antiguedad::create([
-                'añosCumplidos'=>$i,
-                'diasCorrespondientes' => 32,
+                'años_cumplidos'=>$i,
+                'dias_correspondientes' => 32,
                 //'regimen'=>2023
             ]);
         }

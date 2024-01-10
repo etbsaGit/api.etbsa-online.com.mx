@@ -2,65 +2,42 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Archivo;
-use Illuminate\Http\Request;
+use App\Http\Controllers\ApiController;
+use App\Http\Requests\Archivo\PutRequest;
+use App\Http\Requests\Archivo\StoreRequest;
 
-class ArchivoController extends Controller
+class ArchivoController extends ApiController
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return response()->json(Archivo::paginate(5));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function all()
     {
-        //
+        return response()->json(Archivo::get());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
-        //
+        return response()->json(Archivo::create($request->validated()));
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Archivo $archivo)
     {
-        //
+        return response()->json($archivo);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Archivo $archivo)
+    public function update(PutRequest $request, Archivo $archivo)
     {
-        //
+        $archivo->update($request->validated());
+        return response()->json($archivo);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Archivo $archivo)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Archivo $archivo)
     {
-        //
+        $archivo->delete();
+        return response()->json("ok");
     }
 }

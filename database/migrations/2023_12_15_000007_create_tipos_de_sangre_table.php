@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
 
             $table->string('nombre');
-            $table->string('puedeRecibir');
-            $table->string('puedeDonar');
+            $table->string('puede_recibir');
+            $table->string('puede_donar');
 
             $table->timestamps();
         });

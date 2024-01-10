@@ -3,64 +3,41 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Estatus;
-use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Estatus\PutRequest;
+use App\Http\Requests\Estatus\StoreRequest;
 
 class EstatusController extends ApiController
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return response()->json(Estatus::paginate(5));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function all()
     {
-        //
+        return response()->json(Estatus::get());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
-        //
+        return response()->json(Estatus::create($request->validated()));
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Estatus $estatus)
     {
-        //
+        return response()->json($estatus);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Estatus $estatus)
+    public function update(PutRequest $request, Estatus $estatus)
     {
-        //
+        $estatus->update($request->validated());
+        return response()->json($estatus);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Estatus $estatus)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Estatus $estatus)
     {
-        //
+        $estatus->delete();
+        return response()->json("ok");
     }
 }

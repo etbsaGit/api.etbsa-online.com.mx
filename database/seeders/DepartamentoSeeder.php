@@ -32,7 +32,8 @@ class DepartamentoSeeder extends Seeder
             'Servicio',
             'Tecnologias de la informacion',
             'Taller',
-            'Ventas'
+            'Ventas',
+            'Desarrollo de proyectos'
         ];
 
         foreach ($departamentos as $departamento) {

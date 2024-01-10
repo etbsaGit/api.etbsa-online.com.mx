@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('antiguedades', function (Blueprint $table) {
             $table->id();
 
-            $table->integer('añosCumplidos');
-            $table->integer('diasCorrespondientes');
+            $table->integer('años_cumplidos');
+            $table->integer('dias_correspondientes');
             $table->enum('regimen', [2022,2023])->default(2023);
             
             $table->timestamps();

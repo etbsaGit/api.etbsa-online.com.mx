@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\TipoDeDesvinculacion;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -22,7 +23,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "nombre"=>['required','string','max:255','unique:tipos_de_desvinculacion,nombre'],
         ];
     }
 }

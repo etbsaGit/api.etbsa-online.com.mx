@@ -3,65 +3,41 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Plantilla;
-use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
-
+use App\Http\Requests\Plantilla\PutRequest;
+use App\Http\Requests\Plantilla\StoreRequest;
 
 class PlantillaController extends ApiController
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return response()->json(Plantilla::paginate(5));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function all()
     {
-        //
+        return response()->json(Plantilla::get());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
-        //
+        return response()->json(Plantilla::create($request->validated()));
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Plantilla $plantilla)
     {
-        //
+        return response()->json($plantilla);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Plantilla $plantilla)
+    public function update(PutRequest $request, Plantilla $plantilla)
     {
-        //
+        $plantilla->update($request->validated());
+        return response()->json($plantilla);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Plantilla $plantilla)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Plantilla $plantilla)
     {
-        //
+        $plantilla->delete();
+        return response()->json("ok");
     }
 }

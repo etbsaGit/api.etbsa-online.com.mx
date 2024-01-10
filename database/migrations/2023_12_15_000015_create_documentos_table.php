@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->string('nombre');
             $table->date('fecha_de_vencimiento');
-            $table->string('descripcion');
+            $table->string('descripcion')->nullable();
 
             $table->unsignedBigInteger('requisito_id')->nullable();
             $table->unsignedBigInteger('expediente_id')->nullable();

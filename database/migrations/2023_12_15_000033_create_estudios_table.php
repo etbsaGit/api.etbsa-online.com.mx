@@ -17,14 +17,14 @@ return new class extends Migration
             $table->date('inicio');
             $table->date('termino')->nullable();
 
-            $table->unsignedBigInteger('documentoQueAvala_id')->nullable();
-            $table->unsignedBigInteger('estadoDelEstudio_id')->nullable();
+            $table->unsignedBigInteger('documento_que_avala_id')->nullable();
+            $table->unsignedBigInteger('estado_del_estudio_id')->nullable();
             $table->unsignedBigInteger('escuela_id')->nullable();
             $table->unsignedBigInteger('escolaridad_id')->nullable();
             $table->unsignedBigInteger('empleado_id')->nullable();
 
-            $table->foreign('documentoQueAvala_id')->references('id')->on('documentos_que_avalan')->onDelete('set null');
-            $table->foreign('estadoDelEstudio_id')->references('id')->on('estados_del_estudio')->onDelete('set null');
+            $table->foreign('documento_que_avala_id')->references('id')->on('documentos_que_avalan')->onDelete('set null');
+            $table->foreign('estado_del_estudio_id')->references('id')->on('estados_del_estudio')->onDelete('set null');
             $table->foreign('escuela_id')->references('id')->on('escuelas')->onDelete('set null');
             $table->foreign('escolaridad_id')->references('id')->on('escolaridades')->onDelete('set null');
             $table->foreign('empleado_id')->references('id')->on('empleados')->onDelete('set null');

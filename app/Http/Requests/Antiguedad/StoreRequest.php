@@ -26,8 +26,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'añosCumplidos'=> ['required','unique:antiguedad,añosCumplidos','integer','max:99'],
-            'diasCorrespondientes'=>['required','integer','max:99'],
+            'años_cumplidos'=> ['required','unique:antiguedad,años_cumplidos','integer','max:99'],
+            'dias_correspondientes'=>['required','integer','max:99'],
             'regimen' => ['required', 'in:2022,2023'],
         ];
     }

@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Http\Requests\TipoDeDesvinculacion;
+namespace App\Http\Requests\Plantilla;
 
-use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class PutRequest extends FormRequest
+class StoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +22,7 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "nombre"=>['required','string','max:255',Rule::unique('tipos_de_desvinculaciones')->ignore($this->route("tipo_de_desvinculacion")->id)],
+            "nombre"=>['required','string','max:255','unique:plantillas,nombre'],
         ];
     }
 }
