@@ -31,6 +31,11 @@ class Documento extends Model
     }
 
     public function estatus(){
-        return $this->belongsTo(Expediente::class,'estatus_id');
+        return $this->belongsTo(Estatus::class,'estatus_id');
+    }
+
+    public function asignable()
+    {
+        return $this->morphMany(Archivo::class, 'asignable');
     }
 }
