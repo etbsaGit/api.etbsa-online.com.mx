@@ -16,12 +16,20 @@ class PlantillaController extends ApiController
 
     public function all()
     {
-        return response()->json(Plantilla::get());
+        return response()->json(Plantilla::with(['requisito'])->get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Plantilla::create($request->validated()));
+        $plantilla = Plantilla::create(
+            $request->only('nombre')
+        );
+
+        $plantilla->requisito()->syncWithoutDetaching(
+            $request->get('requisito_id')
+        );
+
+        return response()->json($plantilla);
     }
 
     public function show(Plantilla $plantilla)
@@ -31,7 +39,10 @@ class PlantillaController extends ApiController
 
     public function update(PutRequest $request, Plantilla $plantilla)
     {
-        $plantilla->update($request->validated());
+        $plantilla->update($request->only('nombre'));
+
+        $plantilla->requisito()->sync($request->get('requisito_id'));
+
         return response()->json($plantilla);
     }
 

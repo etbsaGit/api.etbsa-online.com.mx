@@ -20,6 +20,6 @@ class Requisito extends Model
 
     public function plantilla()
     {
-        return $this->belongsToMany(Plantilla::class, 'p_plantillas_requisitos', 'plantilla_id', 'requisito_id');
+        return $this->belongsToMany(Plantilla::class, 'p_plantillas_requisitos', 'plantilla_id', 'requisito_id')->withTimestamps();
     }
 }

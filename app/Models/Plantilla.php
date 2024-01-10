@@ -17,7 +17,7 @@ class Plantilla extends Model
 
     public function requisito()
     {
-        return $this->belongsToMany(Requisito::class, 'p_plantillas_requisitos', 'plantilla_id', 'requisito_id');
+        return $this->belongsToMany(Requisito::class, 'p_plantillas_requisitos', 'plantilla_id', 'requisito_id')->withTimestamps();
     }
 
 }

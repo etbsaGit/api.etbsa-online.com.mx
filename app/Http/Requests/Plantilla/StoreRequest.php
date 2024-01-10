@@ -23,7 +23,7 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre"=>['required','string','max:255','unique:plantillas,nombre'],
-            'requisitos'=>['required','array']
+            'requisito_id'=>['required','array']
         ];
     }
 }
