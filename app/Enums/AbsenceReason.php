@@ -71,14 +71,14 @@ class AbsenceReason
     {
         if (is_null(self::$values)) {
             self::$values = [
-                self::SICK_LEAVE => new AbsenceReason(self::SICK_LEAVE, 'Sick leave'),
-                self::PERSONAL_LEAVE => new AbsenceReason(self::PERSONAL_LEAVE, 'Personal leave'),
-                self::VACATION => new AbsenceReason(self::VACATION, 'Vacation'),
-                self::VACATION_DAY => new AbsenceReason(self::VACATION_DAY, 'Vacation day'),
-                self::TIME_OFF => new AbsenceReason(self::TIME_OFF, 'Time off'),
-                self::TIME_OFF_IN_LIEU => new AbsenceReason(self::TIME_OFF, 'Time off in lieu'),
-                self::FLEXTIME => new AbsenceReason(self::FLEXTIME, 'Flextime'),
-                self::OTHER => new AbsenceReason(self::OTHER, 'Other'),
+                self::SICK_LEAVE => new AbsenceReason(self::SICK_LEAVE, 'Enfermedad'),
+                self::PERSONAL_LEAVE => new AbsenceReason(self::PERSONAL_LEAVE, 'Permiso Personal'),
+                self::VACATION => new AbsenceReason(self::VACATION, 'Vacaciones'),
+                self::VACATION_DAY => new AbsenceReason(self::VACATION_DAY, 'Dia de Vacacion'),
+                self::TIME_OFF => new AbsenceReason(self::TIME_OFF, 'Descanso'),
+                self::TIME_OFF_IN_LIEU => new AbsenceReason(self::TIME_OFF, 'Descanso con Paga'),
+                self::FLEXTIME => new AbsenceReason(self::FLEXTIME, 'Medio Tiempo'),
+                self::OTHER => new AbsenceReason(self::OTHER, 'Otro'),
             ];
         }
         return self::$values;
