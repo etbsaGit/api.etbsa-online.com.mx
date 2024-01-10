@@ -25,6 +25,7 @@ class StoreRequest extends FormRequest
             'nombre' => ['required','string'],
             'tipo_de_archivo' => ['required','string'],
             'tamano_de_archivo' => ['required','numeric'],
+            'path' => ['required','string'],
             'asignable_id' => ['required','numeric'],
             'asignable_type' => ['required','string'],
         ];

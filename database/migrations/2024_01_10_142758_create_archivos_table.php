@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('tipo_de_archivo')->nullable();
             $table->integer('tamano_de_archivo')->nullable();
+            $table->string('path');
 
             $table->morphs('asignable');
 

@@ -16,6 +16,7 @@ class Archivo extends Model
         'nombre',
         'tipo_de_archivo',
         'tamano_de_archivo',
+        'path',
 
         'asignable_id',
         'asignable_type'
