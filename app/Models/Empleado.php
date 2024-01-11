@@ -157,18 +157,18 @@ class Empleado extends Model
 
     // ----------------------------------------------------------------------------------
 
-    public function constelaciones()
+    public function constelacion()
     {
-        return $this->belongsToMany(Constelacion::class, 'p_constelaciones_empleados', 'empleado_id', 'constelacion_id');
+        return $this->belongsToMany(Constelacion::class, 'p_constelaciones_empleados', 'empleado_id', 'constelacion_id')->withTimestamps();
     }
 
     public function alergias()
     {
-        return $this->belongsToMany(Alergia::class, 'p_alergias_empleados', 'empleado_id', 'alergias_id');
+        return $this->belongsToMany(Alergia::class, 'p_alergias_empleados', 'empleado_id', 'alergias_id')->withTimestamps();
     }
 
     public function enfermedad()
     {
-        return $this->belongsToMany(Enfermedad::class, 'p_enfermedades_empleados', 'empleado_id', 'enfermedad_id');
+        return $this->belongsToMany(Enfermedad::class, 'p_enfermedades_empleados', 'empleado_id', 'enfermedad_id')->withTimestamps();
     }
 }

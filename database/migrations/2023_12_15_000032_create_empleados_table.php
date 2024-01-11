@@ -32,9 +32,9 @@ return new class extends Migration
             $table->integer('hijos')->nullable();
             $table->string('dependientes_economicos')->nullable();
             $table->string('cedula_profesional')->nullable();
-            $table->boolean('matriz');
+            $table->boolean('matriz')->default(false);
             $table->integer('sueldo_base');
-            $table->boolean('comision');
+            $table->boolean('comision')->default(false);
             $table->string('foto')->nullable();
             $table->string('numero_exterior');
             $table->string('numero_interior')->nullable();

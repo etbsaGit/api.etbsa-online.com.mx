@@ -4,8 +4,6 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\DocumentoQueAvala;
-use App\Models\TipoDeSangre;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -30,5 +28,6 @@ class DatabaseSeeder extends Seeder
         $this->call(TipoDeAsignacionSeeder::class);
         $this->call(UserSeeder::class);
         $this->call(EmpleadoSeeder::class);
+        $this->call(MedicamentoSeeder::class);
     }
 }

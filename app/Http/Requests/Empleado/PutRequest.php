@@ -69,6 +69,10 @@ class PutRequest extends FormRequest
             "expediente_id" => ['nullable', 'integer', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "desvinculacion_id" => ['nullable', 'integer', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "jefe_directo_id" => ['nullable', 'integer'],
+
+            'constelacion_id'=>['nullable','array'],
+            'alergias_id'=>['nullable','array'],
+            'enfermedad_id'=>['nullable','array']
         ];
     }
 
