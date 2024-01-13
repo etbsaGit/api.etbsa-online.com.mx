@@ -27,4 +27,9 @@ class Expediente extends Model
     {
         return $this->morphTo();
     }
+
+    public function requisito()
+    {
+        return $this->belongsToMany(Requisito::class, 'documentos')->using(Documento::class)->withPivot( 'fecha_de_vencimiento', 'comentario','estatus_id')->withTimestamps();
+    }
 }

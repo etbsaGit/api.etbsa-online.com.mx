@@ -45,6 +45,10 @@ class RequisitoSeeder extends Seeder
         ];
 
         foreach ($requisitos as $requisito) {
-            Requisito::create(['nombre' => $requisito]);
-        }    }
+            Requisito::create([
+                'nombre' => $requisito,
+                'descripcion' => 'Descripcion de ' . $requisito
+            ]);
+        }
+    }
 }

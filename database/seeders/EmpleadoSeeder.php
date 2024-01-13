@@ -53,6 +53,7 @@ class EmpleadoSeeder extends Seeder
             'linea_id' => Linea::inRandomOrder()->first()->id,
             'departamento_id' => Departamento::inRandomOrder()->first()->id,
             'puesto_id' => Puesto::inRandomOrder()->first()->id,
+            'escolaridad_id'=>2
         ]);
 
         // for ($i = 1; $i < 10; $i++) {

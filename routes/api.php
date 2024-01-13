@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
+use App\Models\Expediente;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +80,8 @@ Route::get('tipoDeAsignacion/all', [TipoDeAsignacionController::class, 'all']);
 Route::get('tipoDeDesvinculacion/all', [TipoDeDesvinculacionController::class, 'all']);
 Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
 Route::get('user/all', [UserController::class, 'all']);
+
+Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class,'buscarExpedientePorArchivable']);
 
 Route::resource('alergia', AlergiaController::class)->except("create", "edit");
 Route::resource('antiguedad', AntiguedadController::class)->except("create", "edit");

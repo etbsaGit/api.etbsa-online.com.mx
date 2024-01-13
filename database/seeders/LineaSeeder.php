@@ -20,7 +20,8 @@ class LineaSeeder extends Seeder
 
         $lineas = [
             'Agricola',
-            'Construccion'
+            'Construccion',
+            'Combo'
         ];
 
         foreach ($lineas as $linea) {

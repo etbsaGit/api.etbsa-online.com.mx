@@ -3,19 +3,18 @@
 namespace App\Models;
 
 use App\Models\Requisito;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class Documento extends Model
+class Documento extends Pivot
 {
     use HasFactory;
 
     protected $table = 'documentos';
 
     protected $fillable = [
-        'nombre',
         'fecha_de_vencimiento',
-        'descripcion',
+        'comentario',
 
         'requisito_id',
         'expediente_id',

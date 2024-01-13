@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Empleado;
+use App\Models\Plantilla;
 use App\Models\Expediente;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
@@ -27,7 +28,16 @@ class EmpleadoController extends ApiController
             return tap(
                 Empleado::create($request->validated()),
                 function (Empleado $empleado) {
-                    $empleado->archivable()->create(['nombre' => $empleado->rfc . ' expediente']);
+                    $plantilla = Plantilla::find(1);
+                    $ids = $plantilla->requisito->pluck('id');
+                    // Crea el expediente asociado al empleado
+                    $expediente = $empleado->archivable()->create(['nombre' => $empleado->rfc . ' expediente']);
+                    // Adjunta requisitos a través de la relación
+                    $expediente->requisito()->syncWithPivotValues($ids , ['comentaio' => 'com 1']);
+
+
+
+
                 }
             );
         });
@@ -35,7 +45,7 @@ class EmpleadoController extends ApiController
 
     public function show(Empleado $empleado)
     {
-        return response()->json($empleado);
+        return response()->json($empleado->load('archivable', 'archivable.requisito'));
     }
 
     public function update(PutRequest $request, Empleado $empleado)

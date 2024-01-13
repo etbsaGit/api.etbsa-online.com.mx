@@ -12,6 +12,7 @@ class Requisito extends Model
 
     protected $fillable = [
         'nombre',
+        'descripcion'
      ];
 
      public function documento(){
@@ -21,5 +22,10 @@ class Requisito extends Model
     public function plantilla()
     {
         return $this->belongsToMany(Plantilla::class, 'p_plantillas_requisitos', 'plantilla_id', 'requisito_id')->withTimestamps();
+    }
+
+    public function expediente()
+    {
+        return $this->belongsToMany(Expediente::class,'documentos')->using(Documento::class)->withPivot('fecha_de_vencimiento', 'comentario','estatus_id')->withTimestamps();
     }
 }

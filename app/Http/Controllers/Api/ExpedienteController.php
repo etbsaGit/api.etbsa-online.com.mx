@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Expediente;
+use Illuminate\Support\Str;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Expediente\PutRequest;
 use App\Http\Requests\Expediente\StoreRequest;
@@ -16,7 +17,7 @@ class ExpedienteController extends ApiController
 
     public function all()
     {
-        return response()->json(Expediente::get());
+        return response()->json(Expediente::with('archivable')->get());
     }
 
     public function store(StoreRequest $request)
@@ -39,5 +40,17 @@ class ExpedienteController extends ApiController
     {
         $expediente->delete();
         return response()->json("ok");
+    }
+
+    public function buscarExpedientePorArchivable($tipoModelo, $idModelo)
+    {
+    $tipoModelo = Str::startsWith($tipoModelo, 'App\\Models\\') ? $tipoModelo : 'App\\Models\\' . $tipoModelo;
+
+    $expediente = Expediente::whereHas('archivable', function ($query) use ($tipoModelo, $idModelo) {
+        $query->where('archivable_type', $tipoModelo)
+            ->where('archivable_id', $idModelo);
+    })->first();
+
+    return response()->json($expediente);
     }
 }
