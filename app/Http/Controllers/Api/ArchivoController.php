@@ -16,7 +16,7 @@ class ArchivoController extends ApiController
 
     public function all()
     {
-        return response()->json(Archivo::get());
+        return response()->json(Archivo::with('asignable')->get());
     }
 
     public function store(StoreRequest $request)
@@ -26,7 +26,7 @@ class ArchivoController extends ApiController
 
     public function show(Archivo $archivo)
     {
-        return response()->json($archivo);
+        return response()->json($archivo->load('asignable'));
     }
 
     public function update(PutRequest $request, Archivo $archivo)

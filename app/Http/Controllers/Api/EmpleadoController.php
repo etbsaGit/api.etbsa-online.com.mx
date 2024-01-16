@@ -19,7 +19,7 @@ class EmpleadoController extends ApiController
 
     public function all()
     {
-        return response()->json(Empleado::with(['escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get());
+        return response()->json(Empleado::with(['archivable', 'archivable.requisito','escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get());
     }
 
     public function store(StoreRequest $request)
@@ -34,10 +34,6 @@ class EmpleadoController extends ApiController
                     $expediente = $empleado->archivable()->create(['nombre' => $empleado->rfc . ' expediente']);
                     // Adjunta requisitos a través de la relación
                     $expediente->requisito()->syncWithPivotValues($ids , ['comentaio' => 'com 1']);
-
-
-
-
                 }
             );
         });
@@ -45,7 +41,7 @@ class EmpleadoController extends ApiController
 
     public function show(Empleado $empleado)
     {
-        return response()->json($empleado->load('archivable', 'archivable.requisito'));
+        return response()->json($empleado->load('archivable', 'archivable.requisito','escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
     }
 
     public function update(PutRequest $request, Empleado $empleado)

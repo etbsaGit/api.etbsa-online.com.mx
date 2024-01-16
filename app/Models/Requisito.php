@@ -26,6 +26,6 @@ class Requisito extends Model
 
     public function expediente()
     {
-        return $this->belongsToMany(Expediente::class,'documentos')->using(Documento::class)->withPivot('fecha_de_vencimiento', 'comentario','estatus_id')->withTimestamps();
+        return $this->belongsToMany(Expediente::class,'documentos')->using(Documento::class)->withPivot('fecha_de_vencimiento', 'comentario','estatus_id','id')->withTimestamps();
     }
 }

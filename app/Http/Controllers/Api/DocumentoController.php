@@ -16,7 +16,7 @@ class DocumentoController extends ApiController
 
     public function all()
     {
-        return response()->json(Documento::get());
+        return response()->json(Documento::with('asignable')->get());
     }
 
     public function store(StoreRequest $request)
@@ -26,7 +26,7 @@ class DocumentoController extends ApiController
 
     public function show(Documento $documento)
     {
-        return response()->json($documento);
+        return response()->json($documento->load('asignable'));
     }
 
     public function update(PutRequest $request, Documento $documento)

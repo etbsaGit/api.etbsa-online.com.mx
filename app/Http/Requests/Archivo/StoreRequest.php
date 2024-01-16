@@ -22,12 +22,12 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => ['required','string'],
-            'tipo_de_archivo' => ['required','string'],
-            'tamano_de_archivo' => ['required','numeric'],
-            'path' => ['required','string'],
-            'asignable_id' => ['required','numeric'],
-            'asignable_type' => ['required','string'],
+            'nombre' => ['required', 'string'],
+            'tipo_de_archivo' => ['required', 'string'],
+            'tamano_de_archivo' => ['required', 'numeric'],
+            'path' => ['required', 'string', 'unique:archivos,path'],
+            'asignable_id' => ['required', 'numeric'],
+            'asignable_type' => ['required', 'string'],
         ];
     }
 }
