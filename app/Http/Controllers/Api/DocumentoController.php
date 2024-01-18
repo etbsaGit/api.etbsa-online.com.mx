@@ -44,6 +44,7 @@ class DocumentoController extends ApiController
     }
 
     public function uploadFile(Request $request,) {
-        return [$request->hasFile('file'), $request->file('file')];
+
+        dd('hello upload function');
     }
 }

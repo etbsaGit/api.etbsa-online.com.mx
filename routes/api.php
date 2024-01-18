@@ -82,7 +82,7 @@ Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
 Route::get('estatus/all', [EstatusController::class, 'all']);
 Route::get('user/all', [UserController::class, 'all']);
 
-Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class,'buscarExpedientePorArchivable']);
+Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
 
 Route::resource('alergia', AlergiaController::class)->except("create", "edit");
 Route::resource('antiguedad', AntiguedadController::class)->except("create", "edit");
@@ -92,6 +92,9 @@ Route::resource('constelacion', ConstelacionController::class)->except("create",
 Route::resource('departamento', DepartamentoController::class)->except("create", "edit");
 Route::resource('desvinculacion', DesvinculacionController::class)->except("create", "edit");
 Route::resource('documento', DocumentoController::class)->except("create", "edit");
+
+Route::post('documento/uploadFile', [DocumentoController::class, 'uploadFile']);
+
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
 Route::resource('empleado', EmpleadoController::class)->except("create", "edit");
 Route::resource('enfermedad', EnfermedadController::class)->except("create", "edit");
@@ -118,7 +121,7 @@ Route::resource('user', UserController::class)->except("create", "edit");
 
 Route::post('documento/uploadFile', [DocumentoController::class, 'uploadFile']);
 
-Route::group(['middleware' => 'auth:sanctum'],function () {
+Route::group(['middleware' => 'auth:sanctum'], function () {
 
 });
 
