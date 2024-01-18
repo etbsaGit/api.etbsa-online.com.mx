@@ -116,6 +116,8 @@ Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create",
 Route::resource('estatus', EstatusController::class)->except("create", "edit");
 Route::resource('user', UserController::class)->except("create", "edit");
 
+Route::post('documento/uploadFile', [DocumentoController::class, 'uploadFile']);
+
 Route::group(['middleware' => 'auth:sanctum'],function () {
 
 });
