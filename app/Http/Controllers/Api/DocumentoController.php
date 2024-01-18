@@ -6,6 +6,7 @@ use App\Models\Documento;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Documento\PutRequest;
 use App\Http\Requests\Documento\StoreRequest;
+use Request;
 
 class DocumentoController extends ApiController
 {
@@ -39,5 +40,9 @@ class DocumentoController extends ApiController
     {
         $documento->delete();
         return response()->json("ok");
+    }
+
+    public function uploadFile(Request $request,) {
+        dd('hello upload function');
     }
 }
