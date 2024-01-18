@@ -23,8 +23,6 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre"=>['required','string','max:255','unique:estatus,nombre'],
-            "controlable_id"=>['required','numeric'],
-            "controlable_type"=>['required','string']
         ];
     }
 }

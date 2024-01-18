@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Documento;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Documento\PutRequest;
 use App\Http\Requests\Documento\StoreRequest;
+
 
 class DocumentoController extends ApiController
 {
@@ -39,5 +41,9 @@ class DocumentoController extends ApiController
     {
         $documento->delete();
         return response()->json("ok");
+    }
+
+    public function uploadFile(Request $request,) {
+        return [$request->hasFile('file'), $request->file('file')];
     }
 }

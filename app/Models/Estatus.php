@@ -14,17 +14,11 @@ class Estatus extends Model
 
     protected $fillable = [
         'nombre',
-        'controlable_id',
-        'controlable_type'
     ];
 
     public function documento(){
-        return $this->belongsTo(Documento::class,'estatus_id');
+        return $this->hasMany(Documento::class,'estatus_id');
     }
 
-    public function controlable(): MorphTo
-    {
-        return $this->morphTo();
-    }
 
 }

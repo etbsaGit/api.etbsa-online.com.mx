@@ -24,8 +24,6 @@ class PutRequest extends FormRequest
     {
         return [
             "nombre"=>['required','string','max:255',Rule::unique('estatus')->ignore($this->route("estatus")->id)],
-            "controlable_id"=>['required','numeric'],
-            "controlable_type"=>['required','string']
         ];
     }
 }

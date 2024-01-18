@@ -79,6 +79,7 @@ Route::get('sucursal/all', [SucursalController::class, 'all']);
 Route::get('tipoDeAsignacion/all', [TipoDeAsignacionController::class, 'all']);
 Route::get('tipoDeDesvinculacion/all', [TipoDeDesvinculacionController::class, 'all']);
 Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
+Route::get('estatus/all', [EstatusController::class, 'all']);
 Route::get('user/all', [UserController::class, 'all']);
 
 Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class,'buscarExpedientePorArchivable']);
@@ -112,6 +113,7 @@ Route::resource('sucursal', SucursalController::class)->except("create", "edit")
 Route::resource('tipoDeAsignacion', TipoDeAsignacionController::class)->except("create", "edit");
 Route::resource('tipoDeDesvinculacion', TipoDeDesvinculacionController::class)->except("create", "edit");
 Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
+Route::resource('estatus', EstatusController::class)->except("create", "edit");
 Route::resource('user', UserController::class)->except("create", "edit");
 
 Route::group(['middleware' => 'auth:sanctum'],function () {

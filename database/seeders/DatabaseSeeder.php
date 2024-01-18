@@ -27,7 +27,8 @@ class DatabaseSeeder extends Seeder
         $this->call(ConstelacionSeeder::class);
         $this->call(TipoDeAsignacionSeeder::class);
         $this->call(UserSeeder::class);
-        $this->call(EmpleadoSeeder::class);
+        //$this->call(EmpleadoSeeder::class);
         $this->call(MedicamentoSeeder::class);
+        $this->call(EstatusSeeder::class);
     }
 }

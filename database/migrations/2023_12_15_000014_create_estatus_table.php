@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('estatus', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->morphs('controlable');
             $table->timestamps();
         });
     }

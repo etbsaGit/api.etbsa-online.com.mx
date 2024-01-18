@@ -3,8 +3,10 @@
 namespace App\Http\Requests\Archivo;
 
 use Illuminate\Validation\Rule;
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
-
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 class PutRequest extends FormRequest
 {
     /**
@@ -30,5 +32,14 @@ class PutRequest extends FormRequest
             'asignable_id' => ['required', 'numeric'],
             'asignable_type' => ['required', 'string'],
         ];
+    }
+
+     
+    function failedValidation(Validator $validator)
+    {
+        if ($this->expectsJson()) {
+            $response = new Response($validator->errors(), 422);
+            throw new ValidationException($validator, $response);
+        }
     }
 }

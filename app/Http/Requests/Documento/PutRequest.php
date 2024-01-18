@@ -26,14 +26,12 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "nombre" => ['required', 'string', 'max:255', Rule::unique('documentos')->ignore($this->route("documento")->id)],
-            "fecha_de_vencimiento" => ['required', 'date'],
+            "fecha_de_vencimiento" => ['nullable', 'date'],
             "comentario"=>['nullable', 'string', 'max:255'],
 
             "requisito_id" => ['required', 'integer'],
             "expediente_id" => ['required', 'integer'],
-            "estatus_id" => ['required', 'integer'],
-
+            "estatus_id" => ['nullable', 'integer'],
         ];
     }
 
