@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Documento;
 
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
@@ -31,7 +30,7 @@ class PutRequest extends FormRequest
 
             "requisito_id" => ['required', 'integer'],
             "expediente_id" => ['required', 'integer'],
-            "estatus_id" => ['nullable', 'integer'],
+            "estatus_id" => ['required', 'integer'],
         ];
     }
 

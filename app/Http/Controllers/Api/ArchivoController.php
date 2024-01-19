@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Archivo;
+use App\Models\Documento;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Archivo\PutRequest;
 use App\Http\Requests\Archivo\StoreRequest;
@@ -39,5 +41,39 @@ class ArchivoController extends ApiController
     {
         $archivo->delete();
         return response()->json("ok");
+    }
+
+    public function uploadFile(StoreRequest $request)
+    {
+        if ($request->hasFile('file')) {
+            $archivo = $request->file('file');
+    
+            $nombre = $archivo->getClientOriginalName();
+            $extension = $archivo->getClientOriginalExtension();
+            $tamaño = $archivo->getSize() / 1024; // Tamaño en KB
+            $path = $archivo->store('pdf');
+            $asignableId = $request->input('asignableId');
+    
+            $asignable = Documento::find($asignableId);
+    
+            if (!$asignable) {
+                return response()->json(['error' => 'Asignable no encontrado.'], 404);
+            }
+    
+            $archivoBD = new Archivo([
+                'nombre' => $nombre,
+                'tipo_de_archivo' => $extension,
+                'tamano_de_archivo' => $tamaño,
+                'path' => $path,
+            ]);
+    
+            $asignable->asignable()->save($archivoBD);
+    
+            $archivoBD->save();
+    
+            return response()->json($archivoBD);
+        } else {
+            return response()->json(['error' => 'No se ha enviado un archivo en la solicitud.'], 400);
+        }
     }
 }

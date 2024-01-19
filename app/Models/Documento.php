@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Requisito;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class Documento extends Pivot
@@ -33,8 +34,7 @@ class Documento extends Pivot
         return $this->belongsTo(Estatus::class,'estatus_id');
     }
 
-    public function asignable()
-    {
+    public function asignable(){
         return $this->morphMany(Archivo::class, 'asignable');
     }
 }
