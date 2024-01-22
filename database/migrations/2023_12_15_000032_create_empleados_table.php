@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('dependientes_economicos')->nullable();
             $table->string('cedula_profesional')->nullable();
             $table->boolean('matriz')->default(false);
-            $table->integer('sueldo_base');
+            $table->integer('sueldo_base')->nullable();
             $table->boolean('comision')->default(false);
             $table->string('foto')->nullable();
             $table->string('numero_exterior');

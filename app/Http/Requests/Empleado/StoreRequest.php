@@ -44,7 +44,7 @@ class StoreRequest extends FormRequest
             "dependientes_economicos" => ['nullable', 'integer','max:99'],
             "cedula_profesional" => ['nullable', 'string', 'min:7', 'max:15', 'unique:empleados,cedulaProfesional'],
             "matriz" => ['boolean'],
-            "sueldo_base"=>['required','integer'],
+            "sueldo_base"=>['nullable','integer'],
             "comision"=>['boolean'],
             "foto"=>['nullable'],
             "numero_exterior"=>['required','integer'],
