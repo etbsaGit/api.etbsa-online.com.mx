@@ -43,7 +43,7 @@ return new class extends Migration
             $table->integer('codigo_postal');
             $table->string('ciudad');
             $table->string('estado');
-            $table->string('cuenta_bancaria');
+            $table->string('cuenta_bancaria')->nullable();
             $table->string('constelacion_familiar')->nullable();
             $table->string('status')->nullable();
             $table->string('correo_institucional')->nullable();
