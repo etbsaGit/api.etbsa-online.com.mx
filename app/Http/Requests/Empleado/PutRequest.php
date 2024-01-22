@@ -43,7 +43,7 @@ class PutRequest extends FormRequest
             "dependientes_economicos" => ['nullable', 'integer', 'max:99'],
             "cedula_profesional" => ['nullable', 'string', 'min:7', 'max:15', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "matriz" => ['boolean'],
-            "sueldo_base" => ['required', 'integer'],
+            "sueldo_base" => ['nullable', 'integer'],
             "comision" => ['boolean'],
             "foto"=>['nullable'],
             "numero_exterior"=>['required','integer'],
