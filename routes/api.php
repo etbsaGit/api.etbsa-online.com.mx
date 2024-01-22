@@ -94,7 +94,7 @@ Route::resource('desvinculacion', DesvinculacionController::class)->except("crea
 Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
 Route::post('archivo/uploadFile', [ArchivoController::class, 'uploadFile']);
-Route::delete('/archivo/{archivoId}',[ArchivoController::class, 'deleteFile']);
+Route::delete('/archivo/delete/{archivoId}',[ArchivoController::class, 'deleteFile']);
 Route::get('/archivo/show/{archivoId}', [ArchivoController::class, 'showFile']);
 
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");

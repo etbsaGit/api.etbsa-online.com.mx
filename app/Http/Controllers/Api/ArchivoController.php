@@ -53,7 +53,7 @@ class ArchivoController extends ApiController
             $nombre = $archivo->getClientOriginalName();
             $extension = $archivo->getClientOriginalExtension();
             $tamaño = $archivo->getSize() / 1024; // Tamaño en KB
-            $path = $archivo->store('pdf','public');
+            $path = $archivo->store('pdf', 'public');
             $asignableId = $request->input('asignableId');
 
             $asignable = Documento::find($asignableId);
@@ -83,14 +83,21 @@ class ArchivoController extends ApiController
     {
         $archivo = Archivo::find($archivoId);
 
+        $archivoPath = public_path() . $archivo->path;
+
         if (!$archivo) {
             return response()->json(['error' => 'Archivo no encontrado.'], 404);
         }
 
-        $archivo->delete();
-
-        return response()->json(['message' => 'Archivo eliminado con éxito.']);
+        if (file_exists($archivoPath)) {
+            unlink($archivoPath);
+            $archivo->delete();
+            return response()->json('El archivo ha sido borrado');
+        } else {
+            return response()->json('El archivo no existe');
+        }
     }
+
 
 
     public function showFile($archivoId)
@@ -101,8 +108,6 @@ class ArchivoController extends ApiController
             return response()->json(['error' => 'Archivo no encontrado.'], 404);
         }
 
-        $path = Storage::url($archivoDB->path);
-
-        return response($path);
+        return response($archivoDB->path);
     }
 }
