@@ -4,12 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Archivo;
 use App\Models\Documento;
-use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Archivo\PutRequest;
 use App\Http\Requests\Archivo\StoreRequest;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ArchivoController extends ApiController
 {
@@ -39,10 +36,23 @@ class ArchivoController extends ApiController
         return response()->json($archivo);
     }
 
-    public function destroy(Archivo $archivo)
+    public function destroy($archivoId)
     {
-        $archivo->delete();
-        return response()->json("ok");
+        $archivo = Archivo::find($archivoId);
+
+        $archivoPath = public_path() . $archivo->path;
+
+        if (!$archivo) {
+            return response()->json(['error' => 'Archivo no encontrado.'], 404);
+        }
+
+        if (file_exists($archivoPath)) {
+            unlink($archivoPath);
+            $archivo->delete();
+            return response()->json('El archivo ha sido borrado');
+        } else {
+            return response()->json('El archivo no existe');
+        }
     }
 
     public function uploadFile(StoreRequest $request)
@@ -77,37 +87,5 @@ class ArchivoController extends ApiController
         } else {
             return response()->json(['error' => 'No se ha enviado un archivo en la solicitud.'], 400);
         }
-    }
-
-    public function deleteFile($archivoId)
-    {
-        $archivo = Archivo::find($archivoId);
-
-        $archivoPath = public_path() . $archivo->path;
-
-        if (!$archivo) {
-            return response()->json(['error' => 'Archivo no encontrado.'], 404);
-        }
-
-        if (file_exists($archivoPath)) {
-            unlink($archivoPath);
-            $archivo->delete();
-            return response()->json('El archivo ha sido borrado');
-        } else {
-            return response()->json('El archivo no existe');
-        }
-    }
-
-
-
-    public function showFile($archivoId)
-    {
-        $archivoDB = Archivo::find($archivoId);
-
-        if (!$archivoDB) {
-            return response()->json(['error' => 'Archivo no encontrado.'], 404);
-        }
-
-        return response($archivoDB->path);
     }
 }

@@ -94,8 +94,6 @@ Route::resource('desvinculacion', DesvinculacionController::class)->except("crea
 Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
 Route::post('archivo/uploadFile', [ArchivoController::class, 'uploadFile']);
-Route::delete('/archivo/delete/{archivoId}',[ArchivoController::class, 'deleteFile']);
-Route::get('/archivo/show/{archivoId}', [ArchivoController::class, 'showFile']);
 
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
 Route::resource('empleado', EmpleadoController::class)->except("create", "edit");
@@ -120,8 +118,6 @@ Route::resource('tipoDeDesvinculacion', TipoDeDesvinculacionController::class)->
 Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
 Route::resource('estatus', EstatusController::class)->except("create", "edit");
 Route::resource('user', UserController::class)->except("create", "edit");
-
-Route::post('documento/uploadFile', [DocumentoController::class, 'uploadFile']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
 
