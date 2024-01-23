@@ -14,6 +14,9 @@ class Estatus extends Model
 
     protected $fillable = [
         'nombre',
+        'clave',
+        'tipo_estatus',
+        'color'
     ];
 
     public function documento(){

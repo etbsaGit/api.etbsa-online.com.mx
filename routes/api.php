@@ -93,7 +93,7 @@ Route::resource('departamento', DepartamentoController::class)->except("create",
 Route::resource('desvinculacion', DesvinculacionController::class)->except("create", "edit");
 Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
-Route::post('archivo/uploadFile', [ArchivoController::class, 'uploadFile']);
+Route::post('documento/uploadFile/{documentoID}', [DocumentoController::class, 'uploadFile']);
 
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
 Route::resource('empleado', EmpleadoController::class)->except("create", "edit");

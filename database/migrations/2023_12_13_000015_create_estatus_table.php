@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('estatus', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
+            $table->string('clave');
+            $table->string('tipo_estatus')->nullable();
+            $table->string('color');
             $table->timestamps();
         });
     }

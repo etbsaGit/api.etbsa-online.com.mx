@@ -30,7 +30,7 @@ class PutRequest extends FormRequest
 
             "requisito_id" => ['required', 'integer'],
             "expediente_id" => ['required', 'integer'],
-            "estatus_id" => ['required', 'integer'],
+            "estatus_id" => ['nullable', 'integer'],
         ];
     }
 

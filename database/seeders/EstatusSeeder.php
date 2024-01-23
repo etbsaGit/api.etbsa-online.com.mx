@@ -18,15 +18,25 @@ class EstatusSeeder extends Seeder
         Estatus::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $estatuses = [
-           'pendiente',
-           'enviado',
-           'rechazado',
-           'validado',
-        ];
+       Estatus::create([
+        'nombre' => 'Aceptado',
+        'clave' => 'aceptado',
+        'tipo_estatus' => 'archivo',
+        'color'=>'green'
+       ]);
 
-        foreach ($estatuses as $estatus) {
-            Estatus::create(['nombre' => $estatus]);
-        }
+       Estatus::create([
+        'nombre' => 'Rechazado',
+        'clave' => 'rechazado',
+        'tipo_estatus' => 'archivo',
+        'color'=>'red'
+       ]);
+
+       Estatus::create([
+        'nombre' => 'Pendiente',
+        'clave' => 'pendiente',
+        'tipo_estatus' => 'archivo',
+        'color'=>'yellow'
+       ]);
     }
 }
