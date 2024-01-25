@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Archivo;
 use App\Models\Documento;
+use App\Traits\UploadableFile;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Documento\PutRequest;
 use App\Http\Requests\Documento\StoreRequest;
@@ -12,6 +13,8 @@ use App\Models\Estatus;
 
 class DocumentoController extends ApiController
 {
+
+    use UploadableFile;
     public function index()
     {
         return response()->json(Documento::paginate(5));
@@ -44,36 +47,37 @@ class DocumentoController extends ApiController
         return response()->json("ok");
     }
 
-    public function uploadFile(ArchivoStoreRequest $request, Documento $documentoID)
+    public function uploadFile(ArchivoStoreRequest $request, Documento $documento)
     {
         if ($request->hasFile('file')) {
             $archivo = $request->file('file');
 
-            $nombre = $archivo->getClientOriginalName();
-            $extension = $archivo->getClientOriginalExtension();
-            $tamaño = $archivo->getSize() / 1024; // Tamaño en KB
-            $path = $archivo->store('pdf', 'public');
 
-            if (!$documentoID) {
-                return response()->json(['error' => 'Asignable no encontrado.'], 404);
+            $path = $this->uploadOne($archivo, $documento->default_path_folder, 's3');
+
+            if (!$path) {
+                return response()->json(['error' => 'Error al Guardar el Archivo.'], 404);
             }
 
+
             $archivoBD = new Archivo([
-                'nombre' => $nombre,
-                'tipo_de_archivo' => $extension,
-                'tamano_de_archivo' => $tamaño,
+                'nombre' => $archivo->getClientOriginalName(),
+                'tipo_de_archivo' => $archivo->getClientOriginalExtension(),
+                'tamano_de_archivo' => $archivo->getSize() / 1024,
                 'path' => $path,
             ]);
+            $documento->asignable()->save($archivoBD);
 
             $estatus = Estatus::where('clave', 'enviado')->first();
 
-            $documentoID->estatus_id = $estatus->id;
+            $documento->estatus_id = $estatus->id;
 
-            $documentoID->asignable()->save($archivoBD);
+            $documento->asignable()->save($archivoBD);
 
-            $documentoID->save();
+            $documento->save();
 
             $archivoBD->save();
+
 
             return response()->json($archivoBD);
         } else {

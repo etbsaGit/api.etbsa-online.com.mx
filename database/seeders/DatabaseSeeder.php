@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(DepartamentoSeeder::class);
         $this->call(LineaSeeder::class);
         $this->call(RequisitoSeeder::class);
+        $this->call(PlantillaSeeder::class);
         $this->call(EstadoCivilSeeder::class);
         $this->call(EscolaridadSeeder::class);
         $this->call(EstadosDelEstudioSeeder::class);

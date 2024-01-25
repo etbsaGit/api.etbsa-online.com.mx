@@ -32,7 +32,7 @@ class Archivo extends Model
     public function path(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => Storage::url($value),
+            get: fn (string $value) => Storage::disk('s3')->url($value),
         );
     }
 
