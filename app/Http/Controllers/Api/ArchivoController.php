@@ -51,8 +51,8 @@ class ArchivoController extends ApiController
             return response()->json(['error' => 'Documento no encontrado.'], 404);
         }
 
-        if (file_exists($archivo->path)) {
-            Storage::delete($archivo->path);
+        if (Storage::disk('s3')->exists($archivo->path)) {
+            Storage::disk('s3')->delete($archivo->path);
         }
 
         $estatus = Estatus::where('clave', 'pendiente')->first();

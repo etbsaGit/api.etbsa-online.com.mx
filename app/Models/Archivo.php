@@ -24,15 +24,17 @@ class Archivo extends Model
         'asignable_type'
     ];
 
+    protected $appends = ['path_absolute'];
+
     public function asignable(): MorphTo
     {
         return $this->morphTo();
     }
 
-    public function path(): Attribute
+    public function pathAbsolute(): Attribute
     {
         return Attribute::make(
-            get: fn (string $value) => Storage::disk('s3')->url($value),
+            get: fn () => Storage::disk('s3')->url($this->path),
         );
     }
 

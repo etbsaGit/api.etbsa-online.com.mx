@@ -83,6 +83,14 @@ class Empleado extends Model
         );
     }
 
+    protected function defaultPathFolder(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => "empleados/id_" . $this->id . "/foto_de_perfil",
+        );
+    }
+
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

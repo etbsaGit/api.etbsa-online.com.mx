@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Empleado;
 use App\Models\Plantilla;
+use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Empleado\PicRequest;
@@ -12,6 +13,9 @@ use App\Http\Requests\Empleado\StoreRequest;
 
 class EmpleadoController extends ApiController
 {
+
+    use UploadableFile;
+
     public function index()
     {
         return response()->json(Empleado::paginate(5));
@@ -106,9 +110,9 @@ class EmpleadoController extends ApiController
         if ($request->hasFile('pic')) {
             $pic = $request->file('pic');
     
-            $fotografia = $pic->store('pics', 'public');
+            $path = $this->uploadOne($pic, $empleado->default_path_folder, 's3');
     
-            $updateData = ['fotografia' => $fotografia];
+            $updateData = ['fotografia' => $path];
     
             $empleado->update($updateData);
     
