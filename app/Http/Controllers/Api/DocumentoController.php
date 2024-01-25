@@ -68,16 +68,8 @@ class DocumentoController extends ApiController
             ]);
             $documento->asignable()->save($archivoBD);
 
-            $estatus = Estatus::where('clave', 'enviado')->first();
-
-            $documento->estatus_id = $estatus->id;
-
-            $documento->asignable()->save($archivoBD);
-
-            $documento->save();
-
-            $archivoBD->save();
-
+            $estatus = Estatus::where('clave', 'pendiente')->first();
+            $documento->estatus()->associate($estatus)->save();
 
             return response()->json($archivoBD);
         } else {
