@@ -7,6 +7,7 @@ use App\Models\Estatus;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Archivo\PutRequest;
 use App\Http\Requests\Archivo\StoreRequest;
+use Illuminate\Support\Facades\Storage;
 
 class ArchivoController extends ApiController
 {
@@ -50,9 +51,8 @@ class ArchivoController extends ApiController
             return response()->json(['error' => 'Documento no encontrado.'], 404);
         }
 
-        $archivoPath = public_path() . $archivo->path;
-        if (file_exists($archivoPath)) {
-            unlink($archivoPath);
+        if (file_exists($archivo->path)) {
+            Storage::delete($archivo->path);
         }
 
         $estatus = Estatus::where('clave', 'pendiente')->first();
