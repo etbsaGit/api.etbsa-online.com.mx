@@ -19,6 +19,8 @@ use App\Models\ExperienciaLaboral;
 use App\Models\ReferenciaPersonal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Empleado extends Model
 {
@@ -27,6 +29,7 @@ class Empleado extends Model
     protected $table = 'empleados';
 
     protected $fillable = [
+        'fotografia',
         'nombre',
         'segundo_nombre',
         'apellido_paterno',
@@ -70,6 +73,15 @@ class Empleado extends Model
         'desvinculacion_id',
         'jefe_directo_id',
     ];
+
+    public function fotografia(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                return $value ? Storage::url($value) : null;
+            }
+        );
+    }
 
     public function user()
     {

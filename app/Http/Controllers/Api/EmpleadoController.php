@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Empleado;
 use App\Models\Plantilla;
-use App\Models\Expediente;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Empleado\PicRequest;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
 
@@ -19,7 +19,7 @@ class EmpleadoController extends ApiController
 
     public function all()
     {
-        return response()->json(Empleado::with(['archivable', 'archivable.requisito','escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get());
+        return response()->json(Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get());
     }
 
     public function store(StoreRequest $request)
@@ -33,7 +33,7 @@ class EmpleadoController extends ApiController
                     // Crea el expediente asociado al empleado
                     $expediente = $empleado->archivable()->create(['nombre' => $empleado->rfc . ' expediente']);
                     // Adjunta requisitos a través de la relación
-                    $expediente->requisito()->syncWithPivotValues($ids , ['comentaio' => 'com 1']);
+                    $expediente->requisito()->syncWithPivotValues($ids, ['comentaio' => 'com 1']);
                 }
             );
         });
@@ -41,7 +41,7 @@ class EmpleadoController extends ApiController
 
     public function show(Empleado $empleado)
     {
-        return response()->json($empleado->load('archivable', 'archivable.requisito','escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
+        return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
     }
 
     public function update(PutRequest $request, Empleado $empleado)
@@ -100,5 +100,21 @@ class EmpleadoController extends ApiController
     {
         $empleado->delete();
         return response()->json("ok");
+    }
+
+    public function uploadPicture(PicRequest $request, Empleado $empleado){
+        if ($request->hasFile('pic')) {
+            $pic = $request->file('pic');
+    
+            $fotografia = $pic->store('pics', 'public');
+    
+            $updateData = ['fotografia' => $fotografia];
+    
+            $empleado->update($updateData);
+    
+            return response()->json(['message' => 'Fotografía actualizada con éxito']);
+        } else {
+            return response()->json(['error' => 'No se ha enviado una foto en la solicitud.'], 400);
+        }
     }
 }

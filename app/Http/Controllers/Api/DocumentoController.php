@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Archivo;
 use App\Models\Documento;
-use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Documento\PutRequest;
 use App\Http\Requests\Documento\StoreRequest;
@@ -66,9 +65,9 @@ class DocumentoController extends ApiController
                 'path' => $path,
             ]);
 
-            $estatus = Estatus::where('clave','pendiente')->first();
+            $estatus = Estatus::where('clave', 'enviado')->first();
 
-            $documentoID->estatus_id=$estatus->id;
+            $documentoID->estatus_id = $estatus->id;
 
             $documentoID->asignable()->save($archivoBD);
 
@@ -81,6 +80,4 @@ class DocumentoController extends ApiController
             return response()->json(['error' => 'No se ha enviado un archivo en la solicitud.'], 400);
         }
     }
-
-
 }

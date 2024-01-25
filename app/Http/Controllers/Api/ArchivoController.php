@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Archivo;
-use App\Models\Documento;
+use App\Models\Estatus;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Archivo\PutRequest;
 use App\Http\Requests\Archivo\StoreRequest;
@@ -40,18 +40,27 @@ class ArchivoController extends ApiController
     {
         $archivo = Archivo::find($archivoId);
 
-        $archivoPath = public_path() . $archivo->path;
-
         if (!$archivo) {
             return response()->json(['error' => 'Archivo no encontrado.'], 404);
         }
 
+        $documento = $archivo->asignable();
+
+        if (!$documento) {
+            return response()->json(['error' => 'Documento no encontrado.'], 404);
+        }
+
+        $archivoPath = public_path() . $archivo->path;
         if (file_exists($archivoPath)) {
             unlink($archivoPath);
-            $archivo->delete();
-            return response()->json('El archivo ha sido borrado');
-        } else {
-            return response()->json('El archivo no existe');
         }
+
+        $estatus = Estatus::where('clave', 'pendiente')->first();
+
+        $documento->update(['estatus_id' => $estatus->id]);
+
+        $archivo->delete();
+
+        return response()->json('Archivo borrado exitosamente');
     }
 }

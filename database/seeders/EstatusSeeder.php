@@ -38,5 +38,12 @@ class EstatusSeeder extends Seeder
         'tipo_estatus' => 'archivo',
         'color'=>'yellow'
        ]);
+
+       Estatus::create([
+        'nombre' => 'Enviado',
+        'clave' => 'enviado',
+        'tipo_estatus' => 'archivo',
+        'color'=>'blue'
+       ]);
     }
 }
