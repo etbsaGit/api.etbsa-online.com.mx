@@ -7,6 +7,7 @@ use App\Models\Plantilla;
 use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Empleado\PicRequest;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
@@ -109,7 +110,11 @@ class EmpleadoController extends ApiController
     public function uploadPicture(PicRequest $request, Empleado $empleado){
         if ($request->hasFile('pic')) {
             $pic = $request->file('pic');
-    
+
+            if ($empleado->fotografia) {
+                Storage::disk('s3')->delete($empleado->fotografia);
+            }
+            
             $path = $this->uploadOne($pic, $empleado->default_path_folder, 's3');
     
             $updateData = ['fotografia' => $path];

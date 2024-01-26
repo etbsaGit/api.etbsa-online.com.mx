@@ -26,7 +26,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|file|mimes:pdf', // Validar que el archivo sea de tipo PDF
+            'file' => 'required|file|mimes:pdf,jpeg,png,jpg', // Validar que el archivo sea de tipo PDF
             'asignableId' => 'required|integer|min:1', // Validar que el asignableId sea un entero positivo
         ];
     }

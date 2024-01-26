@@ -74,12 +74,12 @@ class Empleado extends Model
         'jefe_directo_id',
     ];
 
-    public function fotografia(): Attribute
+    protected $appends = ['picture'];
+
+    public function picture(): Attribute
     {
         return Attribute::make(
-            get: function ($value) {
-                return $value ? Storage::url($value) : null;
-            }
+            get: fn () => $this->fotografia ? Storage::disk('s3')->url($this->fotografia) : null
         );
     }
 
@@ -89,7 +89,6 @@ class Empleado extends Model
             get: fn() => "empleados/id_" . $this->id . "/foto_de_perfil",
         );
     }
-
 
     public function user()
     {
