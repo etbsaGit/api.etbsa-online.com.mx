@@ -7,7 +7,7 @@ use App\Http\Controllers\ApiController;
 use App\Http\Requests\Desvinculacion\PutRequest;
 use App\Http\Requests\Desvinculacion\StoreRequest;
 
-class TipoDeSangreController extends ApiController
+class DesvinculacionController extends ApiController
 {
     public function index()
     {

@@ -75,7 +75,9 @@ class SucursalSeeder extends Seeder
             'nombre'=>'Nuevas Tecnologias',
         ]);
 
-
+        Sucursal::create([
+            'nombre'=>'Matriz',
+        ]);
         
     }
 

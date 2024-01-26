@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\TipoDeDesvinculacion;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PutRequest extends FormRequest
@@ -22,7 +23,7 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "nombre"=>['required','string','max:255',Rule::unique('tipos_de_desvinculaciones')->ignore($this->route("tipo_de_desvinculacion")->id)],
         ];
     }
 }

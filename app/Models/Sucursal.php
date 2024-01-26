@@ -22,8 +22,8 @@ class Sucursal extends Model
         return $this->hasMany(Empleado::class,'sucursal_id');
     }
 
-    public function lineas()
+    public function linea()
     {
-        return $this->belongsToMany(Linea::class, 'p_sucursales_lineas', 'sucursal_id', 'linea_id');
+        return $this->belongsToMany(Linea::class, 'p_sucursales_lineas', 'sucursal_id', 'linea_id')->withTimestamps();
     }
 }

@@ -27,7 +27,7 @@ class StoreRequest extends FormRequest
         return [
             "nombre" => ['required', 'string', 'max:255','unique:asignaciones,nombre'],
             "descripcion" => ['required', 'string', 'max:255','unique:asignaciones,descripcion'],
-            "tipoDeAsignacion_id"=>['required','integer'],
+            "tipo_de_asignacion_id"=>['required','integer'],
             "empleado_id"=>['required','integer'],
         ];
     }

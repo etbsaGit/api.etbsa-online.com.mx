@@ -12,8 +12,8 @@ class Antiguedad extends Model
     protected $table = 'antiguedades';
 
     protected $fillable = [
-        'añosCumplidos',
-        'diasCorresopondientes',
+        'años_cumplidos',
+        'dias_corresopondientes',
         'regimen'
     ];
 

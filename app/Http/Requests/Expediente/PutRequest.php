@@ -26,6 +26,9 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
+            "nombre"=>['required','string','max:255',Rule::unique('expedientes')->ignore($this->route("expediente")->id)],
+            "archivable_id"=>['required','numeric'],
+            "archivable_type"=>['required','string']
         ];
     }
 

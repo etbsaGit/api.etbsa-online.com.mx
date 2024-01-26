@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('descripcion');
 
-            $table->unsignedBigInteger('tipoDeAsignacion_id')->nullable();
+            $table->unsignedBigInteger('tipo_de_asignacion_id')->nullable();
             $table->unsignedBigInteger('empleado_id')->nullable();
 
-            $table->foreign('tipoDeAsignacion_id')->references('id')->on('tipos_de_asignaciones')->onDelete('set null');
+            $table->foreign('tipo_de_asignacion_id')->references('id')->on('tipos_de_asignaciones')->onDelete('set null');
             $table->foreign('empleado_id')->references('id')->on('empleados')->onDelete('set null');
 
             $table->timestamps();

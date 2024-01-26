@@ -28,6 +28,7 @@ class StoreRequest extends FormRequest
         return [
             "nombre" => ['required', 'string', 'max:255', 'unique:sucursales,nombre'],
             "direccion" => ['required', 'string', 'max:255', 'unique:sucursales,direccion'],
+            "linea_id"=>['required','array']
         ];
     }
     function failedValidation(Validator $validator)

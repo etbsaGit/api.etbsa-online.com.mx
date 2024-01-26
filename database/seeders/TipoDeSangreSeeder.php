@@ -19,50 +19,50 @@ class TipoDeSangreSeeder extends Seeder
 
         TipoDeSangre::create([
             'nombre' => 'A+',
-            'puedeDonar' => 'A+, AB+',
-            'puedeRecibir' => 'A+, A-, O+, O-',
+            'puede_donar' => 'A+, AB+',
+            'puede_recibir' => 'A+, A-, O+, O-',
         ]);
 
         TipoDeSangre::create([
             'nombre' => 'O+',
-            'puedeDonar' => 'O+, A+, B+, AB+',
-            'puedeRecibir' => 'O+, O-',
+            'puede_donar' => 'O+, A+, B+, AB+',
+            'puede_recibir' => 'O+, O-',
         ]);
 
         TipoDeSangre::create([
             'nombre' => 'B+',
-            'puedeDonar' => 'B+, AB+',
-            'puedeRecibir' => 'B+, B-, O+, O-',
+            'puede_donar' => 'B+, AB+',
+            'puede_recibir' => 'B+, B-, O+, O-',
         ]);
 
         TipoDeSangre::create([
             'nombre' => 'AB+',
-            'puedeDonar' => 'AB+',
-            'puedeRecibir' => 'Todos',
+            'puede_donar' => 'AB+',
+            'puede_recibir' => 'Todos',
         ]);
 
         TipoDeSangre::create([
             'nombre' => 'A-',
-            'puedeDonar' => 'A+, A- AB+, AB-',
-            'puedeRecibir' => 'A-, O-',
+            'puede_donar' => 'A+, A- AB+, AB-',
+            'puede_recibir' => 'A-, O-',
         ]);
 
         TipoDeSangre::create([
             'nombre' => 'O-',
-            'puedeDonar' => 'Todos',
-            'puedeRecibir' => 'O-',
+            'puede_donar' => 'Todos',
+            'puede_recibir' => 'O-',
         ]);
 
         TipoDeSangre::create([
             'nombre' => 'B-',
-            'puedeDonar' => 'B+, B-, AB+, AB-',
-            'puedeRecibir' => 'B-, O-',
+            'puede_donar' => 'B+, B-, AB+, AB-',
+            'puede_recibir' => 'B-, O-',
         ]);
 
         TipoDeSangre::create([
             'nombre' => 'AB-',
-            'puedeDonar' => 'AB+, AB-',
-            'puedeRecibir' => 'AB-, A-, B-, O-',
+            'puede_donar' => 'AB+, AB-',
+            'puede_recibir' => 'AB-, A-, B-, O-',
         ]);
 }
 }

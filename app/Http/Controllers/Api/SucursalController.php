@@ -16,12 +16,18 @@ class SucursalController extends ApiController
 
     public function all()
     {
-        return response()->json(Sucursal::get());
+        return response()->json(Sucursal::with(['linea'])->get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Sucursal::create($request->validated()));
+        $sucursal = Sucursal::create($request->only(['nombre', 'direccion']));
+
+        $sucursal->linea()->syncWithoutDetaching(
+            $request->get('linea_id')
+        );
+
+        return response()->json($sucursal);
     }
 
     public function show(Sucursal $sucursal)
@@ -31,7 +37,8 @@ class SucursalController extends ApiController
 
     public function update(PutRequest $request, Sucursal $sucursal)
     {
-        $sucursal->update($request->validated());
+        $sucursal->update($request->only(['nombre', 'direccion']));
+        $sucursal->linea()->sync($request->get('linea_id'));
         return response()->json($sucursal);
     }
 

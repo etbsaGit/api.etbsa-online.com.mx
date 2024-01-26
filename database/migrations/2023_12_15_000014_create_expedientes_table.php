@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('expedientes', function (Blueprint $table) {
             $table->id();
 
-
+            $table->string('nombre');
+            $table->morphs('archivable');
             
             $table->timestamps();
         });

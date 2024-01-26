@@ -26,8 +26,8 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'añosCumplidos'=> ['required','integer','max:35',Rule::unique('antiguedades')->ignore($this->route("Antiguedad")->id)],
-            'diasCorrespondientes'=>['required','integer','max:99'],
+            'años_cumplidos'=> ['required','integer','max:35',Rule::unique('antiguedades')->ignore($this->route("Antiguedad")->id)],
+            'dias_correspondientes'=>['required','integer','max:99'],
             'regimen' => ['required', 'in:2022,2023'],
         ];
     }

@@ -28,8 +28,8 @@ class StoreRequest extends FormRequest
         return [
             "inicio"=>['required','date'],
             "termino"=>['nullable','date'],
-            "documentoQueAvala_id"=>['required', 'integer'],
-            "estadoDelEstudio_id"=>['required', 'integer'],
+            "documento_que_avala_id"=>['required', 'integer'],
+            "estado_del_estudio_id"=>['required', 'integer'],
             "escolaridad_id"=>['required', 'integer'],
             "empleado_id"=>['required','integer'],
             "escuela_id"=>['required','integer'],

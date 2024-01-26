@@ -16,7 +16,7 @@ class RequisitoController extends ApiController
 
     public function all()
     {
-        return response()->json(Requisito::get());
+        return response()->json(Requisito::with('expediente')->get());
     }
 
     public function store(StoreRequest $request)
@@ -26,7 +26,7 @@ class RequisitoController extends ApiController
 
     public function show(Requisito $requisito)
     {
-        return response()->json($requisito);
+        return response()->json($requisito->load('expediente'));
     }
 
     public function update(PutRequest $request, Requisito $requisito)

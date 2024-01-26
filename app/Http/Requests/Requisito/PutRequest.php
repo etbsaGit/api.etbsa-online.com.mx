@@ -15,7 +15,7 @@ class PutRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -27,6 +27,7 @@ class PutRequest extends FormRequest
     {
         return [
             "nombre"=>['required','string','max:255',Rule::unique('requisitos')->ignore($this->route("requisito")->id)],
+            "descripcion"=>['required', 'string', 'max:255']
         ];
     }
 

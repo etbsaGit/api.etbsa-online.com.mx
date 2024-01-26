@@ -14,40 +14,40 @@ return new class extends Migration
         Schema::create('empleados', function(Blueprint $table){
             $table -> id();
 
+            $table->string('fotografia')->nullable();
             $table->string('nombre');
             $table->string('segundo_nombre')->nullable();
             $table->string('apellido_paterno');
             $table->string('apellido_materno');
-            $table->string('telefono');
+            $table->string('telefono')->nullable();
             $table->string('telefono_institucional')->nullable();
-            $table->date('fecha_de_nacimiento');
-            $table->string('curp');
-            $table->string('rfc');
-            $table->string('ine');
+            $table->date('fecha_de_nacimiento')->nullable();
+            $table->string('curp')->nullable();
+            $table->string('rfc')->nullable();
+            $table->string('ine')->nullable();
             $table->string('pasaporte')->nullable();
             $table->bigInteger('visa')->nullable();
             $table->string('licencia_de_manejo')->nullable();
-            $table->bigInteger('nss');
+            $table->bigInteger('nss')->nullable();
             $table->date('fecha_de_ingreso');
             $table->integer('hijos')->nullable();
             $table->string('dependientes_economicos')->nullable();
             $table->string('cedula_profesional')->nullable();
-            $table->boolean('matriz');
+            $table->boolean('matriz')->default(false);
             $table->integer('sueldo_base')->nullable();
-            $table->boolean('comision');
+            $table->boolean('comision')->default(false);
             $table->string('foto')->nullable();
-            $table->string('numero_exterior');
+            $table->string('numero_exterior')->nullable();
             $table->string('numero_interior')->nullable();
-            $table->string('calle');
-            $table->string('colonia');
-            $table->integer('codigo_postal');
-            $table->string('ciudad');
-            $table->string('estado');
+            $table->string('calle')->nullable();
+            $table->string('colonia')->nullable();
+            $table->integer('codigo_postal')->nullable();
+            $table->string('ciudad')->nullable();
+            $table->string('estado')->nullable();
             $table->string('cuenta_bancaria')->nullable();
             $table->string('constelacion_familiar')->nullable();
             $table->string('status')->nullable();
             $table->string('correo_institucional')->nullable();
-
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('puesto_id')->nullable();
             $table->unsignedBigInteger('sucursal_id')->nullable();
@@ -55,10 +55,8 @@ return new class extends Migration
             $table->unsignedBigInteger('departamento_id')->nullable();
             $table->unsignedBigInteger('estado_civil_id')->nullable();
             $table->unsignedBigInteger('tipo_de_sangre_id')->nullable();
-            $table->unsignedBigInteger('expediente_id')->nullable();
             $table->unsignedBigInteger('desvinculacion_id')->nullable();
             $table->unsignedBigInteger('escolaridad_id')->nullable();
-
             $table->foreign('escolaridad_id')->references('id')->on('escolaridades')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('puesto_id')->references('id')->on('puestos')->onDelete('set null');
@@ -67,7 +65,6 @@ return new class extends Migration
             $table->foreign('departamento_id')->references('id')->on('departamentos')->onDelete('set null');
             $table->foreign('estado_civil_id')->references('id')->on('estados_civiles')->onDelete('set null');
             $table->foreign('tipo_de_sangre_id')->references('id')->on('tipos_de_sangre')->onDelete('set null');
-            $table->foreign('expediente_id')->references('id')->on('expedientes')->onDelete('set null');
             $table->foreign('desvinculacion_id')->references('id')->on('desvinculaciones')->onDelete('set null');
 
             $table->timestamps();

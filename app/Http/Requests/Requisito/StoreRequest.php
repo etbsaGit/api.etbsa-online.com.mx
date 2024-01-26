@@ -15,7 +15,7 @@ class StoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -27,6 +27,7 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre"=>['required','string','max:255','unique:requisitos,nombre'],
+            "descripcion"=>['required', 'string', 'max:255']
         ];
     }
 

@@ -11,7 +11,7 @@ class PutRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,9 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "fecha" => ['required', 'date'],
+            "comentarios" => ['required', 'string', 'max:255'],
+            "tipo_de_desvinculacion_id"=>['required','integer'],
         ];
     }
 }

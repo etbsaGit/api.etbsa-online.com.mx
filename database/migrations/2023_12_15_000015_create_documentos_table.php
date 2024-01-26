@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('documentos', function (Blueprint $table) {
             $table->id();
 
-            $table->string('nombre');
-            $table->date('fechaDeVencimiento');
+            $table->date('fecha_de_vencimiento')->nullable();
+            $table->string('comentario')->nullable();
 
-            $table->unsignedBigInteger('requisito_id')->nullable();
-            $table->unsignedBigInteger('expediente_id')->nullable();
+            $table->unsignedBigInteger('requisito_id');
+            $table->unsignedBigInteger('expediente_id');
+            $table->unsignedBigInteger('estatus_id')->nullable();
 
-            $table->foreign('requisito_id')->references('id')->on('requisitos')->onDelete('set null');
-            $table->foreign('expediente_id')->references('id')->on('expedientes')->onDelete('set null');
+            $table->foreign('requisito_id')->references('id')->on('requisitos')->restrictOnDelete();
+            $table->foreign('expediente_id')->references('id')->on('expedientes')->restrictOnDelete();
+            $table->foreign('estatus_id')->references('id')->on('estatus')->onDelete('set null');
 
             $table->timestamps();
         });

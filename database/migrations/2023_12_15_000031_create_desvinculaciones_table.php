@@ -17,9 +17,9 @@ return new class extends Migration
             $table->date('fecha');
             $table->string('comentarios');
 
-            $table->unsignedBigInteger('tipoDeDesvinculacion_id')->nullable();
+            $table->unsignedBigInteger('tipo_de_desvinculacion_id')->nullable();
 
-            $table->foreign('tipoDeDesvinculacion_id')->references('id')->on('tipos_de_desvinculaciones')->onDelete('set null');
+            $table->foreign('tipo_de_desvinculacion_id')->references('id')->on('tipos_de_desvinculaciones')->onDelete('set null');
 
             $table->timestamps();
         });
