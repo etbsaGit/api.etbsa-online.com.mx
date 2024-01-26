@@ -27,8 +27,7 @@ class PutRequest extends FormRequest
     {
         return [
             "nombre" => ['required', 'string', 'max:255', Rule::unique('sucursales')->ignore($this->route('sucursal')->id)],
-            "direccion" => ['required', 'string', 'max:255', Rule::unique('sucursales')->ignore($this->route('sucursal')->id)],
-            "linea_id"=>['required','array']
+            "direccion" => ['nullable', 'string', 'max:255', Rule::unique('sucursales')->ignore($this->route('sucursal')->id)],
         ];
     }
     function failedValidation(Validator $validator)
