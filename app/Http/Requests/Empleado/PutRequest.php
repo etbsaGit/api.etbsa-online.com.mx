@@ -53,6 +53,7 @@ class PutRequest extends FormRequest
             "codigo_postal"=>['nullable','numeric','digits:5'],
             "ciudad" => ['nullable','string','max:255'],
             "estado" => ['nullable','string','max:255'],
+
             "cuenta_bancaria" => ['nullable','string','min:18','max:18'],
             "constelacion_familiar"=>['nullable','string','max:255'],
             "status"=>['nullable','string','max:255'],

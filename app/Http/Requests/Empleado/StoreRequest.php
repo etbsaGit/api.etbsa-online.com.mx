@@ -32,6 +32,7 @@ class StoreRequest extends FormRequest
             "fecha_de_nacimiento" => ['nullable', 'date'],
             "telefono"=>['nullable','numeric','digits:10','unique:empleados,telefono'],
             "telefono_institucional"=>['nullable','numeric','digits:10','unique:empleados,telefono_institucional'],
+
             "curp" => ['nullable', 'string', 'min:18', 'max:18', 'unique:empleados,curp'],
             "rfc" => ['nullable', 'string', 'min:13', 'max:13', 'unique:empleados,rfc'],
             "ine" => ['nullable', 'numeric', 'digits:10', 'unique:empleados,ine'],
@@ -49,6 +50,7 @@ class StoreRequest extends FormRequest
             "foto"=>['nullable'],
             "numero_exterior"=>['nullable','integer'],
             "numero_interior"=>['nullable','string'],
+
             "calle" => ['nullable','string','max:255'],
             "colonia" => ['nullable','string','max:255'],
             "codigo_postal"=>['nullable','numeric','digits:5'],

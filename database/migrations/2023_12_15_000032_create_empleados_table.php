@@ -48,7 +48,6 @@ return new class extends Migration
             $table->string('constelacion_familiar')->nullable();
             $table->string('status')->nullable();
             $table->string('correo_institucional')->nullable();
-
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('puesto_id')->nullable();
             $table->unsignedBigInteger('sucursal_id')->nullable();
@@ -58,7 +57,6 @@ return new class extends Migration
             $table->unsignedBigInteger('tipo_de_sangre_id')->nullable();
             $table->unsignedBigInteger('desvinculacion_id')->nullable();
             $table->unsignedBigInteger('escolaridad_id')->nullable();
-
             $table->foreign('escolaridad_id')->references('id')->on('escolaridades')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('puesto_id')->references('id')->on('puestos')->onDelete('set null');
