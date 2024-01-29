@@ -107,23 +107,37 @@ class EmpleadoController extends ApiController
         return response()->json("ok");
     }
 
-    public function uploadPicture(PicRequest $request, Empleado $empleado){
+    public function uploadPicture(PicRequest $request, Empleado $empleado)
+    {
         if ($request->hasFile('pic')) {
             $pic = $request->file('pic');
 
             if ($empleado->fotografia) {
                 Storage::disk('s3')->delete($empleado->fotografia);
             }
-            
+
             $path = $this->uploadOne($pic, $empleado->default_path_folder, 's3');
-    
+
             $updateData = ['fotografia' => $path];
-    
+
             $empleado->update($updateData);
-    
+
             return response()->json(['message' => 'Fotografía actualizada con éxito']);
         } else {
             return response()->json(['error' => 'No se ha enviado una foto en la solicitud.'], 400);
+        }
+    }
+
+    public function findEmpleadoByRFCandINE($rfc, $ine)
+    {
+        $empleado = Empleado::where('rfc', $rfc)
+            ->where('ine', $ine)
+            ->first();
+
+        if ($empleado) {
+            return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
+        } else {
+            return response()->json(['error' => 'No se encontro un empleado con esos datos.'], 400);
         }
     }
 }
