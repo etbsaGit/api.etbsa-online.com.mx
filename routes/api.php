@@ -31,9 +31,10 @@ use App\Http\Controllers\Api\EstadoDeEstudioController;
 use App\Http\Controllers\Api\TipoDeAsignacionController;
 use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
+use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
-use App\Models\Expediente;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +83,9 @@ Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
 Route::get('estatus/all', [EstatusController::class, 'all']);
 Route::get('user/all', [UserController::class, 'all']);
 
+Route::post('roleattach/{role}/{permission}', [RoleController::class,'attachPermission']);
+Route::delete('roledetach/{role}/{permission}', [RoleController::class,'detachPermission']);
+
 Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
 
 Route::resource('alergia', AlergiaController::class)->except("create", "edit");
@@ -121,6 +125,9 @@ Route::resource('tipoDeDesvinculacion', TipoDeDesvinculacionController::class)->
 Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
 Route::resource('estatus', EstatusController::class)->except("create", "edit");
 Route::resource('user', UserController::class)->except("create", "edit");
+
+Route::apiResource('role', RoleController::class);
+Route::apiResource('permission', PermissionController::class);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
 

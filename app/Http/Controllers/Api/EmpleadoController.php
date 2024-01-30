@@ -41,6 +41,15 @@ class EmpleadoController extends ApiController
                     $expediente = $empleado->archivable()->create(['nombre' => $empleado->rfc . ' expediente']);
                     // Adjunta requisitos a través de la relación
                     $expediente->requisito()->syncWithPivotValues($ids, ['comentaio' => 'com 1']);
+                    //se le crea un usuario
+                    $correo = $empleado->correo_institucional;
+                    if ($correo) {
+                        $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'), 'name' => $empleado->rfc]);
+                        if (!$empleado->user) {
+                            $empleado->user()->associate($usuario);
+                            $empleado->save();
+                        }
+                    }
                 }
             );
         });
@@ -94,16 +103,16 @@ class EmpleadoController extends ApiController
             'desvinculacion_id',
             'jefe_directo_id',
         ]));
-    
+
         $correo = $request->correo_institucional;
         if ($correo) {
-            $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'),'name'=>$empleado->rfc]);
+            $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'), 'name' => $empleado->rfc]);
             if (!$empleado->user) {
                 $empleado->user()->associate($usuario);
                 $empleado->save();
             }
         }
-    
+
         return response()->json($empleado);
     }
 

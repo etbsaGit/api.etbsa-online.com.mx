@@ -34,8 +34,8 @@ class StoreRequest extends FormRequest
             "telefono_institucional"=>['nullable','numeric','digits:10','unique:empleados,telefono_institucional'],
 
             "curp" => ['nullable', 'string', 'min:18', 'max:18', 'unique:empleados,curp'],
-            "rfc" => ['nullable', 'string', 'min:13', 'max:13', 'unique:empleados,rfc'],
-            "ine" => ['nullable', 'numeric', 'digits:10', 'unique:empleados,ine'],
+            "rfc" => ['required', 'string', 'min:13', 'max:13', 'unique:empleados,rfc'],
+            "ine" => ['required', 'numeric', 'digits:10', 'unique:empleados,ine'],
             "pasaporte" => ['nullable', 'string', 'mas:255', 'unique:empleados,pasaporte'],
             "visa" => ['nullable', 'numeric', 'digits:16', 'unique:empleados,visa'],
             "licencia_de_manejo" => ['nullable', 'string', 'max:255', 'unique:empleados,licencia_de_manejo'],
