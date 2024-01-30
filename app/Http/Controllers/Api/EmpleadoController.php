@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
 use App\Models\Empleado;
 use App\Models\Plantilla;
 use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Empleado\PicRequest;
@@ -71,7 +73,6 @@ class EmpleadoController extends ApiController
             'matriz',
             'sueldo_base',
             'comision',
-            'foto',
             'numero_exterior',
             'numero_interior',
             'calle',
@@ -83,9 +84,7 @@ class EmpleadoController extends ApiController
             'constelacion_familiar',
             'status',
             'correo_institucional',
-
             'escolaridad_id',
-            'user_id',
             'puesto_id',
             'sucursal_id',
             'linea_id',
@@ -95,9 +94,16 @@ class EmpleadoController extends ApiController
             'desvinculacion_id',
             'jefe_directo_id',
         ]));
-        $empleado->constelacion()->sync($request->get('constelacion_id'));
-        $empleado->alergias()->sync($request->get('alergias_id'));
-        $empleado->enfermedad()->sync($request->get('enfermedad_id'));
+    
+        $correo = $request->correo_institucional;
+        if ($correo) {
+            $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'),'name'=>$empleado->rfc]);
+            if (!$empleado->user) {
+                $empleado->user()->associate($usuario);
+                $empleado->save();
+            }
+        }
+    
         return response()->json($empleado);
     }
 
