@@ -83,9 +83,6 @@ Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
 Route::get('estatus/all', [EstatusController::class, 'all']);
 Route::get('user/all', [UserController::class, 'all']);
 
-Route::post('roleattach/{role}/{permission}', [RoleController::class,'attachPermission']);
-Route::delete('roledetach/{role}/{permission}', [RoleController::class,'detachPermission']);
-
 Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
 
 Route::resource('alergia', AlergiaController::class)->except("create", "edit");
@@ -99,6 +96,9 @@ Route::resource('documento', DocumentoController::class)->except("create", "edit
 
 Route::post('empleado/uploadPicture/{empleado}',[EmpleadoController::class, 'uploadPicture']);
 Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);
+
+Route::post('roles/permissions/{role}', [RoleController::class,'attachPermissionsToRole']);
+Route::delete('roles/permissions/{role}', [RoleController::class,'detachPermissionsFromRole']);
 
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
 

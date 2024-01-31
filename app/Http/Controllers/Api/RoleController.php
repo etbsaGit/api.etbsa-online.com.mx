@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use App\Http\Requests\Role\PutRequest;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Role\StoreRequest;
+use App\Http\Requests\Role\AttachRequest;
+use Illuminate\Contracts\Mail\Attachable;
 use Spatie\Permission\Models\Permission;
+
 
 class RoleController extends ApiController
 {
@@ -28,26 +32,36 @@ class RoleController extends ApiController
 
     public function update(PutRequest $request, Role $role)
     {
-       $role->update($request->validated());
-       return response()->json($role);
+        $role->update($request->validated());
+        return response()->json($role);
     }
 
-    public function destroy(Role $role) {
+    public function destroy(Role $role)
+    {
         $role->delete();
         return response()->json('ok');
     }
 
-    public function attachPermission(Role $role, Permission $permission)
+    public function attachPermissionsToRole(Role $role, AttachRequest $request)
     {
-        $role->givePermissionTo($permission);
+        $permissions = $request->permissions;
 
-        return response()->json(['message' => 'Permiso asignado al rol correctamente'], 200);
+        $role->syncPermissions($permissions);
+
+        return response()->json(['message' => 'Permisos asignados al rol correctamente'], 200);
     }
 
-    public function detachPermission(Role $role, Permission $permission)
+    public function detachPermissionsFromRole(Role $role, AttachRequest $request)
     {
-        $role->revokePermissionTo($permission);
 
-        return response()->json(['message' => 'Permiso removido del rol correctamente'], 200);
+        $permissions = ($request->permissions);
+
+        if (!empty($permissions)) {
+            foreach ($permissions as $permission) {
+                $role->revokePermissionTo($permission);
+            }
+        }
+
+        return response()->json(['message' => 'Permisos desasociados del rol correctamente'], 200);
     }
 }
