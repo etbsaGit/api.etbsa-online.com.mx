@@ -8,9 +8,6 @@ use App\Http\Requests\Role\PutRequest;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Role\StoreRequest;
 use App\Http\Requests\Role\AttachRequest;
-use Illuminate\Contracts\Mail\Attachable;
-use Spatie\Permission\Models\Permission;
-
 
 class RoleController extends ApiController
 {
@@ -46,9 +43,12 @@ class RoleController extends ApiController
     {
         $permissions = $request->permissions;
 
-        $role->syncPermissions($permissions);
-
-        return response()->json(['message' => 'Permisos asignados al rol correctamente'], 200);
+        if (!empty($permissions)) {
+            $role->syncPermissions($permissions);
+            return response()->json(['message' => 'Permisos asignados al rol correctamente'], 200);
+        } else {
+            return response()->json(['message' => 'No se esta asignando ningun permiso'], 400);
+        }
     }
 
     public function detachPermissionsFromRole(Role $role, AttachRequest $request)
@@ -60,8 +60,10 @@ class RoleController extends ApiController
             foreach ($permissions as $permission) {
                 $role->revokePermissionTo($permission);
             }
+        } else {
+            return response()->json(['message' => 'No hay permisos que borrar'], 200);
         }
 
-        return response()->json(['message' => 'Permisos desasociados del rol correctamente'], 200);
+        return response()->json(['message' => 'Permisos desasociados del rol correctamente'], 400);
     }
 }

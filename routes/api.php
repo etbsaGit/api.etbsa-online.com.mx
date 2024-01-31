@@ -99,6 +99,10 @@ Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'up
 
 Route::post('roles/permissions/{role}', [RoleController::class,'attachPermissionsToRole']);
 Route::delete('roles/permissions/{role}', [RoleController::class,'detachPermissionsFromRole']);
+Route::post('user/role/{user}', [UserController::class,'assignRoleToUser']);
+Route::delete('user/role/{user}', [UserController::class,'revokeRoleToUser']);
+Route::get('user/permissions/{user}', [UserController::class,'getPermissionsForAUser']);
+Route::get('user/roles/{user}', [UserController::class,'getRolesForAUser']);
 
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
 

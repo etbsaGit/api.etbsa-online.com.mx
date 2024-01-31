@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\User\AttachRequest;
 use App\Http\Requests\User\StoreRequest;
 use App\Http\Requests\User\PutRequest;
 
@@ -25,7 +26,7 @@ class UserController extends ApiController
             //$user = User::find(1)->load('Empleado')
 
             // return response()->json($token);
-            $user = User::where('email',$request->email)->first()->load('Empleado');
+            $user = User::where('email', $request->email)->first()->load('Empleado');
             return response()->json([
                 'status' => true,
                 'message' => 'Usuario logueado con exito',
@@ -42,7 +43,7 @@ class UserController extends ApiController
 
         return response()->json('Logout exitoso');
     }
-// -----------------------------------------------------
+    // -----------------------------------------------------
     public function index()
     {
         return response()->json(User::paginate(5));
@@ -75,4 +76,41 @@ class UserController extends ApiController
         return response()->json("ok");
     }
 
+    //-------------------------------------------------------------
+
+    public function assignRoleToUser(User $user, AttachRequest $request)
+    {
+        $roles = $request->roles;
+
+        if (!empty($roles)) {
+            $user->syncRoles($roles);
+            return response()->json(['message' => 'Rol asignado al usuario correctamente'], 200);
+        } else {
+            return response()->json(['message' => 'No hay roles que asignar'], 400);
+        }
+    }
+
+    public function revokeRoleToUser(User $user, AttachRequest $request)
+    {
+        $roles = $request->roles;
+
+        if (!empty($roles)) {
+            foreach ($roles as $role){
+                $user->removeRole($role);
+            }
+            return response()->json(['message' => 'Roles quitados al usuario correctamente'], 200);
+        } else {
+            return response()->json(['message' => 'No hay roles que quitar'], 400);
+        }
+    }
+
+    public function getPermissionsForAUser(User $user)  {
+        $permissions = $user->getAllPermissions();
+        return response()->json($permissions);
+    }
+
+    public function getRolesForAUser(User $user)  {
+        $RoleNames = $user->getRoleNames();
+        return response()->json($RoleNames);
+    }
 }
