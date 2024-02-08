@@ -102,6 +102,9 @@ class EmpleadoController extends ApiController
             'tipo_de_sangre_id',
             'desvinculacion_id',
             'jefe_directo_id',
+
+            'descripcion_puesto',
+            'carrera',
         ]));
 
         $correo = $request->correo_institucional;

@@ -49,7 +49,6 @@ class Empleado extends Model
         'matriz',
         'sueldo_base',
         'comision',
-        'foto',
         'numero_exterior',
         'numero_interior',
         'calle',
@@ -72,6 +71,9 @@ class Empleado extends Model
         'tipo_de_sangre_id',
         'desvinculacion_id',
         'jefe_directo_id',
+
+        'descripcion_puesto',
+        'carrera',
     ];
 
     protected $appends = ['picture'];

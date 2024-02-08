@@ -45,7 +45,6 @@ class PutRequest extends FormRequest
             "matriz" => ['boolean'],
             "sueldo_base" => ['nullable', 'integer'],
             "comision" => ['boolean'],
-            "foto"=>['nullable'],
             "numero_exterior"=>['nullable','integer'],
             "numero_interior"=>['nullable','string'],
             "calle" => ['nullable','string','max:255'],
@@ -73,7 +72,10 @@ class PutRequest extends FormRequest
 
             'constelacion_id'=>['nullable','array'],
             'alergias_id'=>['nullable','array'],
-            'enfermedad_id'=>['nullable','array']
+            'enfermedad_id'=>['nullable','array'],
+
+            "descripcion_puesto" => ['nullable','string','max:255'],
+            "carrera" => ['nullable','string','max:255'],
         ];
     }
 
