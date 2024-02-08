@@ -71,7 +71,6 @@ class EmpleadoController extends ApiController
             'matriz',
             'sueldo_base',
             'comision',
-            'foto',
             'numero_exterior',
             'numero_interior',
             'calle',
@@ -94,6 +93,9 @@ class EmpleadoController extends ApiController
             'tipo_de_sangre_id',
             'desvinculacion_id',
             'jefe_directo_id',
+
+            'descripcion_puesto',
+            'carrera',
         ]));
         $empleado->constelacion()->sync($request->get('constelacion_id'));
         $empleado->alergias()->sync($request->get('alergias_id'));

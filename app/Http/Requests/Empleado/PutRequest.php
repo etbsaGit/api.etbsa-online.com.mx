@@ -34,8 +34,8 @@ class PutRequest extends FormRequest
             "telefono" => ['nullable', 'numeric', 'digits:10', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "telefono_institucional"=>['nullable','numeric','digits:10',Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "curp" => ['nullable', 'string', 'min:18', 'max:18', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
-            "rfc" => ['nullable', 'string', 'min:13', 'max:13', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
-            "ine" => ['nullable', 'numeric', 'digits:10', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
+            "rfc" => ['required', 'string', 'min:13', 'max:13', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
+            "ine" => ['required', 'numeric', 'digits:10', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "licencia_de_manejo" => ['nullable', 'string', 'max:255', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "nss" => ['nullable', 'numeric', 'digits:11', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "fecha_de_ingreso" => ['required', 'date'],
@@ -45,7 +45,6 @@ class PutRequest extends FormRequest
             "matriz" => ['boolean'],
             "sueldo_base" => ['nullable', 'integer'],
             "comision" => ['boolean'],
-            "foto"=>['nullable'],
             "numero_exterior"=>['nullable','integer'],
             "numero_interior"=>['nullable','string'],
             "calle" => ['nullable','string','max:255'],
@@ -73,7 +72,10 @@ class PutRequest extends FormRequest
 
             'constelacion_id'=>['nullable','array'],
             'alergias_id'=>['nullable','array'],
-            'enfermedad_id'=>['nullable','array']
+            'enfermedad_id'=>['nullable','array'],
+
+            "descripcion_puesto" => ['nullable','string','max:255'],
+            "carrera" => ['nullable','string','max:255'],
         ];
     }
 

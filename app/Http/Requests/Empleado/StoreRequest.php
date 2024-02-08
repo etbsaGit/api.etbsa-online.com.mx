@@ -34,8 +34,8 @@ class StoreRequest extends FormRequest
             "telefono_institucional"=>['nullable','numeric','digits:10','unique:empleados,telefono_institucional'],
 
             "curp" => ['nullable', 'string', 'min:18', 'max:18', 'unique:empleados,curp'],
-            "rfc" => ['nullable', 'string', 'min:13', 'max:13', 'unique:empleados,rfc'],
-            "ine" => ['nullable', 'numeric', 'digits:10', 'unique:empleados,ine'],
+            "rfc" => ['required', 'string', 'min:13', 'max:13', 'unique:empleados,rfc'],
+            "ine" => ['required', 'numeric', 'digits:10', 'unique:empleados,ine'],
             "pasaporte" => ['nullable', 'string', 'mas:255', 'unique:empleados,pasaporte'],
             "visa" => ['nullable', 'numeric', 'digits:16', 'unique:empleados,visa'],
             "licencia_de_manejo" => ['nullable', 'string', 'max:255', 'unique:empleados,licencia_de_manejo'],
@@ -47,7 +47,6 @@ class StoreRequest extends FormRequest
             "matriz" => ['boolean'],
             "sueldo_base"=>['nullable','integer'],
             "comision"=>['boolean'],
-            "foto"=>['nullable'],
             "numero_exterior"=>['nullable','integer'],
             "numero_interior"=>['nullable','string'],
 
@@ -75,7 +74,10 @@ class StoreRequest extends FormRequest
 
             'constelacion_id'=>['nullable','array'],
             'alergias_id'=>['nullable','array'],
-            'enfermedad_id'=>['nullable','array']
+            'enfermedad_id'=>['nullable','array'],
+
+            "descripcion_puesto" => ['nullable','string','max:255'],
+            "carrera" => ['nullable','string','max:255'],
         ];
     }
 
