@@ -97,8 +97,6 @@ Route::resource('documento', DocumentoController::class)->except("create", "edit
 Route::post('empleado/uploadPicture/{empleado}',[EmpleadoController::class, 'uploadPicture']);
 Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);
 
-Route::post('roles/permissions/{role}', [RoleController::class,'attachPermissionsToRole']);
-Route::delete('roles/permissions/{role}', [RoleController::class,'detachPermissionsFromRole']);
 Route::post('user/role/{user}', [UserController::class,'assignRoleToUser']);
 Route::delete('user/role/{user}', [UserController::class,'revokeRoleToUser']);
 Route::get('user/permissions/{user}', [UserController::class,'getPermissionsForAUser']);

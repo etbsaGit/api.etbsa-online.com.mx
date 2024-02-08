@@ -35,7 +35,7 @@ class PutRequest extends FormRequest
             "telefono_institucional"=>['nullable','numeric','digits:10',Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "curp" => ['nullable', 'string', 'min:18', 'max:18', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "rfc" => ['required', 'string', 'min:13', 'max:13', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
-            "ine" => ['rfc', 'numeric', 'digits:10', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
+            "ine" => ['required', 'numeric', 'digits:10', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "licencia_de_manejo" => ['nullable', 'string', 'max:255', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "nss" => ['nullable', 'numeric', 'digits:11', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "fecha_de_ingreso" => ['required', 'date'],

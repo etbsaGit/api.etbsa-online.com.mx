@@ -26,7 +26,7 @@ class UserController extends ApiController
             //$user = User::find(1)->load('Empleado')
 
             // return response()->json($token);
-            $user = User::where('email', $request->email)->first()->load('Empleado');
+            $user = User::where('email', $request->email)->first()->load('Empleado','Roles');
             return response()->json([
                 'status' => true,
                 'message' => 'Usuario logueado con exito',
@@ -51,7 +51,7 @@ class UserController extends ApiController
 
     public function all()
     {
-        return response()->json(User::get());
+        return response()->json(User::with('roles','roles.permissions','empleado')->get());
     }
 
     public function store(StoreRequest $request)
@@ -61,13 +61,22 @@ class UserController extends ApiController
 
     public function show(User $user)
     {
-        return response()->json($user);
+        return response()->json($user->load('roles','roles.permissions','empleado'));
     }
 
     public function update(PutRequest $request, User $user)
     {
-        $user->update($request->validated());
+
+        if ($request->password) {
+            $user->update($request->validated());
+        } else {
+            $user->update($request->only(['name','email']));
+        }
+
         return response()->json($user);
+
+        // password_verify($request->password, $user->password // con esto comparas las contraseñas bruta contra la hash
+
     }
 
     public function destroy(User $user)
