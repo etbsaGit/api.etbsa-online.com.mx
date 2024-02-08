@@ -96,6 +96,8 @@ Route::resource('documento', DocumentoController::class)->except("create", "edit
 Route::post('empleado/uploadPicture/{empleado}',[EmpleadoController::class, 'uploadPicture']);
 Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);
 
+Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
+
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
 Route::resource('empleado', EmpleadoController::class)->except("create", "edit");
 Route::resource('enfermedad', EnfermedadController::class)->except("create", "edit");

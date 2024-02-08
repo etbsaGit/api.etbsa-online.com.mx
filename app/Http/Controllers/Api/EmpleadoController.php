@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
 use App\Models\Empleado;
 use App\Models\Plantilla;
 use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Empleado\PicRequest;
@@ -82,9 +84,7 @@ class EmpleadoController extends ApiController
             'constelacion_familiar',
             'status',
             'correo_institucional',
-
             'escolaridad_id',
-            'user_id',
             'puesto_id',
             'sucursal_id',
             'linea_id',
@@ -97,9 +97,16 @@ class EmpleadoController extends ApiController
             'descripcion_puesto',
             'carrera',
         ]));
-        $empleado->constelacion()->sync($request->get('constelacion_id'));
-        $empleado->alergias()->sync($request->get('alergias_id'));
-        $empleado->enfermedad()->sync($request->get('enfermedad_id'));
+    
+        $correo = $request->correo_institucional;
+        if ($correo) {
+            $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'),'name'=>$empleado->rfc]);
+            if (!$empleado->user) {
+                $empleado->user()->associate($usuario);
+                $empleado->save();
+            }
+        }
+    
         return response()->json($empleado);
     }
 
@@ -109,23 +116,37 @@ class EmpleadoController extends ApiController
         return response()->json("ok");
     }
 
-    public function uploadPicture(PicRequest $request, Empleado $empleado){
+    public function uploadPicture(PicRequest $request, Empleado $empleado)
+    {
         if ($request->hasFile('pic')) {
             $pic = $request->file('pic');
 
             if ($empleado->fotografia) {
                 Storage::disk('s3')->delete($empleado->fotografia);
             }
-            
+
             $path = $this->uploadOne($pic, $empleado->default_path_folder, 's3');
-    
+
             $updateData = ['fotografia' => $path];
-    
+
             $empleado->update($updateData);
-    
+
             return response()->json(['message' => 'Fotografía actualizada con éxito']);
         } else {
             return response()->json(['error' => 'No se ha enviado una foto en la solicitud.'], 400);
+        }
+    }
+
+    public function findEmpleadoByRFCandINE($rfc, $ine)
+    {
+        $empleado = Empleado::where('rfc', $rfc)
+            ->where('ine', $ine)
+            ->first();
+
+        if ($empleado) {
+            return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
+        } else {
+            return response()->json(['error' => 'No se encontro un empleado con esos datos.'], 400);
         }
     }
 }
