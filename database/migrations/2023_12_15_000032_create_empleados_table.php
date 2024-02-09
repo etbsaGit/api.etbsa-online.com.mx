@@ -36,7 +36,6 @@ return new class extends Migration
             $table->boolean('matriz')->default(false);
             $table->integer('sueldo_base')->nullable();
             $table->boolean('comision')->default(false);
-            $table->string('foto')->nullable();
             $table->string('numero_exterior')->nullable();
             $table->string('numero_interior')->nullable();
             $table->string('calle')->nullable();

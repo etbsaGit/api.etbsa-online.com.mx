@@ -48,6 +48,7 @@ class EmpleadoController extends ApiController
                         if (!$empleado->user) {
                             $empleado->user()->associate($usuario);
                             $empleado->save();
+                            $empleado->user->syncRoles('Empleado');
                         }
                     }
                 }
@@ -109,10 +110,11 @@ class EmpleadoController extends ApiController
 
         $correo = $request->correo_institucional;
         if ($correo) {
-            $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'), 'name' => $empleado->rfc]);
+            $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make($empleado->ine), 'name' => $empleado->rfc]);
             if (!$empleado->user) {
                 $empleado->user()->associate($usuario);
                 $empleado->save();
+                $empleado->user->syncRoles('Empleado');
             }
         }
 
