@@ -28,7 +28,9 @@ class StoreRequest extends FormRequest
         return [
             "name"=>['required','string','max:255','unique:users,name'],
             "email"=>['required','email','unique:users,email'],
-            "password"=>['required','string','max:255']
+            "password"=>['required','string','max:255'],
+            'roles' => ['nullable','array'],
+            'roles.*' => ['nullable','string','exists:roles,name'],
         ];
     }
     function failedValidation(Validator $validator)

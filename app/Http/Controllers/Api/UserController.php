@@ -56,7 +56,13 @@ class UserController extends ApiController
 
     public function store(StoreRequest $request)
     {
-        return response()->json(User::create($request->validated()));
+        $user = User::create($request->only(['name','email','password']));
+        $roles = $request->roles;
+
+        if (!empty($roles)) {
+            $user->syncRoles($roles);
+        }
+        return response()->json($user->load('roles'));
     }
 
     public function show(User $user)
@@ -112,14 +118,14 @@ class UserController extends ApiController
             return response()->json(['message' => 'No hay roles que quitar'], 400);
         }
     }
+    
+    public function getRolesForAUser(User $user)  {
+        $RoleNames = $user->getRoleNames();
+        return response()->json($RoleNames);
+    }
 
     public function getPermissionsForAUser(User $user)  {
         $permissions = $user->getAllPermissions();
         return response()->json($permissions);
-    }
-
-    public function getRolesForAUser(User $user)  {
-        $RoleNames = $user->getRoleNames();
-        return response()->json($RoleNames);
     }
 }
