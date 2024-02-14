@@ -101,7 +101,9 @@ Route::post('user/role/{user}', [UserController::class,'assignRoleToUser']);
 Route::delete('user/role/{user}', [UserController::class,'revokeRoleToUser']);
 Route::get('user/roles/{user}', [UserController::class,'getRolesForAUser']);
 
-Route::get('user/permissions/{user}', [UserController::class,'getPermissionsForAUser']);
+Route::post('user/permission/{user}', [UserController::class,'assignPermissionToUser']);
+Route::delete('user/permission/{user}', [UserController::class,'revokePermissionToUser']);
+Route::get('user/permission/{user}', [UserController::class,'getPermissionsForAUser']);
 
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
 

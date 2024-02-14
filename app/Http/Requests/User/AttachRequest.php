@@ -22,8 +22,10 @@ class AttachRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'roles' => ['required','array'], // Se espera un array de permisos
-            'roles.*' => ['string','exists:roles,name'], // Cada permiso debe ser un entero y existir en la tabla permissions
+            'roles' => ['nullable','array'],
+            'roles.*' => ['nullable','string','exists:roles,name'],
+            'permissions' => ['nullable','array'],
+            'permissions.*' => ['nullable','string','exists:permissions,name'], 
         ];
     }
 }

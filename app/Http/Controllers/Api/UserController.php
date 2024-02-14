@@ -51,7 +51,7 @@ class UserController extends ApiController
 
     public function all()
     {
-        return response()->json(User::with('roles','roles.permissions','empleado')->get());
+        return response()->json(User::with('roles','roles.permissions','empleado','permissions')->get());
     }
 
     public function store(StoreRequest $request)
@@ -67,7 +67,7 @@ class UserController extends ApiController
 
     public function show(User $user)
     {
-        return response()->json($user->load('roles','roles.permissions','empleado'));
+        return response()->json($user->load('roles','roles.permissions','empleado','permissions'));
     }
 
     public function update(PutRequest $request, User $user)
@@ -122,6 +122,33 @@ class UserController extends ApiController
     public function getRolesForAUser(User $user)  {
         $RoleNames = $user->getRoleNames();
         return response()->json($RoleNames);
+    }
+
+    public function assignPermissionToUser(User $user, AttachRequest $request)
+    {
+        $permissions = $request->permissions;
+
+
+        if (!empty($permissions)) {
+            $user->syncPermissions($permissions);
+            return response()->json(['message' => 'Permiso asignado al usuario correctamente'], 200);
+        } else {
+            return response()->json(['message' => 'No hay permisos que asignar'], 400);
+        }
+    }
+
+    public function revokePermissionToUser(User $user, AttachRequest $request)
+    {
+        $permissions = $request->permissions;
+
+        if (!empty($permissions)) {
+            foreach ($permissions as $permission){
+                $user->revokePermissionTo($permission);
+            }
+            return response()->json(['message' => 'Permisos quitados al usuario correctamente'], 200);
+        } else {
+            return response()->json(['message' => 'No hay permisos que quitar'], 400);
+        }
     }
 
     public function getPermissionsForAUser(User $user)  {
