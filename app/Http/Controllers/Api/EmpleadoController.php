@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use App\Models\Empleado;
 use App\Models\Plantilla;
+use Illuminate\Http\Request;
 use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -159,5 +160,21 @@ class EmpleadoController extends ApiController
         } else {
             return response()->json(['error' => 'No se encontro un empleado con esos datos.'], 400);
         }
+    }
+
+    public function filter(Request $request) {
+        $filters = $request->all();
+
+        $filteredEmployees = Empleado::filter($filters)->with('sucursal','linea','departamento','puesto','jefe_directo')->get();
+        
+        return response()->json($filteredEmployees);
+    }
+
+    public function filtertwo(Request $request) {
+        $filters = $request->all();
+
+        $filteredEmployees = Empleado::filtertwo($filters)->get();
+        
+        return response()->json($filteredEmployees);
     }
 }

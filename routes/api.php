@@ -105,6 +105,9 @@ Route::post('user/permission/{user}', [UserController::class,'assignPermissionTo
 Route::delete('user/permission/{user}', [UserController::class,'revokePermissionToUser']);
 Route::get('user/permission/{user}', [UserController::class,'getPermissionsForAUser']);
 
+Route::post('empleado/filter',[EmpleadoController::class,'filter']);
+Route::post('empleado/filtertwo',[EmpleadoController::class,'filtertwo']);
+
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
 
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
