@@ -49,4 +49,18 @@ class User extends Authenticatable
     public function empleado(){
         return $this->hasOne(Empleado::class,'user_id');
     }
+
+    public function survey(){
+        return $this->hasMany(Survey::class,'evaluator_id');
+    }
+
+    public function answer(){
+        return $this->hasMany(SurveyAnswer::class,'evaluee_id');
+    }
+
+    public function evaluee()
+    {
+        return $this->belongsToMany(Survey::class, 'p_survey_evaluee', 'survey_id', 'evaluee_id')->withTimestamps();
+    }
+    
 }
