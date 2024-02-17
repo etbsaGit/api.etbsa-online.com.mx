@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\LineaController;
 use App\Http\Controllers\Api\PuestoController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Api\AntiguedadController;
 use App\Http\Controllers\Api\AsignacionController;
 use App\Http\Controllers\Api\EnfermedadController;
 use App\Http\Controllers\Api\ExpedienteController;
+use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\MedicamentoController;
@@ -28,12 +30,11 @@ use App\Http\Controllers\Api\DepartamentoController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\DesvinculacionController;
 use App\Http\Controllers\Api\EstadoDeEstudioController;
+use App\Http\Controllers\Api\encuestas\SurveyController;
 use App\Http\Controllers\Api\TipoDeAsignacionController;
 use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
-use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
-use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
 
 /*
@@ -136,6 +137,7 @@ Route::resource('user', UserController::class)->except("create", "edit");
 
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
+Route::apiResource('survey', SurveyController::class);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
 
