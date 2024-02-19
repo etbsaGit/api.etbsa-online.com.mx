@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Survey extends Model
 {
@@ -24,6 +26,22 @@ class Survey extends Model
         'description',
         'expire_date'
     ];
+
+    protected $appends = ['imagen'];
+
+    public function imagen(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->image ? Storage::disk('s3')->url($this->image) : null
+        );
+    }
+
+    protected function defaultPathFolder(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "surveys/id_" . $this->id . "/foto_de_encuesta",
+        );
+    }
 
     public function evaluator()
     {

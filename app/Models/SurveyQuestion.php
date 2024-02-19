@@ -4,19 +4,37 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class SurveyQuestion extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'id',
         'type',
+        'image',
         'question',
         'description',
         'data',
         'survey_id'
     ];
+
+    protected $appends = ['imagen'];
+
+    public function imagen(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->image ? Storage::disk('s3')->url($this->image) : null
+        );
+    }
+
+    protected function defaultPathFolder(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "questions/id_" . $this->id . "/foto_de_pregunta",
+        );
+    }
 
     public function survey()
     {
