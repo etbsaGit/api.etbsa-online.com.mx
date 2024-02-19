@@ -45,7 +45,7 @@ class PutRequest extends FormRequest
             "matriz" => ['boolean'],
             "sueldo_base" => ['nullable', 'integer'],
             "comision" => ['boolean'],
-            "numero_exterior"=>['nullable','integer'],
+            "numero_exterior"=>['nullable','string'],
             "numero_interior"=>['nullable','string'],
             "calle" => ['nullable','string','max:255'],
             "colonia" => ['nullable','string','max:255'],
