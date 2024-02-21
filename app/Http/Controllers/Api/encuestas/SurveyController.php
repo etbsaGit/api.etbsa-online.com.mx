@@ -13,9 +13,10 @@ use App\Http\Controllers\Controller;
 use App\Models\SurveyQuestionAnswer;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use App\Http\Requests\UpdateSurveyRequest;
 use App\Http\Requests\StoreSurveyAnswerRequest;
 use App\Http\Requests\Survey\SurveyStoreRequest;
+use App\Http\Requests\Survey\UpdateSurveyRequest;
+
 
 class SurveyController extends Controller
 {
@@ -78,11 +79,11 @@ class SurveyController extends Controller
             $survey->update($updateData);
         }
 
-         // Update survey in the database
-         $survey->update($data);
+        // Update survey in the database
+        $survey->update($data);
 
-         // Get ids as plain array of existing questions
-        $existingIds = $survey->questions()->pluck('id')->toArray();
+        // Get ids as plain array of existing questions
+        $existingIds = $survey->question()->pluck('id')->toArray();
         // Get ids as plain array of new questions
         $newIds = Arr::pluck($data['questions'], 'id');
         // Find questions to delete
@@ -103,13 +104,15 @@ class SurveyController extends Controller
 
         // Update existing questions
         $questionMap = collect($data['questions'])->keyBy('id');
-        foreach ($survey->questions as $question) {
+        $questions = $survey->question;
+        //return response()->json($questions);
+        foreach ($questions as $question) {
             if (isset($questionMap[$question->id])) {
                 $this->updateQuestion($question, $questionMap[$question->id]);
             }
         }
 
-        return response()->json($survey);
+        return response()->json($survey->load('question'));
     }
 
     /**

@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Survey;
 
-use App\Models\Survey;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateSurveyRequest extends FormRequest
@@ -14,10 +13,10 @@ class UpdateSurveyRequest extends FormRequest
      */
     public function authorize()
     {
-        $survey = $this->route('survey');
-        if ($this->user()->id !== $survey->user_id) {
-            return false;
-        }
+        // $survey = $this->route('survey');
+        // if ($this->user()->id !== $survey->user_id) {
+        //     return false;
+        // }
         return true;
     }
 
