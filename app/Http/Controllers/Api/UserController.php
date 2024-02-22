@@ -51,7 +51,7 @@ class UserController extends ApiController
 
     public function all()
     {
-        return response()->json(User::with('roles','roles.permissions','empleado','permissions')->get());
+        return response()->json(User::with('roles','roles.permissions','empleado','permissions','evaluee')->get());
     }
 
     public function store(StoreRequest $request)
@@ -67,7 +67,7 @@ class UserController extends ApiController
 
     public function show(User $user)
     {
-        return response()->json($user->load('roles','roles.permissions','empleado','permissions'));
+        return response()->json($user->load('roles','roles.permissions','empleado','permissions','evaluee'));
     }
 
     public function update(PutRequest $request, User $user)
@@ -118,7 +118,7 @@ class UserController extends ApiController
             return response()->json(['message' => 'No hay roles que quitar'], 400);
         }
     }
-    
+
     public function getRolesForAUser(User $user)  {
         $RoleNames = $user->getRoleNames();
         return response()->json($RoleNames);

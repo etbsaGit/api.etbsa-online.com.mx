@@ -60,7 +60,7 @@ class User extends Authenticatable
 
     public function evaluee()
     {
-        return $this->belongsToMany(Survey::class, 'p_survey_evaluee', 'survey_id', 'evaluee_id')->withTimestamps();
+        return $this->belongsToMany(Survey::class, 'p_survey_evaluee', 'evaluee_id', 'survey_id')->withTimestamps();
     }
-    
+
 }

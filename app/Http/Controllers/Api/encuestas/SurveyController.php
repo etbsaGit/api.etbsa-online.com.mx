@@ -14,6 +14,7 @@ use App\Models\SurveyQuestionAnswer;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StoreSurveyAnswerRequest;
+use App\Http\Requests\Survey\EvalueesSurveyRequest;
 use App\Http\Requests\Survey\SurveyStoreRequest;
 use App\Http\Requests\Survey\UpdateSurveyRequest;
 
@@ -26,7 +27,7 @@ class SurveyController extends Controller
      */
     public function index()
     {
-        return response()->json(Survey::with(['question'])->get());
+        return response()->json(Survey::with(['question','evaluee','evaluee.empleado'])->get());
     }
 
     /**
@@ -200,6 +201,7 @@ class SurveyController extends Controller
         $validated = $request->validated();
 
         $surveyAnswer = SurveyAnswer::create([
+            'evaluee_id' => $request->evaluee_id,
             'survey_id' => $survey->id,
             'start_date' => date('Y-m-d H:i:s'),
             'end_date' => date('Y-m-d H:i:s'),
@@ -221,5 +223,14 @@ class SurveyController extends Controller
         }
 
         return response("", 201);
+    }
+
+    public function storeEvaluees(Survey $survey, EvalueesSurveyRequest $request)
+    {
+        $empleadoIds = $request->evaluees;
+
+        $survey->evaluee()->sync($empleadoIds);
+
+        return response()->json(['message' => 'Empleados asignados correctamente a la encuesta']);
     }
 }

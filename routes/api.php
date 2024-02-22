@@ -139,6 +139,9 @@ Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
 Route::apiResource('survey', SurveyController::class);
 
+Route::post('surveys/evaluees/{survey}', [SurveyController::class, 'storeEvaluees']);
+
+
 Route::group(['middleware' => 'auth:sanctum'], function () {
 
 });
