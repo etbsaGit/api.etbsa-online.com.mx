@@ -10,12 +10,11 @@ class SurveyAnswer extends Model
     use HasFactory;
 
     protected $fillable = [
+        'answer',
         'comments',
         'rating',
         'evaluee_id',
-        'survey_id',
-        'start_date',
-        'end_date'
+        'question_id',
     ];
 
     public function evaluee()
@@ -23,13 +22,10 @@ class SurveyAnswer extends Model
         return $this->belongsTo(User::class, 'evaluee_id');
     }
 
-    public function survey()
+    public function question()
     {
-        return $this->belongsTo(Survey::class);
+        return $this->belongsTo(SurveyQuestion::class,'question_id');
     }
 
-    public function surveyQuestionAnswer() {
-        return $this->hasMany(SurveyQuestionAnswer::class, 'survey_answer_id');
-    }
 
 }

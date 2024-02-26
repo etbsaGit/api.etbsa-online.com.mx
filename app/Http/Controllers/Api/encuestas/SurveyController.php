@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers\Api\encuestas;
 
+use App\Models\User;
 use App\Models\Survey;
 use Illuminate\Support\Arr;
-use App\Models\SurveyAnswer;
-use Illuminate\Http\Request;
 use App\Models\SurveyQuestion;
 use App\Traits\UploadableFile;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
-use App\Models\SurveyQuestionAnswer;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use App\Http\Requests\StoreSurveyAnswerRequest;
-use App\Http\Requests\Survey\EvalueesSurveyRequest;
 use App\Http\Requests\Survey\SurveyStoreRequest;
 use App\Http\Requests\Survey\UpdateSurveyRequest;
-
+use App\Http\Requests\Survey\EvalueesSurveyRequest;
+use App\Http\Requests\Survey\StoreSurveyAnswerRequest;
+use App\Models\SurveyAnswer;
+use Illuminate\Http\Request;
 
 class SurveyController extends Controller
 {
@@ -27,7 +26,7 @@ class SurveyController extends Controller
      */
     public function index()
     {
-        return response()->json(Survey::with(['question','evaluee','evaluee.empleado'])->get());
+        return response()->json(Survey::with(['question', 'evaluee', 'evaluee.empleado'])->get());
     }
 
     /**
@@ -61,6 +60,15 @@ class SurveyController extends Controller
     public function show(Survey $survey)
     {
         return response()->json($survey->load(['question']));
+    }
+
+    public function showPerEvaluee(User $userId)
+    {
+        $evaluees = $userId->evaluee()->with(['question' => function ($query) {
+            $query->get(); // especifica el número de elementos por página que deseas
+        }])->get();
+
+        return response()->json($evaluees);
     }
 
     /**
@@ -132,9 +140,9 @@ class SurveyController extends Controller
 
     private function createQuestion($data)
     {
-        if (is_array($data['data'])) {
-            $data['data'] = json_encode($data['data']);
-        }
+        // if (is_array($data['data'])) {
+        //     $data['data'] = json_encode($data['data']);
+        // }
 
         $validator = Validator::make($data, [
             'question' => ['required', 'string'],
@@ -165,9 +173,9 @@ class SurveyController extends Controller
 
     private function updateQuestion(SurveyQuestion $surveyQuestion, $data)
     {
-        if (is_array($data['data'])) {
-            $data['data'] = json_encode($data['data']);
-        }
+        // if (is_array($data['data'])) {
+        //     $data['data'] = json_encode($data['data']);
+        // }
         $validator = Validator::make($data, [
             'id' => ['exists:App\Models\SurveyQuestion,id'],
             'question' => ['required', 'string'],
@@ -196,34 +204,32 @@ class SurveyController extends Controller
         return $surveyQuestion->update($validator->validated());
     }
 
-    public function storeAnswer(StoreSurveyAnswerRequest $request, Survey $survey)
+    public function storeAnswer(StoreSurveyAnswerRequest $request)
     {
-        $validated = $request->validated();
-
-        $surveyAnswer = SurveyAnswer::create([
-            'evaluee_id' => $request->evaluee_id,
-            'survey_id' => $survey->id,
-            'start_date' => date('Y-m-d H:i:s'),
-            'end_date' => date('Y-m-d H:i:s'),
-        ]);
-
-        foreach ($validated['answers'] as $questionId => $answer) {
-            $question = SurveyQuestion::where(['id' => $questionId, 'survey_id' => $survey->id])->get();
-            if (!$question) {
-                return response("Invalid question ID: \"$questionId\"", 400);
-            }
-
-            $data = [
-                'survey_question_id' => $questionId,
-                'survey_answer_id' => $surveyAnswer->id,
-                'answer' => is_array($answer) ? json_encode($answer) : $answer
-            ];
-
-            $questionAnswer = SurveyQuestionAnswer::create($data);
-        }
-
-        return response("", 201);
+        $surveyAnswer = SurveyAnswer::create($request->validated());
+        return response()->json($surveyAnswer);
     }
+
+    public function getAnswerUserForSurvey($surveyId, $userId)
+    {
+        $questions = Survey::find($surveyId)->question;
+
+        $answers = SurveyAnswer::whereIn('question_id', $questions->pluck('id'))
+            ->where('evaluee_id', $userId)
+            ->get();
+
+        return response()->json($answers);
+    }
+
+    function updateComment(SurveyAnswer $answer, Request $request )
+    {
+        $answer->comments = $request->comments;
+
+        $answer->save();
+
+        return response()->json($answer);
+    }
+
 
     public function storeEvaluees(Survey $survey, EvalueesSurveyRequest $request)
     {

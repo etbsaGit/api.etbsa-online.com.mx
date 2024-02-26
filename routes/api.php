@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RoleController;
@@ -83,6 +82,7 @@ Route::get('tipoDeDesvinculacion/all', [TipoDeDesvinculacionController::class, '
 Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
 Route::get('estatus/all', [EstatusController::class, 'all']);
 Route::get('user/all', [UserController::class, 'all']);
+Route::get('survey/user/{userId}',[SurveyController::class,'showPerEvaluee']);
 
 Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
 
@@ -140,6 +140,10 @@ Route::apiResource('permission', PermissionController::class);
 Route::apiResource('survey', SurveyController::class);
 
 Route::post('surveys/evaluees/{survey}', [SurveyController::class, 'storeEvaluees']);
+Route::post('survey/answer', [SurveyController::class, 'storeAnswer']);
+Route::get('survey/answer/{surveyId}/{userId}', [SurveyController::class, 'getAnswerUserForSurvey']);
+Route::put('survey/answer/{answer}', [SurveyController::class, 'updateComment']);
+
 
 
 Route::group(['middleware' => 'auth:sanctum'], function () {

@@ -14,17 +14,16 @@ return new class extends Migration
         Schema::create('survey_answers', function (Blueprint $table) {
             $table->id();
 
+            $table->longText('answer');
             $table->longText('comments')->nullable();
-            $table->longText('rating')->nullable();
-            $table->timestamp('start_date')->nullable();
-            $table->timestamp('end_date')->nullable();
+            $table->integer('rating')->nullable();
 
             $table->unsignedBigInteger('evaluee_id')->nullable();
-            $table->unsignedBigInteger('survey_id')->nullable();
+            $table->unsignedBigInteger('question_id')->nullable();
 
-            $table->foreign('survey_id')->references('id')->on('surveys')->onDelete('set null');
+            $table->foreign('question_id')->references('id')->on('survey_questions')->onDelete('set null');
             $table->foreign('evaluee_id')->references('id')->on('users')->onDelete('set null');
-            
+
             $table->timestamps();
         });
     }

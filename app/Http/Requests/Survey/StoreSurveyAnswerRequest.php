@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Survey;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +24,11 @@ class StoreSurveyAnswerRequest extends FormRequest
     public function rules()
     {
         return [
-            'answers' => 'required|array'
+            'answer' => ['required','string'],
+            'comments'=>['nullable','string'],
+            'rating'=>['nullable','integer'],
+            'evaluee_id'=>['required','integer'],
+            'question_id'=>['required','integer']
         ];
     }
 }

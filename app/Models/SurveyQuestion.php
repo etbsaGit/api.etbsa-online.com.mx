@@ -20,6 +20,10 @@ class SurveyQuestion extends Model
         'survey_id'
     ];
 
+    protected $casts = [
+        'data' => 'array',
+    ];
+
     protected $appends = ['imagen'];
 
     public function imagen(): Attribute
@@ -41,7 +45,7 @@ class SurveyQuestion extends Model
         return $this->belongsTo(Survey::class, 'survey_id');
     }
 
-    public function surveyQuestionAnswer() {
-        return $this->hasMany(SurveyQuestionAnswer::class, 'survey_question_id');
+    public function answer() {
+        return $this->hasMany(SurveyAnswer::class, 'question_id');
     }
 }
