@@ -62,4 +62,9 @@ class Survey extends Model
     {
         return $this->belongsToMany(User::class, 'p_survey_evaluee', 'survey_id', 'evaluee_id')->withTimestamps();
     }
+
+    public function grade()
+    {
+        return $this->hasMany(Grade::class, 'survey_id');
+    }
 }

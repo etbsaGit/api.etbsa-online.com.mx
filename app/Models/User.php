@@ -63,4 +63,8 @@ class User extends Authenticatable
         return $this->belongsToMany(Survey::class, 'p_survey_evaluee', 'evaluee_id', 'survey_id')->withTimestamps();
     }
 
+    public function grade(){
+        return $this->hasMany(Grade::class,'evaluee_id');
+    }
+
 }

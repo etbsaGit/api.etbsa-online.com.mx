@@ -5,18 +5,21 @@ namespace App\Http\Controllers\Api\encuestas;
 use App\Models\User;
 use App\Models\Survey;
 use Illuminate\Support\Arr;
+use App\Models\SurveyAnswer;
+use Illuminate\Http\Request;
 use App\Models\SurveyQuestion;
 use App\Traits\UploadableFile;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\Survey\GradeRequest;
 use App\Http\Requests\Survey\SurveyStoreRequest;
 use App\Http\Requests\Survey\UpdateSurveyRequest;
 use App\Http\Requests\Survey\EvalueesSurveyRequest;
 use App\Http\Requests\Survey\StoreSurveyAnswerRequest;
-use App\Models\SurveyAnswer;
-use Illuminate\Http\Request;
+use App\Models\Grade;
 
 class SurveyController extends Controller
 {
@@ -221,9 +224,10 @@ class SurveyController extends Controller
         return response()->json($answers);
     }
 
-    function updateComment(SurveyAnswer $answer, Request $request )
+    function updateComment(SurveyAnswer $answer, Request $request)
     {
         $answer->comments = $request->comments;
+        $answer->rating = $request->rating;
 
         $answer->save();
 
@@ -238,5 +242,53 @@ class SurveyController extends Controller
         $survey->evaluee()->sync($empleadoIds);
 
         return response()->json(['message' => 'Empleados asignados correctamente a la encuesta']);
+    }
+
+    public function storeGrade(GradeRequest $request)
+    {
+        return response()->json(Grade::create($request->validated()));
+    }
+
+    public function getForGrade(User $evaluee, Survey $survey)
+    {
+        // Obtener el total de preguntas de la encuesta
+        $totalQuestions = $survey->question->count();
+
+        // Obtener las respuestas del evaluado para esta encuesta
+        $responses = DB::table('survey_answers')
+            ->where('evaluee_id', $evaluee->id)
+            ->whereIn('question_id', $survey->question->pluck('id'))
+            ->get();
+
+        // Contar el total de respuestas
+        $totalResponses = $responses->count();
+
+        // Contar las respuestas correctas, incorrectas y no contestadas
+        $correctResponses = $responses->where('rating', true)->count();
+        $incorrectResponses = $responses->where('rating', false)->count();
+        $ungradedResponses = $responses->whereNull('rating')->count();
+        $unansweredResponses = $totalQuestions - $totalResponses;
+
+        // Calcular el promedio de respuestas correctas
+        $averageGrade = $totalQuestions > 0 ? ($correctResponses / $totalQuestions) * 100 : 0;
+
+
+        return response()->json([
+            'total_questions' => $totalQuestions,
+            'total_responses' => $totalResponses,
+            'correct_responses' => $correctResponses,
+            'incorrect_responses' => $incorrectResponses,
+            'unanswered_responses' => $unansweredResponses,
+            'ungraded_responses' => $ungradedResponses,
+            'average_grade' => $averageGrade,
+        ]);
+    }
+
+    public function getGradesForEvaluee(User $evaluee)
+    {
+        // Obtener todas las calificaciones para el evaluado especificado
+        $grades = Grade::where('evaluee_id', $evaluee->id)->with('survey')->get();
+        // Devolver las calificaciones en formato JSON
+        return response()->json($grades);
     }
 }
