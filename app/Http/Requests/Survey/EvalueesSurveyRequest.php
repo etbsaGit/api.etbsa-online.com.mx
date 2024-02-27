@@ -22,7 +22,7 @@ class EvalueesSurveyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'evaluees' => 'required|array'
+            'evaluees' => 'nullable|array'
         ];
     }
 }
