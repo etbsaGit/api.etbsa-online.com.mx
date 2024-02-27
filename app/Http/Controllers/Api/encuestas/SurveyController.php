@@ -67,9 +67,7 @@ class SurveyController extends Controller
 
     public function showPerEvaluee(User $userId)
     {
-        $evaluees = $userId->evaluee()->with(['question' => function ($query) {
-            $query->get(); // especifica el número de elementos por página que deseas
-        }])->get();
+        $evaluees = $userId->evaluee()->with(['question','question.answer'])->get();
 
         return response()->json($evaluees);
     }
