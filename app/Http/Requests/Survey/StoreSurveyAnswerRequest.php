@@ -24,7 +24,7 @@ class StoreSurveyAnswerRequest extends FormRequest
     public function rules()
     {
         return [
-            'answer' => ['required','string'],
+            'answer' => ['required'],
             'comments'=>['nullable','string'],
             'rating'=>['nullable','integer'],
             'evaluee_id'=>['required','integer'],

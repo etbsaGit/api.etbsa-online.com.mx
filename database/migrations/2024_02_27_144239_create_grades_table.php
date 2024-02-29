@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('grades', function (Blueprint $table) {
             $table->id();
             $table->text('comments')->nullable();
-            $table->integer('score')->nullable();
+            $table->double('score')->nullable();
             $table->integer('questions')->nullable();
             $table->integer('correct')->nullable();
             $table->integer('incorrect')->nullable();

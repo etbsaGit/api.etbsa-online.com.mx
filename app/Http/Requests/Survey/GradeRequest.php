@@ -23,7 +23,7 @@ class GradeRequest extends FormRequest
     {
         return [
             'comments' => ['required','string'],
-            'score' => ['required','integer'],
+            'score' => ['required'],
             'questions' => ['required','integer'],
             'correct' => ['required','integer'],
             'incorrect' => ['required','integer'],
