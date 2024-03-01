@@ -45,7 +45,7 @@ class EmpleadoController extends ApiController
                     //se le crea un usuario
                     $correo = $empleado->correo_institucional;
                     if ($correo) {
-                        $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'), 'name' => $empleado->rfc]);
+                        $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'), 'name' => $empleado->nombre]);
                         if (!$empleado->user) {
                             $empleado->user()->associate($usuario);
                             $empleado->save();
@@ -166,7 +166,7 @@ class EmpleadoController extends ApiController
         $filters = $request->all();
 
         $filteredEmployees = Empleado::filter($filters)->with('sucursal','linea','departamento','puesto','jefe_directo')->get();
-        
+
         return response()->json($filteredEmployees);
     }
 
@@ -174,7 +174,7 @@ class EmpleadoController extends ApiController
         $filters = $request->all();
 
         $filteredEmployees = Empleado::filtertwo($filters)->get();
-        
+
         return response()->json($filteredEmployees);
     }
 }
