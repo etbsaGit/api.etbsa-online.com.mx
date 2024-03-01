@@ -26,7 +26,7 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "name"=>['required','string','max:255',Rule::unique('users')->ignore($this->route("user")->id)],
+            "name"=>['required','string','max:255'],
             "email"=>['required','email',Rule::unique('users')->ignore($this->route("user")->id)],
             "password"=>['nullable','string','max:255']
         ];
