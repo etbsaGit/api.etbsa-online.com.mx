@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\LineaController;
 use App\Http\Controllers\Api\PuestoController;
@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\AntiguedadController;
 use App\Http\Controllers\Api\AsignacionController;
 use App\Http\Controllers\Api\EnfermedadController;
 use App\Http\Controllers\Api\ExpedienteController;
+use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\MedicamentoController;
@@ -28,12 +29,12 @@ use App\Http\Controllers\Api\DepartamentoController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\DesvinculacionController;
 use App\Http\Controllers\Api\EstadoDeEstudioController;
+use App\Http\Controllers\Api\encuestas\SurveyController;
 use App\Http\Controllers\Api\TipoDeAsignacionController;
 use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
-use App\Models\Expediente;
 
 /*
 |--------------------------------------------------------------------------
@@ -81,6 +82,7 @@ Route::get('tipoDeDesvinculacion/all', [TipoDeDesvinculacionController::class, '
 Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
 Route::get('estatus/all', [EstatusController::class, 'all']);
 Route::get('user/all', [UserController::class, 'all']);
+Route::get('survey/user/{userId}',[SurveyController::class,'showPerEvaluee']);
 
 Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
 
@@ -95,6 +97,17 @@ Route::resource('documento', DocumentoController::class)->except("create", "edit
 
 Route::post('empleado/uploadPicture/{empleado}',[EmpleadoController::class, 'uploadPicture']);
 Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);
+
+Route::post('user/role/{user}', [UserController::class,'assignRoleToUser']);
+Route::delete('user/role/{user}', [UserController::class,'revokeRoleToUser']);
+Route::get('user/roles/{user}', [UserController::class,'getRolesForAUser']);
+
+Route::post('user/permission/{user}', [UserController::class,'assignPermissionToUser']);
+Route::delete('user/permission/{user}', [UserController::class,'revokePermissionToUser']);
+Route::get('user/permission/{user}', [UserController::class,'getPermissionsForAUser']);
+
+Route::post('empleado/filter',[EmpleadoController::class,'filter']);
+Route::post('empleado/filtertwo',[EmpleadoController::class,'filtertwo']);
 
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
 
@@ -121,6 +134,21 @@ Route::resource('tipoDeDesvinculacion', TipoDeDesvinculacionController::class)->
 Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
 Route::resource('estatus', EstatusController::class)->except("create", "edit");
 Route::resource('user', UserController::class)->except("create", "edit");
+
+Route::apiResource('role', RoleController::class);
+Route::apiResource('permission', PermissionController::class);
+Route::apiResource('survey', SurveyController::class);
+
+Route::post('surveys/evaluees/{survey}', [SurveyController::class, 'storeEvaluees']);
+Route::post('survey/answer', [SurveyController::class, 'storeAnswer']);
+Route::get('survey/answer/{surveyId}/{userId}', [SurveyController::class, 'getAnswerUserForSurvey']);
+Route::put('survey/answer/{answer}', [SurveyController::class, 'updateComment']);
+
+Route::post('surveys/grade', [SurveyController::class, 'storeGrade']);
+Route::get('surveys/grade/{evaluee}/{survey}', [SurveyController::class, 'getForGrade']);
+Route::get('/grades/{evaluee}', [SurveyController::class, 'getGradesForEvaluee']);
+
+
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
 

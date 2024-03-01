@@ -19,11 +19,11 @@ class UserSeeder extends Seeder
         User::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        User::create([
-            'name'=>'aguayocesar',
-            'email'=>'aguayocesar@etbsa.com.mx',
-            'password'=>Hash::make('12345678')
-        ]);
+        // User::create([
+        //     'name'=>'aguayocesar',
+        //     'email'=>'aguayocesar@etbsa.com.mx',
+        //     'password'=>Hash::make('12345678')
+        // ]);
 
         User::create([
             'name'=>'admin',
@@ -31,18 +31,18 @@ class UserSeeder extends Seeder
             'password'=>Hash::make('12345678')
         ]);
 
-        for ($i = 1; $i < 10; $i++) {
-            User::create(
-                [
-                    'name' => "usuario$i",
-                    'email' => "usuario$i@ejemplo.com",
-                    'email_verified_at' => now(),
-                    'password' => Hash::make('12345678'),
-                    'remember_token' => Str::random(10),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
-        }
+        // for ($i = 1; $i < 10; $i++) {
+        //     User::create(
+        //         [
+        //             'name' => "usuario$i",
+        //             'email' => "usuario$i@ejemplo.com",
+        //             'email_verified_at' => now(),
+        //             'password' => Hash::make('12345678'),
+        //             'remember_token' => Str::random(10),
+        //             'created_at' => now(),
+        //             'updated_at' => now(),
+        //         ]
+        //     );
+        // }
     }
 }

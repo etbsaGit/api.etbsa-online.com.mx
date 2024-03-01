@@ -7,9 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+    use HasRoles;
+
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
@@ -46,4 +49,22 @@ class User extends Authenticatable
     public function empleado(){
         return $this->hasOne(Empleado::class,'user_id');
     }
+
+    public function survey(){
+        return $this->hasMany(Survey::class,'evaluator_id');
+    }
+
+    public function answer(){
+        return $this->hasMany(SurveyAnswer::class,'evaluee_id');
+    }
+
+    public function evaluee()
+    {
+        return $this->belongsToMany(Survey::class, 'p_survey_evaluee', 'evaluee_id', 'survey_id')->withTimestamps();
+    }
+
+    public function grade(){
+        return $this->hasMany(Grade::class,'evaluee_id');
+    }
+
 }

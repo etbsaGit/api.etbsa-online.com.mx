@@ -18,6 +18,7 @@ use App\Models\TipoDeSangre;
 use App\Models\ExperienciaLaboral;
 use App\Models\ReferenciaPersonal;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -88,7 +89,7 @@ class Empleado extends Model
     protected function defaultPathFolder(): Attribute
     {
         return Attribute::make(
-            get: fn() => "empleados/id_" . $this->id . "/foto_de_perfil",
+            get: fn () => "empleados/id_" . $this->id . "/foto_de_perfil",
         );
     }
 
@@ -167,9 +168,7 @@ class Empleado extends Model
         return $this->hasMany(Asignacion::class, 'empleado_id');
     }
 
-
     // -----------------------------------------------------------------
-
 
     public function empleado()
     {
@@ -191,5 +190,33 @@ class Empleado extends Model
     public function enfermedad()
     {
         return $this->belongsToMany(Enfermedad::class, 'p_enfermedades_empleados', 'empleado_id', 'enfermedad_id')->withTimestamps();
+    }
+
+    // ---------------------------------scope---------------------------------------------------------
+
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $value) {
+            if ($value !== null) {
+                $query->where($key, $value);
+            }
+        }
+    }
+
+    public function scopeFiltertwo(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $values) {
+            if ($values !== null) {
+                if (is_array($values)) {
+                    $query->where(function ($query) use ($key, $values) {
+                        foreach ($values as $value) {
+                            $query->orWhere($key, $value);
+                        }
+                    });
+                } else {
+                    $query->Where($key, $values);
+                }
+            }
+        }
     }
 }
