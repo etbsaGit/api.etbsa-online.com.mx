@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\encuestas;
 
 use App\Models\User;
+use App\Models\Grade;
 use App\Models\Survey;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use App\Models\SurveyAnswer;
 use Illuminate\Http\Request;
 use App\Models\SurveyQuestion;
@@ -12,6 +14,7 @@ use App\Traits\UploadableFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Survey\GradeRequest;
@@ -19,7 +22,6 @@ use App\Http\Requests\Survey\SurveyStoreRequest;
 use App\Http\Requests\Survey\UpdateSurveyRequest;
 use App\Http\Requests\Survey\EvalueesSurveyRequest;
 use App\Http\Requests\Survey\StoreSurveyAnswerRequest;
-use App\Models\Grade;
 
 class SurveyController extends Controller
 {
@@ -40,13 +42,6 @@ class SurveyController extends Controller
         $data = $request->validated();
 
         $survey = Survey::create($data);
-
-        if ($request->hasFile('image')) {
-            $pic = $request->file('image');
-            $path = $this->uploadOne($pic, $survey->default_path_folder, 's3');
-            $updateData = ['image' => $path];
-            $survey->update($updateData);
-        }
 
         // Create new questions
         foreach ($data['questions'] as $question) {
@@ -162,12 +157,13 @@ class SurveyController extends Controller
 
         $surveyQuestion = SurveyQuestion::create($validator->validated());
 
-        if (isset($data['image'])) {
-            $pic = $data['image'];
-            $path = $this->uploadOne($pic, $surveyQuestion->default_path_folder, 's3');
-            $updateData = ['image' => $path];
+        if (isset($data['base64'])) {
+            $relativePath  = $this->saveImage($data['base64'], $surveyQuestion->default_path_folder);
+            $data['base64'] = $relativePath;
+            $updateData = ['image' => $relativePath];
             $surveyQuestion->update($updateData);
         }
+
 
         return $surveyQuestion;
     }
@@ -192,17 +188,18 @@ class SurveyController extends Controller
             'data' => ['present'],
         ]);
 
-        if (isset($data['image'])) {
+        $surveyQuestion->update($validator->validated());
+
+        if (isset($data['base64'])) {
             if ($surveyQuestion->image) {
                 Storage::disk('s3')->delete($surveyQuestion->image);
             }
-            $pic = $data['image'];
-            $path = $this->uploadOne($pic, $surveyQuestion->default_path_folder, 's3');
-            $updateData = ['image' => $path];
+            $relativePath  = $this->saveImage($data['base64'], $surveyQuestion->default_path_folder);
+            $data['base64'] = $relativePath;
+            $updateData = ['image' => $relativePath];
             $surveyQuestion->update($updateData);
         }
-
-        return $surveyQuestion->update($validator->validated());
+        return $surveyQuestion;
     }
 
     public function storeAnswer(StoreSurveyAnswerRequest $request)
@@ -288,5 +285,37 @@ class SurveyController extends Controller
         $grades = Grade::where('evaluee_id', $evaluee->id)->with('survey')->get();
         // Devolver las calificaciones en formato JSON
         return response()->json($grades);
+    }
+
+    private function saveImage($base64, $defaultPathFolder)
+    {
+        // Check if image is valid base64 string
+    if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
+        // Take out the base64 encoded text without mime type
+        $image = substr($base64, strpos($base64, ',') + 1);
+        // Get file extension
+        $type = strtolower($type[1]); // jpg, png, gif
+
+        // Check if file is an image
+        if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
+            throw new \Exception('invalid image type');
+        }
+        $image = str_replace(' ', '+', $image);
+        $image = base64_decode($image);
+
+        if ($image === false) {
+            throw new \Exception('base64_decode failed');
+        }
+    } else {
+        throw new \Exception('did not match data URI with image data');
+    }
+
+    $fileName = Str::random() . '.' . $type;
+    $filePath = $defaultPathFolder . '/' . $fileName;
+
+    // Guardar el archivo en AWS S3
+    Storage::disk('s3')->put($filePath, $image);
+
+    return $filePath;
     }
 }
