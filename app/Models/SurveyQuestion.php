@@ -36,7 +36,7 @@ class SurveyQuestion extends Model
     protected function defaultPathFolder(): Attribute
     {
         return Attribute::make(
-            get: fn () => "questions/id_" . $this->id . "/foto_de_pregunta",
+            get: fn () => "questions/id_" . $this->id,
         );
     }
 
