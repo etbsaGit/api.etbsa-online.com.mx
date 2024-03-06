@@ -28,13 +28,14 @@ class UpdateSurveyRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|string|max:1000',
-            'image' => 'string',
-            'user_id' => 'exists:users,id',
-            'status' => 'required|boolean',
-            'description' => 'nullable|string',
-            'expire_date' => 'nullable|date',
-            'questions' => 'array'
+            'image' => ['nullable', 'string'],
+            'title' => ['required', 'string'],
+            'slug' => ['required', 'string'],
+            'evaluator_id' => ['nullable','exists:users,id'],
+            'status' => ['required', 'boolean'],
+            'description' => ['nullable', 'string'],
+            'expire_date' => ['nullable', 'date', 'after:tomoroow'],
+            'questions' => ['array'],
         ];
     }
 }

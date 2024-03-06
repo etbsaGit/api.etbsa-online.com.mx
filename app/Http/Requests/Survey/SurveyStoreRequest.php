@@ -42,7 +42,7 @@ class SurveyStoreRequest extends FormRequest
             'image' => ['nullable', 'string'],
             'title' => ['required', 'string'],
             'slug' => ['required', 'string'],
-            'evaluator_id' => ['required','exists:users,id'],
+            'evaluator_id' => ['nullable','exists:users,id'],
             'status' => ['required', 'boolean'],
             'description' => ['nullable', 'string'],
             'expire_date' => ['nullable', 'date', 'after:tomoroow'],
