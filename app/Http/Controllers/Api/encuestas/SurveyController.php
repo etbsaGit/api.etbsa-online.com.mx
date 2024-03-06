@@ -14,7 +14,6 @@ use App\Traits\UploadableFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Survey\GradeRequest;
@@ -74,16 +73,6 @@ class SurveyController extends Controller
     {
         $data = $request->validated();
 
-        if ($request->hasFile('image')) {
-            if ($survey->image) {
-                Storage::disk('s3')->delete($survey->image);
-            }
-            $pic = $request->file('image');
-            $path = $this->uploadOne($pic, $survey->default_path_folder, 's3');
-            $updateData = ['image' => $path];
-            $survey->update($updateData);
-        }
-
         // Update survey in the database
         $survey->update($data);
 
@@ -136,9 +125,6 @@ class SurveyController extends Controller
 
     private function createQuestion($data)
     {
-        // if (is_array($data['data'])) {
-        //     $data['data'] = json_encode($data['data']);
-        // }
 
         $validator = Validator::make($data, [
             'question' => ['required', 'string'],
@@ -170,9 +156,6 @@ class SurveyController extends Controller
 
     private function updateQuestion(SurveyQuestion $surveyQuestion, $data)
     {
-        // if (is_array($data['data'])) {
-        //     $data['data'] = json_encode($data['data']);
-        // }
         $validator = Validator::make($data, [
             'id' => ['exists:App\Models\SurveyQuestion,id'],
             'question' => ['required', 'string'],
@@ -229,7 +212,6 @@ class SurveyController extends Controller
         return response()->json($answer);
     }
 
-
     public function storeEvaluees(Survey $survey, EvalueesSurveyRequest $request)
     {
         $empleadoIds = $request->evaluees;
@@ -266,7 +248,6 @@ class SurveyController extends Controller
 
         // Calcular el promedio de respuestas correctas
         $averageGrade = $totalQuestions > 0 ? ($correctResponses / $totalQuestions) * 100 : 0;
-
 
         return response()->json([
             'total_questions' => $totalQuestions,

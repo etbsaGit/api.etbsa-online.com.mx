@@ -110,6 +110,8 @@ Route::post('empleado/filter',[EmpleadoController::class,'filter']);
 Route::post('empleado/filtertwo',[EmpleadoController::class,'filtertwo']);
 
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
+Route::get('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
+Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
 
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
 Route::resource('empleado', EmpleadoController::class)->except("create", "edit");
@@ -146,9 +148,7 @@ Route::put('survey/answer/{answer}', [SurveyController::class, 'updateComment'])
 
 Route::post('surveys/grade', [SurveyController::class, 'storeGrade']);
 Route::get('surveys/grade/{evaluee}/{survey}', [SurveyController::class, 'getForGrade']);
-Route::get('/grades/{evaluee}', [SurveyController::class, 'getGradesForEvaluee']);
-
-
+Route::get('grades/{evaluee}', [SurveyController::class, 'getGradesForEvaluee']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
 

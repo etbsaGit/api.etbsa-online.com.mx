@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
+use App\Models\Linea;
+use App\Models\Puesto;
 use App\Models\Empleado;
+use App\Models\Sucursal;
 use App\Models\Plantilla;
+use App\Models\Departamento;
 use Illuminate\Http\Request;
 use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +18,9 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Empleado\PicRequest;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
+use App\Models\Escolaridad;
+use App\Models\EstadoCivil;
+use App\Models\TipoDeSangre;
 
 class EmpleadoController extends ApiController
 {
@@ -162,19 +169,51 @@ class EmpleadoController extends ApiController
         }
     }
 
-    public function filter(Request $request) {
+    public function filter(Request $request)
+    {
         $filters = $request->all();
 
-        $filteredEmployees = Empleado::filter($filters)->with('sucursal','linea','departamento','puesto','jefe_directo')->get();
+        $filteredEmployees = Empleado::filter($filters)->with('sucursal', 'linea', 'departamento', 'puesto', 'jefe_directo')->get();
 
         return response()->json($filteredEmployees);
     }
 
-    public function filtertwo(Request $request) {
+    public function filtertwo(Request $request)
+    {
         $filters = $request->all();
 
         $filteredEmployees = Empleado::filtertwo($filters)->get();
 
         return response()->json($filteredEmployees);
+    }
+
+    public function modeloNegocio()
+    {
+        $empleados = Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
+        $sucursales = Sucursal::all();
+        $departamentos = Departamento::all();
+        $lineas = Linea::all();
+        $puestos = Puesto::all();
+
+        return response()->json([
+            'empleados' => $empleados,
+            'sucursales' => $sucursales,
+            'departamentos' => $departamentos,
+            'lineas' => $lineas,
+            'puestos' => $puestos
+        ]);
+    }
+
+    public function personal()
+    {
+        $escolaridades = Escolaridad::all();
+        $estados_civiles = EstadoCivil::all();
+        $tipos_de_sangre = TipoDeSangre::all();
+
+        return response()->json([
+            'escolaridades' => $escolaridades,
+            'estados_civiles' => $estados_civiles,
+            'tipos_de_sangre' => $tipos_de_sangre
+        ]);
     }
 }
