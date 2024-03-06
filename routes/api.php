@@ -150,8 +150,6 @@ Route::post('surveys/grade', [SurveyController::class, 'storeGrade']);
 Route::get('surveys/grade/{evaluee}/{survey}', [SurveyController::class, 'getForGrade']);
 Route::get('grades/{evaluee}', [SurveyController::class, 'getGradesForEvaluee']);
 
-
-
 Route::group(['middleware' => 'auth:sanctum'], function () {
 
 });

@@ -169,15 +169,17 @@ class EmpleadoController extends ApiController
         }
     }
 
-    public function filter(Request $request) {
+    public function filter(Request $request)
+    {
         $filters = $request->all();
 
-        $filteredEmployees = Empleado::filter($filters)->with('sucursal','linea','departamento','puesto','jefe_directo')->get();
+        $filteredEmployees = Empleado::filter($filters)->with('sucursal', 'linea', 'departamento', 'puesto', 'jefe_directo')->get();
 
         return response()->json($filteredEmployees);
     }
 
-    public function filtertwo(Request $request) {
+    public function filtertwo(Request $request)
+    {
         $filters = $request->all();
 
         $filteredEmployees = Empleado::filtertwo($filters)->get();
