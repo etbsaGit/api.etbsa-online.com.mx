@@ -61,7 +61,7 @@ class SurveyController extends Controller
 
     public function showPerEvaluee(User $userId)
     {
-        $evaluees = $userId->evaluee()->with(['question','question.answer'])->get();
+        $evaluees = $userId->evaluee()->with(['question', 'question.answer'])->get();
 
         return response()->json($evaluees);
     }
@@ -86,7 +86,17 @@ class SurveyController extends Controller
         $toAdd = array_diff($newIds, $existingIds);
 
         // Delete questions by $toDelete array
-        SurveyQuestion::destroy($toDelete);
+        foreach ($toDelete as $questionId) {
+            $question = SurveyQuestion::find($questionId);
+            if ($question) {
+                // Eliminar la imagen asociada de S3
+                if ($question->image) {
+                    Storage::disk('s3')->delete($question->image);
+                }
+                // Eliminar la pregunta
+                $question->delete();
+            }
+        }
 
         // Create new questions
         foreach ($data['questions'] as $question) {
@@ -99,7 +109,6 @@ class SurveyController extends Controller
         // Update existing questions
         $questionMap = collect($data['questions'])->keyBy('id');
         $questions = $survey->question;
-        //return response()->json($questions);
         foreach ($questions as $question) {
             if (isset($questionMap[$question->id])) {
                 $this->updateQuestion($question, $questionMap[$question->id]);
@@ -108,7 +117,6 @@ class SurveyController extends Controller
 
         return response()->json($survey->load('question'));
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -185,10 +193,24 @@ class SurveyController extends Controller
         return $surveyQuestion;
     }
 
+    public function deleteImage(SurveyQuestion $surveyQuestion)
+    {
+        Storage::disk('s3')->delete($surveyQuestion->image);
+        $surveyQuestion->update(['image' => null]);
+        return response()->json(['success' => true, 'message' => 'Imagen eliminada correctamente']);
+    }
+
     public function storeAnswer(StoreSurveyAnswerRequest $request)
     {
         $surveyAnswer = SurveyAnswer::create($request->validated());
         return response()->json($surveyAnswer);
+    }
+
+
+    public function getAnswers()
+    {
+        $answers = SurveyAnswer::with('question')->get();
+        return response()->json($answers);
     }
 
     public function getAnswerUserForSurvey($surveyId, $userId)
@@ -221,6 +243,13 @@ class SurveyController extends Controller
         return response()->json(['message' => 'Empleados asignados correctamente a la encuesta']);
     }
 
+    public function getEvaluees(Survey $survey)
+    {
+        $evaluees = $survey->evaluee()->with(['Empleado','Answer'])->get();
+
+        return response()->json($evaluees);
+    }
+
     public function storeGrade(GradeRequest $request)
     {
         return response()->json(Grade::create($request->validated()));
@@ -241,8 +270,8 @@ class SurveyController extends Controller
         $totalResponses = $responses->count();
 
         // Contar las respuestas correctas, incorrectas y no contestadas
-        $correctResponses = $responses->where('rating', true)->count();
-        $incorrectResponses = $responses->where('rating', false)->count();
+        $correctResponses = $responses->where('rating', 1)->count();
+        $incorrectResponses = $responses->whereStrict('rating', 0)->count();
         $ungradedResponses = $responses->whereNull('rating')->count();
         $unansweredResponses = $totalQuestions - $totalResponses;
 
@@ -271,32 +300,32 @@ class SurveyController extends Controller
     private function saveImage($base64, $defaultPathFolder)
     {
         // Check if image is valid base64 string
-    if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
-        // Take out the base64 encoded text without mime type
-        $image = substr($base64, strpos($base64, ',') + 1);
-        // Get file extension
-        $type = strtolower($type[1]); // jpg, png, gif
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
+            // Take out the base64 encoded text without mime type
+            $image = substr($base64, strpos($base64, ',') + 1);
+            // Get file extension
+            $type = strtolower($type[1]); // jpg, png, gif
 
-        // Check if file is an image
-        if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
-            throw new \Exception('invalid image type');
+            // Check if file is an image
+            if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
+                throw new \Exception('invalid image type');
+            }
+            $image = str_replace(' ', '+', $image);
+            $image = base64_decode($image);
+
+            if ($image === false) {
+                throw new \Exception('base64_decode failed');
+            }
+        } else {
+            throw new \Exception('did not match data URI with image data');
         }
-        $image = str_replace(' ', '+', $image);
-        $image = base64_decode($image);
 
-        if ($image === false) {
-            throw new \Exception('base64_decode failed');
-        }
-    } else {
-        throw new \Exception('did not match data URI with image data');
-    }
+        $fileName = Str::random() . '.' . $type;
+        $filePath = $defaultPathFolder . '/' . $fileName;
 
-    $fileName = Str::random() . '.' . $type;
-    $filePath = $defaultPathFolder . '/' . $fileName;
+        // Guardar el archivo en AWS S3
+        Storage::disk('s3')->put($filePath, $image);
 
-    // Guardar el archivo en AWS S3
-    Storage::disk('s3')->put($filePath, $image);
-
-    return $filePath;
+        return $filePath;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Survey;
 
+use Illuminate\Support\Str;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateSurveyRequest extends FormRequest
@@ -19,6 +20,20 @@ class UpdateSurveyRequest extends FormRequest
         // }
         return true;
     }
+
+    protected function prepareForValidation()
+    {
+        $title = $this->input('title');
+        $slug = Str::slug($title);
+        $this->merge([
+            'slug' => $slug,
+        ]);
+
+        // $this->merge([
+        //     'user_id' => $this->user()->id
+        // ]);
+    }
+
 
     /**
      * Get the validation rules that apply to the request.
