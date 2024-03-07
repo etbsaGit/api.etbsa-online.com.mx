@@ -143,6 +143,7 @@ Route::apiResource('survey', SurveyController::class);
 
 Route::post('surveys/evaluees/{survey}', [SurveyController::class, 'storeEvaluees']);
 Route::get('surveys/evaluees/{survey}', [SurveyController::class, 'getEvaluees']);
+Route::get('survey/answers/all', [SurveyController::class, 'getAnswers']);
 
 Route::delete('survey/question/image/{surveyQuestion}', [SurveyController::class, 'deleteImage']);
 

@@ -207,6 +207,12 @@ class SurveyController extends Controller
     }
 
 
+    public function getAnswers()
+    {
+        $answers = SurveyAnswer::with('question')->get();
+        return response()->json($answers);
+    }
+
     public function getAnswerUserForSurvey($surveyId, $userId)
     {
         $questions = Survey::find($surveyId)->question;
@@ -239,7 +245,7 @@ class SurveyController extends Controller
 
     public function getEvaluees(Survey $survey)
     {
-        $evaluees = $survey->evaluee()->with('Empleado')->get();
+        $evaluees = $survey->evaluee()->with(['Empleado','Answer'])->get();
 
         return response()->json($evaluees);
     }
@@ -264,8 +270,8 @@ class SurveyController extends Controller
         $totalResponses = $responses->count();
 
         // Contar las respuestas correctas, incorrectas y no contestadas
-        $correctResponses = $responses->where('rating', true)->count();
-        $incorrectResponses = $responses->where('rating', false)->count();
+        $correctResponses = $responses->where('rating', 1)->count();
+        $incorrectResponses = $responses->whereStrict('rating', 0)->count();
         $ungradedResponses = $responses->whereNull('rating')->count();
         $unansweredResponses = $totalQuestions - $totalResponses;
 
