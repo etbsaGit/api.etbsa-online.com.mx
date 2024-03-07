@@ -142,6 +142,10 @@ Route::apiResource('permission', PermissionController::class);
 Route::apiResource('survey', SurveyController::class);
 
 Route::post('surveys/evaluees/{survey}', [SurveyController::class, 'storeEvaluees']);
+Route::get('surveys/evaluees/{survey}', [SurveyController::class, 'getEvaluees']);
+
+Route::delete('survey/question/image/{surveyQuestion}', [SurveyController::class, 'deleteImage']);
+
 Route::post('survey/answer', [SurveyController::class, 'storeAnswer']);
 Route::get('survey/answer/{surveyId}/{userId}', [SurveyController::class, 'getAnswerUserForSurvey']);
 Route::put('survey/answer/{answer}', [SurveyController::class, 'updateComment']);
