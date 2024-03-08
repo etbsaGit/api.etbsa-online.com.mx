@@ -61,9 +61,9 @@ class SurveyController extends Controller
 
     public function showPerEvaluee(User $userId)
     {
-        $evaluees = $userId->evaluee()->with(['question', 'question.answer'])->get();
+        $surveys = $userId->evaluee()->where('evaluator_id', $userId->id)->with(['question', 'question.answer'])->get();
 
-        return response()->json($evaluees);
+        return response()->json($surveys);
     }
 
     /**
