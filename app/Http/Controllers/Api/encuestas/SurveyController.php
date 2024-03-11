@@ -395,7 +395,19 @@ class SurveyController extends Controller
         ]);
     }
 
+    public function cloneSurvey(Survey $survey)
+    {
+        $newSurvey = $survey->replicate();
+        $newSurvey->save();
 
+        $oldQuestions = $survey->question;
+
+        foreach ($oldQuestions as $preguntaOriginal) {
+            $nuevaPregunta = $preguntaOriginal->replicate();
+            $nuevaPregunta->survey_id = $newSurvey->id; // Ajustar la clave foránea de la nueva pregunta
+            $nuevaPregunta->save();
+        }
+    }
 
     private function saveImage($base64, $defaultPathFolder)
     {
