@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\encuestas;
 use App\Models\User;
 use App\Models\Grade;
 use App\Models\Survey;
+use App\Models\Empleado;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Models\SurveyAnswer;
@@ -30,7 +31,11 @@ class SurveyController extends Controller
      */
     public function index()
     {
-        return response()->json(Survey::with(['question', 'evaluee', 'evaluee.empleado'])->get());
+        $surveys = Survey::with(['question', 'evaluee', 'evaluee.empleado'])
+            ->withCount('evaluee')
+            ->get();
+
+        return response()->json($surveys);
     }
 
     /**
@@ -61,7 +66,15 @@ class SurveyController extends Controller
 
     public function showPerEvaluee(User $userId)
     {
-        $surveys = $userId->evaluee()->where('evaluator_id', $userId->id)->with(['question', 'question.answer'])->get();
+        $surveys = $userId->evaluee()->with(['question', 'question.answer'])->get();
+
+        return response()->json($surveys);
+    }
+
+
+    public function showPerEvaluator(User $userId)
+    {
+        $surveys = $userId->evaluee()->where('evaluator_id', $userId->id)->with(['question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
 
         return response()->json($surveys);
     }
@@ -245,34 +258,72 @@ class SurveyController extends Controller
 
     public function getEvaluees(Survey $survey)
     {
-        $evaluees = $survey->evaluee()->with(['Empleado','Answer'])->get();
+        $evaluees = $survey->evaluee()->with(['Empleado', 'Answer'])->get();
 
         return response()->json($evaluees);
     }
 
     public function storeGrade(GradeRequest $request)
     {
-        return response()->json(Grade::create($request->validated()));
+        $data = $request->validated(); // Obtener los datos validados del request
+
+        if ($request->has('id')) {
+            // Si hay un ID en la solicitud, actualizar la calificación existente
+            $grade = Grade::findOrFail($request->id);
+            $grade->update($data);
+        } else {
+            // Si no hay un ID en la solicitud, crear una nueva calificación
+            $grade = Grade::create($data);
+        }
+
+        return response()->json($grade);
     }
 
     public function getForGrade(User $evaluee, Survey $survey)
     {
+        // Obtener las calificaciones donde coincidan el survey_id y el evaluee_id
+        $matchedGrades = Grade::where('survey_id', $survey->id)
+            ->where('evaluee_id', $evaluee->id)
+            ->get();
+
         // Obtener el total de preguntas de la encuesta
         $totalQuestions = $survey->question->count();
 
-        // Obtener las respuestas del evaluado para esta encuesta
-        $responses = DB::table('survey_answers')
+        // Obtener las preguntas respondidas por el evaluado para esta encuesta
+        $answeredQuestions = DB::table('survey_answers')
             ->where('evaluee_id', $evaluee->id)
             ->whereIn('question_id', $survey->question->pluck('id'))
-            ->get();
+            ->pluck('question_id')
+            ->unique();
+
+        // Obtener las preguntas que no se respondieron
+        $unansweredQuestionsIds = $survey->question->pluck('id')->diff($answeredQuestions);
+
+        // Obtener los modelos de preguntas que no se respondieron
+        $unansweredQuestions = SurveyQuestion::whereIn('id', $unansweredQuestionsIds)->get();
 
         // Contar el total de respuestas
-        $totalResponses = $responses->count();
+        $totalResponses = $answeredQuestions->count();
 
         // Contar las respuestas correctas, incorrectas y no contestadas
-        $correctResponses = $responses->where('rating', 1)->count();
-        $incorrectResponses = $responses->whereStrict('rating', 0)->count();
-        $ungradedResponses = $responses->whereNull('rating')->count();
+        $correctResponses = DB::table('survey_answers')
+            ->where('evaluee_id', $evaluee->id)
+            ->whereIn('question_id', $survey->question->pluck('id'))
+            ->where('rating', 1)
+            ->count();
+
+        $incorrectResponses = DB::table('survey_answers')
+            ->where('evaluee_id', $evaluee->id)
+            ->whereIn('question_id', $survey->question->pluck('id'))
+            ->where('rating', 0)
+            ->count();
+
+        $ungradedResponses = DB::table('survey_answers')
+            ->where('evaluee_id', $evaluee->id)
+            ->whereIn('question_id', $survey->question->pluck('id'))
+            ->whereNull('rating')
+            ->count();
+
         $unansweredResponses = $totalQuestions - $totalResponses;
 
         // Calcular el promedio de respuestas correctas
@@ -286,8 +337,11 @@ class SurveyController extends Controller
             'unanswered_responses' => $unansweredResponses,
             'ungraded_responses' => $ungradedResponses,
             'average_grade' => $averageGrade,
+            'matched_grades' => $matchedGrades,
+            'unanswered_questions' => $unansweredQuestions,
         ]);
     }
+
 
     public function getGradesForEvaluee(User $evaluee)
     {
@@ -296,6 +350,46 @@ class SurveyController extends Controller
         // Devolver las calificaciones en formato JSON
         return response()->json($grades);
     }
+
+    public function getGradesForSurvey(Survey $survey)
+    {
+        // Obtener las calificaciones para la encuesta dada con los datos de los usuarios
+        $grades = Grade::where('survey_id', $survey->id)->with('evaluee.empleado')->get();
+
+        // Extraer los IDs únicos de los usuarios de las calificaciones
+        $userIds = $grades->pluck('evaluee_id')->unique();
+
+        // Obtener los usuarios correspondientes a los IDs únicos
+        $users = User::whereIn('id', $userIds)->get();
+
+        $unansweredQuestionsIds = collect(); // Inicialización de la colección de IDs no respondidos
+
+        foreach ($users as $evaluee) {
+            // Obtener las preguntas respondidas por el evaluado para esta encuesta
+            $answeredQuestions = DB::table('survey_answers')
+                ->where('evaluee_id', $evaluee->id)
+                ->whereIn('question_id', $survey->question->pluck('id'))
+                ->pluck('question_id')
+                ->unique();
+
+            // Obtener las preguntas que no se respondieron y agregarlas a la colección
+            $unansweredQuestionsIds = $unansweredQuestionsIds->merge($survey->question->pluck('id')->diff($answeredQuestions));
+        }
+
+        // Obtener las preguntas y respuestas de la encuesta
+        $questions = $survey->question()->with('answer')->get();
+        $answers = $questions->flatMap->answer;
+
+        return response()->json([
+            'grades' => $grades,
+            'users' => $users,
+            'questions' => $questions,
+            'answers' => $answers,
+            'unanswered' => $unansweredQuestionsIds->values()->all() // Convertir la colección en un array
+        ]);
+    }
+
+
 
     private function saveImage($base64, $defaultPathFolder)
     {
