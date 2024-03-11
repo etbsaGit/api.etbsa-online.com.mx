@@ -67,4 +67,29 @@ class Survey extends Model
     {
         return $this->hasMany(Grade::class, 'survey_id');
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Escuchar el evento deleting para borrar las preguntas, respuestas, imágenes, evaluees y grades asociados
+        static::deleting(function ($survey) {
+            // Eliminar preguntas, respuestas y archivos en S3 asociados
+            $survey->question->each(function ($one_question) {
+                $one_question->answer()->delete(); // Eliminar respuestas asociadas
+
+                if ($one_question->image) {
+                    Storage::disk('s3')->delete($one_question->image);
+                }
+
+                $one_question->delete(); // Eliminar la pregunta
+            });
+
+            // Eliminar relaciones evaluee
+            $survey->evaluee()->detach();
+
+            // Eliminar relaciones grade
+            $survey->grade()->delete();
+        });
+    }
 }
