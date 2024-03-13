@@ -147,6 +147,7 @@ Route::post('survey/clone/{survey}', [SurveyController::class, 'cloneSurvey']);
 Route::post('surveys/evaluees/{survey}', [SurveyController::class, 'storeEvaluees']);
 Route::get('surveys/evaluees/{survey}', [SurveyController::class, 'getEvaluees']);
 Route::get('survey/answers/all', [SurveyController::class, 'getAnswers']);
+Route::get('survey/evaluees/all/{survey}', [SurveyController::class, 'getSurveyDataForSurvey']);
 
 Route::delete('survey/question/image/{surveyQuestion}', [SurveyController::class, 'deleteImage']);
 

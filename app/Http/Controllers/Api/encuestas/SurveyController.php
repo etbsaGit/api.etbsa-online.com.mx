@@ -31,12 +31,40 @@ class SurveyController extends Controller
      */
     public function index()
     {
-        $surveys = Survey::with(['question', 'evaluee', 'evaluee.empleado'])
+        $surveys = Survey::with(['question', 'question.answer.evaluee', 'evaluee', 'evaluee.empleado'])
             ->withCount('evaluee')
             ->get();
 
         return response()->json($surveys);
     }
+
+    public function getSurveyDataForSurvey(Survey $survey)
+    {
+        $evaluees = $survey->evaluee()->with('evaluee')->get();
+
+        $surveyData = $evaluees->map(function ($evaluee) use ($survey) {
+            $totalQuestions = $survey->question->count();
+            $totalResponses = $this->getResponseCountForEvaluee($evaluee, $survey);
+
+            return [
+                'evaluee_name' => $evaluee->empleado->nombre, // Reemplaza 'nombre' por el nombre real del campo
+                'total_questions' => $totalQuestions,
+                'total_responses' => $totalResponses,
+            ];
+        });
+
+        return response()->json($surveyData);
+    }
+
+    private function getResponseCountForEvaluee($evaluee, $survey)
+    {
+        return $evaluee->answer()->whereHas('question', function ($query) use ($survey) {
+            $query->where('survey_id', $survey->id);
+        })->count();
+    }
+
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -173,6 +201,12 @@ class SurveyController extends Controller
         if (isset($data['base64'])) {
             $relativePath  = $this->saveImage($data['base64'], $surveyQuestion->default_path_folder);
             $data['base64'] = $relativePath;
+            $updateData = ['image' => $relativePath];
+            $surveyQuestion->update($updateData);
+        } elseif (isset($data['imagen'])) {
+            $base64 = $this->getImageAsBase64($data['imagen']);
+            $relativePath  = $this->saveImage($base64, $surveyQuestion->default_path_folder);
+            $base64 = $relativePath;
             $updateData = ['image' => $relativePath];
             $surveyQuestion->update($updateData);
         }
@@ -439,5 +473,21 @@ class SurveyController extends Controller
         Storage::disk('s3')->put($filePath, $image);
 
         return $filePath;
+    }
+
+    private function getImageAsBase64($imageUrl)
+    {
+        // Obtener el contenido de la imagen de la URL en base64
+        $imageContent = file_get_contents($imageUrl);
+        $imageBase64 = base64_encode($imageContent);
+
+        // Obtener el tipo de la imagen (por ejemplo, 'png')
+        $imageType = pathinfo($imageUrl, PATHINFO_EXTENSION);
+
+        // Construir el prefijo del formato de imagen
+        $imagePrefix = 'data:image/' . $imageType . ';base64,';
+
+        // Devolver la imagen en formato base64 con el prefijo
+        return $imagePrefix . $imageBase64;
     }
 }
