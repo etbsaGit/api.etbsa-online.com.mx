@@ -164,6 +164,20 @@ class SurveyController extends Controller
 
         return response()->json($survey->load('question'));
     }
+
+    public function changeStatus(Survey $survey)
+    {
+        if ($survey->status == 1) {
+            $survey->status = 0;
+        } elseif ($survey->status == 0) {
+            $survey->status = 1;
+        }
+
+        $survey->save();
+
+        return response()->json(['mensaje' => 'Estado cambiado exitosamente']);
+    }
+
     /**
      * Remove the specified resource from storage.
      */

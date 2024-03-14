@@ -142,6 +142,8 @@ Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
 Route::apiResource('survey', SurveyController::class);
 
+Route::put('survey/status/{survey}', [SurveyController::class, 'changeStatus']);
+
 Route::post('survey/clone/{survey}', [SurveyController::class, 'cloneSurvey']);
 
 Route::post('surveys/evaluees/{survey}', [SurveyController::class, 'storeEvaluees']);
