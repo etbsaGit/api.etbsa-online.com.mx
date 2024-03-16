@@ -22,6 +22,7 @@ class GradeRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id'=>['nullable'],
             'comments' => ['required','string'],
             'score' => ['required'],
             'questions' => ['required','integer'],

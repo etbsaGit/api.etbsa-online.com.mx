@@ -83,6 +83,7 @@ Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
 Route::get('estatus/all', [EstatusController::class, 'all']);
 Route::get('user/all', [UserController::class, 'all']);
 Route::get('survey/user/{userId}',[SurveyController::class,'showPerEvaluee']);
+Route::get('survey/evaluator/{userId}',[SurveyController::class,'showPerEvaluator']);
 
 Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
 
@@ -141,9 +142,14 @@ Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
 Route::apiResource('survey', SurveyController::class);
 
+Route::put('survey/status/{survey}', [SurveyController::class, 'changeStatus']);
+
+Route::post('survey/clone/{survey}', [SurveyController::class, 'cloneSurvey']);
+
 Route::post('surveys/evaluees/{survey}', [SurveyController::class, 'storeEvaluees']);
 Route::get('surveys/evaluees/{survey}', [SurveyController::class, 'getEvaluees']);
 Route::get('survey/answers/all', [SurveyController::class, 'getAnswers']);
+Route::get('survey/evaluees/all/{survey}', [SurveyController::class, 'getSurveyDataForSurvey']);
 
 Route::delete('survey/question/image/{surveyQuestion}', [SurveyController::class, 'deleteImage']);
 
@@ -154,6 +160,7 @@ Route::put('survey/answer/{answer}', [SurveyController::class, 'updateComment'])
 Route::post('surveys/grade', [SurveyController::class, 'storeGrade']);
 Route::get('surveys/grade/{evaluee}/{survey}', [SurveyController::class, 'getForGrade']);
 Route::get('grades/{evaluee}', [SurveyController::class, 'getGradesForEvaluee']);
+Route::get('grades/survey/{survey}', [SurveyController::class, 'getGradesForSurvey']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
 
