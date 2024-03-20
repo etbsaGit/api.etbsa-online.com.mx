@@ -8,13 +8,16 @@ use App\Models\Survey;
 use App\Models\Empleado;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use App\Mail\SurveyMailable;
 use App\Models\SurveyAnswer;
 use Illuminate\Http\Request;
+use App\Mail\EvalueeMailable;
 use App\Models\SurveyQuestion;
 use App\Traits\UploadableFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Survey\GradeRequest;
@@ -63,9 +66,6 @@ class SurveyController extends Controller
         })->count();
     }
 
-
-
-
     /**
      * Store a newly created resource in storage.
      */
@@ -73,7 +73,25 @@ class SurveyController extends Controller
     {
         $data = $request->validated();
 
+
         $survey = Survey::create($data);
+
+        if ($survey->evaluator) {
+            $to_email = $survey->evaluator->email;
+
+            $to_name = $survey->evaluator->name;
+
+            $survey_title = $survey->title;
+
+            // Datos a pasar a la vista del correo electrónico
+            $correo = [
+                'to_name' => $to_name,
+                'survey_title' => $survey_title,
+            ];
+
+            // Enviar el correo electrónico con los datos y la vista
+            Mail::to($to_email)->send(new SurveyMailable($correo));
+        }
 
         // Create new questions
         foreach ($data['questions'] as $question) {
@@ -104,8 +122,6 @@ class SurveyController extends Controller
         return response()->json($surveys);
     }
 
-
-
     public function showPerEvaluator(User $userId)
     {
         $surveys = $userId->evaluee()->where('evaluator_id', $userId->id)->with(['question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
@@ -118,6 +134,28 @@ class SurveyController extends Controller
      */
     public function update(UpdateSurveyRequest $request, Survey $survey)
     {
+
+        if ($request->evaluator_id !== $survey->evaluator_id) {
+
+            $data = $request->validated();
+
+            // Update survey in the database
+            $survey->update($data);
+
+            $to_email = $survey->evaluator->email;
+
+            $to_name = $survey->evaluator->name;
+
+            $survey_title = $survey->title;
+
+            $correo = [
+                'to_name' => $to_name,
+                'survey_title' => $survey_title,
+            ];
+
+            Mail::to($to_email)->send(new SurveyMailable($correo));
+        }
+
         $data = $request->validated();
 
         // Update survey in the database
@@ -305,10 +343,32 @@ class SurveyController extends Controller
     {
         $empleadoIds = $request->evaluees;
 
+        $empleadosAsociados = $survey->evaluee()->pluck('evaluee_id')->toArray();
+
+        $nuevosEmpleadoIds = array_diff($empleadoIds, $empleadosAsociados);
+
         $survey->evaluee()->sync($empleadoIds);
+
+        $usuarios = User::whereIn('id', $nuevosEmpleadoIds)->get();
+
+        foreach ($usuarios as $usuario) {
+            $to_email = $usuario->email;
+            $to_name = $usuario->name;
+            $survey_title = $survey->title;
+            $expire_date = $survey->expire_date;
+
+            $correo = [
+                'to_name' => $to_name,
+                'survey_title' => $survey_title,
+                'expire_date' => $expire_date,
+            ];
+
+            Mail::to($to_email)->send(new EvalueeMailable($correo));
+        }
 
         return response()->json(['message' => 'Empleados asignados correctamente a la encuesta']);
     }
+
 
     public function getEvaluees(Survey $survey)
     {
