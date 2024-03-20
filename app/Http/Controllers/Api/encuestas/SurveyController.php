@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Grade;
 use App\Models\Survey;
 use App\Models\Empleado;
+use App\Mail\GradeMailable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Mail\SurveyMailable;
@@ -389,6 +390,21 @@ class SurveyController extends Controller
             // Si no hay un ID en la solicitud, crear una nueva calificación
             $grade = Grade::create($data);
         }
+
+        $to_email = $grade->evaluee->email;
+
+        $correo=[
+            'score'=>$grade->score,
+            'correct'=>$grade->correct,
+            'incorrect'=>$grade->incorrect,
+            'unanswered'=>$grade->unanswered,
+            'comments'=>$grade->comments,
+            'evaluee'=>$grade->evaluee->name,
+            'survey'=>$grade->survey->title
+        ];
+
+
+        Mail::to($to_email)->send(new GradeMailable($correo));
 
         return response()->json($grade);
     }
