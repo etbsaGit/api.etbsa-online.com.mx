@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\LineaController;
+use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\PuestoController;
 use App\Http\Controllers\Api\AlergiaController;
 use App\Http\Controllers\Api\ArchivoController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
+use App\Models\Career;
 
 /*
 |--------------------------------------------------------------------------
@@ -137,6 +139,11 @@ Route::resource('tipoDeDesvinculacion', TipoDeDesvinculacionController::class)->
 Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
 Route::resource('estatus', EstatusController::class)->except("create", "edit");
 Route::resource('user', UserController::class)->except("create", "edit");
+
+Route::get('career/empleado/{empleado}', [CareerController::class, 'showPerEmpleado']);
+Route::get('career/empleados', [CareerController::class, 'empleadosWithAndWithoutCareer']);
+Route::post('career/empleados/new/{empleado}', [CareerController::class, 'storeNewCareer']);
+Route::resource('career', CareerController::class)->except("create", "edit");
 
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);

@@ -175,6 +175,11 @@ class Empleado extends Model
         return $this->hasMany(Empleado::class, 'jefe_directo_id');
     }
 
+    public function career()
+    {
+        return $this->hasMany(Career::class, 'empleado_id');
+    }
+
     // ----------------------------------------------------------------------------------
 
     public function constelacion()
