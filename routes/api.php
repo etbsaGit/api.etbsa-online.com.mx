@@ -36,9 +36,9 @@ use App\Http\Controllers\Api\TipoDeAsignacionController;
 use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
+use App\Http\Controllers\Api\SkillController;
 use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
-use App\Models\Qualification;
 
 /*
 |--------------------------------------------------------------------------
@@ -148,6 +148,9 @@ Route::post('qualifications/empleado/{empleado}', [QualificationController::clas
 Route::apiResource('qualification', QualificationController::class);
 Route::apiResource('technician', TechnicianController::class);
 
+//--------------------Skill--------------------
+Route::get('skill/puesto/{puesto}', [SkillController::class, 'getPerPuesto']);
+Route::apiResource('skill', SkillController::class);
 
 //--------------------Resource--------------------
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
