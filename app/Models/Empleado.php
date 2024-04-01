@@ -75,6 +75,8 @@ class Empleado extends Model
 
         'descripcion_puesto',
         'carrera',
+
+        'technician_id'
     ];
 
     protected $appends = ['picture'];
@@ -195,6 +197,16 @@ class Empleado extends Model
     public function enfermedad()
     {
         return $this->belongsToMany(Enfermedad::class, 'p_enfermedades_empleados', 'empleado_id', 'enfermedad_id')->withTimestamps();
+    }
+    //----------------------------------Qualification---------------------------------------------------------
+    public function qualification()
+    {
+        return $this->belongsToMany(Qualification::class, 'p_empleado_qualification', 'empleado_id', 'qualification_id');
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(Technician::class, 'technician_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------
