@@ -17,4 +17,9 @@ class Skill extends Model
     {
         return $this->belongsToMany(Puesto::class, 'p_skills_puestos', 'skill_id', 'puesto_id');
     }
+
+    public function skillRating()
+    {
+        return $this->hasMany(SkillRating::class, 'skill_id');
+    }
 }

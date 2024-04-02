@@ -209,6 +209,12 @@ class Empleado extends Model
         return $this->belongsTo(Technician::class, 'technician_id');
     }
 
+    //----------------------------------SkillRating---------------------------------------------------------
+    public function skillRating()
+    {
+        return $this->hasMany(SkillRating::class, 'empleado_id');
+    }
+
     // ---------------------------------scope---------------------------------------------------------
 
     public function scopeFilter(Builder $query, array $filters)

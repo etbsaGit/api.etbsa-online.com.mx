@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
 use App\Http\Controllers\Api\SkillController;
+use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
 
@@ -151,6 +152,11 @@ Route::apiResource('technician', TechnicianController::class);
 //--------------------Skill--------------------
 Route::get('skill/puesto/{puesto}', [SkillController::class, 'getPerPuesto']);
 Route::apiResource('skill', SkillController::class);
+
+//--------------------SkillRating--------------------
+Route::get('skillratings/{empleado}', [SkillRaitngController::class, 'getPerEmpleado']);
+Route::put('skillratings', [SkillRaitngController::class, 'saveSkillRating']);
+Route::apiResource('skillrating', SkillRaitngController::class);
 
 //--------------------Resource--------------------
 Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
