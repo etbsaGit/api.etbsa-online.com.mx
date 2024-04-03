@@ -173,7 +173,7 @@ class EmpleadoController extends ApiController
     {
         $filters = $request->all();
 
-        $filteredEmployees = Empleado::filter($filters)->with('sucursal', 'linea', 'departamento', 'puesto', 'jefe_directo')->get();
+        $filteredEmployees = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
 
         return response()->json($filteredEmployees);
     }
