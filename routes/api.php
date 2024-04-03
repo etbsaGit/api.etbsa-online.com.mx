@@ -104,7 +104,7 @@ Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'up
 //--------------------Career--------------------
 Route::get('career/empleado/{empleado}', [CareerController::class, 'showPerEmpleado']);
 Route::get('career/empleados', [CareerController::class, 'empleadosWithAndWithoutCareer']);
-Route::post('career/empleados/new/{empleado}', [CareerController::class, 'storeNewCareer']);
+Route::get('career/empleados/new/{empleado}', [CareerController::class, 'storeNewCareer']);
 Route::resource('career', CareerController::class)->except("create", "edit");
 
 //--------------------Survey--------------------

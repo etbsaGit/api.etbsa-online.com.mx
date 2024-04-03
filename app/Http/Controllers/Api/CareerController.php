@@ -29,18 +29,22 @@ class CareerController extends Controller
 
     public function storeNewCareer(Empleado $empleado)
     {
-        // Obtener la fecha de ingreso del empleado
-        $fechaIngreso = $empleado->fecha_de_ingreso;
-
-        // Crear una nueva carrera con los datos proporcionados
-        $nuevaCarrera = new Career();
-        $nuevaCarrera->title = "Aqui comenzamos";
-        $nuevaCarrera->date = $fechaIngreso;
-        $nuevaCarrera->description = "Este día te uniste a la familia de ETBSA";
-        $nuevaCarrera->empleado_id = $empleado->id;
-        $nuevaCarrera->save();
-
-        return response()->json($nuevaCarrera);
+        // Verificar si el empleado tiene registros en la tabla careers
+        if ($empleado->career()->exists()) {
+            // Si el empleado tiene registros en la tabla careers, obtener todos los registros ordenados por fecha
+            $careers = $empleado->career()->orderBy('date')->get();
+            return response()->json($careers);
+        } else {
+            // Si el empleado no tiene registros en la tabla careers, crear el primer registro
+            $fechaIngreso = $empleado->fecha_de_ingreso;
+            $nuevaCarrera = new Career();
+            $nuevaCarrera->title = "Aqui comenzamos";
+            $nuevaCarrera->date = $fechaIngreso;
+            $nuevaCarrera->description = "Este día te uniste a la familia de ETBSA";
+            $nuevaCarrera->empleado_id = $empleado->id;
+            $nuevaCarrera->save();
+            return response()->json([$nuevaCarrera]);
+        }
     }
 
     /**
