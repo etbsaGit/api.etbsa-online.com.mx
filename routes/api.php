@@ -96,6 +96,7 @@ Route::post('empleado/filtertwo', [EmpleadoController::class, 'filtertwo']);
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
 Route::get('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
 Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
+Route::get('jefe/{empleado}', [EmpleadoController::class, 'subordinados']);
 
 //--------------------Expediente--------------------
 Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);

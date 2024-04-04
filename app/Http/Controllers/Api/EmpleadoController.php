@@ -216,4 +216,21 @@ class EmpleadoController extends ApiController
             'tipos_de_sangre' => $tipos_de_sangre
         ]);
     }
+
+    public function subordinados(Empleado $empleado)
+    {
+        $empleados = Empleado::where('jefe_directo_id', $empleado->id)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
+        $sucursales = Sucursal::all();
+        $departamentos = Departamento::all();
+        $lineas = Linea::all();
+        $puestos = Puesto::all();
+
+        return response()->json([
+            'empleados' => $empleados,
+            'sucursales' => $sucursales,
+            'departamentos' => $departamentos,
+            'lineas' => $lineas,
+            'puestos' => $puestos
+        ]);
+    }
 }
