@@ -8,19 +8,20 @@ use App\Models\Puesto;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use App\Models\Plantilla;
+use App\Models\Escolaridad;
+use App\Models\EstadoCivil;
 use App\Models\Departamento;
+use App\Models\TipoDeSangre;
 use Illuminate\Http\Request;
 use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Empleado\PicRequest;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
-use App\Models\Escolaridad;
-use App\Models\EstadoCivil;
-use App\Models\TipoDeSangre;
 
 class EmpleadoController extends ApiController
 {
@@ -169,13 +170,31 @@ class EmpleadoController extends ApiController
         }
     }
 
-    public function filter(Request $request)
+    private function getAllSubordinates($employee)
     {
-        $filters = $request->all();
+        $subordinates = $employee->empleado()
+            ->with([
+                'archivable',
+                'archivable.requisito',
+                'escolaridad',
+                'departamento',
+                'desvinculacion',
+                'estado_civil',
+                'jefe_directo',
+                'linea',
+                'puesto',
+                'sucursal',
+                'tipo_de_sangre',
+                'user'
+            ])
+            ->get();
 
-        $filteredEmployees = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
-
-        return response()->json($filteredEmployees);
+        $allSubordinates = collect();
+        foreach ($subordinates as $subordinate) {
+            $allSubordinates->push($subordinate);
+            $allSubordinates = $allSubordinates->merge($this->getAllSubordinates($subordinate));
+        }
+        return $allSubordinates;
     }
 
     public function filtertwo(Request $request)
@@ -187,9 +206,18 @@ class EmpleadoController extends ApiController
         return response()->json($filteredEmployees);
     }
 
-    public function modeloNegocio()
+    public function modeloNegocio(Request $request)
     {
-        $empleados = Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
+        $filters = $request->all();
+        $user = Auth::user();
+        $empleado = $user->empleado;
+
+        if ($user->hasRole('RRHH')) {
+            $empleados = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
+        } else {
+            $empleados = $this->getAllSubordinates($empleado);
+        }
+
         $sucursales = Sucursal::all();
         $departamentos = Departamento::all();
         $lineas = Linea::all();
@@ -214,23 +242,6 @@ class EmpleadoController extends ApiController
             'escolaridades' => $escolaridades,
             'estados_civiles' => $estados_civiles,
             'tipos_de_sangre' => $tipos_de_sangre
-        ]);
-    }
-
-    public function subordinados(Empleado $empleado)
-    {
-        $empleados = Empleado::where('jefe_directo_id', $empleado->id)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
-        $sucursales = Sucursal::all();
-        $departamentos = Departamento::all();
-        $lineas = Linea::all();
-        $puestos = Puesto::all();
-
-        return response()->json([
-            'empleados' => $empleados,
-            'sucursales' => $sucursales,
-            'departamentos' => $departamentos,
-            'lineas' => $lineas,
-            'puestos' => $puestos
         ]);
     }
 }

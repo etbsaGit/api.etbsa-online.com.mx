@@ -56,6 +56,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::post('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
+});
+
 //--------------------Rutas All--------------------
 Route::get('alergia/all', [AlergiaController::class, 'all']);
 Route::get('antiguedad/all', [AntiguedadController::class, 'all']);
@@ -91,12 +96,9 @@ Route::get('user/all', [UserController::class, 'all']);
 
 //--------------------Empleado--------------------
 Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
-Route::post('empleado/filter', [EmpleadoController::class, 'filter']);
 Route::post('empleado/filtertwo', [EmpleadoController::class, 'filtertwo']);
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
-Route::get('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
 Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
-Route::get('jefe/{empleado}', [EmpleadoController::class, 'subordinados']);
 
 //--------------------Expediente--------------------
 Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
@@ -192,6 +194,4 @@ Route::resource('departamento', DepartamentoController::class)->except("create",
 Route::resource('desvinculacion', DesvinculacionController::class)->except("create", "edit");
 Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
-Route::group(['middleware' => 'auth:sanctum'], function () {
-});
 
