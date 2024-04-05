@@ -11,15 +11,21 @@ class Linea extends Model
 
     protected $fillable = [
         'nombre',
-
     ];
 
-    public function empleado(){
-        return $this->hasMany(Empleado::class,'linea_id');
+    public function empleado()
+    {
+        return $this->hasMany(Empleado::class, 'linea_id');
     }
 
     public function sucursal()
     {
         return $this->belongsToMany(Sucursal::class, 'p_sucursales_lineas', 'sucursal_id', 'linea_id');
     }
+
+    public function lineaTechnician()
+    {
+        return $this->hasMany(LineaTechnician::class, 'linea_id');
+    }
+
 }

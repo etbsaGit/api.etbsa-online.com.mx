@@ -14,11 +14,18 @@ class Puesto extends Model
         'nombre'
     ];
 
-    public function empleado(){
-        return $this->hasMany(Empleado::class,'puesto_id');
+    public function empleado()
+    {
+        return $this->hasMany(Empleado::class, 'puesto_id');
     }
 
-    public function experienciaLaboral(){
-        return $this->hasMany(ExperienciaLaboral::class,'puesto_id');
+    public function experienciaLaboral()
+    {
+        return $this->hasMany(ExperienciaLaboral::class, 'puesto_id');
+    }
+
+    public function skill()
+    {
+        return $this->belongsToMany(Skill::class, 'p_skills_puestos', 'puesto_id', 'skill_id');
     }
 }
