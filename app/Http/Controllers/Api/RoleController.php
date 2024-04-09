@@ -11,41 +11,24 @@ class RoleController extends ApiController
 {
     public function index()
     {
-        return response()->json(Role::with(['permissions','users'])->get());
+        return response()->json(Role::with(['permissions', 'users'])->get());
     }
 
     public function store(StoreRequest $request)
     {
-        $role = Role::create($request->only(['name']));
-
-        $permissions = $request->permissions;
-
-        if (!empty($permissions)) {
-            $role->syncPermissions($permissions);
-        }
-
-        return response()->json($role->load('permissions'));
+        $role = Role::create($request->validated());
+        return response()->json($role, 201);
     }
 
     public function show(Role $role)
     {
-        return response()->json($role->load('permissions','users'));
+        return response()->json($role->load('permissions', 'users'));
     }
 
     public function update(PutRequest $request, Role $role)
     {
-        $role->update($request->only(['name']));
-
-        if (!empty($request->permissions)) {
-            $permissions = $request->permissions;
-            $role->syncPermissions($permissions);
-        } else {
-            $permissions = $role->getAllPermissions();
-            foreach ($permissions as $permission) {
-                $role->revokePermissionTo($permission->name);
-            }
-        }
-        return response()->json($role->load('permissions'));
+        $role->update($request->validated());
+        return response()->json($role);
     }
 
     public function destroy(Role $role)

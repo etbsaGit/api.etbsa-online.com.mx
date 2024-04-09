@@ -31,6 +31,8 @@ class StoreRequest extends FormRequest
             "password"=>['required','string','max:255'],
             'roles' => ['nullable','array'],
             'roles.*' => ['nullable','string','exists:roles,name'],
+            'permissions' => ['nullable','array'],
+            'permissions.*' => ['nullable','string','exists:permissions,name'],
         ];
     }
     function failedValidation(Validator $validator)

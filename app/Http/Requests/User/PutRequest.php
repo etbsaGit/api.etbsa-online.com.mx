@@ -28,7 +28,11 @@ class PutRequest extends FormRequest
         return [
             "name"=>['required','string','max:255'],
             "email"=>['required','email',Rule::unique('users')->ignore($this->route("user")->id)],
-            "password"=>['nullable','string','max:255']
+            "password"=>['nullable','string','max:255'],
+            'roles' => ['nullable','array'],
+            'roles.*' => ['nullable','string','exists:roles,name'],
+            'permissions' => ['nullable','array'],
+            'permissions.*' => ['nullable','string','exists:permissions,name'],
         ];
     }
     function failedValidation(Validator $validator)

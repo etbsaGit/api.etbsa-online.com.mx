@@ -182,18 +182,13 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     //--------------------User--------------------
 
     Route::post('auth/logout', [UserController::class, 'logout']);
+    Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
 });
 
 //--------------------Sin inicio de sesion--------------------
 
 //--------------------User--------------------
 Route::post('auth/login', [UserController::class, 'login']);
-Route::post('user/role/{user}', [UserController::class, 'assignRoleToUser']);
-Route::delete('user/role/{user}', [UserController::class, 'revokeRoleToUser']);
-Route::get('user/roles/{user}', [UserController::class, 'getRolesForAUser']);
-Route::post('user/permission/{user}', [UserController::class, 'assignPermissionToUser']);
-Route::delete('user/permission/{user}', [UserController::class, 'revokePermissionToUser']);
-Route::get('user/permission/{user}', [UserController::class, 'getPermissionsForAUser']);
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
 
