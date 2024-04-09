@@ -25,12 +25,11 @@ use App\Http\Requests\Empleado\StoreRequest;
 
 class EmpleadoController extends ApiController
 {
-
     use UploadableFile;
 
     public function index()
     {
-        return response()->json(Empleado::paginate(5));
+        return $this->respond(Empleado::paginate(5));
     }
 
     public function all()
@@ -218,30 +217,25 @@ class EmpleadoController extends ApiController
             $empleados = $this->getAllSubordinates($empleado);
         }
 
-        $sucursales = Sucursal::all();
-        $departamentos = Departamento::all();
-        $lineas = Linea::all();
-        $puestos = Puesto::all();
-
-        return response()->json([
+        $data = [
             'empleados' => $empleados,
-            'sucursales' => $sucursales,
-            'departamentos' => $departamentos,
-            'lineas' => $lineas,
-            'puestos' => $puestos
-        ]);
+            'sucursales' => Sucursal::all(),
+            'departamentos' => Departamento::all(),
+            'lineas' => Linea::all(),
+            'puestos' => Puesto::all()
+        ];
+
+        return $this->respond($data);
     }
 
     public function personal()
     {
-        $escolaridades = Escolaridad::all();
-        $estados_civiles = EstadoCivil::all();
-        $tipos_de_sangre = TipoDeSangre::all();
+        $data = [
+            'escolaridades' => Escolaridad::all(),
+            'estados_civiles' => EstadoCivil::all(),
+            'tipos_de_sangre' => TipoDeSangre::all(),
+        ];
 
-        return response()->json([
-            'escolaridades' => $escolaridades,
-            'estados_civiles' => $estados_civiles,
-            'tipos_de_sangre' => $tipos_de_sangre
-        ]);
+        return $this->respond($data);
     }
 }
