@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\User\PutRequest;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\User\StoreRequest;
-use App\Http\Requests\User\PutRequest;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Http\Requests\User\PasswordRequest;
 
 class UserController extends ApiController
 {
@@ -35,7 +36,7 @@ class UserController extends ApiController
                 'token' => $user->createToken('myapptoken')->plainTextToken
             ]);
         }
-        return response()->json("Usuario y/o contraseña inválido", error: 401);
+        return response()->json("Usuario y/o contraseña inválido", 401);
     }
 
     public function logout(Request $request)
@@ -87,7 +88,6 @@ class UserController extends ApiController
         $user->syncRoles($roles);
         $user->syncPermissions($permissions);
         return response()->json($user->load('roles', 'permissions'));
-        // password_verify($request->password, $user->password // con esto comparas las contraseñas bruta contra la hash
     }
 
     public function destroy(User $user)
@@ -103,5 +103,15 @@ class UserController extends ApiController
             'permissions' => Permission::all(),
         ];
         return $this->respond($data);
+    }
+
+    public function changePassword(PasswordRequest $request)
+    {
+        $user = Auth::user();
+        if (password_verify($request->old_password, $user->password)) {
+            $user->update($request->only(['password']));
+            return response()->json('Contraseña cambiada con exito');
+        }
+        return response()->json('Contraseña actual no valida', 403);
     }
 }

@@ -182,6 +182,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     //--------------------User--------------------
 
     Route::post('auth/logout', [UserController::class, 'logout']);
+    Route::post('auth/change', [UserController::class, 'changePassword']);
     Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
 });
 
