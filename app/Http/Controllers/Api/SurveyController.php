@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\encuestas;
+namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use App\Models\Grade;
@@ -17,7 +17,8 @@ use App\Models\SurveyQuestion;
 use App\Traits\UploadableFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -27,7 +28,7 @@ use App\Http\Requests\Survey\UpdateSurveyRequest;
 use App\Http\Requests\Survey\EvalueesSurveyRequest;
 use App\Http\Requests\Survey\StoreSurveyAnswerRequest;
 
-class SurveyController extends Controller
+class SurveyController extends ApiController
 {
     use UploadableFile;
     /**
@@ -111,9 +112,11 @@ class SurveyController extends Controller
         return response()->json($survey->load(['question']));
     }
 
-    public function showPerEvaluee(User $userId)
+    public function showPerEvaluee()
     {
-        $surveys = $userId->evaluee()
+        $user = Auth::user();
+
+        $surveys = $user->evaluee()
             ->whereHas('evaluee', function ($query) {
                 $query->where('status', 1);
             })
@@ -123,9 +126,11 @@ class SurveyController extends Controller
         return response()->json($surveys);
     }
 
-    public function showPerEvaluator(User $userId)
+    public function showPerEvaluator()
     {
-        $surveys = $userId->evaluee()->where('evaluator_id', $userId->id)->with(['question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
+        $user = Auth::user();
+
+        $surveys = $user->evaluee()->where('evaluator_id', $user->id)->with(['question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
 
         return response()->json($surveys);
     }

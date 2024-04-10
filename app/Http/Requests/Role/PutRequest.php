@@ -24,8 +24,6 @@ class PutRequest extends FormRequest
     {
         return [
             'name' => ['required', Rule::unique('roles')->ignore($this->route("role")->id)],
-            'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['nullable', 'string', 'exists:permissions,name'],
         ];
     }
 }
