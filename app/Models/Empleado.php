@@ -79,13 +79,18 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture'];
+    protected $appends = ['picture','nombreCompleto'];
 
     public function picture(): Attribute
     {
         return Attribute::make(
             get: fn () => $this->fotografia ? Storage::disk('s3')->url($this->fotografia) : null
         );
+    }
+
+    public function getNombreCompletoAttribute()
+    {
+        return $this->nombre . ' ' . $this->segundo_nombre . ' ' . $this->apellido_paterno . ' ' . $this->apellido_materno;
     }
 
     protected function defaultPathFolder(): Attribute
