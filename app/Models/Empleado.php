@@ -61,6 +61,7 @@ class Empleado extends Model
         'constelacion_familiar',
         'status',
         'correo_institucional',
+        'usuario_x',
 
         'escolaridad_id',
         'user_id',

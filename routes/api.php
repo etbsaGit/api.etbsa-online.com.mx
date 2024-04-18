@@ -128,6 +128,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     //--------------------Qualification--------------------
     Route::post('technician/linea/{technician}', [TechnicianController::class, 'storeLineas']);
+    Route::post('technician/userx/{empleado}', [TechnicianController::class, 'setUserX']);
     Route::post('technician/empleado/{empleado}/{technician}', [TechnicianController::class, 'changeTypeTechnician']);
     Route::get('technicians', [TechnicianController::class, 'getAll']);
     Route::get('technicians/{linea}', [TechnicianController::class, 'getTechnicianLine']);

@@ -11,6 +11,7 @@ class Qualification extends Model
 
     protected $fillable = [
         'name',
+        'clave',
         'linea_technician_id',
     ];
 

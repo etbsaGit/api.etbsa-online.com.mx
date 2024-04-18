@@ -27,6 +27,7 @@ class PutRequest extends FormRequest
     {
         return [
             "name" => ['required', 'string', 'max:255', Rule::unique('qualifications')->ignore($this->route("qualification")->id)],
+            "clave" => ['nullable', 'string', 'max:255', Rule::unique('qualifications')->ignore($this->route("qualification")->id)],
             "linea_technician_id" => ['required', 'integer'],
         ];
     }
