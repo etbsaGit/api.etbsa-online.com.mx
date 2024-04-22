@@ -2,10 +2,12 @@
 
 namespace App\Models\Ecommerce;
 
+use App\Casts\Name;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Casts\Attribute as CastableAttribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Vendor extends Model
 {
@@ -33,10 +35,14 @@ class Vendor extends Model
     {
         parent::boot();
 
-        static::created(static function ($brand) {
-            $brand->slug = \Str::slug($brand->name);
-            $brand->save();
+        static::created(static function ($vendor) {
+            $vendor->slug = \Str::slug($vendor->name);
+            $vendor->save();
         });
+        // static::updated(static function ($vendor) {
+        //     $vendor->slug = \Str::slug($vendor->name);
+        //     $vendor->save();
+        // });
     }
 
     public function logo(): CastableAttribute
@@ -45,6 +51,7 @@ class Vendor extends Model
             get: static function($value) {
                 if(!is_null($value)) {
                     // return asset('storage/' . $value);
+                    return Storage::disk('s3')->url($value);
                 }
             }
         );
