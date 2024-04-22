@@ -92,7 +92,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('user/all', [UserController::class, 'all']);
 
     //--------------------Empleado--------------------
-    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
     Route::post('empleado/filtertwo', [EmpleadoController::class, 'filtertwo']);
     Route::post('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
     Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
@@ -193,6 +192,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 Route::post('auth/login', [UserController::class, 'login']);
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
+
+Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
+
 
 //--------------------Expediente--------------------
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
