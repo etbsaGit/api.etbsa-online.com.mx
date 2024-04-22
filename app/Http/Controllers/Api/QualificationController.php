@@ -29,6 +29,7 @@ class QualificationController extends Controller
     public function store(StoreRequest $request)
     {
         $name = $request->name;
+        $clave = $request->clave;
         $linea_id = $request->linea_id;
         $technician_id = $request->technician_id;
         $linea_technician_id = LineaTechnician::where('linea_id', $linea_id)
@@ -37,6 +38,7 @@ class QualificationController extends Controller
 
         return response()->json(Qualification::create([
             'name' => $name,
+            'clave' => $clave,
             'linea_technician_id' => $linea_technician_id,
         ]));
     }
