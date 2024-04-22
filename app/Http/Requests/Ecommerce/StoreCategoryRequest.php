@@ -2,16 +2,21 @@
 
 namespace App\Http\Requests\Ecommerce;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreCategoryRequest extends FormRequest
 {
+
+    protected $stopOnFirstFailure = true;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +27,17 @@ class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|max:191',
+            'parent_id' => 'nullable|exists:App\Models\Ecommerce\Category,id'
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+       throw new HttpResponseException(response()->json([
+         'success'   => false,
+         'message'   => 'Validation errors',
+         'data'      => $validator->errors()
+       ]));
     }
 }
