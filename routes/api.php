@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Ecommerce\BrandController;
+use App\Http\Controllers\Ecommerce\CategoryController;
+use App\Http\Controllers\Ecommerce\ProductController;
+use App\Http\Controllers\Ecommerce\VendorController;
+
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RoleController;
@@ -195,3 +201,9 @@ Route::apiResource('permission', PermissionController::class);
 
 //--------------------Expediente--------------------
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
+
+
+Route::apiResource('brands', BrandController::class);
+Route::apiResource('vendors', VendorController::class);
+Route::apiResource('categories', CategoryController::class);
+Route::apiResource('products', ProductController::class);
