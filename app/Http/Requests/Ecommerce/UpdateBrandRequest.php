@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Ecommerce;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateBrandRequest extends FormRequest
 {
@@ -11,7 +13,7 @@ class UpdateBrandRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +23,19 @@ class UpdateBrandRequest extends FormRequest
      */
     public function rules(): array
     {
+
         return [
-            //
+            'name' => 'required|max:191',
+            'logo' => 'nullable|mimes:jpg,jpeg,png|max:1000',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+       throw new HttpResponseException(response()->json([
+         'success'   => false,
+         'message'   => 'Validation errors',
+         'data'      => $validator->errors()
+       ]));
     }
 }
