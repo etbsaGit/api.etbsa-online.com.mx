@@ -44,7 +44,7 @@ class Product extends Model
         parent::boot();
 
         static::created(static function ($product) {
-            $product->slug = \Str::slug($product->name);
+            $product->sku = \Str::slug($product->sku);
             $product->save();
         });
     }
@@ -72,7 +72,7 @@ class Product extends Model
 
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'product_categories', 'product_id', 'category_id');
+        return $this->belongsToMany(Category::class, 'product_category', 'product_id', 'category_id');
     }
 
 }

@@ -5,6 +5,7 @@ namespace App\Models\Ecommerce;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute as CastableAttribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class ProductImage extends Model
 {
@@ -12,11 +13,11 @@ class ProductImage extends Model
 
     protected $table = 'product_images';
 
-    protected $fillable = ['product_id', 'thumbnaul', 'path', 'main'];
+    protected $fillable = ['product_id', 'thumbnail', 'path'];
 
     protected $casts = [
         'product_id' => 'integer',
-        'main' => 'boolean',
+        // 'main' => 'boolean',
     ];
 
     public function product() {
@@ -28,7 +29,7 @@ class ProductImage extends Model
         return CastableAttribute::make(
             get: static function($value) {
                 if(!is_null($value)) {
-                    // return asset('storage/' . $value);
+                    return Storage::disk('s3')->url($value);
                 }
             }
         );
