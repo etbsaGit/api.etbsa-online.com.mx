@@ -60,3 +60,9 @@ Route::get('/config-cache', function () {
     $exitCode = Artisan::call('config:cache');
     return '<h1>Clear Config cleared</h1>' . $exitCode;
 });
+
+//Clear Config cache:
+Route::get('/config-clear', function () {
+    $exitCode = Artisan::call('config:clear');
+    return '<h1>config:clear</h1>' . $exitCode;
+});
