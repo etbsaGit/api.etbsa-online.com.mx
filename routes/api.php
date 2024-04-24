@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Ecommerce\CategoryController;
+use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Ecommerce\VendorController;
 
@@ -206,4 +207,5 @@ Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmp
 Route::apiResource('brands', BrandController::class);
 Route::apiResource('vendors', VendorController::class);
 Route::apiResource('categories', CategoryController::class);
+Route::apiResource('features', FeaturesController::class);
 Route::apiResource('products', ProductController::class);
