@@ -191,6 +191,17 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('auth/logout', [UserController::class, 'logout']);
     Route::post('auth/change', [UserController::class, 'changePassword']);
     Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
+
+    //--------------------landingPage--------------------
+    Route::apiResource('brands', BrandController::class);
+    Route::apiResource('vendors', VendorController::class);
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('features', FeaturesController::class);
+    Route::apiResource('products', ProductController::class);
+    Route::get('formProduct', [ProductController::class, 'formProduct']);
+    Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
+    Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
+    Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
 });
 
 //--------------------Sin inicio de sesion--------------------
@@ -202,10 +213,3 @@ Route::apiResource('permission', PermissionController::class);
 
 //--------------------Expediente--------------------
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
-
-
-Route::apiResource('brands', BrandController::class);
-Route::apiResource('vendors', VendorController::class);
-Route::apiResource('categories', CategoryController::class);
-Route::apiResource('features', FeaturesController::class);
-Route::apiResource('products', ProductController::class);

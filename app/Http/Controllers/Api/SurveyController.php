@@ -52,7 +52,7 @@ class SurveyController extends ApiController
             $totalResponses = $this->getResponseCountForEvaluee($evaluee, $survey);
 
             return [
-                'evaluee_name' => $evaluee->empleado->nombre, // Reemplaza 'nombre' por el nombre real del campo
+                'evaluee_name' => $evaluee->empleado->nombreCompleto, // Reemplaza 'nombre' por el nombre real del campo
                 'total_questions' => $totalQuestions,
                 'total_responses' => $totalResponses,
             ];
@@ -130,7 +130,7 @@ class SurveyController extends ApiController
     {
         $user = Auth::user();
 
-        $surveys = $user->evaluee()->where('evaluator_id', $user->id)->with(['question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
+        $surveys = $user->survey()->where('evaluator_id', $user->id)->with(['question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
 
         return response()->json($surveys);
     }

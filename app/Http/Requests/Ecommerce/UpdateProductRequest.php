@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Ecommerce;
 
-use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -13,7 +15,16 @@ class UpdateProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
+    }
+
+    protected function prepareForValidation()
+    {
+        $name = $this->input('name');
+        $slug = Str::slug($name);
+        $this->merge([
+            'slug' => $slug,
+        ]);
     }
 
     /**
@@ -26,7 +37,7 @@ class UpdateProductRequest extends FormRequest
         return [
             'name' => 'required|max:191',
             'sku' => 'required|max:191',
-            // 'images' => 'nullable|array',
+            'images' => 'nullable|array',
             'category_id' => 'nullable|array',
             'features' => 'nullable|array',
             'brand_id' => 'nullable',
@@ -36,15 +47,15 @@ class UpdateProductRequest extends FormRequest
             'featured' => 'required|boolean',
             'price' => 'required|decimal:2',
             'sale_price' => 'required|decimal:2',
+            'quantity'=>'nullable|decimal:0'
         ];
     }
 
-    public function failedValidation(Validator $validator)
+    function failedValidation(Validator $validator)
     {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'message' => 'Validation errors',
-            'data' => $validator->errors()
-        ]));
+        if ($this->expectsJson()) {
+            $response = new Response($validator->errors(), 422);
+            throw new ValidationException($validator, $response);
+        }
     }
 }

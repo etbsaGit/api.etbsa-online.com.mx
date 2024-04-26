@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Ecommerce;
 
-use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class StoreBrandRequest extends FormRequest
 {
@@ -16,6 +18,15 @@ class StoreBrandRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $name = $this->input('name');
+        $slug = Str::slug($name);
+        $this->merge([
+            'slug' => $slug,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -24,17 +35,15 @@ class StoreBrandRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|max:191',
-            'logo' => 'nullable|mimes:jpg,jpeg,png|max:1000',
+            'name' => ['required','max:191','unique:brands,name'],
         ];
     }
 
-    public function failedValidation(Validator $validator)
+    function failedValidation(Validator $validator)
     {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'message' => 'Validation errors',
-            'data' => $validator->errors()
-        ], 422));
+        if ($this->expectsJson()) {
+            $response = new Response($validator->errors(), 422);
+            throw new ValidationException($validator, $response);
+        }
     }
 }

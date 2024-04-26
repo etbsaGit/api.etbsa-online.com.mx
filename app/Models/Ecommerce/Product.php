@@ -10,7 +10,6 @@ class Product extends Model
 {
     use HasFactory;
 
-
     protected $table = 'products';
 
     protected $fillable = [
@@ -35,24 +34,11 @@ class Product extends Model
         'featured' => 'boolean',
     ];
 
-    /**
-     *
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::created(static function ($product) {
-            $product->sku = \Str::slug($product->sku);
-            $product->save();
-        });
-    }
-
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
     }
+
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
@@ -65,7 +51,7 @@ class Product extends Model
 
     public function features()
     {
-        return $this->belongsToMany(Features::class, 'feature_product', 'product_id', 'feature_id')
+        return $this->belongsToMany(Feature::class, 'feature_product', 'product_id', 'feature_id')
             ->withPivot('value')
             ->withTimestamps();
     }

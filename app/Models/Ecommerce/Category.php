@@ -10,19 +10,13 @@ class Category extends Model
 {
     use HasFactory;
 
-    public $fillable = ['name', 'slug', 'parent_id'];
+    public $fillable = [
+        'name',
+        'slug',
+        'parent_id'
+    ];
+
     protected $table = 'categories';
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::created(static function ($category) {
-            $category->slug = \Str::slug($category->name);
-            $category->save();
-        });
-
-    }
 
     /**
      * Return the children of the model, if exists.

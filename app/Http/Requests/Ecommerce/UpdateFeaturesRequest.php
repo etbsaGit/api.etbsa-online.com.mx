@@ -2,7 +2,11 @@
 
 namespace App\Http\Requests\Ecommerce;
 
+use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class UpdateFeaturesRequest extends FormRequest
 {
@@ -11,7 +15,7 @@ class UpdateFeaturesRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +26,15 @@ class UpdateFeaturesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "name" => ['required', 'string', 'max:191', Rule::unique('features')->ignore($this->route('feature')->id)],
         ];
+    }
+
+    function failedValidation(Validator $validator)
+    {
+        if ($this->expectsJson()) {
+            $response = new Response($validator->errors(), 422);
+            throw new ValidationException($validator, $response);
+        }
     }
 }

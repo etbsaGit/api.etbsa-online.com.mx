@@ -13,19 +13,12 @@ use Illuminate\Http\Request;
 class CategoryController extends ApiController
 {
 
-    private CategoryRepository $categoryRepository;
-
-    public function __construct(CategoryRepository $categoryRepository)
-    {
-        $this->categoryRepository = $categoryRepository;
-    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $items = $this->categoryRepository->index(request()->all());
-        return $this->respond(compact('items'));
+        return response()->json(Category::all());
     }
 
     /**
@@ -34,15 +27,7 @@ class CategoryController extends ApiController
     // public function store(StoreCategoryRequest $request) : JsonResponse
     public function store(StoreCategoryRequest $request)
     {
-        $payload = $request->validated();
-
-        $category = $this->categoryRepository->createCategory($payload);
-
-        return $this->respondCreated([
-            'success' => true,
-            'message' => 'Categoria Creada',
-            'data' => $category
-        ]);
+        return response()->json(Category::create($request->validated()));
     }
 
     /**
@@ -58,15 +43,8 @@ class CategoryController extends ApiController
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        $payload = $request->validated();
-
-        $updated = $this->categoryRepository->updateCategory($category->id, $payload);
-
-        return $this->respondCreated([
-            'success' => true,
-            'message' => 'Categoria Creada',
-            'data' => $updated
-        ]);
+        $category->update($request->validated());
+        return response()->json($category);
     }
 
     /**

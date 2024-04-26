@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Ecommerce;
 
-use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class StoreProductRequest extends FormRequest
 {
@@ -16,6 +18,15 @@ class StoreProductRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $name = $this->input('name');
+        $slug = Str::slug($name);
+        $this->merge([
+            'slug' => $slug,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -24,8 +35,8 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|max:191',
-            'sku' => 'required|max:191',
+            'name' => ['required','string','max:191','unique:products,name'],
+            'sku' => ['required','string','max:191','unique:products,sku'],
             'images' => 'nullable|array',
             'category_id' => 'nullable|array',
             'features' => 'nullable|array',
@@ -36,15 +47,15 @@ class StoreProductRequest extends FormRequest
             'featured' => 'required|boolean',
             'price' => 'required|decimal:2',
             'sale_price' => 'required|decimal:2',
+            'quantity'=>'nullable|decimal:0'
         ];
     }
 
-    public function failedValidation(Validator $validator)
+    function failedValidation(Validator $validator)
     {
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'message' => 'Validation errors',
-            'data' => $validator->errors()
-        ]));
+        if ($this->expectsJson()) {
+            $response = new Response($validator->errors(), 422);
+            throw new ValidationException($validator, $response);
+        }
     }
 }

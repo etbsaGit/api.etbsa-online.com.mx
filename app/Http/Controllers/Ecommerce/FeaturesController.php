@@ -6,29 +6,16 @@ use App\Contracts\FeatureContract;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Ecommerce\StoreFeaturesRequest;
 use App\Http\Requests\Ecommerce\UpdateFeaturesRequest;
-use App\Models\Ecommerce\Features;
+use App\Models\Ecommerce\Feature;
 
 class FeaturesController extends ApiController
 {
-
-    private FeatureContract $featureRepository;
-
-    public function __construct(FeatureContract $featureRepository)
-    {
-        $this->featureRepository = $featureRepository;
-    }
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $items = $this->featureRepository->index(request()->all());
-
-        return $this->respond([
-            'data' => $items,
-            'message' => 'Recursos Encontrados'
-        ]);
+        return response()->json(Feature::all());
     }
 
     /**
@@ -36,21 +23,13 @@ class FeaturesController extends ApiController
      */
     public function store(StoreFeaturesRequest $request)
     {
-        $payload = $request->validated();
-
-        $feature = $this->featureRepository->createFeature($payload);
-
-        return $this->respondCreated([
-            'success' => true,
-            'message' => 'Categoria Creada',
-            'data' => $feature
-        ]);
+        return response()->json(Feature::create($request->validated()));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Features $feature)
+    public function show(Feature $feature)
     {
         //
     }
@@ -58,23 +37,16 @@ class FeaturesController extends ApiController
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateFeaturesRequest $request, Features $feature)
+    public function update(UpdateFeaturesRequest $request, Feature $feature)
     {
-        $payload = $request->validated();
-
-        $updated = $this->featureRepository->updateFeature($feature->id, $payload);
-
-        return $this->respondCreated([
-            'success' => true,
-            'message' => 'Caracteristica Actualizada',
-            'data' => $updated
-        ]);
+        $feature->update($request->validated());
+        return response()->json($feature);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Features $feature)
+    public function destroy(Feature $feature)
     {
         $feature->delete();
         return $this->respondSuccess();

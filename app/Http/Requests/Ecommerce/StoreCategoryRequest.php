@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Ecommerce;
 
-use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class StoreCategoryRequest extends FormRequest
 {
@@ -19,6 +21,15 @@ class StoreCategoryRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $name = $this->input('name');
+        $slug = Str::slug($name);
+        $this->merge([
+            'slug' => $slug,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -27,17 +38,17 @@ class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|max:191',
-            'parent_id' => 'nullable|exists:App\Models\Ecommerce\Category,id'
+            'name' => ['required','max:191'],
+            'slug' => ['required','max:191'],
+            'parent_id' => ['nullable','exists:App\Models\Ecommerce\Category,id']
         ];
     }
 
-    public function failedValidation(Validator $validator)
+    function failedValidation(Validator $validator)
     {
-       throw new HttpResponseException(response()->json([
-         'success'   => false,
-         'message'   => 'Validation errors',
-         'data'      => $validator->errors()
-       ]));
+        if ($this->expectsJson()) {
+            $response = new Response($validator->errors(), 422);
+            throw new ValidationException($validator, $response);
+        }
     }
 }

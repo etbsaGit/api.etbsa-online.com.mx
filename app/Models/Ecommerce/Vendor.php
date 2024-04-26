@@ -4,7 +4,7 @@ namespace App\Models\Ecommerce;
 
 use App\Casts\Name;
 use App\Traits\FilterableModel;
-use Illuminate\Database\Eloquent\Casts\Attribute as CastableAttribute;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -26,47 +26,19 @@ class Vendor extends Model
         'name' => Name::class,
     ];
 
+    protected $appends = ['logopath'];
 
-    /**
-     *
-     * Boot the model.
-     */
-    protected static function boot()
+    public function logopath(): Attribute
     {
-        parent::boot();
-
-        static::created(static function ($vendor) {
-            $vendor->slug = \Str::slug($vendor->name);
-            $vendor->save();
-        });
-        // static::updated(static function ($vendor) {
-        //     $vendor->slug = \Str::slug($vendor->name);
-        //     $vendor->save();
-        // });
-    }
-
-    public function logo(): CastableAttribute
-    {
-        return CastableAttribute::make(
-            get: static function($value) {
-                if(!is_null($value)) {
-                    // return asset('storage/' . $value);
-                    return Storage::disk('s3')->url($value);
-                }
-            }
+        return Attribute::make(
+            get: fn () => $this->logo ? Storage::disk('s3')->url($this->logo) : null
         );
     }
 
-    public function storageLogo(): CastableAttribute
+    protected function defaultPathFolder(): Attribute
     {
-        return CastableAttribute::make(
-            get: static function($value, $attributes) {
-                if(!is_null($attributes['logo'])) {
-                    return $attributes['logo'];
-                }
-
-                return null;
-            }
+        return Attribute::make(
+            get: fn () => "images/vendors/id_" . $this->id,
         );
     }
 
