@@ -1,21 +1,33 @@
 <?php
 
-namespace App\Http\Requests\Qualification;
+namespace App\Http\Requests\Ecommerce;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
-class StoreRequest extends FormRequest
+class StoreCategoryRequest extends FormRequest
 {
+
+    protected $stopOnFirstFailure = true;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation()
+    {
+        $name = $this->input('name');
+        $slug = Str::slug($name);
+        $this->merge([
+            'slug' => $slug,
+        ]);
     }
 
     /**
@@ -26,11 +38,9 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-
-            "name" => ['required', 'string', 'max:255', 'unique:qualifications,name'],
-            'clave' => ['nullable','string', 'unique:qualifications,clave'],
-            "linea_id" => ['required', 'integer'],
-            "technician_id" => ['required', 'integer'],
+            'name' => ['required','max:191'],
+            'slug' => ['required','max:191'],
+            'parent_id' => ['nullable','exists:App\Models\Ecommerce\Category,id']
         ];
     }
 

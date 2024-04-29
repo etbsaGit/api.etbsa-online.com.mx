@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Requests\Qualification;
+namespace App\Http\Requests\Ecommerce;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
-class StoreRequest extends FormRequest
+class UpdateBrandRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,6 +19,15 @@ class StoreRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $name = $this->input('name');
+        $slug = Str::slug($name);
+        $this->merge([
+            'slug' => $slug,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -25,12 +35,9 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
 
-            "name" => ['required', 'string', 'max:255', 'unique:qualifications,name'],
-            'clave' => ['nullable','string', 'unique:qualifications,clave'],
-            "linea_id" => ['required', 'integer'],
-            "technician_id" => ['required', 'integer'],
+        return [
+            'name' => ['required', 'string', 'max:191', Rule::unique('brands')->ignore($this->route('brand')->id)],
         ];
     }
 

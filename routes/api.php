@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\Ecommerce\BrandController;
+use App\Http\Controllers\Ecommerce\CategoryController;
+use App\Http\Controllers\Ecommerce\FeaturesController;
+use App\Http\Controllers\Ecommerce\ProductController;
+use App\Http\Controllers\Ecommerce\VendorController;
+
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RoleController;
@@ -184,7 +191,25 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('auth/logout', [UserController::class, 'logout']);
     Route::post('auth/change', [UserController::class, 'changePassword']);
     Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
+
+    //--------------------landingPage/admin--------------------
+    Route::apiResource('brands', BrandController::class);
+    Route::apiResource('vendors', VendorController::class);
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('features', FeaturesController::class);
+    Route::apiResource('products', ProductController::class);
+    Route::get('formProduct', [ProductController::class, 'formProduct']);
+    Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
+    Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
+    Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
 });
+//--------------------landingPage--------------------
+Route::apiResource('page/brands', BrandController::class);
+Route::apiResource('page/vendors', VendorController::class);
+Route::apiResource('page/categories', CategoryController::class);
+Route::apiResource('page/features', FeaturesController::class);
+Route::apiResource('page/products', ProductController::class);
+
 
 //--------------------Sin inicio de sesion--------------------
 

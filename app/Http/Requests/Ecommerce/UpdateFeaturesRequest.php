@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Qualification;
+namespace App\Http\Requests\Ecommerce;
 
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
-class StoreRequest extends FormRequest
+class UpdateFeaturesRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,11 +26,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-
-            "name" => ['required', 'string', 'max:255', 'unique:qualifications,name'],
-            'clave' => ['nullable','string', 'unique:qualifications,clave'],
-            "linea_id" => ['required', 'integer'],
-            "technician_id" => ['required', 'integer'],
+            "name" => ['required', 'string', 'max:191', Rule::unique('features')->ignore($this->route('feature')->id)],
         ];
     }
 
