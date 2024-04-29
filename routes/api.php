@@ -192,7 +192,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('auth/change', [UserController::class, 'changePassword']);
     Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
 
-    //--------------------landingPage--------------------
+    //--------------------landingPage/admin--------------------
     Route::apiResource('brands', BrandController::class);
     Route::apiResource('vendors', VendorController::class);
     Route::apiResource('categories', CategoryController::class);
@@ -203,6 +203,13 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
     Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
 });
+//--------------------landingPage--------------------
+Route::apiResource('page/brands', BrandController::class);
+Route::apiResource('page/vendors', VendorController::class);
+Route::apiResource('page/categories', CategoryController::class);
+Route::apiResource('page/features', FeaturesController::class);
+Route::apiResource('page/products', ProductController::class);
+
 
 //--------------------Sin inicio de sesion--------------------
 

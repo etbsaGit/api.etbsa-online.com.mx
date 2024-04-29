@@ -93,7 +93,8 @@ class ProductController extends ApiController
      */
     public function destroy(Product $product)
     {
-        //
+        $product->delete();
+        return $this->respondSuccess();
     }
 
     public function formProduct()

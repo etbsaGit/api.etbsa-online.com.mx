@@ -70,7 +70,8 @@ class BrandController extends ApiController
      */
     public function destroy(Brand $brand)
     {
-        //
+        $brand->delete();
+        return $this->respondSuccess();
     }
 
     private function saveImage($base64, $defaultPathFolder)

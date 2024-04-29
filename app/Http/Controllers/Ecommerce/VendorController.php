@@ -75,7 +75,8 @@ class VendorController extends ApiController
      */
     public function destroy(Vendor $vendor)
     {
-        //
+        $vendor->delete();
+        return $this->respondSuccess();
     }
 
     private function saveImage($base64, $defaultPathFolder)
