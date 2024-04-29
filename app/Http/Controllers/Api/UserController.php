@@ -28,7 +28,7 @@ class UserController extends ApiController
             //$user = User::find(1)->load('Empleado')
 
             // return response()->json($token);
-            $user = User::where('email', $request->email)->first()->load('Evaluee', 'Evaluee.question', 'Empleado', 'Empleado.escolaridad', 'Empleado.estado_civil', 'Empleado.tipo_de_sangre', 'Empleado.puesto', 'Empleado.sucursal', 'Empleado.linea', 'Empleado.departamento', 'Empleado.jefe_directo', 'Empleado.archivable', 'Empleado.archivable.requisito', 'Roles');
+            $user = User::where('email', $request->email)->first()->load('Evaluee', 'Evaluee.question', 'Empleado', 'Empleado.escolaridad', 'Empleado.estado_civil', 'Empleado.tipo_de_sangre', 'Empleado.puesto', 'Empleado.sucursal', 'Empleado.linea', 'Empleado.departamento', 'Empleado.jefe_directo', 'Empleado.archivable', 'Empleado.archivable.requisito', 'Roles', 'Permissions');
             return response()->json([
                 'status' => true,
                 'message' => 'Usuario logueado con exito',

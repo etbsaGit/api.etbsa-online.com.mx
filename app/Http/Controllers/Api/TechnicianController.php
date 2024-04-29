@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Linea;
+use App\Models\Empleado;
 use App\Models\Technician;
 use Illuminate\Http\Request;
+use App\Models\LineaTechnician;
+use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Technician\PutRequest;
-use App\Http\Requests\Technician\ArrayRequest;
 use App\Http\Requests\Technician\StoreRequest;
-use App\Models\Empleado;
-use App\Models\LineaTechnician;
 
 class TechnicianController extends Controller
 {
@@ -107,20 +107,20 @@ class TechnicianController extends Controller
 
         $calificacionesAgricolas = $lineaAgricola->lineaTechnician()
             ->where('linea_id', $lineaAgricola->id)
-            ->with(['technician','qualification'])
+            ->with(['technician', 'qualification'])
             ->get();
-            $calificacionesAgricolas = $calificacionesAgricolas->sortBy(function ($lineaTechnician) {
-                return $lineaTechnician->technician->level;
-            })->values();
+        $calificacionesAgricolas = $calificacionesAgricolas->sortBy(function ($lineaTechnician) {
+            return $lineaTechnician->technician->level;
+        })->values();
 
         $lineaConstruccion = Linea::where('nombre', 'Construccion')->first();
         $calificacionesConstruccion = $lineaConstruccion->lineaTechnician()
             ->where('linea_id', $lineaConstruccion->id)
-            ->with(['technician','qualification'])
+            ->with(['technician', 'qualification'])
             ->get();
-            $calificacionesConstruccion = $calificacionesConstruccion->sortBy(function ($lineaTechnician) {
-                return $lineaTechnician->technician->level;
-            })->values();
+        $calificacionesConstruccion = $calificacionesConstruccion->sortBy(function ($lineaTechnician) {
+            return $lineaTechnician->technician->level;
+        })->values();
 
         return response()->json([
             'agricola' => $calificacionesAgricolas,
@@ -149,5 +149,16 @@ class TechnicianController extends Controller
         });
 
         return response()->json($techniciansArray);
+    }
+
+    public function setUserX(Empleado $empleado, Request $request)
+    {
+        $request->validate(['usuario_x' => ['required', Rule::unique('empleados')->ignore($empleado->id)]]);
+
+        $empleado->update([
+            'usuario_x' => $request->usuario_x
+        ]);
+
+        return response()->json(['message' => 'Usuario X actualizado con éxito']);
     }
 }

@@ -63,7 +63,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::group(['middleware' => 'auth:sanctum'], function () {
+Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------Rutas All--------------------
     Route::get('alergia/all', [AlergiaController::class, 'all']);
@@ -99,7 +99,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('user/all', [UserController::class, 'all']);
 
     //--------------------Empleado--------------------
-    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
     Route::post('empleado/filtertwo', [EmpleadoController::class, 'filtertwo']);
     Route::post('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
     Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
@@ -135,6 +134,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     //--------------------Qualification--------------------
     Route::post('technician/linea/{technician}', [TechnicianController::class, 'storeLineas']);
+    Route::post('technician/userx/{empleado}', [TechnicianController::class, 'setUserX']);
     Route::post('technician/empleado/{empleado}/{technician}', [TechnicianController::class, 'changeTypeTechnician']);
     Route::get('technicians', [TechnicianController::class, 'getAll']);
     Route::get('technicians/{linea}', [TechnicianController::class, 'getTechnicianLine']);
@@ -217,6 +217,9 @@ Route::apiResource('page/products', ProductController::class);
 Route::post('auth/login', [UserController::class, 'login']);
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
+
+Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
+
 
 //--------------------Expediente--------------------
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);

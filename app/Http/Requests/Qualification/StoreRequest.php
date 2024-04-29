@@ -26,18 +26,19 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "name"=>['required','string','max:255'],
-            "linea_id"=>['required','integer'],
-            "technician_id"=>['required','integer'],
+
+            "name" => ['required', 'string', 'max:255', 'unique:qualifications,name'],
+            'clave' => ['nullable','string', 'unique:qualifications,clave'],
+            "linea_id" => ['required', 'integer'],
+            "technician_id" => ['required', 'integer'],
         ];
     }
 
     function failedValidation(Validator $validator)
     {
-        if($this->expectsJson())
-            {
-                $response = new Response($validator->errors(),422);
-                throw new ValidationException($validator, $response);
-            }
+        if ($this->expectsJson()) {
+            $response = new Response($validator->errors(), 422);
+            throw new ValidationException($validator, $response);
+        }
     }
 }
