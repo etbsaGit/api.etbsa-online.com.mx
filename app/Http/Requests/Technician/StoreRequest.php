@@ -27,6 +27,9 @@ class StoreRequest extends FormRequest
     {
         return [
             "name"=>['required','string','max:255'],
+            "antiguedad_minima"=>['nullable','integer'],
+            "jobcode"=>['nullable','string','max:255'],
+            "levelcap"=>['nullable','string','max:255'],
             "level"=>['required','integer'],
             'lineas' => ['nullable','array'],
         ];

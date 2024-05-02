@@ -73,29 +73,75 @@ class QualificationController extends Controller
 
     public function getEmployeeTechnician()
     {
-        // Obtener todos los empleados con el puesto 'tecnico' y cargar la relación 'linea' y 'qualification'
-        $empleadosTecnicos = Empleado::whereHas('puesto', function ($query) {
+
+        $lineasConstruccion = Linea::where('nombre', 'Construccion')->first();
+        $lineasAgricola = Linea::where('nombre', 'Agricola')->first();
+
+        $calificacionesConstruccion = LineaTechnician::where('linea_id', $lineasConstruccion->id)
+            ->with(['technician' => function ($query) {
+                $query->orderBy('level', 'asc')->with(['empleado.linea', 'empleado.departamento', 'empleado.sucursal', 'empleado.puesto', 'empleado.qualification','empleado.technician']);
+            }])
+            ->get();
+
+        $calificacionesAgricola = LineaTechnician::where('linea_id', $lineasAgricola->id)
+            ->with(['technician' => function ($query) {
+                $query->orderBy('level', 'asc')->with(['empleado.linea', 'empleado.departamento', 'empleado.sucursal', 'empleado.puesto', 'empleado.qualification','empleado.technician']);
+            }])
+            ->get();
+
+        $empleadosTecnicosSinAsignar = Empleado::whereHas('puesto', function ($query) {
             $query->where('nombre', 'Tecnico');
-        })->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification','technician')->get();
+        })->whereDoesntHave('technician')->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification')->get();
 
-        // Inicializar arreglos para los empleados de las diferentes líneas
-        $empleadosAgricola = [];
-        $empleadosConstruccion = [];
+        $empleadosAgricolaSinTecnico = [];
+        $empleadosConstruccionSinTecnico = [];
 
-        // Separar los empleados según su línea
-        foreach ($empleadosTecnicos as $empleado) {
+        foreach ($empleadosTecnicosSinAsignar as $empleado) {
             if ($empleado->linea->nombre === 'Agricola') {
-                $empleadosAgricola[] = $empleado;
+                $empleadosAgricolaSinTecnico[] = $empleado;
             } elseif ($empleado->linea->nombre === 'Construccion') {
-                $empleadosConstruccion[] = $empleado;
+                $empleadosConstruccionSinTecnico[] = $empleado;
             }
         }
 
-        // Devolver los empleados separados por línea
-        return [
-            'agricola' => $empleadosAgricola,
-            'construccion' => $empleadosConstruccion
-        ];
+
+        return response()->json([
+            'agricola' => $calificacionesAgricola,
+            'construccion' => $calificacionesConstruccion,
+            'sinAsignar' => [
+                'agricola' => $empleadosAgricolaSinTecnico,
+                'construccion' => $empleadosConstruccionSinTecnico
+            ]
+        ]);
+
+        // // Obtener todos los empleados con el puesto 'tecnico' y cargar la relación 'linea' y 'qualification'
+        // $empleadosTecnicos = Empleado::whereHas('puesto', function ($query) {
+        //     $query->where('nombre', 'Tecnico');
+        // })->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician')->get();
+
+        // // Ordenar los empleados por nivel de técnico
+        // $empleadosTecnicos = $empleadosTecnicos->sortBy(function ($empleado) {
+        //     return $empleado->technician->level ?? PHP_INT_MAX;
+        // });
+
+        // // Inicializar arreglos para los empleados de las diferentes líneas
+        // $empleadosAgricola = [];
+        // $empleadosConstruccion = [];
+
+        // // Separar los empleados según su línea
+        // foreach ($empleadosTecnicos as $empleado) {
+        //     if ($empleado->linea->nombre === 'Agricola') {
+        //         $empleadosAgricola[] = $empleado;
+        //     } elseif ($empleado->linea->nombre === 'Construccion') {
+        //         $empleadosConstruccion[] = $empleado;
+        //     }
+        // }
+
+        // // Devolver los empleados separados por línea
+        // return [
+        //     'agricola' => $empleadosAgricola,
+        //     'construccion' => $empleadosConstruccion
+        // ];
     }
 
     public function getPerLine(Linea $linea)
@@ -108,9 +154,9 @@ class QualificationController extends Controller
             ->where('linea_id', $linea->id)
             ->with(['qualification', 'technician'])
             ->get();
-            $calificaciones = $calificaciones->sortBy(function ($lineaTechnician) {
-                return $lineaTechnician->technician->level;
-            })->values();
+        $calificaciones = $calificaciones->sortBy(function ($lineaTechnician) {
+            return $lineaTechnician->technician->level;
+        })->values();
 
         return response()->json($calificaciones);
     }

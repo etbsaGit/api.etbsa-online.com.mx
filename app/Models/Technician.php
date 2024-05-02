@@ -11,8 +11,18 @@ class Technician extends Model
 
     protected $fillable = [
         'name',
-        'level'
+        'level',
+        'antiguedad_minima',
+        'jobcode',
+        'levelcap'
     ];
+
+    protected $appends = ['concepto'];
+
+    public function getConceptoAttribute()
+    {
+        return "Categoria: " . $this->name . ' / ' . "Antigüedad minima: " . $this->antiguedad_minima . ' / ' . "Level Cap: ".$this->levelcap . ' / ' . "Job Code: ".$this->jobcode;
+    }
 
     public function empleado()
     {
@@ -23,5 +33,4 @@ class Technician extends Model
     {
         return $this->hasMany(LineaTechnician::class, 'technician_id');
     }
-
 }
