@@ -72,7 +72,16 @@ class ProductController extends ApiController
         $features = $request->features;
         $images = $request->images;
         $category_id = $request->category_id;
-        $product->features()->sync($features);
+
+        if (!empty($features)) {
+            $product->features()->detach();
+            foreach ($features as $feature) {
+                $product->features()->attach($feature['feature_id'], ['value' => $feature['value']]);
+            }
+        }else {
+            $product->features()->detach();
+        }
+
         $product->categories()->sync($category_id);
 
         if (!empty($images)) {
