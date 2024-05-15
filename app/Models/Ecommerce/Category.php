@@ -5,18 +5,38 @@ namespace App\Models\Ecommerce;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Category extends Model
 {
     use HasFactory;
 
+    protected $table = 'categories';
+
     public $fillable = [
         'name',
         'slug',
+        'logo',
         'parent_id'
     ];
 
-    protected $table = 'categories';
+    protected $appends = ['logopath'];
+
+    public function logopath(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->logo ? Storage::disk('s3')->url($this->logo) : null
+        );
+    }
+
+    protected function defaultPathFolder(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "images/vendors/id_" . $this->id,
+        );
+    }
+
 
     /**
      * Return the children of the model, if exists.

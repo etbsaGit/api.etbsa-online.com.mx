@@ -37,6 +37,7 @@ class UpdateCategoryRequest extends FormRequest
     {
         return [
             'name' => ['required','max:191'],
+            'slug' => ['required','max:191'],
             'parent_id' => ['nullable','exists:App\Models\Ecommerce\Category,id']
         ];
     }

@@ -198,6 +198,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('features', FeaturesController::class);
     Route::apiResource('products', ProductController::class);
+
     Route::get('formProduct', [ProductController::class, 'formProduct']);
     Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
     Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
@@ -209,6 +210,11 @@ Route::apiResource('page/vendors', VendorController::class);
 Route::apiResource('page/categories', CategoryController::class);
 Route::apiResource('page/features', FeaturesController::class);
 Route::apiResource('page/products', ProductController::class);
+Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
+Route::get('page/product/all', [ProductController::class, 'getAll']);
+Route::post('page/product/get', [ProductController::class, 'getProducts']);
+Route::get('page/product/random/{limit}', [ProductController::class, 'getRandomFeaturedProducts']);
+
 
 
 //--------------------Sin inicio de sesion--------------------

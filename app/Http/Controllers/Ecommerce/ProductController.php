@@ -14,6 +14,7 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Ecommerce\StoreProductRequest;
 use App\Http\Requests\Ecommerce\UpdateProductRequest;
+use Illuminate\Http\Request;
 
 class ProductController extends ApiController
 {
@@ -26,6 +27,21 @@ class ProductController extends ApiController
     /**
      * Display a listing of the resource.
      */
+    public function getAll()
+    {
+        return response()->json([
+            "categories" => Category::whereNull('parent_id')->with('childrenRecursive')->get(),
+            "features" => Feature::all(),
+            "brands"=> Brand::all(),
+        ]);
+    }
+
+    public function getProducts(Request $request)
+    {
+        $filters = $request->all();
+        return response()->json(Product::filter($filters)->with('brand', 'vendor', 'images', 'features', 'categories')->paginate(10));
+    }
+
     public function index()
     {
         return response()->json(Product::with('brand', 'vendor', 'images', 'features', 'categories')->get());
@@ -36,7 +52,7 @@ class ProductController extends ApiController
      */
     public function store(StoreProductRequest $request)
     {
-        $product = Product::create($request->only(['name','slug', 'sku', 'description', 'quantity', 'price', 'active', 'featured', 'brand_id', 'vendor_id','sale_price']));
+        $product = Product::create($request->only(['name', 'slug', 'sku', 'description', 'quantity', 'price', 'active', 'featured', 'brand_id', 'vendor_id', 'sale_price']));
         $features = $request->features;
         $category_id = $request->category_id;
         $images = $request->images;
@@ -78,7 +94,7 @@ class ProductController extends ApiController
             foreach ($features as $feature) {
                 $product->features()->attach($feature['feature_id'], ['value' => $feature['value']]);
             }
-        }else {
+        } else {
             $product->features()->detach();
         }
 
@@ -109,7 +125,7 @@ class ProductController extends ApiController
     public function formProduct()
     {
         $data = [
-            'categories' => Category::all(),
+            'categories' => Category::whereNull('parent_id')->with('childrenRecursive')->get(),
             'features' => Feature::all(),
             'brands' => Brand::all(),
             'vendors' => Vendor::all(),
@@ -141,6 +157,24 @@ class ProductController extends ApiController
         $product->save();
 
         return response()->json(['mensaje' => 'Estado cambiado exitosamente']);
+    }
+
+    public function filterProduct(Request $request)
+    {
+        $filters = $request->all();
+        $products = Product::filter($filters)->with('brand', 'vendor', 'images', 'features', 'categories')->paginate(10);
+        return response()->json($products);
+    }
+
+    public function getRandomFeaturedProducts($limit)
+    {
+        $randomFeaturedProducts = Product::with('brand', 'vendor', 'images', 'features', 'categories')
+            ->where('featured', 1)
+            ->inRandomOrder()
+            ->limit($limit)
+            ->get();
+
+        return response()->json($randomFeaturedProducts);
     }
 
     public function deleteImg(ProductImage $productImage)
