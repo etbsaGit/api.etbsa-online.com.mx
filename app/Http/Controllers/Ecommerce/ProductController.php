@@ -31,8 +31,8 @@ class ProductController extends ApiController
     {
         return response()->json([
             "categories" => Category::whereNull('parent_id')->with('childrenRecursive')->get(),
-            "features" => Feature::all(),
-            "brands"=> Brand::all(),
+            "features" => Feature::with('values')->get(),
+            "brands" => Brand::all(),
         ]);
     }
 
@@ -162,7 +162,11 @@ class ProductController extends ApiController
     public function filterProduct(Request $request)
     {
         $filters = $request->all();
-        $products = Product::filter($filters)->with('brand', 'vendor', 'images', 'features', 'categories')->paginate(10);
+        $products = Product::filter($filters)
+            ->with('brand', 'vendor', 'images', 'features', 'categories')
+            ->orderBy('featured', 'asc') // Ordena por el nombre en orden ascendente
+            ->paginate(10);
+
         return response()->json($products);
     }
 

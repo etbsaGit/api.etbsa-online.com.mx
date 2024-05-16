@@ -15,8 +15,14 @@ class Feature extends Model
         'name',
     ];
 
+    // public function values()
+    // {
+    //     return $this->hasMany(FeatureValue::class, 'feature_id');
+    // }
+
     public function values()
     {
-        return $this->hasMany(FeatureValue::class, 'feature_id');
+        return $this->belongsToMany(Product::class, 'feature_product', 'feature_id', 'product_id')
+            ->select('products.id', 'feature_product.value');
     }
 }
