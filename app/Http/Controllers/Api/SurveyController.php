@@ -479,12 +479,21 @@ class SurveyController extends ApiController
 
 
     public function getGradesForEvaluee(User $evaluee)
-    {
-        // Obtener todas las calificaciones para el evaluado especificado
-        $grades = Grade::where('evaluee_id', $evaluee->id)->with('survey')->get();
-        // Devolver las calificaciones en formato JSON
-        return response()->json($grades);
-    }
+{
+    // Obtener todas las calificaciones para el evaluado especificado
+    $grades = Grade::where('evaluee_id', $evaluee->id)->with('survey')->get();
+
+    // Calcular el promedio de los puntajes
+    $totalScores = $grades->sum('score');
+    $averageScore = $grades->isEmpty() ? 0 : $totalScores / $grades->count();
+
+    // Devolver el promedio de los puntajes
+    return response()->json([
+        'grades' => $grades,
+        'average_score' => $averageScore
+    ]);
+}
+
 
     public function getGradesForSurvey(Survey $survey)
     {
