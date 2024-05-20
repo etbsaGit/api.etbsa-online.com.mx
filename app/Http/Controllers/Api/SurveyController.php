@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use App\Models\Grade;
+use App\Models\Puesto;
 use App\Models\Survey;
 use App\Models\Empleado;
 use App\Mail\GradeMailable;
@@ -17,9 +18,9 @@ use App\Models\SurveyQuestion;
 use App\Traits\UploadableFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Survey\GradeRequest;
@@ -36,7 +37,7 @@ class SurveyController extends ApiController
      */
     public function index()
     {
-        $surveys = Survey::with(['question', 'question.answer.evaluee', 'evaluee', 'evaluee.empleado'])
+        $surveys = Survey::with(['puesto', 'question', 'question.answer.evaluee', 'evaluee', 'evaluee.empleado'])
             ->withCount('evaluee')
             ->get();
 
@@ -75,7 +76,6 @@ class SurveyController extends ApiController
     {
         $data = $request->validated();
 
-
         $survey = Survey::create($data);
 
         if ($survey->evaluator) {
@@ -109,7 +109,7 @@ class SurveyController extends ApiController
      */
     public function show(Survey $survey)
     {
-        return response()->json($survey->load(['question']));
+        return response()->json($survey->load(['puesto', 'question']));
     }
 
     public function showPerEvaluee()
@@ -130,7 +130,7 @@ class SurveyController extends ApiController
     {
         $user = Auth::user();
 
-        $surveys = $user->survey()->where('evaluator_id', $user->id)->with(['question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
+        $surveys = $user->survey()->where('evaluator_id', $user->id)->with(['puesto', 'question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
 
         return response()->json($surveys);
     }
@@ -398,14 +398,14 @@ class SurveyController extends ApiController
 
         $to_email = $grade->evaluee->email;
 
-        $correo=[
-            'score'=>$grade->score,
-            'correct'=>$grade->correct,
-            'incorrect'=>$grade->incorrect,
-            'unanswered'=>$grade->unanswered,
-            'comments'=>$grade->comments,
-            'evaluee'=>$grade->evaluee->name,
-            'survey'=>$grade->survey->title
+        $correo = [
+            'score' => $grade->score,
+            'correct' => $grade->correct,
+            'incorrect' => $grade->incorrect,
+            'unanswered' => $grade->unanswered,
+            'comments' => $grade->comments,
+            'evaluee' => $grade->evaluee->name,
+            'survey' => $grade->survey->title
         ];
 
 
@@ -479,20 +479,20 @@ class SurveyController extends ApiController
 
 
     public function getGradesForEvaluee(User $evaluee)
-{
-    // Obtener todas las calificaciones para el evaluado especificado
-    $grades = Grade::where('evaluee_id', $evaluee->id)->with('survey')->get();
+    {
+        // Obtener todas las calificaciones para el evaluado especificado
+        $grades = Grade::where('evaluee_id', $evaluee->id)->with('survey')->get();
 
-    // Calcular el promedio de los puntajes
-    $totalScores = $grades->sum('score');
-    $averageScore = $grades->isEmpty() ? 0 : $totalScores / $grades->count();
+        // Calcular el promedio de los puntajes
+        $totalScores = $grades->sum('score');
+        $averageScore = $grades->isEmpty() ? 0 : $totalScores / $grades->count();
 
-    // Devolver el promedio de los puntajes
-    return response()->json([
-        'grades' => $grades,
-        'average_score' => $averageScore
-    ]);
-}
+        // Devolver el promedio de los puntajes
+        return response()->json([
+            'grades' => $grades,
+            'average_score' => $averageScore
+        ]);
+    }
 
 
     public function getGradesForSurvey(Survey $survey)
@@ -546,6 +546,54 @@ class SurveyController extends ApiController
             $nuevaPregunta->save();
         }
     }
+
+    public function getKardex()
+    {
+        // Obtener todas las encuestas que tienen puesto_id a través de la relación con Puesto
+        $surveysWithPuesto = Puesto::whereHas('survey')->with('survey', 'survey.evaluee.empleado', 'survey.evaluee.grade')->get();
+
+        // Obtener todas las encuestas que no tienen puesto_id
+        $surveysWithoutPuesto = Survey::whereNull('puesto_id')->with('evaluee.empleado', 'evaluee.grade')->get();
+
+        // Crear una respuesta con ambas colecciones
+        $response = [
+            'surveys_with_puesto' => $surveysWithPuesto,
+            'surveys_without_puesto' => $surveysWithoutPuesto,
+        ];
+
+        // Devolver la respuesta en formato JSON
+        return response()->json($response);
+    }
+
+    public function getKardexPerEvaluator()
+    {
+        $user = Auth::user();
+
+        $surveysWithPuesto = Puesto::whereHas('survey', function ($query) use ($user) {
+            $query->where('evaluator_id', $user->id);
+        })
+        ->with(['survey' => function ($query) use ($user) {
+            $query->where('evaluator_id', $user->id);
+            // Aquí puedes agregar otras condiciones si es necesario
+        }, 'survey.evaluee.empleado', 'survey.evaluee.grade'])
+        ->get();
+
+
+        $surveysWithoutPuesto = Survey::whereNull('puesto_id')
+            ->where('evaluator_id', $user->id)
+            ->with('evaluee.empleado', 'evaluee.grade')
+            ->get();
+
+        $response = [
+            'surveys_with_puesto' => $surveysWithPuesto,
+            'surveys_without_puesto' => $surveysWithoutPuesto,
+        ];
+
+        return response()->json($response);
+    }
+
+
+
 
     private function saveImage($base64, $defaultPathFolder)
     {
