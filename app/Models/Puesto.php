@@ -24,6 +24,11 @@ class Puesto extends Model
         return $this->hasMany(ExperienciaLaboral::class, 'puesto_id');
     }
 
+    public function survey()
+    {
+        return $this->hasMany(Survey::class, 'puesto_id');
+    }
+
     public function skill()
     {
         return $this->belongsToMany(Skill::class, 'p_skills_puestos', 'puesto_id', 'skill_id');

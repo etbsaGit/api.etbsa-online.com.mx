@@ -128,6 +128,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::put('survey/answer/{answer}', [SurveyController::class, 'updateComment']);
     Route::post('surveys/grade', [SurveyController::class, 'storeGrade']);
     Route::get('surveys/grade/{evaluee}/{survey}', [SurveyController::class, 'getForGrade']);
+    Route::get('surveys/kardex', [SurveyController::class, 'getKardex']);
+    Route::get('surveys/kardex/evaluator', [SurveyController::class, 'getKardexPerEvaluator']);
     Route::get('grades/{evaluee}', [SurveyController::class, 'getGradesForEvaluee']);
     Route::get('grades/survey/{survey}', [SurveyController::class, 'getGradesForSurvey']);
     Route::apiResource('survey', SurveyController::class);

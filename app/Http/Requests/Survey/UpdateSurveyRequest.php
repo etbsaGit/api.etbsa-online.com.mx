@@ -47,6 +47,7 @@ class UpdateSurveyRequest extends FormRequest
             'title' => ['required', 'string'],
             'slug' => ['required', 'string'],
             'evaluator_id' => ['nullable','exists:users,id'],
+            'puesto_id' => ['nullable','exists:puestos,id'],
             'status' => ['required', 'boolean'],
             'description' => ['nullable', 'string'],
             'expire_date' => ['nullable', 'date', 'after:tomoroow'],

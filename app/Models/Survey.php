@@ -19,6 +19,7 @@ class Survey extends Model
 
     protected $fillable = [
         'evaluator_id',
+        'puesto_id',
         'image',
         'title',
         'slug',
@@ -46,6 +47,11 @@ class Survey extends Model
     public function evaluator()
     {
         return $this->belongsTo(User::class, 'evaluator_id');
+    }
+
+    public function puesto()
+    {
+        return $this->belongsTo(Puesto::class, 'puesto_id');
     }
 
     public function question()
