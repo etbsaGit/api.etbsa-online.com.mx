@@ -176,6 +176,11 @@ class Empleado extends Model
         return $this->hasMany(Asignacion::class, 'empleado_id');
     }
 
+    public function events()
+    {
+        return $this->hasMany(Event::class, 'empleado_id');
+    }
+
     // -----------------------------------------------------------------
 
     public function empleado()

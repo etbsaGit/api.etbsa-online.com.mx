@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\SkillController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
+use App\Http\Controllers\Api\EventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -205,6 +206,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
     Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
     Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
+
+    //--------------------landingPage/admin--------------------
+    Route::get('event/{day}', [EventController::class, 'getPerDay']);
+    Route::apiResource('events', EventController::class);
+
+
 });
 //--------------------landingPage--------------------
 Route::apiResource('page/brands', BrandController::class);
