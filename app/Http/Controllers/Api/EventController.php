@@ -61,4 +61,20 @@ class EventController extends ApiController
             ->get();
         return response()->json($eventos);
     }
+
+    public function changeDay(Event $event, Request $request)
+    {
+
+        $request->validate([
+            'date' => ['required','date_format:Y-m-d'],
+        ]);
+
+        $newDate = $request->input('date');
+
+        $event->update([
+            'date' => $newDate,
+        ]);
+
+        return response()->json($event);
+    }
 }

@@ -209,6 +209,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------landingPage/admin--------------------
     Route::get('event/{day}', [EventController::class, 'getPerDay']);
+    Route::put('event/change/{event}', [EventController::class, 'changeDay']);
     Route::apiResource('events', EventController::class);
 
 
