@@ -2,7 +2,7 @@
 
 namespace App\Contracts;
 
-use App\Models\Ecommerce\Features;
+use App\Models\Ecommerce\Feature;
 
 
 interface FeatureContract
@@ -17,7 +17,7 @@ interface FeatureContract
 
     public function createFeature(array $params);
 
-    public function updateFeature(Features $feature, array $params);
+    public function updateFeature(Feature $feature, array $params);
 
     public function deleteFeature($id);
 

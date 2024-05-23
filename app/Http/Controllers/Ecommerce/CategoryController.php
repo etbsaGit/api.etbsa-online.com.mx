@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers\Ecommerce;
 
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+
+use App\Traits\UploadableFile;
 use App\Models\Ecommerce\Category;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\ApiController;
-use App\Repositories\CategoryRepository;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Ecommerce\StoreCategoryRequest;
 use App\Http\Requests\Ecommerce\UpdateCategoryRequest;
 
 class CategoryController extends ApiController
 {
-
+    use UploadableFile;
     /**
      * Display a listing of the resource.
      */
@@ -79,35 +77,4 @@ class CategoryController extends ApiController
         return $this->respondSuccess();
     }
 
-    private function saveImage($base64, $defaultPathFolder)
-    {
-        // Check if image is valid base64 string
-        if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
-            // Take out the base64 encoded text without mime type
-            $image = substr($base64, strpos($base64, ',') + 1);
-            // Get file extension
-            $type = strtolower($type[1]); // jpg, png, gif
-
-            // Check if file is an image
-            if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
-                throw new \Exception('invalid image type');
-            }
-            $image = str_replace(' ', '+', $image);
-            $image = base64_decode($image);
-
-            if ($image === false) {
-                throw new \Exception('base64_decode failed');
-            }
-        } else {
-            throw new \Exception('did not match data URI with image data');
-        }
-
-        $fileName = Str::random() . '.' . $type;
-        $filePath = $defaultPathFolder . '/' . $fileName;
-
-        // Guardar el archivo en AWS S3
-        Storage::disk('s3')->put($filePath, $image);
-
-        return $filePath;
-    }
 }
