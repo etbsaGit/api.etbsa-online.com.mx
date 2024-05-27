@@ -1,24 +1,21 @@
 <?php
 
-use App\Http\Controllers\Ecommerce\BrandController;
-use App\Http\Controllers\Ecommerce\CategoryController;
-use App\Http\Controllers\Ecommerce\FeaturesController;
-use App\Http\Controllers\Ecommerce\ProductController;
-use App\Http\Controllers\Ecommerce\VendorController;
-
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\LineaController;
+use App\Http\Controllers\Api\SkillController;
 use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\PuestoController;
+use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\AlergiaController;
 use App\Http\Controllers\Api\ArchivoController;
 use App\Http\Controllers\Api\EscuelaController;
 use App\Http\Controllers\Api\EstatusController;
 use App\Http\Controllers\Api\EstudioController;
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\SucursalController;
 use App\Http\Controllers\Api\DocumentoController;
@@ -29,25 +26,27 @@ use App\Http\Controllers\Api\AsignacionController;
 use App\Http\Controllers\Api\EnfermedadController;
 use App\Http\Controllers\Api\ExpedienteController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\MedicamentoController;
+use App\Http\Controllers\Api\SkillRaitngController;
+use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\ConstelacionController;
 use App\Http\Controllers\Api\DepartamentoController;
 use App\Http\Controllers\Api\TipoDeSangreController;
+use App\Http\Controllers\Ecommerce\VendorController;
 use App\Http\Controllers\Api\QualificationController;
+use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Api\DesvinculacionController;
+use App\Http\Controllers\Ecommerce\CategoryController;
+use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\EstadoDeEstudioController;
-use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\TipoDeAsignacionController;
 use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
-use App\Http\Controllers\Api\SkillController;
-use App\Http\Controllers\Api\SkillRaitngController;
-use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\TipoDeDesvinculacionController;
-use App\Http\Controllers\Api\EventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -207,12 +206,13 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
     Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
 
-    //--------------------landingPage/admin--------------------
+    //--------------------Calendar--------------------
     Route::get('event/{day}', [EventController::class, 'getPerDay']);
     Route::put('event/change/{event}', [EventController::class, 'changeDay']);
+    Route::put('event/completed/{activity}', [EventController::class, 'changeCompleted']);
+    Route::put('event/activity/{event}', [EventController::class, 'storeActivitiesEvent']);
     Route::apiResource('events', EventController::class);
-
-
+    Route::apiResource('activities', ActivityController::class);
 });
 //--------------------landingPage--------------------
 Route::apiResource('page/brands', BrandController::class);
