@@ -26,4 +26,9 @@ class Sucursal extends Model
     {
         return $this->belongsToMany(Linea::class, 'p_sucursales_lineas', 'sucursal_id', 'linea_id')->withTimestamps();
     }
+
+    public function events()
+    {
+        return $this->hasMany(Event::class, 'sucursal_id');
+    }
 }
