@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Linea;
 use App\Models\Empleado;
+use App\Models\Sucursal;
 use App\Models\Technician;
 use Illuminate\Http\Request;
 use App\Models\LineaTechnician;
@@ -160,5 +161,48 @@ class TechnicianController extends Controller
         ]);
 
         return response()->json(['message' => 'Usuario X actualizado con éxito']);
+    }
+
+    public function setProductivity(Empleado $empleado, Request $request)
+    {
+        $request->validate(['productividad' => ['required']]);
+
+        $empleado->update([
+            'productividad' => $request->productividad
+        ]);
+
+        return response()->json(['message' => 'Productividad actualizada con éxito']);
+    }
+
+    public function getConstruccionBySucursal(Sucursal $sucursal)
+    {
+        // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea de construcción
+        $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
+            ->whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+            ->whereHas('linea', function ($query) {
+                $query->where('nombre', 'construccion');
+            })
+            ->with('sucursal','technician') // Cargar la relación 'sucursal'
+            ->get();
+
+        return response()->json($tecnicos);
+    }
+
+
+    public function getAgricolaBySucursal(Sucursal $sucursal)
+    {
+        // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea de construcción
+        $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
+            ->whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+            ->whereHas('linea', function ($query) {
+                $query->where('nombre', 'agricola');
+            })
+            ->get();
+
+        return response()->json($tecnicos);
     }
 }

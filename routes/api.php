@@ -137,12 +137,15 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------Qualification--------------------
     Route::post('technician/linea/{technician}', [TechnicianController::class, 'storeLineas']);
     Route::post('technician/userx/{empleado}', [TechnicianController::class, 'setUserX']);
+    Route::post('technician/productividad/{empleado}', [TechnicianController::class, 'setProductivity']);
     Route::post('technician/empleado/{empleado}/{technician}', [TechnicianController::class, 'changeTypeTechnician']);
     Route::get('technicians', [TechnicianController::class, 'getAll']);
     Route::get('technicians/{linea}', [TechnicianController::class, 'getTechnicianLine']);
     Route::get('technician/all', [QualificationController::class, 'getEmployeeTechnician']);
     Route::get('qualifications/{linea}', [QualificationController::class, 'getPerLine']);
     Route::post('qualifications/empleado/{empleado}', [QualificationController::class, 'storeQualifications']);
+    Route::get('technicians/construccion/{sucursal}', [TechnicianController::class, 'getConstruccionBySucursal']);
+    Route::get('technicians/agricola/{sucursal}', [TechnicianController::class, 'getAgricolaBySucursal']);
     Route::apiResource('qualification', QualificationController::class);
     Route::apiResource('technician', TechnicianController::class);
 

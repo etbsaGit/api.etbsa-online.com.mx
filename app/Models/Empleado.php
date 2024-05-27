@@ -62,6 +62,7 @@ class Empleado extends Model
         'status',
         'correo_institucional',
         'usuario_x',
+        'productividad',
 
         'escolaridad_id',
         'user_id',
