@@ -17,6 +17,7 @@ use App\Models\Departamento;
 use App\Models\TipoDeSangre;
 use App\Models\ExperienciaLaboral;
 use App\Models\ReferenciaPersonal;
+use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,6 +27,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 class Empleado extends Model
 {
     use HasFactory;
+
+    use FilterableModel;
 
     protected $table = 'empleados';
 
@@ -233,15 +236,6 @@ class Empleado extends Model
     }
 
     // ---------------------------------scope---------------------------------------------------------
-
-    public function scopeFilter(Builder $query, array $filters)
-    {
-        foreach ($filters as $key => $value) {
-            if ($value !== null) {
-                $query->where($key, $value);
-            }
-        }
-    }
 
     public function scopeFiltertwo(Builder $query, array $filters)
     {

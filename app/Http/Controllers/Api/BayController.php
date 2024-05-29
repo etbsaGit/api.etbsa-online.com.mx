@@ -7,13 +7,13 @@ use App\Models\Linea;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Bay\PutBayRequest;
 use App\Http\Requests\Bay\StoreBayRequest;
 
 class BayController extends ApiController
 {
+
     /**
      * Display a listing of the resource.
      */
