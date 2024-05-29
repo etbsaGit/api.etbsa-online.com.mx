@@ -28,4 +28,9 @@ class Linea extends Model
         return $this->hasMany(LineaTechnician::class, 'linea_id');
     }
 
+    public function bay()
+    {
+        return $this->hasMany(Bay::class, 'linea_id');
+    }
+
 }

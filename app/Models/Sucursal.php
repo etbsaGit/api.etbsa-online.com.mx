@@ -31,4 +31,9 @@ class Sucursal extends Model
     {
         return $this->hasMany(Event::class, 'sucursal_id');
     }
+
+    public function bay()
+    {
+        return $this->hasMany(Bay::class, 'sucursal_id');
+    }
 }

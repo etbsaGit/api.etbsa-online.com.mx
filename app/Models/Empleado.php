@@ -221,6 +221,11 @@ class Empleado extends Model
         return $this->belongsTo(Technician::class, 'technician_id');
     }
 
+    public function bay()
+    {
+        return $this->hasMany(Bay::class, 'tecnico_id');
+    }
+
     //----------------------------------SkillRating---------------------------------------------------------
     public function skillRating()
     {

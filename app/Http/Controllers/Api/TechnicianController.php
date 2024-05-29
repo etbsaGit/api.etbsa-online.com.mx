@@ -201,6 +201,7 @@ class TechnicianController extends Controller
             ->whereHas('linea', function ($query) {
                 $query->where('nombre', 'agricola');
             })
+            ->with('sucursal','technician')
             ->get();
 
         return response()->json($tecnicos);

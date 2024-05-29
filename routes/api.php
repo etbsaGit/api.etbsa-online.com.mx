@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\PlantillaController;
 use App\Http\Controllers\Api\RequisitoController;
 use App\Http\Controllers\Api\AntiguedadController;
 use App\Http\Controllers\Api\AsignacionController;
+use App\Http\Controllers\Api\BayController;
 use App\Http\Controllers\Api\EnfermedadController;
 use App\Http\Controllers\Api\ExpedienteController;
 use App\Http\Controllers\Api\PermissionController;
@@ -134,7 +135,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('grades/survey/{survey}', [SurveyController::class, 'getGradesForSurvey']);
     Route::apiResource('survey', SurveyController::class);
 
-    //--------------------Qualification--------------------
+    //--------------------Technician--------------------
     Route::post('technician/linea/{technician}', [TechnicianController::class, 'storeLineas']);
     Route::post('technician/userx/{empleado}', [TechnicianController::class, 'setUserX']);
     Route::post('technician/productividad/{empleado}', [TechnicianController::class, 'setProductivity']);
@@ -146,8 +147,13 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('qualifications/empleado/{empleado}', [QualificationController::class, 'storeQualifications']);
     Route::get('technicians/construccion/{sucursal}', [TechnicianController::class, 'getConstruccionBySucursal']);
     Route::get('technicians/agricola/{sucursal}', [TechnicianController::class, 'getAgricolaBySucursal']);
+    Route::get('bays/forms', [BayController::class, 'getAllData']);
+    Route::get('bays/tech/{sucursal}/{linea}', [BayController::class, 'getTechData']);
+    Route::get('bays/construccion/{sucursal}', [BayController::class, 'getConstruccionBySucursal']);
+    Route::get('bays/agricola/{sucursal}', [BayController::class, 'getAgricolaBySucursal']);
     Route::apiResource('qualification', QualificationController::class);
     Route::apiResource('technician', TechnicianController::class);
+    Route::apiResource('bay', BayController::class);
 
     //--------------------Skill--------------------
     Route::get('skill/puesto/{puesto}', [SkillController::class, 'getPerPuesto']);
