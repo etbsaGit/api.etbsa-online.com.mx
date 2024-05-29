@@ -151,6 +151,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('bays/tech/{sucursal}/{linea}', [BayController::class, 'getTechData']);
     Route::get('bays/construccion/{sucursal}', [BayController::class, 'getConstruccionBySucursal']);
     Route::get('bays/agricola/{sucursal}', [BayController::class, 'getAgricolaBySucursal']);
+    Route::post('bays/getAll', [BayController::class, 'getAll']);
     Route::apiResource('qualification', QualificationController::class);
     Route::apiResource('technician', TechnicianController::class);
     Route::apiResource('bay', BayController::class);

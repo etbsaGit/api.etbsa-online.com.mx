@@ -8,10 +8,11 @@ use App\Models\Empleado;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Bay\PutBayRequest;
 use App\Http\Requests\Bay\StoreBayRequest;
 
-class BayController extends Controller
+class BayController extends ApiController
 {
     /**
      * Display a listing of the resource.
@@ -114,5 +115,19 @@ class BayController extends Controller
             ->get();
 
         return response()->json($bays);
+    }
+
+    public function getAll(Request $request)
+    {
+        $filters = $request->all();
+        $bays = Bay::filter($filters)->with('tecnico', 'sucursal', 'linea')->get();
+
+        $data = [
+            'bays' => $bays,
+            'sucursales' => Sucursal::all(),
+            'lineas' => Linea::all(),
+        ];
+
+        return $this->respond($data);
     }
 }
