@@ -7,6 +7,7 @@ use App\Models\Linea;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Bay\PutBayRequest;
 use App\Http\Requests\Bay\StoreBayRequest;
@@ -119,8 +120,30 @@ class BayController extends ApiController
 
     public function getAll(Request $request)
     {
+        $user = Auth::user();
         $filters = $request->all();
-        $bays = Bay::filter($filters)->with('tecnico', 'sucursal', 'linea')->get();
+
+        // Obtener los roles del usuario
+        $roles = $user->roles->pluck('name')->toArray();
+
+        // Base query
+        $query = Bay::with('tecnico', 'sucursal', 'linea');
+
+        if (in_array('Servicio', $roles)) {
+            // Si el usuario tiene rol de servicio, obtener todas las bays
+            $bays = $query->filter($filters)->get();
+        } elseif (in_array('Taller', $roles)) {
+            // Si el usuario tiene rol de taller, filtrar por sucursal_id y linea_id del empleado
+            $empleado = $user->empleado;
+            if ($empleado && isset($empleado->sucursal_id) && isset($empleado->linea_id)) {
+                $query->where('sucursal_id', $empleado->sucursal_id)
+                      ->where('linea_id', $empleado->linea_id);
+            }
+            $bays = $query->get();
+        } else {
+            // Si el usuario no tiene los roles mencionados, devolver un error o un resultado vacío
+            $bays = collect();
+        }
 
         $data = [
             'bays' => $bays,
