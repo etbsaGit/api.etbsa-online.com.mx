@@ -162,13 +162,20 @@ class ProductController extends ApiController
     public function filterProduct(Request $request)
     {
         $filters = $request->all();
-        $products = Product::filter($filters)
-            ->with('brand', 'vendor', 'images', 'features', 'categories')
-            ->orderBy('featured', 'asc') // Ordena por el nombre en orden ascendente
+
+        // Consulta inicial con los filtros aplicados
+        $productsQuery = Product::filter($filters)
+            ->with('brand', 'vendor', 'images', 'features', 'categories');
+
+        // Ordenar los productos
+        $products = $productsQuery
+            ->orderBy('featured', 'desc') // Prioriza los productos con featured en verdadero
+            ->orderByRaw('RAND()') // Dentro de cada grupo (featured verdadero y falso), ordena aleatoriamente
             ->paginate(10);
 
         return response()->json($products);
     }
+
 
     public function getRandomFeaturedProducts($limit)
     {
