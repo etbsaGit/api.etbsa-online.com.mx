@@ -221,6 +221,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::put('event/change/{event}', [EventController::class, 'changeDay']);
     Route::put('event/completed/{activity}', [EventController::class, 'changeCompleted']);
     Route::put('event/activity/{event}', [EventController::class, 'storeActivitiesEvent']);
+    Route::get('activity/{event}', [ActivityController::class, 'showPerEvent']);
     Route::apiResource('events', EventController::class);
     Route::apiResource('activities', ActivityController::class);
 });
