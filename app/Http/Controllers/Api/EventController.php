@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Event;
+use App\Models\Activity;
+use App\Models\Empleado;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Event\PutEventRequest;
 use App\Http\Requests\Event\StoreEventRequest;
-use App\Models\Activity;
 
 class EventController extends ApiController
 {
@@ -106,5 +107,43 @@ class EventController extends ApiController
 
         // Devolver una respuesta con las actividades creadas
         return response()->json($activities, 201);
+    }
+
+    public function getKardex()
+    {
+
+        // $empleadosConEventos = Empleado::whereHas('events')->with('events.sucursal')->get();
+
+        // return response()->json($empleadosConEventos);
+
+        // Obtener empleados que tienen al menos un evento asociado y cargar los eventos con la sucursal
+        $empleadosConEventos = Empleado::whereHas('events')->with('events.sucursal')->get();
+
+        // Procesar los datos para estructurarlos de la forma deseada
+        $result = $empleadosConEventos->map(function ($empleado) {
+            $sucursales = [];
+
+            // Contar las visitas del empleado a cada sucursal
+            foreach ($empleado->events as $event) {
+                $sucursalId = $event->sucursal->id;
+                $sucursalName = $event->sucursal->nombre;
+
+                if (!isset($sucursales[$sucursalId])) {
+                    $sucursales[$sucursalId] = [
+                        'nombre' => $sucursalName,
+                        'conteo' => 0
+                    ];
+                }
+
+                $sucursales[$sucursalId]['conteo']++;
+            }
+
+            return [
+                'empleado' => $empleado->nombreCompleto,
+                'sucursales' => array_values($sucursales) // Convertir a array para facilitar el manejo en el frontend
+            ];
+        });
+
+        return response()->json($result);
     }
 }
