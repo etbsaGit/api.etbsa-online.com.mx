@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\SkillController;
 use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\PuestoController;
 use App\Http\Controllers\Api\SurveyController;
-use App\Http\Controllers\Api\AlergiaController;
 use App\Http\Controllers\Api\ArchivoController;
 use App\Http\Controllers\Api\EscuelaController;
 use App\Http\Controllers\Api\EstatusController;
@@ -65,7 +64,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------Rutas All--------------------
-    Route::get('alergia/all', [AlergiaController::class, 'all']);
     Route::get('antiguedad/all', [AntiguedadController::class, 'all']);
     Route::get('archivo/all', [ArchivoController::class, 'all']);
     Route::get('asignacion/all', [AsignacionController::class, 'all']);
@@ -184,7 +182,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
     Route::resource('estatus', EstatusController::class)->except("create", "edit");
     Route::resource('user', UserController::class)->except("create", "edit");
-    Route::resource('alergia', AlergiaController::class)->except("create", "edit");
     Route::resource('antiguedad', AntiguedadController::class)->except("create", "edit");
     Route::resource('archivo', ArchivoController::class)->except("create", "edit");
     Route::resource('asignacion', AsignacionController::class)->except("create", "edit");

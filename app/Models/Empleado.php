@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\Linea;
 use App\Models\Puesto;
-use App\Models\Alergia;
 use App\Models\Estudio;
 use App\Models\Sucursal;
 use App\Models\Asignacion;
@@ -196,11 +195,6 @@ class Empleado extends Model
     public function constelacion()
     {
         return $this->belongsToMany(Constelacion::class, 'p_constelaciones_empleados', 'empleado_id', 'constelacion_id')->withTimestamps();
-    }
-
-    public function alergias()
-    {
-        return $this->belongsToMany(Alergia::class, 'p_alergias_empleados', 'empleado_id', 'alergias_id')->withTimestamps();
     }
 
     public function enfermedad()
