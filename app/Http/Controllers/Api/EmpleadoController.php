@@ -99,7 +99,6 @@ class EmpleadoController extends ApiController
             'ciudad',
             'estado',
             'cuenta_bancaria',
-            'constelacion_familiar',
             'status',
             'correo_institucional',
             'escolaridad_id',

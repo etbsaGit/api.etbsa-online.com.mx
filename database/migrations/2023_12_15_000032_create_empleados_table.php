@@ -44,7 +44,6 @@ return new class extends Migration
             $table->string('ciudad')->nullable();
             $table->string('estado')->nullable();
             $table->string('cuenta_bancaria')->nullable();
-            $table->string('constelacion_familiar')->nullable();
             $table->string('status')->nullable();
             $table->string('correo_institucional')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();

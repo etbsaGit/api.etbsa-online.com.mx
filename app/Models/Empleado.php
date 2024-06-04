@@ -10,7 +10,6 @@ use App\Models\Sucursal;
 use App\Models\Asignacion;
 use App\Models\Expediente;
 use App\Models\EstadoCivil;
-use App\Models\Constelacion;
 use App\Models\Departamento;
 use App\Models\TipoDeSangre;
 use App\Models\ExperienciaLaboral;
@@ -59,7 +58,6 @@ class Empleado extends Model
         'ciudad',
         'estado',
         'cuenta_bancaria',
-        'constelacion_familiar',
         'status',
         'correo_institucional',
         'usuario_x',
@@ -191,10 +189,7 @@ class Empleado extends Model
 
     // ----------------------------------------------------------------------------------
 
-    public function constelacion()
-    {
-        return $this->belongsToMany(Constelacion::class, 'p_constelaciones_empleados', 'empleado_id', 'constelacion_id')->withTimestamps();
-    }
+
 
 
     //----------------------------------Qualification---------------------------------------------------------

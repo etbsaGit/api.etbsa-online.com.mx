@@ -54,7 +54,6 @@ class PutRequest extends FormRequest
             "estado" => ['nullable','string','max:255'],
 
             "cuenta_bancaria" => ['nullable','string','min:18','max:18'],
-            "constelacion_familiar"=>['nullable','string','max:255'],
             "status"=>['nullable','string','max:255'],
             'correo_institucional' => ['nullable','email',Rule::unique('empleados')->ignore($this->route("empleado")->id)],
 
@@ -69,7 +68,6 @@ class PutRequest extends FormRequest
             "expediente_id" => ['nullable', 'integer', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "jefe_directo_id" => ['nullable', 'integer'],
 
-            'constelacion_id'=>['nullable','array'],
 
             "descripcion_puesto" => ['nullable','string','max:255'],
             "carrera" => ['nullable','string','max:255'],

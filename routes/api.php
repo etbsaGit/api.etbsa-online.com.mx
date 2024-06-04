@@ -30,7 +30,6 @@ use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Ecommerce\BrandController;
-use App\Http\Controllers\Api\ConstelacionController;
 use App\Http\Controllers\Api\DepartamentoController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Ecommerce\VendorController;
@@ -65,7 +64,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('antiguedad/all', [AntiguedadController::class, 'all']);
     Route::get('archivo/all', [ArchivoController::class, 'all']);
     Route::get('asignacion/all', [AsignacionController::class, 'all']);
-    Route::get('constelacion/all', [ConstelacionController::class, 'all']);
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::get('documento/all', [DocumentoController::class, 'all']);
     Route::get('documentoQueAvala/all', [DocumentoQueAvalaController::class, 'all']);
@@ -179,7 +177,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('antiguedad', AntiguedadController::class)->except("create", "edit");
     Route::resource('archivo', ArchivoController::class)->except("create", "edit");
     Route::resource('asignacion', AsignacionController::class)->except("create", "edit");
-    Route::resource('constelacion', ConstelacionController::class)->except("create", "edit");
     Route::resource('departamento', DepartamentoController::class)->except("create", "edit");
     Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
