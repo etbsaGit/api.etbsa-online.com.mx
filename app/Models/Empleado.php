@@ -7,7 +7,6 @@ use App\Models\Linea;
 use App\Models\Puesto;
 use App\Models\Estudio;
 use App\Models\Sucursal;
-use App\Models\Asignacion;
 use App\Models\Expediente;
 use App\Models\EstadoCivil;
 use App\Models\Departamento;
@@ -163,11 +162,6 @@ class Empleado extends Model
     public function experiencia_laboral()
     {
         return $this->hasMany(ExperienciaLaboral::class, 'empleado_id');
-    }
-
-    public function asignacion()
-    {
-        return $this->hasMany(Asignacion::class, 'empleado_id');
     }
 
     public function events()

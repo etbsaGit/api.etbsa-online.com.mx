@@ -21,7 +21,6 @@ use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\PlantillaController;
 use App\Http\Controllers\Api\RequisitoController;
 use App\Http\Controllers\Api\AntiguedadController;
-use App\Http\Controllers\Api\AsignacionController;
 use App\Http\Controllers\Api\BayController;
 use App\Http\Controllers\Api\ExpedienteController;
 use App\Http\Controllers\Api\PermissionController;
@@ -38,7 +37,6 @@ use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\EstadoDeEstudioController;
-use App\Http\Controllers\Api\TipoDeAsignacionController;
 use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
@@ -63,7 +61,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------Rutas All--------------------
     Route::get('antiguedad/all', [AntiguedadController::class, 'all']);
     Route::get('archivo/all', [ArchivoController::class, 'all']);
-    Route::get('asignacion/all', [AsignacionController::class, 'all']);
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::get('documento/all', [DocumentoController::class, 'all']);
     Route::get('documentoQueAvala/all', [DocumentoQueAvalaController::class, 'all']);
@@ -82,7 +79,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('referenciaPersonal/all', [ReferenciaPersonalController::class, 'all']);
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('sucursal/all', [SucursalController::class, 'all']);
-    Route::get('tipoDeAsignacion/all', [TipoDeAsignacionController::class, 'all']);
     Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
     Route::get('estatus/all', [EstatusController::class, 'all']);
     Route::get('user/all', [UserController::class, 'all']);
@@ -170,13 +166,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('referenciaPersonal', ReferenciaPersonalController::class)->except("create", "edit");
     Route::resource('requisito', RequisitoController::class)->except("create", "edit");
     Route::resource('sucursal', SucursalController::class)->except("create", "edit");
-    Route::resource('tipoDeAsignacion', TipoDeAsignacionController::class)->except("create", "edit");
     Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
     Route::resource('estatus', EstatusController::class)->except("create", "edit");
     Route::resource('user', UserController::class)->except("create", "edit");
     Route::resource('antiguedad', AntiguedadController::class)->except("create", "edit");
     Route::resource('archivo', ArchivoController::class)->except("create", "edit");
-    Route::resource('asignacion', AsignacionController::class)->except("create", "edit");
     Route::resource('departamento', DepartamentoController::class)->except("create", "edit");
     Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
