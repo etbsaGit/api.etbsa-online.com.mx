@@ -8,7 +8,6 @@ use App\Models\Puesto;
 use App\Models\Estudio;
 use App\Models\Sucursal;
 use App\Models\Asignacion;
-use App\Models\Enfermedad;
 use App\Models\Expediente;
 use App\Models\EstadoCivil;
 use App\Models\Constelacion;
@@ -197,10 +196,7 @@ class Empleado extends Model
         return $this->belongsToMany(Constelacion::class, 'p_constelaciones_empleados', 'empleado_id', 'constelacion_id')->withTimestamps();
     }
 
-    public function enfermedad()
-    {
-        return $this->belongsToMany(Enfermedad::class, 'p_enfermedades_empleados', 'empleado_id', 'enfermedad_id')->withTimestamps();
-    }
+
     //----------------------------------Qualification---------------------------------------------------------
     public function qualification()
     {

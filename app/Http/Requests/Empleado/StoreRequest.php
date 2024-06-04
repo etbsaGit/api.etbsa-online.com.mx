@@ -72,7 +72,6 @@ class StoreRequest extends FormRequest
             "jefe_directo_id"=>['nullable','integer'],
 
             'constelacion_id'=>['nullable','array'],
-            'enfermedad_id'=>['nullable','array'],
 
             "descripcion_puesto" => ['nullable','string','max:255'],
             "carrera" => ['nullable','string','max:255'],
