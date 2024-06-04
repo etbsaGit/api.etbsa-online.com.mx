@@ -10,8 +10,6 @@ use App\Models\Expediente;
 use App\Models\EstadoCivil;
 use App\Models\Departamento;
 use App\Models\TipoDeSangre;
-use App\Models\ExperienciaLaboral;
-use App\Models\ReferenciaPersonal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -146,16 +144,6 @@ class Empleado extends Model
     public function jefe_directo()
     {
         return $this->belongsTo(Empleado::class, 'jefe_directo_id');
-    }
-
-    public function referencia_personal()
-    {
-        return $this->hasMany(ReferenciaPersonal::class, 'empleado_id');
-    }
-
-    public function experiencia_laboral()
-    {
-        return $this->hasMany(ExperienciaLaboral::class, 'empleado_id');
     }
 
     public function events()

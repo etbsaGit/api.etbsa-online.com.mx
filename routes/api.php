@@ -34,8 +34,6 @@ use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
-use App\Http\Controllers\Api\ExperienciaLaboralController;
-use App\Http\Controllers\Api\ReferenciaPersonalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,11 +62,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('estadoCivil/all', [EstadoCivilController::class, 'all']);
     Route::get('Estatus/all', [EstatusController::class, 'all']);
     Route::get('expediente/all', [ExpedienteController::class, 'all']);
-    Route::get('experienciaLaboral/all', [ExperienciaLaboralController::class, 'all']);
     Route::get('linea/all', [LineaController::class, 'all']);
     Route::get('plantilla/all', [PlantillaController::class, 'all']);
     Route::get('puesto/all', [PuestoController::class, 'all']);
-    Route::get('referenciaPersonal/all', [ReferenciaPersonalController::class, 'all']);
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
@@ -147,11 +143,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('estadoCivil', EstadoCivilController::class)->except("create", "edit");
     Route::resource('Estatus', EstatusController::class)->except("create", "edit");
     Route::resource('expediente', ExpedienteController::class)->except("create", "edit");
-    Route::resource('experienciaLaboral', ExperienciaLaboralController::class)->except("create", "edit");
     Route::resource('linea', LineaController::class)->except("create", "edit");
     Route::resource('plantilla', PlantillaController::class)->except("create", "edit");
     Route::resource('puesto', PuestoController::class)->except("create", "edit");
-    Route::resource('referenciaPersonal', ReferenciaPersonalController::class)->except("create", "edit");
     Route::resource('requisito', RequisitoController::class)->except("create", "edit");
     Route::resource('sucursal', SucursalController::class)->except("create", "edit");
     Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");

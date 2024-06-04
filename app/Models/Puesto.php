@@ -19,11 +19,6 @@ class Puesto extends Model
         return $this->hasMany(Empleado::class, 'puesto_id');
     }
 
-    public function experienciaLaboral()
-    {
-        return $this->hasMany(ExperienciaLaboral::class, 'puesto_id');
-    }
-
     public function survey()
     {
         return $this->hasMany(Survey::class, 'puesto_id');
