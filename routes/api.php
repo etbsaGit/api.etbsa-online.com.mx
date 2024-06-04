@@ -29,7 +29,6 @@ use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
-use App\Http\Controllers\Api\MedicamentoController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\ConstelacionController;
@@ -82,7 +81,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('expediente/all', [ExpedienteController::class, 'all']);
     Route::get('experienciaLaboral/all', [ExperienciaLaboralController::class, 'all']);
     Route::get('linea/all', [LineaController::class, 'all']);
-    Route::get('medicamento/all', [MedicamentoController::class, 'all']);
     Route::get('plantilla/all', [PlantillaController::class, 'all']);
     Route::get('puesto/all', [PuestoController::class, 'all']);
     Route::get('referenciaPersonal/all', [ReferenciaPersonalController::class, 'all']);
@@ -172,7 +170,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('expediente', ExpedienteController::class)->except("create", "edit");
     Route::resource('experienciaLaboral', ExperienciaLaboralController::class)->except("create", "edit");
     Route::resource('linea', LineaController::class)->except("create", "edit");
-    Route::resource('medicamento', MedicamentoController::class)->except("create", "edit");
     Route::resource('plantilla', PlantillaController::class)->except("create", "edit");
     Route::resource('puesto', PuestoController::class)->except("create", "edit");
     Route::resource('referenciaPersonal', ReferenciaPersonalController::class)->except("create", "edit");

@@ -16,10 +16,8 @@ return new class extends Migration
 
             $table->string('nombre');
 
-            $table->unsignedBigInteger('medicamento_id')->nullable();
 
-            $table->foreign('medicamento_id')->references('id')->on('medicamentos')->onDelete('set null');
-            
+
             $table->timestamps();
         });
     }

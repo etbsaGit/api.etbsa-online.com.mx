@@ -26,7 +26,6 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre" => ['required', 'string', 'max:255', 'unique:enfermedades,nombre'],
-            "medicamento_id" => ['required', 'integer']
         ];
     }
 

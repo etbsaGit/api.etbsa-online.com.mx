@@ -30,7 +30,6 @@ class DatabaseSeeder extends Seeder
         $this->call(UserSeeder::class);
         //$this->call(EmpleadoSeeder::class);
         $this->call(RoleSeeder::class);
-        $this->call(MedicamentoSeeder::class);
         $this->call(EstatusSeeder::class);
         //$this->call(UserRoleSeeder::class);
         $this->call(ChangePasswordSeeder::class);

@@ -14,12 +14,9 @@ class Enfermedad extends Model
     protected $fillable = [
         'nombre',
 
-        'medicamento_id'
     ];
 
-    public function medicamento(){
-        return $this->belongsTo(Medicamento::class,'medicamento_id');
-    }
+
 
     public function empleados()
     {

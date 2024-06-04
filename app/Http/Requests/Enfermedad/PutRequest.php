@@ -27,7 +27,6 @@ class PutRequest extends FormRequest
     {
         return [
             "nombre" => ['required', 'string', 'max:255', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
-            "medicamento_id" => ['required', 'integer']
         ];
     }
 
