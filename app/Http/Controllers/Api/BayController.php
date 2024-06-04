@@ -129,7 +129,7 @@ class BayController extends ApiController
         // Base query
         $query = Bay::with('tecnico', 'sucursal', 'linea');
 
-        if (in_array('Servicio', $roles)) {
+        if (in_array('Admin', $roles)) {
             // Si el usuario tiene rol de servicio, obtener todas las bays
             $bays = $query->filter($filters)->get();
         } elseif (in_array('Taller', $roles)) {
