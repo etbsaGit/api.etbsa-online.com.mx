@@ -69,7 +69,6 @@ class StoreRequest extends FormRequest
             "estado_civil_id"=>['nullable','integer'],
             "tipo_de_sangre_id"=>['nullable','integer'],
             "expediente_id"=>['nullable','integer','unique:empleados,expediente_id'],
-            "desvinculacion_id"=>['nullable','integer','unique:empleados,direccion_id'],
             "jefe_directo_id"=>['nullable','integer'],
 
             'constelacion_id'=>['nullable','array'],

@@ -75,7 +75,6 @@ class Empleado extends Model
         'departamento_id',
         'estado_civil_id',
         'tipo_de_sangre_id',
-        'desvinculacion_id',
         'jefe_directo_id',
 
         'descripcion_puesto',
@@ -148,11 +147,6 @@ class Empleado extends Model
     public function archivable()
     {
         return $this->morphMany(Expediente::class, 'archivable');
-    }
-
-    public function desvinculacion()
-    {
-        return $this->belongsTo(Desvinculacion::class, 'desvinculacion_id');
     }
 
     public function jefe_directo()

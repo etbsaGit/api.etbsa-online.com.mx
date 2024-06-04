@@ -34,7 +34,7 @@ class EmpleadoController extends ApiController
 
     public function all()
     {
-        return response()->json(Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get());
+        return response()->json(Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get());
     }
 
     public function store(StoreRequest $request)
@@ -66,7 +66,7 @@ class EmpleadoController extends ApiController
 
     public function show(Empleado $empleado)
     {
-        return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
+        return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
     }
 
     public function update(PutRequest $request, Empleado $empleado)
@@ -109,7 +109,6 @@ class EmpleadoController extends ApiController
             'departamento_id',
             'estado_civil_id',
             'tipo_de_sangre_id',
-            'desvinculacion_id',
             'jefe_directo_id',
 
             'descripcion_puesto',
@@ -163,7 +162,7 @@ class EmpleadoController extends ApiController
             ->first();
 
         if ($empleado) {
-            return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
+            return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
         } else {
             return response()->json(['error' => 'No se encontro un empleado con esos datos.'], 400);
         }
@@ -177,7 +176,6 @@ class EmpleadoController extends ApiController
                 'archivable.requisito',
                 'escolaridad',
                 'departamento',
-                'desvinculacion',
                 'estado_civil',
                 'jefe_directo',
                 'linea',
@@ -212,7 +210,7 @@ class EmpleadoController extends ApiController
         $empleado = $user->empleado;
 
         if ($user->hasRole('RRHH')) {
-            $empleados = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'desvinculacion', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
+            $empleados = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
         } else {
             $empleados = $this->getAllSubordinates($empleado);
         }

@@ -39,7 +39,6 @@ use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Ecommerce\VendorController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Ecommerce\ProductController;
-use App\Http\Controllers\Api\DesvinculacionController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\EstadoDeEstudioController;
@@ -47,7 +46,6 @@ use App\Http\Controllers\Api\TipoDeAsignacionController;
 use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
-use App\Http\Controllers\Api\TipoDeDesvinculacionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,7 +71,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('asignacion/all', [AsignacionController::class, 'all']);
     Route::get('constelacion/all', [ConstelacionController::class, 'all']);
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
-    Route::get('desvinculacion/all', [DesvinculacionController::class, 'all']);
     Route::get('documento/all', [DocumentoController::class, 'all']);
     Route::get('documentoQueAvala/all', [DocumentoQueAvalaController::class, 'all']);
     Route::get('empleado/all', [EmpleadoController::class, 'all']);
@@ -94,7 +91,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::get('tipoDeAsignacion/all', [TipoDeAsignacionController::class, 'all']);
-    Route::get('tipoDeDesvinculacion/all', [TipoDeDesvinculacionController::class, 'all']);
     Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
     Route::get('estatus/all', [EstatusController::class, 'all']);
     Route::get('user/all', [UserController::class, 'all']);
@@ -185,7 +181,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('requisito', RequisitoController::class)->except("create", "edit");
     Route::resource('sucursal', SucursalController::class)->except("create", "edit");
     Route::resource('tipoDeAsignacion', TipoDeAsignacionController::class)->except("create", "edit");
-    Route::resource('tipoDeDesvinculacion', TipoDeDesvinculacionController::class)->except("create", "edit");
     Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
     Route::resource('estatus', EstatusController::class)->except("create", "edit");
     Route::resource('user', UserController::class)->except("create", "edit");
@@ -195,7 +190,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('asignacion', AsignacionController::class)->except("create", "edit");
     Route::resource('constelacion', ConstelacionController::class)->except("create", "edit");
     Route::resource('departamento', DepartamentoController::class)->except("create", "edit");
-    Route::resource('desvinculacion', DesvinculacionController::class)->except("create", "edit");
     Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
     //--------------------User--------------------
