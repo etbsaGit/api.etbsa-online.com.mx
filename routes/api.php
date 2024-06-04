@@ -222,7 +222,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::put('event/completed/{activity}', [EventController::class, 'changeCompleted']);
     Route::put('event/activity/{event}', [EventController::class, 'storeActivitiesEvent']);
     Route::get('activity/{event}', [ActivityController::class, 'showPerEvent']);
-    Route::get('event/kardex/get', [EventController::class, 'getKardex']);
+    Route::get('event/kardex/get/{anio?}/{mes?}', [EventController::class, 'getKardex']);
     Route::apiResource('events', EventController::class);
     Route::apiResource('activities', ActivityController::class);
 });
