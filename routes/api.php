@@ -11,9 +11,7 @@ use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\PuestoController;
 use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\ArchivoController;
-use App\Http\Controllers\Api\EscuelaController;
 use App\Http\Controllers\Api\EstatusController;
-use App\Http\Controllers\Api\EstudioController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\SucursalController;
@@ -36,8 +34,6 @@ use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
-use App\Http\Controllers\Api\EstadoDeEstudioController;
-use App\Http\Controllers\Api\DocumentoQueAvalaController;
 use App\Http\Controllers\Api\ExperienciaLaboralController;
 use App\Http\Controllers\Api\ReferenciaPersonalController;
 
@@ -63,14 +59,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('archivo/all', [ArchivoController::class, 'all']);
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::get('documento/all', [DocumentoController::class, 'all']);
-    Route::get('documentoQueAvala/all', [DocumentoQueAvalaController::class, 'all']);
     Route::get('empleado/all', [EmpleadoController::class, 'all']);
     Route::get('escolaridad/all', [EscolaridadController::class, 'all']);
-    Route::get('escuela/all', [EscuelaController::class, 'all']);
     Route::get('estadoCivil/all', [EstadoCivilController::class, 'all']);
-    Route::get('estadoDeEstudio/all', [EstadoDeEstudioController::class, 'all']);
     Route::get('Estatus/all', [EstatusController::class, 'all']);
-    Route::get('estudio/all', [EstudioController::class, 'all']);
     Route::get('expediente/all', [ExpedienteController::class, 'all']);
     Route::get('experienciaLaboral/all', [ExperienciaLaboralController::class, 'all']);
     Route::get('linea/all', [LineaController::class, 'all']);
@@ -150,14 +142,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('skillrating', SkillRaitngController::class);
 
     //--------------------Resource--------------------
-    Route::resource('documentoQueAvala', DocumentoQueAvalaController::class)->except("create", "edit");
     Route::resource('empleado', EmpleadoController::class)->except("create", "edit");
     Route::resource('escolaridad', EscolaridadController::class)->except("create", "edit");
-    Route::resource('escuela', EscuelaController::class)->except("create", "edit");
     Route::resource('estadoCivil', EstadoCivilController::class)->except("create", "edit");
-    Route::resource('estadoDeEstudio', EstadoDeEstudioController::class)->except("create", "edit");
     Route::resource('Estatus', EstatusController::class)->except("create", "edit");
-    Route::resource('estudio', EstudioController::class)->except("create", "edit");
     Route::resource('expediente', ExpedienteController::class)->except("create", "edit");
     Route::resource('experienciaLaboral', ExperienciaLaboralController::class)->except("create", "edit");
     Route::resource('linea', LineaController::class)->except("create", "edit");

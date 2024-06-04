@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\Linea;
 use App\Models\Puesto;
-use App\Models\Estudio;
 use App\Models\Sucursal;
 use App\Models\Expediente;
 use App\Models\EstadoCivil;
@@ -147,11 +146,6 @@ class Empleado extends Model
     public function jefe_directo()
     {
         return $this->belongsTo(Empleado::class, 'jefe_directo_id');
-    }
-
-    public function estudio()
-    {
-        return $this->hasMany(Estudio::class, 'empleado_id');
     }
 
     public function referencia_personal()
