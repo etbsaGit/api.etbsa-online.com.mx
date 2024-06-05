@@ -26,11 +26,11 @@ class PicRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pic' => ['required','image','mimes:jpeg,png,jpg'],
+            'base64' => ['required', 'string'],
         ];
     }
 
-    
+
     function failedValidation(Validator $validator)
     {
         if ($this->expectsJson()) {

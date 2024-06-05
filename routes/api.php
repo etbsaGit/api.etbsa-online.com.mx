@@ -78,7 +78,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------Expediente--------------------
     Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
-    Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);
 
     //--------------------Career--------------------
     Route::get('career/empleado/{empleado}', [CareerController::class, 'showPerEmpleado']);
@@ -183,6 +182,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('event/kardex/get/{anio?}/{mes?}', [EventController::class, 'getKardex']);
     Route::apiResource('events', EventController::class);
     Route::apiResource('activities', ActivityController::class);
+
+    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
+
 });
 //--------------------landingPage--------------------
 Route::apiResource('page/brands', BrandController::class);
@@ -195,16 +197,14 @@ Route::get('page/product/all', [ProductController::class, 'getAll']);
 Route::post('page/product/get', [ProductController::class, 'getProducts']);
 Route::get('page/product/random/{limit}', [ProductController::class, 'getRandomFeaturedProducts']);
 
-
-
 //--------------------Sin inicio de sesion--------------------
+Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);
 
 //--------------------User--------------------
 Route::post('auth/login', [UserController::class, 'login']);
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
 
-Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
 
 
 //--------------------Expediente--------------------

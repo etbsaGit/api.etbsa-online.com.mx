@@ -135,23 +135,16 @@ class EmpleadoController extends ApiController
 
     public function uploadPicture(PicRequest $request, Empleado $empleado)
     {
-        if ($request->hasFile('pic')) {
-            $pic = $request->file('pic');
-
+        if (!is_null($request['base64'])) {
             if ($empleado->fotografia) {
                 Storage::disk('s3')->delete($empleado->fotografia);
             }
-
-            $path = $this->uploadOne($pic, $empleado->default_path_folder, 's3');
-
-            $updateData = ['fotografia' => $path];
-
+            $relativePath  = $this->saveImage($request['base64'], $empleado->default_path_folder);
+            $request['base64'] = $relativePath;
+            $updateData = ['fotografia' => $relativePath];
             $empleado->update($updateData);
-
-            return response()->json(['message' => 'Fotografía actualizada con éxito']);
-        } else {
-            return response()->json(['error' => 'No se ha enviado una foto en la solicitud.'], 400);
         }
+
     }
 
     public function findEmpleadoByRFCandINE($rfc, $ine)
