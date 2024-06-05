@@ -15,10 +15,6 @@ class Escolaridad extends Model
         'nombre',
     ];
 
-    public function estudio(){
-        return $this->hasMany(Estudio::class,'escolaridad_id');
-    }
-
     public function empleado(){
         return $this->hasMany(Empleado::class,'escolaridad_id');
     }

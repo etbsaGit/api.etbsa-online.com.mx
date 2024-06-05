@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Event;
+use App\Models\Activity;
+use App\Models\Empleado;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Event\PutEventRequest;
 use App\Http\Requests\Event\StoreEventRequest;
-use App\Models\Activity;
 
 class EventController extends ApiController
 {
@@ -106,5 +107,70 @@ class EventController extends ApiController
 
         // Devolver una respuesta con las actividades creadas
         return response()->json($activities, 201);
+    }
+
+    public function getKardex($anio = null, $mes = null)
+    {
+        // Validar que el mes y el año sean válidos si se proporcionan
+        if ($mes && $anio && !checkdate($mes, 1, $anio)) {
+            return response()->json(['error' => 'Fecha no válida'], 400);
+        }
+
+        // Variables para la consulta
+        $empleadosConEventosQuery = Empleado::query();
+
+        if ($anio) {
+            if ($mes) {
+                // Filtrar por mes y año
+                $startDate = \Carbon\Carbon::create($anio, $mes, 1)->startOfMonth();
+                $endDate = \Carbon\Carbon::create($anio, $mes, 1)->endOfMonth();
+            } else {
+                // Filtrar por todo el año
+                $startDate = \Carbon\Carbon::create($anio, 1, 1)->startOfYear();
+                $endDate = \Carbon\Carbon::create($anio, 12, 31)->endOfYear();
+            }
+
+            $empleadosConEventosQuery = $empleadosConEventosQuery->whereHas('events', function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate]);
+            })->with(['events' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('date', [$startDate, $endDate])
+                    ->with(['activity']) // Cargar relación 'activity'
+                    ->orderBy('date', 'asc'); // Ordenar por fecha ascendente
+            }]);
+        } else {
+            // Si no se proporciona ni mes ni año, cargar todos los eventos
+            $empleadosConEventosQuery = $empleadosConEventosQuery->whereHas('events')->with(['events' => function ($query) {
+                $query->with(['activity']) // Cargar relación 'activity'
+                    ->orderBy('date', 'asc'); // Ordenar por fecha ascendente
+            }]);
+        }
+
+        // Obtener los empleados con eventos
+        $empleadosConEventos = $empleadosConEventosQuery->get();
+
+        // Mapear los datos de los empleados con sus eventos y sucursales
+        $result = $empleadosConEventos->map(function ($empleado) {
+            $sucursales = [];
+            foreach ($empleado->events as $event) {
+                $sucursalId = $event->sucursal->id;
+                $sucursalName = $event->sucursal->nombre;
+                if (!isset($sucursales[$sucursalId])) {
+                    $sucursales[$sucursalId] = [
+                        'nombre' => $sucursalName,
+                        'conteo' => 0,
+                        'eventos' => []
+                    ];
+                }
+                $sucursales[$sucursalId]['conteo']++;
+                $sucursales[$sucursalId]['eventos'][] = $event;  // Agregar el evento al array de eventos
+            }
+            return [
+                'id' => $empleado->id,
+                'empleado' => $empleado->nombreCompleto,
+                'sucursales' => array_values($sucursales)
+            ];
+        });
+
+        return response()->json($result);
     }
 }

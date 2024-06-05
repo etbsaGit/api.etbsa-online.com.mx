@@ -56,7 +56,6 @@ class StoreRequest extends FormRequest
             "ciudad" => ['nullable','string','max:255'],
             "estado" => ['nullable','string','max:255'],
             "cuenta_bancaria" => ['nullable','string','min:18','max:18'],
-            "constelacion_familiar"=>['nullable','string','max:255'],
             "status"=>['nullable','string','max:255'],
             'correo_institucional' => ['nullable','email','unique:empleados,correo_institucional'],
 
@@ -69,12 +68,7 @@ class StoreRequest extends FormRequest
             "estado_civil_id"=>['nullable','integer'],
             "tipo_de_sangre_id"=>['nullable','integer'],
             "expediente_id"=>['nullable','integer','unique:empleados,expediente_id'],
-            "desvinculacion_id"=>['nullable','integer','unique:empleados,direccion_id'],
             "jefe_directo_id"=>['nullable','integer'],
-
-            'constelacion_id'=>['nullable','array'],
-            'alergias_id'=>['nullable','array'],
-            'enfermedad_id'=>['nullable','array'],
 
             "descripcion_puesto" => ['nullable','string','max:255'],
             "carrera" => ['nullable','string','max:255'],

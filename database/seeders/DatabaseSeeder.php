@@ -23,14 +23,9 @@ class DatabaseSeeder extends Seeder
         $this->call(PlantillaSeeder::class);
         $this->call(EstadoCivilSeeder::class);
         $this->call(EscolaridadSeeder::class);
-        $this->call(EstadosDelEstudioSeeder::class);
-        $this->call(DocumentoQueAvalaSeeder::class);
-        $this->call(ConstelacionSeeder::class);
-        $this->call(TipoDeAsignacionSeeder::class);
         $this->call(UserSeeder::class);
         //$this->call(EmpleadoSeeder::class);
         $this->call(RoleSeeder::class);
-        $this->call(MedicamentoSeeder::class);
         $this->call(EstatusSeeder::class);
         //$this->call(UserRoleSeeder::class);
         $this->call(ChangePasswordSeeder::class);

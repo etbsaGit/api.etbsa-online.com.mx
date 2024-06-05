@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Event;
+use App\Models\Activity;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Activity\PutActivityRequest;
 use App\Http\Requests\Activity\StoreActivityRequest;
-use App\Models\Activity;
-use Illuminate\Http\Request;
 
 class ActivityController extends Controller
 {
@@ -52,5 +53,11 @@ class ActivityController extends Controller
     {
         $activity->delete();
         return response()->json('ok');
+    }
+
+    public function showPerEvent(Event $event)
+    {
+        $activities = $event->activity;
+        return response()->json($activities);
     }
 }
