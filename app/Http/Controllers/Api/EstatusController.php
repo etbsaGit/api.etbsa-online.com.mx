@@ -40,4 +40,11 @@ class EstatusController extends ApiController
         $estatus->delete();
         return response()->json("ok");
     }
+
+    public function getPerType($type)
+    {
+        $statuses = Estatus::where('tipo_estatus', $type)->get();
+
+        return response()->json($statuses);
+    }
 }

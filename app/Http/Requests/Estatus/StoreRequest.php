@@ -23,6 +23,9 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre"=>['required','string','max:255','unique:estatus,nombre'],
+            "clave"=>['required','string','max:255','unique:estatus,nombre'],
+            "tipo_estatus"=>['required','string','max:255'],
+            "color"=>['required','string','max:255'],
         ];
     }
 }

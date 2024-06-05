@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use App\Models\Linea;
 use App\Models\Puesto;
+use App\Models\Estatus;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use App\Models\Plantilla;
@@ -34,7 +35,7 @@ class EmpleadoController extends ApiController
 
     public function all()
     {
-        return response()->json(Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get());
+        return response()->json(Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user','estatus'])->get());
     }
 
     public function store(StoreRequest $request)
@@ -66,7 +67,7 @@ class EmpleadoController extends ApiController
 
     public function show(Empleado $empleado)
     {
-        return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
+        return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user','estatus'));
     }
 
     public function update(PutRequest $request, Empleado $empleado)
@@ -99,7 +100,6 @@ class EmpleadoController extends ApiController
             'ciudad',
             'estado',
             'cuenta_bancaria',
-            'status',
             'correo_institucional',
             'escolaridad_id',
             'puesto_id',
@@ -109,6 +109,7 @@ class EmpleadoController extends ApiController
             'estado_civil_id',
             'tipo_de_sangre_id',
             'jefe_directo_id',
+            'estatus_id',
 
             'descripcion_puesto',
             'carrera',
@@ -174,7 +175,8 @@ class EmpleadoController extends ApiController
                 'puesto',
                 'sucursal',
                 'tipo_de_sangre',
-                'user'
+                'user',
+                'estatus'
             ])
             ->get();
 
@@ -202,7 +204,7 @@ class EmpleadoController extends ApiController
         $empleado = $user->empleado;
 
         if ($user->hasRole('RRHH')) {
-            $empleados = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'])->get();
+            $empleados = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user','estatus'])->get();
         } else {
             $empleados = $this->getAllSubordinates($empleado);
         }
@@ -212,7 +214,8 @@ class EmpleadoController extends ApiController
             'sucursales' => Sucursal::all(),
             'departamentos' => Departamento::all(),
             'lineas' => Linea::all(),
-            'puestos' => Puesto::all()
+            'puestos' => Puesto::all(),
+            'estatus' => Estatus::where('tipo_estatus', 'empleado')->get()
         ];
 
         return $this->respond($data);

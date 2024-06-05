@@ -68,8 +68,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
-    Route::get('estatus/all', [EstatusController::class, 'all']);
     Route::get('user/all', [UserController::class, 'all']);
+
+    //--------------------Estatus--------------------
+    Route::get('estatus/all', [EstatusController::class, 'all']);
+    Route::get('estatus/{tipo}', [EstatusController::class, 'getPerType']);
 
     //--------------------Empleado--------------------
     Route::post('empleado/filtertwo', [EmpleadoController::class, 'filtertwo']);
@@ -184,7 +187,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('activities', ActivityController::class);
 
     Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
-
 });
 //--------------------landingPage--------------------
 Route::apiResource('page/brands', BrandController::class);

@@ -19,9 +19,13 @@ class Estatus extends Model
         'color'
     ];
 
-    public function documento(){
-        return $this->hasMany(Documento::class,'estatus_id');
+    public function documento()
+    {
+        return $this->hasMany(Documento::class, 'estatus_id');
     }
 
-
+    public function empleado()
+    {
+        return $this->hasMany(Empleado::class, 'estatus_id');
+    }
 }

@@ -54,7 +54,6 @@ class Empleado extends Model
         'ciudad',
         'estado',
         'cuenta_bancaria',
-        'status',
         'correo_institucional',
         'usuario_x',
         'productividad',
@@ -68,6 +67,7 @@ class Empleado extends Model
         'estado_civil_id',
         'tipo_de_sangre_id',
         'jefe_directo_id',
+        'estatus_id',
 
         'descripcion_puesto',
         'carrera',
@@ -144,6 +144,11 @@ class Empleado extends Model
     public function jefe_directo()
     {
         return $this->belongsTo(Empleado::class, 'jefe_directo_id');
+    }
+
+    public function estatus()
+    {
+        return $this->belongsTo(Estatus::class, 'estatus_id');
     }
 
     public function events()
