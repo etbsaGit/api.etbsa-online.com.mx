@@ -37,7 +37,7 @@ class PutRequest extends FormRequest
             "rfc" => ['nullable', 'string', 'min:13', 'max:13', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "ine" => ['nullable', 'numeric', 'digits:10', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "licencia_de_manejo" => ['nullable', 'string', 'max:255', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
-            "nss" => ['nullable', 'numeric', 'digits:11', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
+            "nss" => ['nullable', 'numeric', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "fecha_de_ingreso" => ['required', 'date'],
             "hijos" => ['nullable', 'integer', 'max:99'],
             "dependientes_economicos" => ['nullable', 'integer', 'max:99'],

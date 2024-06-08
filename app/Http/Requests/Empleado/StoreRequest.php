@@ -39,7 +39,7 @@ class StoreRequest extends FormRequest
             "pasaporte" => ['nullable', 'string', 'mas:255', 'unique:empleados,pasaporte'],
             "visa" => ['nullable', 'numeric', 'digits:16', 'unique:empleados,visa'],
             "licencia_de_manejo" => ['nullable', 'string', 'max:255', 'unique:empleados,licencia_de_manejo'],
-            "nss" => ['nullable', 'numeric', 'digits:11', 'unique:empleados,nss'],
+            "nss" => ['nullable', 'numeric', 'unique:empleados,nss'],
             "fecha_de_ingreso" => ['required', 'date'],
             "hijos" => ['nullable', 'integer','max:99'],
             "dependientes_economicos" => ['nullable', 'integer','max:99'],
