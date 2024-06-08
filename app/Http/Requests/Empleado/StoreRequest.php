@@ -73,6 +73,12 @@ class StoreRequest extends FormRequest
 
             "descripcion_puesto" => ['nullable','string','max:255'],
             "carrera" => ['nullable','string','max:255'],
+
+            'desvinculacion' => ['nullable','array'],
+            'desvinculacion.reason_id' => ['required_with:desvinculacion','integer','exists:estatus,id'],
+            'desvinculacion.estatus_id' => ['required_with:desvinculacion','integer','exists:estatus,id'],
+            'desvinculacion.date' => ['required_with:desvinculacion','date'],
+            'desvinculacion.comments' => ['nullable','string'],
         ];
     }
 

@@ -28,4 +28,14 @@ class Estatus extends Model
     {
         return $this->hasMany(Empleado::class, 'estatus_id');
     }
+
+    public function termination()
+    {
+        return $this->hasMany(Termination::class, 'estatus_id');
+    }
+
+    public function reason()
+    {
+        return $this->hasMany(Termination::class, 'reason_id');
+    }
 }

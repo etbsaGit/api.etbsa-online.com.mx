@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Empleado\PicRequest;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
+use App\Models\Termination;
 
 class EmpleadoController extends ApiController
 {
@@ -35,7 +36,7 @@ class EmpleadoController extends ApiController
 
     public function all()
     {
-        return response()->json(Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user','estatus'])->get());
+        return response()->json(Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus'])->get());
     }
 
     public function store(StoreRequest $request)
@@ -43,31 +44,50 @@ class EmpleadoController extends ApiController
         return DB::transaction(function () use ($request) {
             return tap(
                 Empleado::create($request->validated()),
-                function (Empleado $empleado) {
+                function (Empleado $empleado) use ($request) {
                     $plantilla = Plantilla::find(1);
                     $ids = $plantilla->requisito->pluck('id');
+
                     // Crea el expediente asociado al empleado
                     $expediente = $empleado->archivable()->create(['nombre' => $empleado->rfc . ' expediente']);
+
                     // Adjunta requisitos a través de la relación
                     $expediente->requisito()->syncWithPivotValues($ids, ['comentaio' => 'com 1']);
-                    //se le crea un usuario
+
+                    // Se le crea un usuario
                     $correo = $empleado->correo_institucional;
                     if ($correo) {
-                        $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make('password123'), 'name' => $empleado->nombre]);
+                        $usuario = User::firstOrCreate(
+                            ['email' => $correo],
+                            ['password' => Hash::make('password123'), 'name' => $empleado->nombre]
+                        );
                         if (!$empleado->user) {
                             $empleado->user()->associate($usuario);
                             $empleado->save();
                             $empleado->user->syncRoles('Empleado');
                         }
                     }
+
+                    // Verifica si el request contiene 'desvinculacion'
+                    if ($request->has('desvinculacion')) {
+                        $desvinculacionData = $request->input('desvinculacion');
+                        Termination::create([
+                            'reason_id' => $desvinculacionData['reason_id'],
+                            'estatus_id' => $desvinculacionData['estatus_id'],
+                            'date' => $desvinculacionData['date'],
+                            'comments' => $desvinculacionData['comments'] ?? null,
+                            'empleado_id' => $empleado->id
+                        ]);
+                    }
                 }
             );
         });
     }
 
+
     public function show(Empleado $empleado)
     {
-        return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user','estatus'));
+        return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus'));
     }
 
     public function update(PutRequest $request, Empleado $empleado)
@@ -125,6 +145,35 @@ class EmpleadoController extends ApiController
             }
         }
 
+        // Verifica si el request contiene información de desvinculación
+        if ($request->has('desvinculacion')) {
+            // Extrae los datos de desvinculación de la solicitud
+            $desvinculacionData = $request->input('desvinculacion');
+
+            // Busca una instancia existente de Termination asociada al empleado
+            $termination = Termination::where('empleado_id', $empleado->id)->first();
+
+            // Si se encuentra una instancia, actualiza sus datos con los datos de la solicitud
+            // Si no se encuentra ninguna instancia, crea una nueva instancia de Termination
+            if ($termination) {
+                $termination->update([
+                    'reason_id' => $desvinculacionData['reason_id'],
+                    'estatus_id' => $desvinculacionData['estatus_id'],
+                    'date' => $desvinculacionData['date'],
+                    'comments' => $desvinculacionData['comments'] ?? null,
+                    'empleado_id' => $empleado->id
+                ]);
+            } else {
+                Termination::create([
+                    'reason_id' => $desvinculacionData['reason_id'],
+                    'estatus_id' => $desvinculacionData['estatus_id'],
+                    'date' => $desvinculacionData['date'],
+                    'comments' => $desvinculacionData['comments'] ?? null,
+                    'empleado_id' => $empleado->id
+                ]);
+            }
+        }
+
         return response()->json($empleado);
     }
 
@@ -145,7 +194,6 @@ class EmpleadoController extends ApiController
             $updateData = ['fotografia' => $relativePath];
             $empleado->update($updateData);
         }
-
     }
 
     public function findEmpleadoByRFCandINE($rfc, $ine)
@@ -204,7 +252,7 @@ class EmpleadoController extends ApiController
         $empleado = $user->empleado;
 
         if ($user->hasRole('RRHH')) {
-            $empleados = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user','estatus'])->get();
+            $empleados = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason'])->get();
         } else {
             $empleados = $this->getAllSubordinates($empleado);
         }
@@ -230,5 +278,32 @@ class EmpleadoController extends ApiController
         ];
 
         return $this->respond($data);
+    }
+
+    public function getEmployeesTerminations($anio = null, $mes = null)
+    {
+        $query = Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason']); // Cargar las relaciones sucursal y termination
+
+        // Agregar filtros para la fecha en la relación termination
+        if (!is_null($anio)) {
+            $query->whereHas('termination', function ($q) use ($anio) {
+                $q->whereYear('date', $anio);
+            });
+        }
+
+        if (!is_null($mes)) {
+            $query->whereHas('termination', function ($q) use ($mes) {
+                $q->whereMonth('date', $mes);
+            });
+        }
+
+        // Si tanto $anio como $mes son nulos, buscar empleados con estatus_id igual a 6
+        if (is_null($anio) && is_null($mes)) {
+            $query->where('estatus_id', 6);
+        }
+
+        $employees = $query->get();
+
+        return response()->json($employees);
     }
 }

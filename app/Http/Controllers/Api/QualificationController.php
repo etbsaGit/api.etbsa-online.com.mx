@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Qualification;
 use App\Models\LineaTechnician;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Qualification\PutRequest;
 use App\Http\Requests\Qualification\ArrayRequest;
 use App\Http\Requests\Qualification\StoreRequest;
@@ -73,25 +74,105 @@ class QualificationController extends Controller
 
     public function getEmployeeTechnician()
     {
+        $user = Auth::user();
+
+        // Obtener los roles del usuario
+        $roles = $user->roles->pluck('name')->toArray();
 
         $lineasConstruccion = Linea::where('nombre', 'Construccion')->first();
         $lineasAgricola = Linea::where('nombre', 'Agricola')->first();
 
-        $calificacionesConstruccion = LineaTechnician::where('linea_id', $lineasConstruccion->id)
-            ->with(['technician' => function ($query) {
-                $query->orderBy('level', 'asc')->with(['empleado.linea', 'empleado.departamento', 'empleado.sucursal', 'empleado.puesto', 'empleado.qualification','empleado.technician']);
-            }])
-            ->get();
+        if (in_array('Admin', $roles)) {
 
-        $calificacionesAgricola = LineaTechnician::where('linea_id', $lineasAgricola->id)
-            ->with(['technician' => function ($query) {
-                $query->orderBy('level', 'asc')->with(['empleado.linea', 'empleado.departamento', 'empleado.sucursal', 'empleado.puesto', 'empleado.qualification','empleado.technician']);
-            }])
-            ->get();
+            $tecnicosConstruccion = LineaTechnician::where('linea_id', $lineasConstruccion->id)
+                ->with(['technician' => function ($query) {
+                    $query->orderBy('level', 'asc')
+                        ->whereHas('empleado', function ($query) {
+                            $query->where('estatus_id', 5);
+                        })
+                        ->with(['empleado.linea', 'empleado.departamento', 'empleado.sucursal', 'empleado.puesto', 'empleado.qualification', 'empleado.technician']);
+                }])
+                ->get();
 
-        $empleadosTecnicosSinAsignar = Empleado::whereHas('puesto', function ($query) {
-            $query->where('nombre', 'Tecnico');
-        })->whereDoesntHave('technician')->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification')->get();
+            $tecnicosAgricola = LineaTechnician::where('linea_id', $lineasAgricola->id)
+                ->with(['technician' => function ($query) {
+                    $query->orderBy('level', 'asc')
+                        ->whereHas('empleado', function ($query) {
+                            $query->where('estatus_id', 5);
+                        })
+                        ->with(['empleado.linea', 'empleado.departamento', 'empleado.sucursal', 'empleado.puesto', 'empleado.qualification', 'empleado.technician']);
+                }])
+                ->get();
+
+            $empleadosTecnicosSinAsignar = Empleado::whereHas('puesto', function ($query) {
+                $query->where('nombre', 'Tecnico');
+            })
+                ->whereDoesntHave('technician')
+                ->whereHas('estatus', function ($query) {
+                    $query->where('id', 5);
+                })
+                ->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification')
+                ->get();
+        } elseif (in_array('Taller', $roles)) {
+
+            $sucursal = $user->empleado->sucursal;
+
+            $tecnicosConstruccion = LineaTechnician::where('linea_id', $lineasConstruccion->id)
+                ->whereHas('technician.empleado', function ($query) use ($sucursal) {
+                    // Filtrar empleados por estatus_id y sucursal_id
+                    $query->where('estatus_id', 5)
+                        ->where('sucursal_id', $sucursal->id);
+                })
+                ->with([
+                    'technician.empleado' => function ($query) use ($sucursal) {
+                        // Asegurarse de que el filtro se aplica también al cargar las relaciones
+                        $query->where('estatus_id', 5)
+                            ->where('sucursal_id', $sucursal->id)
+                            ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician']);
+                    }
+                ])
+                ->get();
+
+
+            $tecnicosAgricola = LineaTechnician::where('linea_id', $lineasAgricola->id)
+                ->whereHas('technician.empleado', function ($query) use ($sucursal) {
+                    // Filtrar empleados por estatus_id y sucursal_id
+                    $query->where('estatus_id', 5)
+                        ->where('sucursal_id', $sucursal->id);
+                })
+                ->with([
+                    'technician.empleado' => function ($query) use ($sucursal) {
+                        // Asegurarse de que el filtro se aplica también al cargar las relaciones
+                        $query->where('estatus_id', 5)
+                            ->where('sucursal_id', $sucursal->id)
+                            ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician']);
+                    }
+                ])
+                ->get();
+
+
+                $empleadosTecnicosSinAsignar = Empleado::whereHas('puesto', function ($query) {
+                    $query->where('nombre', 'Tecnico');
+                })
+                ->whereDoesntHave('technician')
+                ->whereHas('estatus', function ($query) {
+                    $query->where('id', 5);
+                })
+                ->whereHas('sucursal', function ($query) use ($sucursal) {
+                    $query->where('id', $sucursal->id);
+                })
+                ->with([
+                    'linea',
+                    'departamento',
+                    'sucursal' => function ($query) use ($sucursal) {
+                        // Asegurarse de que el filtro se aplica también al cargar las relaciones
+                        $query->where('id', $sucursal->id);
+                    },
+                    'puesto',
+                    'qualification'
+                ])
+                ->get();
+        }
 
         $empleadosAgricolaSinTecnico = [];
         $empleadosConstruccionSinTecnico = [];
@@ -104,44 +185,14 @@ class QualificationController extends Controller
             }
         }
 
-
         return response()->json([
-            'agricola' => $calificacionesAgricola,
-            'construccion' => $calificacionesConstruccion,
+            'agricola' => $tecnicosAgricola,
+            'construccion' => $tecnicosConstruccion,
             'sinAsignar' => [
                 'agricola' => $empleadosAgricolaSinTecnico,
                 'construccion' => $empleadosConstruccionSinTecnico
             ]
         ]);
-
-        // // Obtener todos los empleados con el puesto 'tecnico' y cargar la relación 'linea' y 'qualification'
-        // $empleadosTecnicos = Empleado::whereHas('puesto', function ($query) {
-        //     $query->where('nombre', 'Tecnico');
-        // })->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician')->get();
-
-        // // Ordenar los empleados por nivel de técnico
-        // $empleadosTecnicos = $empleadosTecnicos->sortBy(function ($empleado) {
-        //     return $empleado->technician->level ?? PHP_INT_MAX;
-        // });
-
-        // // Inicializar arreglos para los empleados de las diferentes líneas
-        // $empleadosAgricola = [];
-        // $empleadosConstruccion = [];
-
-        // // Separar los empleados según su línea
-        // foreach ($empleadosTecnicos as $empleado) {
-        //     if ($empleado->linea->nombre === 'Agricola') {
-        //         $empleadosAgricola[] = $empleado;
-        //     } elseif ($empleado->linea->nombre === 'Construccion') {
-        //         $empleadosConstruccion[] = $empleado;
-        //     }
-        // }
-
-        // // Devolver los empleados separados por línea
-        // return [
-        //     'agricola' => $empleadosAgricola,
-        //     'construccion' => $empleadosConstruccion
-        // ];
     }
 
     public function getPerLine(Linea $linea)

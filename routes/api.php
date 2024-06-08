@@ -78,6 +78,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('empleado/filtertwo', [EmpleadoController::class, 'filtertwo']);
     Route::post('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
     Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
+    Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
 
     //--------------------Expediente--------------------
     Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
