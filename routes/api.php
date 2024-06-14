@@ -169,16 +169,15 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
 
     //--------------------landingPage/admin--------------------
+    Route::get('formProduct', [ProductController::class, 'formProduct']);
+    Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
+    Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
+    Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
     Route::apiResource('brand', BrandController::class);
     Route::apiResource('vendor', VendorController::class);
     Route::apiResource('categorie', CategoryController::class);
     Route::apiResource('feature', FeaturesController::class);
     Route::apiResource('product', ProductController::class);
-
-    Route::get('formProduct', [ProductController::class, 'formProduct']);
-    Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
-    Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
-    Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
 
     //--------------------Calendar--------------------
     Route::get('event/{day}', [EventController::class, 'getPerDay']);
@@ -198,15 +197,15 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('post/doc', PostDocController::class);
 });
 //--------------------landingPage--------------------
+Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
+Route::get('page/product/all', [ProductController::class, 'getAll']);
+Route::post('page/product/get', [ProductController::class, 'getProducts']);
+Route::get('page/product/random/{limit}', [ProductController::class, 'getRandomFeaturedProducts']);
 Route::apiResource('page/brands', BrandController::class);
 Route::apiResource('page/vendors', VendorController::class);
 Route::apiResource('page/categories', CategoryController::class);
 Route::apiResource('page/features', FeaturesController::class);
 Route::apiResource('page/products', ProductController::class);
-Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
-Route::get('page/product/all', [ProductController::class, 'getAll']);
-Route::post('page/product/get', [ProductController::class, 'getProducts']);
-Route::get('page/product/random/{limit}', [ProductController::class, 'getRandomFeaturedProducts']);
 
 //--------------------Sin inicio de sesion--------------------
 Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);
