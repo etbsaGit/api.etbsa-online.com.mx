@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\BayController;
+use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\EventController;
@@ -14,12 +16,12 @@ use App\Http\Controllers\Api\ArchivoController;
 use App\Http\Controllers\Api\EstatusController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
+use App\Http\Controllers\Api\PostDocController;
 use App\Http\Controllers\Api\SucursalController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\PlantillaController;
 use App\Http\Controllers\Api\RequisitoController;
 use App\Http\Controllers\Api\AntiguedadController;
-use App\Http\Controllers\Api\BayController;
 use App\Http\Controllers\Api\ExpedienteController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\TechnicianController;
@@ -79,6 +81,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
     Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
     Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
+    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
 
     //--------------------Expediente--------------------
     Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
@@ -166,11 +169,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
 
     //--------------------landingPage/admin--------------------
-    Route::apiResource('brands', BrandController::class);
-    Route::apiResource('vendors', VendorController::class);
-    Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('features', FeaturesController::class);
-    Route::apiResource('products', ProductController::class);
+    Route::apiResource('brand', BrandController::class);
+    Route::apiResource('vendor', VendorController::class);
+    Route::apiResource('categorie', CategoryController::class);
+    Route::apiResource('feature', FeaturesController::class);
+    Route::apiResource('product', ProductController::class);
 
     Route::get('formProduct', [ProductController::class, 'formProduct']);
     Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
@@ -187,7 +190,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('events', EventController::class);
     Route::apiResource('activities', ActivityController::class);
 
-    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
+    //--------------------Post--------------------
+    Route::get('posts/forms', [PostController::class, 'getforms']);
+    Route::post('posts/all', [PostController::class, 'getAll']);
+    Route::get('posts/auth', [PostController::class, 'getPerAuth']);
+    Route::apiResource('post', PostController::class);
+    Route::apiResource('post/doc', PostDocController::class);
 });
 //--------------------landingPage--------------------
 Route::apiResource('page/brands', BrandController::class);

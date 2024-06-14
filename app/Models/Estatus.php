@@ -38,4 +38,9 @@ class Estatus extends Model
     {
         return $this->hasMany(Termination::class, 'reason_id');
     }
+
+    public function post()
+    {
+        return $this->hasMany(Post::class, 'estatus_id');
+    }
 }

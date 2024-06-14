@@ -28,4 +28,9 @@ class Puesto extends Model
     {
         return $this->belongsToMany(Skill::class, 'p_skills_puestos', 'puesto_id', 'skill_id');
     }
+
+    public function post()
+    {
+        return $this->hasMany(Post::class, 'puesto_id');
+    }
 }

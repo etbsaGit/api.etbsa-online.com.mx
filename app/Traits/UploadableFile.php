@@ -95,4 +95,47 @@ trait UploadableFile
         // Devolver la imagen en formato base64 con el prefijo
         return $imagePrefix . $imageBase64;
     }
+
+    public function saveDoc($base64, $defaultPathFolder)
+    {
+        // Check if data is a valid base64 string
+        if (preg_match('/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+)?;base64,/', $base64)) {
+            // Take out the base64 encoded text
+            $data = substr($base64, strpos($base64, ',') + 1);
+
+            // Decode the base64 data
+            $decodedData = base64_decode($data);
+
+            if ($decodedData === false) {
+                throw new \Exception('base64_decode failed');
+            }
+        } else {
+            throw new \Exception('Invalid base64 data');
+        }
+
+        // Generate a random filename
+        $fileName = Str::random();
+        // Determine file extension based on mime type
+        $fileExtension = '';
+
+        if (preg_match('/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+)?/', $base64, $matches)) {
+            if (isset($matches[1])) {
+                $mimeType = explode('/', $matches[1]);
+                if (isset($mimeType[1])) {
+                    $fileExtension = '.' . explode(';', $mimeType[1])[0];
+                }
+            }
+        }
+
+        // Append file extension if found, otherwise, leave it empty
+        $fileName .= $fileExtension;
+
+        // Define file path
+        $filePath = $defaultPathFolder . '/' . $fileName;
+
+        // Save the file to AWS S3
+        Storage::disk('s3')->put($filePath, $decodedData);
+
+        return $filePath;
+    }
 }
