@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Bay;
+use App\Models\Post;
 use App\Models\Linea;
+use App\Models\Estatus;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
@@ -20,7 +22,7 @@ class BayController extends ApiController
      */
     public function index()
     {
-        return response()->json(Bay::with('tecnico', 'sucursal', 'linea')->get());
+        return $this->respond(Bay::with('estatus', 'sucursal', 'linea')->get());
     }
 
     /**
@@ -28,7 +30,7 @@ class BayController extends ApiController
      */
     public function store(StoreBayRequest $request)
     {
-        return response()->json(Bay::create($request->validated()));
+        return $this->respond(Bay::create($request->validated()));
     }
 
     /**
@@ -36,7 +38,7 @@ class BayController extends ApiController
      */
     public function show(Bay $bay)
     {
-        return response()->json($bay->load('tecnico', 'sucursal', 'linea'));
+        return $this->respond($bay->load('estatus', 'sucursal', 'linea'));
     }
 
     /**
@@ -45,7 +47,7 @@ class BayController extends ApiController
     public function update(PutBayRequest $request, Bay $bay)
     {
         $bay->update($request->validated());
-        return response()->json($bay);
+        return $this->respond($bay);
     }
 
     /**
@@ -54,7 +56,7 @@ class BayController extends ApiController
     public function destroy(Bay $bay)
     {
         $bay->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function getAllData()
@@ -63,9 +65,11 @@ class BayController extends ApiController
 
         $lineas = Linea::all();
 
-        return response()->json([
+
+        return $this->respond([
             'sucursales' => $sucursales,
             'lineas' => $lineas,
+            'estatus' => Estatus::where('tipo_estatus', 'bay')->get()
         ]);
     }
 
@@ -79,43 +83,24 @@ class BayController extends ApiController
             })
             ->get();
 
-        return response()->json($tecnicos);
-    }
-
-    public function getAgricolaBySucursal(Sucursal $sucursal)
-    {
-        // Asumiendo que 'agricola' es el nombre de la línea
-        $agricolaLinea = Linea::where('nombre', 'agricola')->first();
-
-        if (!$agricolaLinea) {
-            return response()->json(['error' => 'Línea agricola no encontrada'], 404);
-        }
-
-        // Obtener bays por sucursal y línea agricola
-        $bays = Bay::where('sucursal_id', $sucursal->id)
-            ->where('linea_id', $agricolaLinea->id)
-            ->with('tecnico')
-            ->get();
-
-        return response()->json($bays);
+        return $this->respond($tecnicos);
     }
 
     public function getConstruccionBySucursal(Sucursal $sucursal)
     {
         // Asumiendo que 'agricola' es el nombre de la línea
-        $agricolaLinea = Linea::where('nombre', 'construccion')->first();
+        $construccionLinea = Linea::where('nombre', 'construccion')->first();
 
-        if (!$agricolaLinea) {
-            return response()->json(['error' => 'Línea agricola no encontrada'], 404);
+        if (!$construccionLinea) {
+            return response()->json(['error' => 'Línea construccion no encontrada'], 404);
         }
 
-        // Obtener bays por sucursal y línea agricola
         $bays = Bay::where('sucursal_id', $sucursal->id)
-            ->where('linea_id', $agricolaLinea->id)
-            ->with('tecnico')
+            ->where('linea_id', $construccionLinea->id)
+            ->with(['estatus', 'workOrder', 'workOrder.estatus', 'workOrder.tecnico', 'workOrder.workOrderDoc'])
             ->get();
 
-        return response()->json($bays);
+        return $this->respond($bays);
     }
 
     public function getAll(Request $request)
@@ -127,7 +112,7 @@ class BayController extends ApiController
         $roles = $user->roles->pluck('name')->toArray();
 
         // Base query
-        $query = Bay::with('tecnico', 'sucursal', 'linea');
+        $query = Bay::with('estatus', 'sucursal', 'linea');
 
         if (in_array('Admin', $roles)) {
             // Si el usuario tiene rol de servicio, obtener todas las bays
@@ -137,7 +122,7 @@ class BayController extends ApiController
             $empleado = $user->empleado;
             if ($empleado && isset($empleado->sucursal_id) && isset($empleado->linea_id)) {
                 $query->where('sucursal_id', $empleado->sucursal_id)
-                      ->where('linea_id', $empleado->linea_id);
+                    ->where('linea_id', $empleado->linea_id);
             }
             $bays = $query->get();
         } else {
@@ -152,5 +137,121 @@ class BayController extends ApiController
         ];
 
         return $this->respond($data);
+    }
+
+    public function pantallaAgricola(Sucursal $sucursal)
+    {
+        $agricolaLinea = Linea::where('nombre', 'agricola')->first();
+
+        if (!$agricolaLinea) {
+            return response()->json(['error' => 'Línea agricola no encontrada'], 404);
+        }
+
+        $bays = Bay::where('sucursal_id', $sucursal->id)
+            ->where('linea_id', $agricolaLinea->id)
+            ->with(['estatus', 'workOrder', 'workOrder.estatus', 'workOrder.tecnico', 'workOrder.workOrderDoc'])
+            ->get();
+
+        $totalBays = $bays->count();
+        $bahiasEnUso = $bays->filter(function ($bay) {
+            return $bay->estatus->nombre === 'En uso';
+        });
+        $porcentajeBahiasEnUso = $totalBays > 0 ? round(($bahiasEnUso->count() / $totalBays) * 100, 2) : 0;
+
+        // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea agrícola
+        $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
+            ->whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+            ->whereHas('linea', function ($query) {
+                $query->where('nombre', 'agricola');
+            })
+            ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
+            ->get();
+
+        // Calcular la productividad promedio de todos los técnicos
+        $totalTecnicos = $tecnicos->count();
+        $sumProductividad = $tecnicos->sum('productividad');
+        $promedioProductividad = $totalTecnicos > 0 ? round(($sumProductividad / $totalTecnicos), 2) : 0;
+
+        $post = Post::whereHas('estatus', function ($query) {
+            $query->where('nombre', 'Pantalla');
+        })
+            ->whereHas('linea', function ($query) {
+                $query->where('nombre', 'agricola');
+            })
+            ->with('postDoc') // Cargar la relación 'sucursal'
+            ->get();
+
+        $data = [
+            'tecnicos' => $tecnicos,
+            'post' => $post,
+            'bays' => $bays,
+            'charts' => [
+                'en_uso' => $porcentajeBahiasEnUso,
+                'prod_taller'=> $promedioProductividad
+            ]
+        ];
+
+        return response()->json($data);
+    }
+
+
+    public function pantallaConstruccion(Sucursal $sucursal)
+    {
+        $construccionLinea = Linea::where('nombre', 'construccion')->first();
+
+        if (!$construccionLinea) {
+            return response()->json(['error' => 'Línea construccion no encontrada'], 404);
+        }
+
+        $bays = Bay::where('sucursal_id', $sucursal->id)
+            ->where('linea_id', $construccionLinea->id)
+            ->with(['estatus', 'workOrder', 'workOrder.estatus', 'workOrder.tecnico', 'workOrder.workOrderDoc'])
+            ->get();
+
+        $totalBays = $bays->count();
+        $bahiasEnUso = $bays->filter(function ($bay) {
+            return $bay->estatus->nombre === 'En uso';
+        });
+        $porcentajeBahiasEnUso = $totalBays > 0 ? ($bahiasEnUso->count() / $totalBays) * 100 : 0;
+
+
+        // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea agrícola
+        $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
+            ->whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+            ->whereHas('linea', function ($query) {
+                $query->where('nombre', 'construccion');
+            })
+            ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
+            ->get();
+
+        // Calcular la productividad promedio de todos los técnicos
+        $totalTecnicos = $tecnicos->count();
+        $sumProductividad = $tecnicos->sum('productividad');
+        $promedioProductividad = $totalTecnicos > 0 ? ($sumProductividad / $totalTecnicos) : 0;
+
+        $post = Post::whereHas('estatus', function ($query) {
+            $query->where('nombre', 'Pantalla');
+        })
+            ->whereHas('linea', function ($query) {
+                $query->where('nombre', 'construccion');
+            })
+            ->with('postDoc') // Cargar la relación 'sucursal'
+            ->get();
+
+        $data = [
+            'tecnicos' => $tecnicos,
+            'post' => $post,
+            'bays' => $bays,
+            'charts' => [
+                'en_uso' => $porcentajeBahiasEnUso,
+                'prod_taller'=> $promedioProductividad
+            ]
+        ];
+
+        return response()->json($data);
     }
 }

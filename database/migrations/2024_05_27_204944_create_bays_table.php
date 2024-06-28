@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('bays', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->string('cliente')->nullable();
-            $table->string('descripcion')->nullable();
-
-            $table->unsignedBigInteger('tecnico_id')->nullable();
-            $table->foreign('tecnico_id')->references('id')->on('empleados')->onDelete('restrict');
 
             $table->unsignedBigInteger('sucursal_id')->nullable();
             $table->foreign('sucursal_id')->references('id')->on('sucursales')->onDelete('restrict');
+
+            $table->unsignedBigInteger('linea_id')->nullable();
+            $table->foreign('linea_id')->references('id')->on('lineas')->onDelete('restrict');
+
+            $table->unsignedBigInteger('estatus_id')->nullable();
+            $table->foreign('estatus_id')->references('id')->on('estatus')->onDelete('restrict');
+
             $table->timestamps();
         });
     }

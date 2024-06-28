@@ -42,4 +42,9 @@ class Sucursal extends Model
     {
         return $this->hasMany(Post::class, 'sucursal_id');
     }
+
+    public function workOrder()
+    {
+        return $this->hasMany(WorkOrder::class, 'sucursal_id');
+    }
 }

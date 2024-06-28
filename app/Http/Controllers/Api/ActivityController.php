@@ -51,7 +51,7 @@ class ActivityController extends Controller
      */
     public function destroy(Activity $activity)
     {
-        $activity->delete();
+        $activity->forceDelete();
         return response()->json('ok');
     }
 

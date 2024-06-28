@@ -14,13 +14,14 @@ use App\Http\Controllers\Api\PuestoController;
 use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\ArchivoController;
 use App\Http\Controllers\Api\EstatusController;
+use App\Http\Controllers\Api\PostDocController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
-use App\Http\Controllers\Api\PostDocController;
 use App\Http\Controllers\Api\SucursalController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\PlantillaController;
 use App\Http\Controllers\Api\RequisitoController;
+use App\Http\Controllers\Api\WorkOrderController;
 use App\Http\Controllers\Api\AntiguedadController;
 use App\Http\Controllers\Api\ExpedienteController;
 use App\Http\Controllers\Api\PermissionController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\DepartamentoController;
 use App\Http\Controllers\Api\TipoDeSangreController;
+use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Ecommerce\ProductController;
@@ -123,16 +125,22 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('technician/all', [QualificationController::class, 'getEmployeeTechnician']);
     Route::get('qualifications/{linea}', [QualificationController::class, 'getPerLine']);
     Route::post('qualifications/empleado/{empleado}', [QualificationController::class, 'storeQualifications']);
-    Route::get('technicians/construccion/{sucursal}', [TechnicianController::class, 'getConstruccionBySucursal']);
-    Route::get('technicians/agricola/{sucursal}', [TechnicianController::class, 'getAgricolaBySucursal']);
     Route::get('bays/forms', [BayController::class, 'getAllData']);
     Route::get('bays/tech/{sucursal}/{linea}', [BayController::class, 'getTechData']);
-    Route::get('bays/construccion/{sucursal}', [BayController::class, 'getConstruccionBySucursal']);
-    Route::get('bays/agricola/{sucursal}', [BayController::class, 'getAgricolaBySucursal']);
+
+    Route::get('pantalla/agricola/{sucursal}', [BayController::class, 'pantallaAgricola']);
+    Route::get('pantalla/construccion/{sucursal}', [BayController::class, 'pantallaConstruccion']);
+
     Route::post('bays/getAll', [BayController::class, 'getAll']);
     Route::apiResource('qualification', QualificationController::class);
     Route::apiResource('technician', TechnicianController::class);
     Route::apiResource('bay', BayController::class);
+
+    //--------------------WorkOrder--------------------
+    Route::get('wos/getform', [WorkOrderController::class, 'getForm']);
+    Route::post('wos/getAll', [WorkOrderController::class, 'getWOS']);
+    Route::apiResource('workOrder', WorkOrderController::class);
+    Route::apiResource('workOrderDoc', WorkOrderDocController::class);
 
     //--------------------Skill--------------------
     Route::get('skill/puesto/{puesto}', [SkillController::class, 'getPerPuesto']);
@@ -194,7 +202,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('posts/all', [PostController::class, 'getAll']);
     Route::get('posts/auth', [PostController::class, 'getPerAuth']);
     Route::apiResource('post', PostController::class);
-    Route::apiResource('post/doc', PostDocController::class);
+    Route::apiResource('postDoc', PostDocController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

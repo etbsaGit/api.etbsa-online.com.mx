@@ -15,18 +15,14 @@ class Bay extends Model
 
     protected $fillable = [
         'nombre',
-        'cliente',
-        'maquina',
-        'descripcion',
-        'status',
-        'tecnico_id',
+        'estatus_id',
         'sucursal_id',
         'linea_id'
     ];
 
-    public function tecnico()
+    public function estatus()
     {
-        return $this->belongsTo(Empleado::class, 'tecnico_id');
+        return $this->belongsTo(Estatus::class, 'estatus_id');
     }
 
     public function sucursal()
@@ -39,4 +35,8 @@ class Bay extends Model
         return $this->belongsTo(Linea::class, 'linea_id');
     }
 
+    public function workOrder()
+    {
+        return $this->hasOne(WorkOrder::class, 'bay_id');
+    }
 }

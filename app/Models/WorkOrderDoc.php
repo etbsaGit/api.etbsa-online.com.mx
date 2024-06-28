@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
-class PostDoc extends Model
+class WorkOrderDoc extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','extension','post_id', 'path'];
+    protected $fillable = ['name','extension','work_order_id', 'path'];
 
     protected $appends = ['realpath'];
 
@@ -25,12 +25,12 @@ class PostDoc extends Model
     protected function defaultPathFolder(): Attribute
     {
         return Attribute::make(
-            get: fn () => "blog/id_" . $this->post_id,
+            get: fn () => "work_order/id_" . $this->workOrder->ot,
         );
     }
 
-    public function post()
+    public function workOrder()
     {
-        return $this->belongsTo(Post::class, 'post_id');
+        return $this->belongsTo(WorkOrder::class, 'work_order_id');
     }
 }

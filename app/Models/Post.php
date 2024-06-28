@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Post extends Model
@@ -56,5 +57,20 @@ class Post extends Model
     public function postDoc()
     {
         return $this->hasMany(PostDoc::class, 'post_id');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($post) {
+
+            $post->postDoc->each(function ($one_post) {
+
+                Storage::disk('s3')->delete($one_post->path);
+
+                $one_post->delete();
+            });
+        });
     }
 }

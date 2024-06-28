@@ -185,54 +185,24 @@ class TechnicianController extends Controller
             ->whereHas('linea', function ($query) {
                 $query->where('nombre', 'construccion');
             })
-            ->with('sucursal','technician') // Cargar la relación 'sucursal'
+            ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
             ->get();
 
-            $post = Post::whereHas('estatus', function ($query) {
-                $query->where('nombre', 'Pantalla');
-            })
+        $post = Post::whereHas('estatus', function ($query) {
+            $query->where('nombre', 'Pantalla');
+        })
             ->whereHas('linea', function ($query) {
                 $query->where('nombre', 'construccion');
             })
             ->with('postDoc') // Cargar la relación 'sucursal'
             ->get();
 
-            $data = [
-                'tecnicos'=>$tecnicos,
-                'post'=>$post
-            ];
+        $data = [
+            'tecnicos' => $tecnicos,
+            'post' => $post
+        ];
 
         return response()->json($data);
     }
 
-
-    public function getAgricolaBySucursal(Sucursal $sucursal)
-    {
-        // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea de construcción
-        $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
-            ->whereHas('puesto', function ($query) {
-                $query->where('nombre', 'tecnico');
-            })
-            ->whereHas('linea', function ($query) {
-                $query->where('nombre', 'agricola');
-            })
-            ->with('sucursal','technician') // Cargar la relación 'sucursal'
-            ->get();
-
-            $post = Post::whereHas('estatus', function ($query) {
-                $query->where('nombre', 'Pantalla');
-            })
-            ->whereHas('linea', function ($query) {
-                $query->where('nombre', 'agricola');
-            })
-            ->with('postDoc') // Cargar la relación 'sucursal'
-            ->get();
-
-            $data = [
-                'tecnicos'=>$tecnicos,
-                'post'=>$post
-            ];
-
-        return response()->json($data);
-    }
 }

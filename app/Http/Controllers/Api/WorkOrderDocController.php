@@ -2,20 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\PostDoc;
+use App\Models\WorkOrderDoc;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 
-class PostDocController extends ApiController
+class WorkOrderDocController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return $this->respond(PostDoc::get());
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
     }
 
     /**
@@ -29,19 +36,23 @@ class PostDocController extends ApiController
     /**
      * Display the specified resource.
      */
-    public function show(PostDoc $postDoc)
+    public function show(WorkOrderDoc $workOrderDoc)
     {
-        // Usamos el método findOrFail para recuperar el PostDoc por su ID
-        // $postDoc = PostDoc::findOrFail($postDoc);
+        //
+    }
 
-        // Devolvemos la respuesta
-        return $this->respond($postDoc);
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(WorkOrderDoc $workOrderDoc)
+    {
+        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PostDoc $postDoc)
+    public function update(Request $request, WorkOrderDoc $workOrderDoc)
     {
         //
     }
@@ -49,10 +60,10 @@ class PostDocController extends ApiController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PostDoc $postDoc)
+    public function destroy(WorkOrderDoc $workOrderDoc)
     {
-        Storage::disk('s3')->delete($postDoc->path);
-        $postDoc->delete();
+        Storage::disk('s3')->delete($workOrderDoc->path);
+        $workOrderDoc->delete();
         return $this->respondSuccess();
     }
 }

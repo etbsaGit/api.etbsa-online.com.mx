@@ -81,11 +81,9 @@ class PostController extends ApiController
      */
     public function destroy(Post $post)
     {
-        $post->postDoc()->delete();
-
         $post->delete();
 
-        return response()->json(['message' => 'Post y registros relacionados eliminados con éxito'], 200);
+        return $this->respondSuccess();
     }
 
 
