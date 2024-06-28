@@ -130,9 +130,33 @@
                         </div>
                     </div>
 
-                    <div class="ml-4 text-center text-sm text-gray-500 dark:text-gray-400 sm:text-right sm:ml-0">
-                        Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
+                    <div class="ml-4 text-sm text-gray-500 dark:text-gray-400 sm:text-right sm:ml-0">
+                        {{-- Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }}) --}}
+                        <a href="{{ route('clear-cache') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block mb-2 mr-2">
+                            Clear cache
+                        </a>
+                        <a href="{{ route('optimize') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block mb-2 mr-2">
+                            optimize
+                        </a>
+                        <a href="{{ route('route-cache') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block mb-2 mr-2">
+                            route-cache
+                        </a>
+                        <a href="{{ route('route-clear') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block mb-2 mr-2">
+                            route-clear
+                        </a>
+                        <a href="{{ route('view-clear') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block mb-2 mr-2">
+                            view-clear
+                        </a>
+                        <a href="{{ route('config-cache') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block mb-2 mr-2">
+                            config-cache
+                        </a>
+                        <a href="{{ route('config-clear') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block mb-2 mr-2">
+                            config-clear
+                        </a>
                     </div>
+
+
+
                 </div>
             </div>
         </div>
