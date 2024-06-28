@@ -25,14 +25,10 @@ class StoreBayRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => 'required|string|max:255',
-            'cliente' => 'nullable|string|max:255',
-            'maquina' => 'nullable|string|max:255',
-            'descripcion' => 'nullable|string|max:255',
-            'status' => 'nullable|string|max:255',
-            'tecnico_id' => 'nullable|exists:empleados,id',
-            'sucursal_id' => 'required|exists:sucursales,id',
-            'linea_id' => 'required|exists:lineas,id',
+            'nombre' => ['required'],
+            'estatus_id' => ['required', 'exists:estatus,id'],
+            'sucursal_id' => ['required', 'exists:sucursales,id'],
+            'linea_id' => ['required', 'exists:lineas,id'],
         ];
     }
 

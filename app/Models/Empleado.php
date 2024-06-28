@@ -194,6 +194,11 @@ class Empleado extends Model
         return $this->hasMany(Bay::class, 'tecnico_id');
     }
 
+    public function workOrder()
+    {
+        return $this->hasMany(WorkOrder::class, 'tecnico_id');
+    }
+
     //----------------------------------SkillRating---------------------------------------------------------
     public function skillRating()
     {

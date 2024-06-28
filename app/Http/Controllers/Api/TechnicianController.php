@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Post;
 use App\Models\Linea;
 use App\Models\Empleado;
 use App\Models\Sucursal;
@@ -184,26 +185,24 @@ class TechnicianController extends Controller
             ->whereHas('linea', function ($query) {
                 $query->where('nombre', 'construccion');
             })
-            ->with('sucursal','technician') // Cargar la relación 'sucursal'
+            ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
             ->get();
 
-        return response()->json($tecnicos);
-    }
-
-
-    public function getAgricolaBySucursal(Sucursal $sucursal)
-    {
-        // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea de construcción
-        $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
-            ->whereHas('puesto', function ($query) {
-                $query->where('nombre', 'tecnico');
-            })
+        $post = Post::whereHas('estatus', function ($query) {
+            $query->where('nombre', 'Pantalla');
+        })
             ->whereHas('linea', function ($query) {
-                $query->where('nombre', 'agricola');
+                $query->where('nombre', 'construccion');
             })
-            ->with('sucursal','technician')
+            ->with('postDoc') // Cargar la relación 'sucursal'
             ->get();
 
-        return response()->json($tecnicos);
+        $data = [
+            'tecnicos' => $tecnicos,
+            'post' => $post
+        ];
+
+        return response()->json($data);
     }
+
 }

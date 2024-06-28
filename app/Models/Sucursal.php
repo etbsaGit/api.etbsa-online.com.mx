@@ -18,8 +18,9 @@ class Sucursal extends Model
     ];
 
 
-    public function empleado(){
-        return $this->hasMany(Empleado::class,'sucursal_id');
+    public function empleado()
+    {
+        return $this->hasMany(Empleado::class, 'sucursal_id');
     }
 
     public function linea()
@@ -35,5 +36,15 @@ class Sucursal extends Model
     public function bay()
     {
         return $this->hasMany(Bay::class, 'sucursal_id');
+    }
+
+    public function post()
+    {
+        return $this->hasMany(Post::class, 'sucursal_id');
+    }
+
+    public function workOrder()
+    {
+        return $this->hasMany(WorkOrder::class, 'sucursal_id');
     }
 }

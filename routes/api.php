@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\BayController;
+use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\EventController;
@@ -12,14 +14,15 @@ use App\Http\Controllers\Api\PuestoController;
 use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\ArchivoController;
 use App\Http\Controllers\Api\EstatusController;
+use App\Http\Controllers\Api\PostDocController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\SucursalController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\PlantillaController;
 use App\Http\Controllers\Api\RequisitoController;
+use App\Http\Controllers\Api\WorkOrderController;
 use App\Http\Controllers\Api\AntiguedadController;
-use App\Http\Controllers\Api\BayController;
 use App\Http\Controllers\Api\ExpedienteController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\TechnicianController;
@@ -29,6 +32,7 @@ use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\DepartamentoController;
 use App\Http\Controllers\Api\TipoDeSangreController;
+use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Ecommerce\ProductController;
@@ -79,6 +83,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
     Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
     Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
+    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
 
     //--------------------Expediente--------------------
     Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
@@ -120,16 +125,22 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('technician/all', [QualificationController::class, 'getEmployeeTechnician']);
     Route::get('qualifications/{linea}', [QualificationController::class, 'getPerLine']);
     Route::post('qualifications/empleado/{empleado}', [QualificationController::class, 'storeQualifications']);
-    Route::get('technicians/construccion/{sucursal}', [TechnicianController::class, 'getConstruccionBySucursal']);
-    Route::get('technicians/agricola/{sucursal}', [TechnicianController::class, 'getAgricolaBySucursal']);
     Route::get('bays/forms', [BayController::class, 'getAllData']);
     Route::get('bays/tech/{sucursal}/{linea}', [BayController::class, 'getTechData']);
-    Route::get('bays/construccion/{sucursal}', [BayController::class, 'getConstruccionBySucursal']);
-    Route::get('bays/agricola/{sucursal}', [BayController::class, 'getAgricolaBySucursal']);
+
+    Route::get('pantalla/agricola/{sucursal}', [BayController::class, 'pantallaAgricola']);
+    Route::get('pantalla/construccion/{sucursal}', [BayController::class, 'pantallaConstruccion']);
+
     Route::post('bays/getAll', [BayController::class, 'getAll']);
     Route::apiResource('qualification', QualificationController::class);
     Route::apiResource('technician', TechnicianController::class);
     Route::apiResource('bay', BayController::class);
+
+    //--------------------WorkOrder--------------------
+    Route::get('wos/getform', [WorkOrderController::class, 'getForm']);
+    Route::post('wos/getAll', [WorkOrderController::class, 'getWOS']);
+    Route::apiResource('workOrder', WorkOrderController::class);
+    Route::apiResource('workOrderDoc', WorkOrderDocController::class);
 
     //--------------------Skill--------------------
     Route::get('skill/puesto/{puesto}', [SkillController::class, 'getPerPuesto']);
@@ -166,16 +177,15 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
 
     //--------------------landingPage/admin--------------------
-    Route::apiResource('brands', BrandController::class);
-    Route::apiResource('vendors', VendorController::class);
-    Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('features', FeaturesController::class);
-    Route::apiResource('products', ProductController::class);
-
     Route::get('formProduct', [ProductController::class, 'formProduct']);
     Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
     Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
     Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
+    Route::apiResource('brand', BrandController::class);
+    Route::apiResource('vendor', VendorController::class);
+    Route::apiResource('categorie', CategoryController::class);
+    Route::apiResource('feature', FeaturesController::class);
+    Route::apiResource('product', ProductController::class);
 
     //--------------------Calendar--------------------
     Route::get('event/{day}', [EventController::class, 'getPerDay']);
@@ -187,18 +197,23 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('events', EventController::class);
     Route::apiResource('activities', ActivityController::class);
 
-    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
+    //--------------------Post--------------------
+    Route::get('posts/forms', [PostController::class, 'getforms']);
+    Route::post('posts/all', [PostController::class, 'getAll']);
+    Route::get('posts/auth', [PostController::class, 'getPerAuth']);
+    Route::apiResource('post', PostController::class);
+    Route::apiResource('postDoc', PostDocController::class);
 });
 //--------------------landingPage--------------------
+Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
+Route::get('page/product/all', [ProductController::class, 'getAll']);
+Route::post('page/product/get', [ProductController::class, 'getProducts']);
+Route::get('page/product/random/{limit}', [ProductController::class, 'getRandomFeaturedProducts']);
 Route::apiResource('page/brands', BrandController::class);
 Route::apiResource('page/vendors', VendorController::class);
 Route::apiResource('page/categories', CategoryController::class);
 Route::apiResource('page/features', FeaturesController::class);
 Route::apiResource('page/products', ProductController::class);
-Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
-Route::get('page/product/all', [ProductController::class, 'getAll']);
-Route::post('page/product/get', [ProductController::class, 'getProducts']);
-Route::get('page/product/random/{limit}', [ProductController::class, 'getRandomFeaturedProducts']);
 
 //--------------------Sin inicio de sesion--------------------
 Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);

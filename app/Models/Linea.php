@@ -33,4 +33,13 @@ class Linea extends Model
         return $this->hasMany(Bay::class, 'linea_id');
     }
 
+    public function post()
+    {
+        return $this->hasMany(Post::class, 'linea_id');
+    }
+
+    public function workOrder()
+    {
+        return $this->hasMany(WorkOrder::class, 'linea_id');
+    }
 }

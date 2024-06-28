@@ -38,4 +38,29 @@ class Estatus extends Model
     {
         return $this->hasMany(Termination::class, 'reason_id');
     }
+
+    public function post()
+    {
+        return $this->hasMany(Post::class, 'estatus_id');
+    }
+
+    public function workOrder()
+    {
+        return $this->hasMany(WorkOrder::class, 'estatus_id');
+    }
+
+    public function workOrderTaller()
+    {
+        return $this->hasMany(WorkOrder::class, 'estatus_taller_id');
+    }
+
+    public function type()
+    {
+        return $this->hasMany(WorkOrder::class, 'type_id');
+    }
+
+    public function bay()
+    {
+        return $this->hasMany(Bay::class, 'estatus_id');
+    }
 }

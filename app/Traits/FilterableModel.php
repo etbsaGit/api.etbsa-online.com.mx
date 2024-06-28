@@ -29,4 +29,15 @@ trait FilterableModel
             }
         }
     }
+
+    public function scopeFilterone(Builder $query, array $filters)
+{
+    $query->where(function ($query) use ($filters) {
+        foreach ($filters as $key => $value) {
+            if ($value !== null) {
+                $query->orWhere($key, $value);
+            }
+        }
+    });
+}
 }
