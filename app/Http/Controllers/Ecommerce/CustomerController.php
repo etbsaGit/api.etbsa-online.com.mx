@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Ecommerce;
 
-use App\Http\Controllers\ApiController;
 use App\Models\Ecommerce\Customer;
-use App\Http\Requests\StoreCustomerRequest;
-use App\Http\Requests\UpdateCustomerRequest;
+use App\Http\Controllers\ApiController;
+use App\Http\Requests\Ecommerce\StoreCustomerRequest;
+use App\Http\Requests\Ecommerce\UpdateCustomerRequest;
+
 
 class CustomerController extends ApiController
 {

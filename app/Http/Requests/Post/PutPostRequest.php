@@ -38,6 +38,8 @@ class PutPostRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:191'],
             'description' => ['required', 'string', 'max:191'],
+            'activo' => ['required', 'boolean'],
+            'fecha_caducidad' => ['nullable', 'date_format:Y-m-d'],
 
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'linea_id' => ['nullable', 'integer', 'exists:lineas,id'],

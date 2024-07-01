@@ -9,6 +9,7 @@ use App\Models\Estatus;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Bay\PutBayRequest;
@@ -178,9 +179,14 @@ class BayController extends ApiController
             $query->where('nombre', 'Pantalla');
         })
             ->whereHas('linea', function ($query) {
-                $query->where('nombre', 'agricola');
+                $query->where('nombre', 'construccion');
             })
-            ->with('postDoc') // Cargar la relación 'sucursal'
+            ->where('activo', 1) // Condición para el campo 'activo'
+            ->where(function ($query) {
+                $query->whereNull('fecha_caducidad') // Posts con fecha_caducidad nula
+                    ->orWhere(DB::raw('DATE(fecha_caducidad)'), '>=', now()->toDateString()); // Posts con fecha_caducidad mayor o igual a hoy
+            })
+            ->with('postDoc') // Cargar la relación 'postDoc'
             ->get();
 
         $data = [
@@ -189,7 +195,7 @@ class BayController extends ApiController
             'bays' => $bays,
             'charts' => [
                 'en_uso' => $porcentajeBahiasEnUso,
-                'prod_taller'=> $promedioProductividad
+                'prod_taller' => $promedioProductividad
             ]
         ];
 
@@ -239,7 +245,12 @@ class BayController extends ApiController
             ->whereHas('linea', function ($query) {
                 $query->where('nombre', 'construccion');
             })
-            ->with('postDoc') // Cargar la relación 'sucursal'
+            ->where('activo', 1) // Condición para el campo 'activo'
+            ->where(function ($query) {
+                $query->whereNull('fecha_caducidad') // Posts con fecha_caducidad nula
+                    ->orWhere(DB::raw('DATE(fecha_caducidad)'), '>=', now()->toDateString()); // Posts con fecha_caducidad mayor o igual a hoy
+            })
+            ->with('postDoc') // Cargar la relación 'postDoc'
             ->get();
 
         $data = [
@@ -248,7 +259,7 @@ class BayController extends ApiController
             'bays' => $bays,
             'charts' => [
                 'en_uso' => $porcentajeBahiasEnUso,
-                'prod_taller'=> $promedioProductividad
+                'prod_taller' => $promedioProductividad
             ]
         ];
 

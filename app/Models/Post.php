@@ -16,6 +16,8 @@ class Post extends Model
     protected $fillable = [
         'title',
         'description',
+        'activo',
+        'fecha_caducidad',
         'user_id',
         'linea_id',
         'sucursal_id',
