@@ -30,7 +30,7 @@ class GradeMailable extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('noreply@etbsa-online.com.mx', 'Administracion'),
+            from: new Address(config('mail.from.address'), config('mail.from.name')),
             subject: 'Evaluaciones ETBSA',
         );
     }

@@ -28,11 +28,6 @@ class Sucursal extends Model
         return $this->belongsToMany(Linea::class, 'p_sucursales_lineas', 'sucursal_id', 'linea_id')->withTimestamps();
     }
 
-    public function events()
-    {
-        return $this->hasMany(Event::class, 'sucursal_id');
-    }
-
     public function bay()
     {
         return $this->hasMany(Bay::class, 'sucursal_id');
@@ -46,5 +41,21 @@ class Sucursal extends Model
     public function workOrder()
     {
         return $this->hasMany(WorkOrder::class, 'sucursal_id');
+    }
+
+     /**
+     * Get the travels that start from this sucursal.
+     */
+    public function startingTravels()
+    {
+        return $this->hasMany(Travel::class, 'start_point');
+    }
+
+    /**
+     * Get the travels that end at this sucursal.
+     */
+    public function endingTravels()
+    {
+        return $this->hasMany(Travel::class, 'end_point');
     }
 }

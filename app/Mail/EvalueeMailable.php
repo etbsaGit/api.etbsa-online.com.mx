@@ -5,9 +5,9 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 class EvalueeMailable extends Mailable
@@ -18,6 +18,8 @@ class EvalueeMailable extends Mailable
 
     /**
      * Create a new message instance.
+     *
+     * @param array $data
      */
     public function __construct($data)
     {
@@ -30,7 +32,7 @@ class EvalueeMailable extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('noreply@etbsa-online.com.mx', 'Administracion'),
+            from: new Address(config('mail.from.address'), config('mail.from.name')),
             subject: 'Evaluaciones ETBSA',
         );
     }

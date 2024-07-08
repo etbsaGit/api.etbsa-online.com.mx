@@ -5,12 +5,12 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
-class SurveyMailable extends Mailable
+class TravelMailable extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -31,7 +31,7 @@ class SurveyMailable extends Mailable
     {
         return new Envelope(
             from: new Address(config('mail.from.address'), config('mail.from.name')),
-            subject: 'Evaluaciones ETBSA',
+            subject: 'Aviso de visita a sucursal ETBSA',
         );
     }
 
@@ -41,7 +41,7 @@ class SurveyMailable extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.evaluator_email',
+            view: 'calendar.travel_email',
         );
     }
 
