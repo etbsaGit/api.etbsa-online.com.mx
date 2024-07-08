@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -10,36 +11,30 @@ class Event extends Model
 {
     use HasFactory;
 
+    use FilterableModel;
+
     protected $fillable = [
         'title',
         'description',
-        'start_time',
-        'end_time',
         'date',
-        'sucursal_id',
-        'empleado_id'
+        'available_seats',
+        'empleado_id',
+        'event_id'
     ];
 
     protected $appends = ['countActivities', 'color'];
 
-    // public function getDateAttribute($value)
-    // {
-    //     return Carbon::parse($value)->format('d-m-Y');
-    // }
-
-    // public function getEndTimeAttribute($value)
-    // {
-    //     return Carbon::createFromFormat('H:i:s', $value)->format('H:i');
-    // }
-
-    // public function getStartTimeAttribute($value)
-    // {
-    //     return Carbon::createFromFormat('H:i:s', $value)->format('H:i');
-    // }
-
-    public function sucursal()
+    public function parentEvent()
     {
-        return $this->belongsTo(Sucursal::class, 'sucursal_id');
+        return $this->belongsTo(Event::class, 'event_id');
+    }
+
+    /**
+     * Get the child events for the event.
+     */
+    public function childEvents()
+    {
+        return $this->hasMany(Event::class, 'event_id');
     }
 
     public function empleado()
@@ -50,6 +45,11 @@ class Event extends Model
     public function activity()
     {
         return $this->hasMany(Activity::class, 'event_id');
+    }
+
+    public function travel()
+    {
+        return $this->hasMany(Travel::class, 'event_id');
     }
 
     public function getCountActivitiesAttribute()
@@ -84,4 +84,16 @@ class Event extends Model
         // Devolver el color en formato hexadecimal
         return '#' . $color;
     }
+
+    public function getAvailableSeatsAttribute()
+    {
+        $numberOfChildEvents = $this->childEvents()->count();
+
+        $availableSeats = $this->attributes['available_seats'];
+
+        $difference = $availableSeats - $numberOfChildEvents;
+
+        return $difference;
+    }
+
 }

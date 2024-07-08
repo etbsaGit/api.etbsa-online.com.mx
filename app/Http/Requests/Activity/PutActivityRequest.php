@@ -26,7 +26,9 @@ class PutActivityRequest extends FormRequest
     {
         return [
             'details' => ['required', 'string', 'max:255'],
+            'comments' => ['nullable', 'string', 'max:255'],
             'completed' => ['boolean'],
+            'empleado_id' => ['nullable', 'exists:empleados,id'],
             'event_id' => ['required', 'exists:events,id'],
         ];
     }

@@ -31,13 +31,39 @@ trait FilterableModel
     }
 
     public function scopeFilterone(Builder $query, array $filters)
-{
-    $query->where(function ($query) use ($filters) {
+    {
+        $query->where(function ($query) use ($filters) {
+            foreach ($filters as $key => $value) {
+                if ($value !== null) {
+                    $query->orWhere($key, $value);
+                }
+            }
+        });
+    }
+
+    public function scopeFilterByTravel(Builder $query, array $filters)
+    {
         foreach ($filters as $key => $value) {
             if ($value !== null) {
-                $query->orWhere($key, $value);
+                if ($key === 'start_point' || $key === 'end_point') {
+                    $query->whereHas('travel', function ($query) use ($key, $value) {
+                        if ($value === 'null') {
+                            $query->whereNull($key);
+                        } else {
+                            $query->where($key, $value);
+                        }
+                    });
+                } else {
+                    $query->where($key, $value);
+                }
+            } else {
+                // Si el valor es null, buscamos los eventos donde el travel tenga ese campo nulo
+                if ($key === 'start_point' || $key === 'end_point') {
+                    $query->whereHas('travel', function ($query) use ($key) {
+                        $query->whereNull($key);
+                    });
+                }
             }
         }
-    });
-}
+    }
 }

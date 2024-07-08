@@ -190,10 +190,16 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------Calendar--------------------
     Route::get('event/{day}', [EventController::class, 'getPerDay']);
     Route::put('event/change/{event}', [EventController::class, 'changeDay']);
+    Route::put('event/all', [EventController::class, 'getAll']);
+    Route::put('event/child/{event}', [EventController::class, 'setEvent']);
+    Route::put('event/clone/{event}', [EventController::class, 'cloneEvent']);
+    Route::get('event/quit/{event}', [EventController::class, 'quitEvent']);
     Route::put('event/completed/{activity}', [EventController::class, 'changeCompleted']);
     Route::put('event/activity/{event}', [EventController::class, 'storeActivitiesEvent']);
     Route::get('activity/{event}', [ActivityController::class, 'showPerEvent']);
+    Route::get('activity/form/{event}', [ActivityController::class, 'getEmployees']);
     Route::get('event/kardex/get/{anio?}/{mes?}', [EventController::class, 'getKardex']);
+    Route::delete('event/travel/delete/{travel}', [EventController::class, 'destroyTravel']);
     Route::apiResource('events', EventController::class);
     Route::apiResource('activities', ActivityController::class);
 

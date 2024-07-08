@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Notifications\Action;
 
 class Empleado extends Model
 {
@@ -154,6 +155,11 @@ class Empleado extends Model
     public function events()
     {
         return $this->hasMany(Event::class, 'empleado_id');
+    }
+
+    public function activity()
+    {
+        return $this->hasMany(Activity::class, 'empleado_id');
     }
 
     public function termination()

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Event;
 
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +18,14 @@ class StoreEventRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $empleado = Auth::user()->empleado->id;
+        $this->merge([
+            'empleado_id' => $empleado
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -25,14 +34,16 @@ class StoreEventRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required','string','max:255'],
-            'description' => ['nullable','string'],
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i|after:start_time',
-            'date' => ['required','date_format:Y-m-d'],
-            'sucursal_id' => ['required','exists:sucursales,id'],
-            'empleado_id' => ['required','exists:empleados,id'],
-
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'date' => ['required', 'date_format:Y-m-d'],
+            'available_seats' => ['required', 'integer'],
+            'empleado_id' => ['required', 'exists:empleados,id'],
+            'travels' => ['required', 'array'],
+            'travels.*.start_point' => ['nullable', 'exists:sucursales,id'],
+            'travels.*.end_point' => ['nullable', 'exists:sucursales,id'],
+            'travels.*.start_time' => ['required', 'date_format:H:i'],
+            'travels.*.end_time' => ['required', 'date_format:H:i'],
         ];
     }
 

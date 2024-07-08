@@ -16,13 +16,9 @@ return new class extends Migration
 
             $table->string('title');
             $table->string('description')->nullable();
-            $table->time('start_time');
-            $table->time('end_time')->nullable();
             $table->date('date');
-
-            $table->unsignedBigInteger('sucursal_id')->nullable();
+            $table->integer('available_seats');
             $table->unsignedBigInteger('empleado_id')->nullable();
-            $table->foreign('sucursal_id')->references('id')->on('sucursales')->onDelete('restrict');
             $table->foreign('empleado_id')->references('id')->on('empleados')->onDelete('restrict');
 
             $table->timestamps();
