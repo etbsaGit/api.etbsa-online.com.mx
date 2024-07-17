@@ -30,6 +30,27 @@ trait FilterableModel
         }
     }
 
+    public function scopeFilterPage(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $value) {
+            if ($value !== null && $key !== 'page') {
+                if ($key === 'search') {
+                    $query->where(function ($query) use ($value) {
+                        $query->where('nombre', 'LIKE', '%' . $value . '%')
+                              ->orWhere('telefono', 'LIKE', '%' . $value . '%')
+                              ->orWhere('rfc', 'LIKE', '%' . $value . '%');
+                    });
+                } else {
+                    $query->where($key, 'LIKE', '%' . $value . '%');
+                }
+            }
+        }
+        return $query;
+    }
+
+
+
+
     public function scopeFilterone(Builder $query, array $filters)
     {
         $query->where(function ($query) use ($filters) {
