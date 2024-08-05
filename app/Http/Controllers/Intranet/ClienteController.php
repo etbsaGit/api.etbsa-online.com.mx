@@ -3,16 +3,18 @@
 namespace App\Http\Controllers\Intranet;
 
 use Illuminate\Http\Request;
+use App\Imports\ClientesImport;
+use App\Models\Intranet\Tactic;
 use App\Models\Intranet\Cliente;
+use App\Models\Intranet\StateEntity;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Intranet\Segmentation;
 use App\Http\Controllers\ApiController;
+use App\Models\Intranet\Classification;
+use App\Models\Intranet\TechnologicalCapability;
+use App\Models\Intranet\ConstructionClassification;
 use App\Http\Requests\Intranet\Cliente\PutClienteRequest;
 use App\Http\Requests\Intranet\Cliente\StoreClienteRequest;
-use App\Models\Intranet\Classification;
-use App\Models\Intranet\ConstructionClassification;
-use App\Models\Intranet\Segmentation;
-use App\Models\Intranet\StateEntity;
-use App\Models\Intranet\Tactic;
-use App\Models\Intranet\TechnologicalCapability;
 
 class ClienteController extends ApiController
 {
@@ -73,5 +75,22 @@ class ClienteController extends ApiController
         ];
 
         return $this->respond($data);
+    }
+
+    public function insetExcel(Request $request)
+    {
+        // Validar que el archivo sea un archivo .xlsx
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls',
+        ]);
+
+        // Obtener el archivo cargado
+        $file = $request->file('file');
+
+        // Importar el archivo .xlsx usando el importador
+        Excel::import(new ClientesImport, $file);
+
+        return $this->respond("Clientes importados con exito");
+
     }
 }
