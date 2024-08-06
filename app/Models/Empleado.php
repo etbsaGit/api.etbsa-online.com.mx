@@ -76,7 +76,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture','nombreCompleto'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra'];
 
     public function picture(): Attribute
     {
@@ -88,6 +88,42 @@ class Empleado extends Model
     public function getNombreCompletoAttribute()
     {
         return $this->nombre . ' ' . $this->segundo_nombre . ' ' . $this->apellido_paterno . ' ' . $this->apellido_materno;
+    }
+
+    public function getDesempenoManoObraAttribute()
+    {
+        // Obtén el mes y año más actuales de HorasTechnician
+        $latestRecord = HorasTechnician::orderBy('anio', 'desc')
+            ->orderBy('mes', 'desc')
+            ->first();
+
+        if (!$latestRecord) {
+            return null; // No hay registros en HorasTechnician
+        }
+
+        // Obtén el mes y año más actuales
+        $mes = $latestRecord->mes;
+        $anio = $latestRecord->anio;
+
+        // Encuentra el registro del mes y año más actuales para el empleado
+        $currentMonthYearRecord = HorasTechnician::where('mes', $mes)
+            ->where('anio', $anio)
+            ->where('tecnico_id', $this->id) // Asegúrate de que `tecnico_id` coincida con el ID del empleado
+            ->first();
+
+        if (!$currentMonthYearRecord) {
+            return null; // No hay registros para el mes y año más actuales
+        }
+
+        // Calcula el desempeño de mano de obra
+        $facturadas = $currentMonthYearRecord->facturadas;
+        $conIngreso = $currentMonthYearRecord->con_ingreso;
+
+        if ($conIngreso == 0) {
+            return null; // Evita la división por cero
+        }
+
+        return ($facturadas / $conIngreso) * 100;
     }
 
     protected function defaultPathFolder(): Attribute
@@ -181,7 +217,10 @@ class Empleado extends Model
 
     // ----------------------------------------------------------------------------------
 
-
+    public function horasFacturadas()
+    {
+        return $this->hasMany(HorasTechnician::class, 'tecnico_id');
+    }
 
 
     //----------------------------------Qualification---------------------------------------------------------

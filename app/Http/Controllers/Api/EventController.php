@@ -174,7 +174,7 @@ class EventController extends ApiController
         });
 
         // Suponiendo que $activitiesData es una colección de datos de actividades
-        $activities = $activitiesData->map(function ($activityData) {
+        $activities = $activitiesData->map(function ($activityData) use ($event) {
             // Crear la actividad en la base de datos
             $activity = Activity::create($activityData);
 
@@ -183,8 +183,10 @@ class EventController extends ApiController
                 // Construir los datos para el correo
                 $to_email = $activity->empleado->correo_institucional;
                 $correo = [
+                    'from_name'=>$event->empleado->nombreCompleto,
                     'to_name' => $activity->empleado->nombreCompleto,
                     'activity_details' => $activity->details,
+                    'comments' => $activity->comments,
                     'date'=>$activity->event->date
                 ];
 

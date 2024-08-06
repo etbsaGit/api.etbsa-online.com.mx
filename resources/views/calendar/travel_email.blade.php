@@ -62,9 +62,13 @@
 
         <h1>¡Hola {{$data['to_name']}}!</h1>
 
+        <h3>Soy {{$data['from_name']}}</h3>
+
         <p>Estoy escribiéndote para informarte que el día {{$formattedDate}} estaré visitándote para revisar la siguiente actividad:</p>
 
         <p>{{$data['activity_details']}}</p>
+
+        <p>{{$data['comments']}}</p>
 
         <p>Espero contar con tu presencia.</p>
 

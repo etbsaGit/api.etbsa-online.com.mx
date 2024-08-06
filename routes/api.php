@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\DepartamentoController;
+use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
@@ -131,10 +132,13 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('pantalla/agricola/{sucursal}', [BayController::class, 'pantallaAgricola']);
     Route::get('pantalla/construccion/{sucursal}', [BayController::class, 'pantallaConstruccion']);
 
+    Route::get('horasTechnician/tech/{id}/{anio}', [HorasTechnicianController::class, 'getPerTech']);
+
     Route::post('bays/getAll', [BayController::class, 'getAll']);
     Route::apiResource('qualification', QualificationController::class);
     Route::apiResource('technician', TechnicianController::class);
     Route::apiResource('bay', BayController::class);
+    Route::apiResource('horasTechnician', HorasTechnicianController::class);
 
     //--------------------WorkOrder--------------------
     Route::get('wos/getform', [WorkOrderController::class, 'getForm']);
@@ -181,6 +185,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
     Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
     Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
+    Route::put('categorie/{category}', [CategoryController::class, 'update']);
+    Route::delete('categorie/{category}', [CategoryController::class, 'destroy']);
     Route::apiResource('brand', BrandController::class);
     Route::apiResource('vendor', VendorController::class);
     Route::apiResource('categorie', CategoryController::class);

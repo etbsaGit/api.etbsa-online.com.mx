@@ -113,9 +113,11 @@ class PostController extends ApiController
         if ($user && $user->empleado && $user->empleado->sucursal()->where('nombre', 'Corporativo')->doesntExist()) {
             $filters['linea_id'] = $user->empleado->linea->id;
             $filters['departamento_id'] = $user->empleado->departamento->id;
+            $filters['sucursal_id'] = $user->empleado->sucursal->id;
+            $filters['puesto_id'] = $user->empleado->puesto->id;
         }
 
-        $allPosts = Post::filter($filters)
+        $allPosts = Post::filterPost($filters)
             ->with('user', 'user.empleado', 'linea', 'sucursal', 'departamento', 'puesto', 'estatus', 'postDoc')
             ->get();
 
@@ -126,7 +128,7 @@ class PostController extends ApiController
             ->whereNull('puesto_id')
             ->get();
 
-            $posts = $postsWithNullRelations->merge($allPosts)->sortByDesc('updated_at')->values();
+        $posts = $postsWithNullRelations->merge($allPosts)->sortByDesc('updated_at')->values();
 
         $data = [
             'post' => $posts,

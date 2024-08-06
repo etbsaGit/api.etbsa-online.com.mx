@@ -145,7 +145,7 @@ class BayController extends ApiController
         $agricolaLinea = Linea::where('nombre', 'agricola')->first();
 
         if (!$agricolaLinea) {
-            return response()->json(['error' => 'Línea agricola no encontrada'], 404);
+            return response()->json(['error' => 'Línea agrícola no encontrada'], 404);
         }
 
         $bays = Bay::where('sucursal_id', $sucursal->id)
@@ -175,6 +175,12 @@ class BayController extends ApiController
         $sumProductividad = $tecnicos->sum('productividad');
         $promedioProductividad = $totalTecnicos > 0 ? round(($sumProductividad / $totalTecnicos), 2) : 0;
 
+        // Calcular el promedio del desempeño de mano de obra
+        $totalDesempeno = $tecnicos->sum(function ($tecnico) {
+            return $tecnico->desempeno_mano_obra ?? 0;
+        });
+        $promedioDesempeno = $totalTecnicos > 0 ? round(($totalDesempeno / $totalTecnicos), 2) : 0;
+
         $post = Post::whereHas('estatus', function ($query) {
             $query->where('nombre', 'Pantalla');
         })
@@ -195,7 +201,8 @@ class BayController extends ApiController
             'bays' => $bays,
             'charts' => [
                 'en_uso' => $porcentajeBahiasEnUso,
-                'prod_taller' => $promedioProductividad
+                'prod_taller' => $promedioProductividad,
+                'desempeno' => $promedioDesempeno // Agregar promedio de desempeño de mano de obra
             ]
         ];
 
@@ -203,12 +210,13 @@ class BayController extends ApiController
     }
 
 
+
     public function pantallaConstruccion(Sucursal $sucursal)
     {
         $construccionLinea = Linea::where('nombre', 'construccion')->first();
 
         if (!$construccionLinea) {
-            return response()->json(['error' => 'Línea construccion no encontrada'], 404);
+            return response()->json(['error' => 'Línea construcción no encontrada'], 404);
         }
 
         $bays = Bay::where('sucursal_id', $sucursal->id)
@@ -222,8 +230,7 @@ class BayController extends ApiController
         });
         $porcentajeBahiasEnUso = $totalBays > 0 ? ($bahiasEnUso->count() / $totalBays) * 100 : 0;
 
-
-        // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea agrícola
+        // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea construcción
         $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
             ->whereHas('puesto', function ($query) {
                 $query->where('nombre', 'tecnico');
@@ -239,6 +246,12 @@ class BayController extends ApiController
         $sumProductividad = $tecnicos->sum('productividad');
         $promedioProductividad = $totalTecnicos > 0 ? ($sumProductividad / $totalTecnicos) : 0;
 
+        // Calcular el promedio del desempeño de mano de obra
+        $totalDesempeno = $tecnicos->sum(function ($tecnico) {
+            return $tecnico->desempeno_mano_obra ?? 0;
+        });
+        $promedioDesempeno = $totalTecnicos > 0 ? ($totalDesempeno / $totalTecnicos) : 0;
+
         $post = Post::whereHas('estatus', function ($query) {
             $query->where('nombre', 'Pantalla');
         })
@@ -259,7 +272,8 @@ class BayController extends ApiController
             'bays' => $bays,
             'charts' => [
                 'en_uso' => $porcentajeBahiasEnUso,
-                'prod_taller' => $promedioProductividad
+                'prod_taller' => $promedioProductividad,
+                'desempeno' => $promedioDesempeno // Agregar promedio de desempeño de mano de obra
             ]
         ];
 
