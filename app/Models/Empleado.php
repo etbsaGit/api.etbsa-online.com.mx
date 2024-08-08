@@ -81,7 +81,7 @@ class Empleado extends Model
     public function picture(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->fotografia ? Storage::disk('s3')->url($this->fotografia) : null
+            get: fn() => $this->fotografia ? Storage::disk('s3')->url($this->fotografia) : null
         );
     }
 
@@ -93,7 +93,8 @@ class Empleado extends Model
     public function getDesempenoManoObraAttribute()
     {
         // Obtén el mes y año más actuales de HorasTechnician
-        $latestRecord = HorasTechnician::orderBy('anio', 'desc')
+        $latestRecord = HorasTechnician::where('tecnico_id', $this->id)
+            ->orderBy('anio', 'desc')
             ->orderBy('mes', 'desc')
             ->first();
 
@@ -123,13 +124,13 @@ class Empleado extends Model
             return null; // Evita la división por cero
         }
 
-        return ($facturadas / $conIngreso) * 100;
+        return round(($facturadas / $conIngreso) * 100, 2);
     }
 
     protected function defaultPathFolder(): Attribute
     {
         return Attribute::make(
-            get: fn () => "empleados/id_" . $this->id . "/foto_de_perfil",
+            get: fn() => "empleados/id_" . $this->id . "/foto_de_perfil",
         );
     }
 
