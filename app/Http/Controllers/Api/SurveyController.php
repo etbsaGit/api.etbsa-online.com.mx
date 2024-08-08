@@ -28,6 +28,7 @@ use App\Http\Requests\Survey\SurveyStoreRequest;
 use App\Http\Requests\Survey\UpdateSurveyRequest;
 use App\Http\Requests\Survey\EvalueesSurveyRequest;
 use App\Http\Requests\Survey\StoreSurveyAnswerRequest;
+use PDF;
 
 class SurveyController extends ApiController
 {
@@ -572,11 +573,11 @@ class SurveyController extends ApiController
         $surveysWithPuesto = Puesto::whereHas('survey', function ($query) use ($user) {
             $query->where('evaluator_id', $user->id);
         })
-        ->with(['survey' => function ($query) use ($user) {
-            $query->where('evaluator_id', $user->id);
-            // Aquí puedes agregar otras condiciones si es necesario
-        }, 'survey.evaluee.empleado', 'survey.evaluee.grade'])
-        ->get();
+            ->with(['survey' => function ($query) use ($user) {
+                $query->where('evaluator_id', $user->id);
+                // Aquí puedes agregar otras condiciones si es necesario
+            }, 'survey.evaluee.empleado', 'survey.evaluee.grade'])
+            ->get();
 
 
         $surveysWithoutPuesto = Survey::whereNull('puesto_id')
@@ -591,5 +592,73 @@ class SurveyController extends ApiController
 
         return response()->json($response);
     }
+
+    public function getPDFAnswers(Survey $survey)
+    {
+        $user = Auth::user();
+
+        // Obtener las preguntas de la encuesta
+        $questions = $survey->question; // Asegúrate de que 'questions' es el nombre correcto
+
+        // Verificar si hay preguntas asociadas a la encuesta
+        if ($questions->isEmpty()) {
+            return response()->json(['message' => 'No questions found for this survey.'], 404);
+        }
+
+        // Obtener las respuestas del usuario para esas preguntas
+        $questionIds = $questions->pluck('id');
+        $answers = SurveyAnswer::whereIn('question_id', $questionIds)
+                             ->where('evaluee_id', $user->id)
+                             ->get();
+
+        // Verificar si hay respuestas
+        if ($answers->isEmpty()) {
+            return response()->json(['message' => 'No answers found for this survey.'], 404);
+        }
+
+        // Agrupar respuestas por pregunta y formatear
+        $questionsWithAnswers = $questions->map(function ($question) use ($answers) {
+            // Filtrar respuestas para la pregunta actual
+            $questionAnswers = $answers->where('question_id', $question->id);
+
+            // Si hay exactamente una respuesta, usa esa respuesta directamente
+            if ($questionAnswers->count() === 1) {
+                $question->answers = $questionAnswers->first();
+            } else {
+                // Si hay múltiples respuestas (o ninguna), usa el array de respuestas
+                $question->answers = $questionAnswers->values();
+            }
+            return $question;
+        });
+
+        // Calcular el promedio de respuestas correctas
+        $totalQuestions = $questions->count();
+        $correctAnswers = $answers->where('rating', 1)->count(); // Asumiendo que 'rating' es el campo que indica si la respuesta es correcta
+        $averageRating = $totalQuestions ? ($correctAnswers / $totalQuestions) * 100 : 0;
+
+        $data = [
+            'employee' => $user->empleado,
+            'survey' => $survey,
+            'questions' => $questionsWithAnswers,
+            'averageRating' => $averageRating, // Agregar calificación promedio a los datos
+        ];
+
+        // Cargar la vista y pasarle los datos
+        $pdf = PDF::loadView('pdf.survey.answers', $data);
+
+        // // Descargar el PDF generado comentar para produccion se utiliza para postman
+        // return $pdf->download('document.pdf');
+
+        // Obtener el contenido del PDF como cadena binaria
+        $pdfContent = $pdf->output();
+
+        // Convertir el contenido a Base64
+        $pdfBase64 = base64_encode($pdfContent);
+
+        // Retornar el PDF en Base64
+        return $this->respond($pdfBase64);
+    }
+
+
 
 }

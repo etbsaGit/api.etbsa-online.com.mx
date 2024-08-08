@@ -114,6 +114,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('surveys/kardex/evaluator', [SurveyController::class, 'getKardexPerEvaluator']);
     Route::get('grades/{evaluee}', [SurveyController::class, 'getGradesForEvaluee']);
     Route::get('grades/survey/{survey}', [SurveyController::class, 'getGradesForSurvey']);
+    Route::get('survey/pdf/answers/{survey}', [SurveyController::class, 'getPDFAnswers']);
     Route::apiResource('survey', SurveyController::class);
 
     //--------------------Technician--------------------
