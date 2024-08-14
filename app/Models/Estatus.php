@@ -63,4 +63,9 @@ class Estatus extends Model
     {
         return $this->hasMany(Bay::class, 'estatus_id');
     }
+
+    public function activityTechnician()
+    {
+        return $this->hasMany(ActivityTechnician::class, 'status_id');
+    }
 }

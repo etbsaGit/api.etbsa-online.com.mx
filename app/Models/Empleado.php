@@ -90,41 +90,97 @@ class Empleado extends Model
         return $this->nombre . ' ' . $this->segundo_nombre . ' ' . $this->apellido_paterno . ' ' . $this->apellido_materno;
     }
 
+    // public function getDesempenoManoObraAttribute()
+    // {
+    //     // Obtén el mes y año más actuales de HorasTechnician
+    //     $latestRecord = HorasTechnician::where('tecnico_id', $this->id)
+    //         ->orderBy('anio', 'desc')
+    //         ->orderBy('mes', 'desc')
+    //         ->first();
+
+    //     if (!$latestRecord) {
+    //         return null; // No hay registros en HorasTechnician
+    //     }
+
+    //     // Obtén el mes y año más actuales
+    //     $mes = $latestRecord->mes;
+    //     $anio = $latestRecord->anio;
+
+    //     // Encuentra el registro del mes y año más actuales para el empleado
+    //     $currentMonthYearRecord = HorasTechnician::where('mes', $mes)
+    //         ->where('anio', $anio)
+    //         ->where('tecnico_id', $this->id) // Asegúrate de que `tecnico_id` coincida con el ID del empleado
+    //         ->first();
+
+    //     if (!$currentMonthYearRecord) {
+    //         return null; // No hay registros para el mes y año más actuales
+    //     }
+
+    //     // Calcula el desempeño de mano de obra
+    //     $facturadas = $currentMonthYearRecord->facturadas;
+    //     $conIngreso = $currentMonthYearRecord->con_ingreso;
+
+    //     if ($conIngreso == 0) {
+    //         return null; // Evita la división por cero
+    //     }
+
+    //     return round(($facturadas / $conIngreso) * 100, 2);
+    // }
+
     public function getDesempenoManoObraAttribute()
     {
-        // Obtén el mes y año más actuales de HorasTechnician
-        $latestRecord = HorasTechnician::where('tecnico_id', $this->id)
-            ->orderBy('anio', 'desc')
-            ->orderBy('mes', 'desc')
-            ->first();
+        // Obtén el primer día del mes actual
+        $startOfMonth = now()->startOfMonth();
 
-        if (!$latestRecord) {
-            return null; // No hay registros en HorasTechnician
-        }
+        // Obtén el último día del mes actual
+        $endOfMonth = now()->endOfMonth();
 
-        // Obtén el mes y año más actuales
-        $mes = $latestRecord->mes;
-        $anio = $latestRecord->anio;
+        // Obtén los invoices relacionados con el empleado
+        // Filtra por el mes actual
+        $invoices = $this->invoices()
+            ->whereBetween('fecha', [$startOfMonth, $endOfMonth])
+            ->get();
 
-        // Encuentra el registro del mes y año más actuales para el empleado
-        $currentMonthYearRecord = HorasTechnician::where('mes', $mes)
-            ->where('anio', $anio)
-            ->where('tecnico_id', $this->id) // Asegúrate de que `tecnico_id` coincida con el ID del empleado
-            ->first();
+        // Suma las horas facturadas de cada invoice
+        $totalHorasFacturadas = $invoices->sum('horas_facturadas');
 
-        if (!$currentMonthYearRecord) {
-            return null; // No hay registros para el mes y año más actuales
-        }
+        $techniciansLogs = $this->techniciansLog()
+            ->whereHas('activityTechnician.estatus', function ($query) {
+                $query->where('nombre', 'Horas con ingreso');
+            })
+            ->whereBetween('fecha', [$startOfMonth, $endOfMonth])
+            ->get();
 
-        // Calcula el desempeño de mano de obra
-        $facturadas = $currentMonthYearRecord->facturadas;
-        $conIngreso = $currentMonthYearRecord->con_ingreso;
+        $totalHoras = $techniciansLogs->reduce(function ($carry, $log) {
+            $horaInicio = $log->hora_inicio;
+            $horaTermino = $log->hora_termino;
 
-        if ($conIngreso == 0) {
-            return null; // Evita la división por cero
-        }
+            // Verifica que las fechas sean válidas
+            if ($horaInicio && $horaTermino) {
+                $start = \Carbon\Carbon::parse($horaInicio);
+                $end = \Carbon\Carbon::parse($horaTermino);
 
-        return round(($facturadas / $conIngreso) * 100, 2);
+                // Calcula la diferencia en horas
+                $diffInHours = $start->diffInHours($end);
+
+                // Acumula la diferencia
+                $carry += $diffInHours;
+            }
+
+            return $carry;
+        }, 0); // El valor inicial es 0
+
+        // Calcular el porcentaje de horas facturadas sobre el total de horas
+        $porcentajeHorasFacturadas = ($totalHoras > 0)
+            ? ($totalHorasFacturadas / $totalHoras) * 100
+            : 0;
+
+        // Formatear el porcentaje a dos dígitos después del punto decimal
+        $porcentajeHorasFacturadas = round($porcentajeHorasFacturadas, 2);
+
+        // Devuelve el porcentaje
+        return $porcentajeHorasFacturadas;
+
     }
 
     protected function defaultPathFolder(): Attribute
@@ -221,6 +277,16 @@ class Empleado extends Model
     public function horasFacturadas()
     {
         return $this->hasMany(HorasTechnician::class, 'tecnico_id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(TechniciansInvoice::class, 'tecnico_id');
+    }
+
+    public function techniciansLog()
+    {
+        return $this->hasMany(TechniciansLog::class, 'tecnico_id');
     }
 
 

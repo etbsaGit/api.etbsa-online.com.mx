@@ -31,14 +31,17 @@ use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\DepartamentoController;
-use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Ecommerce\ProductController;
+use App\Http\Controllers\Api\TechniciansLogController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
+use App\Http\Controllers\Api\HorasTechnicianController;
+use App\Http\Controllers\Api\ActivityTechnicianController;
+use App\Http\Controllers\Api\TechniciansInvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -135,11 +138,20 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     Route::get('horasTechnician/tech/{id}/{anio}', [HorasTechnicianController::class, 'getPerTech']);
 
+    Route::get('techniciansInvoice/wo/{empleado}', [TechniciansInvoiceController::class, 'getWoPerTech']);
+    Route::get('techniciansInvoice/{empleado}', [TechniciansInvoiceController::class, 'getPerTech']);
+    Route::get('techniciansLog/options/{empleado?}', [TechniciansLogController::class, 'getOptions']);
+    Route::get('techniciansLog/tech/{empleado}', [TechniciansLogController::class, 'getPerTech']);
+    Route::get('techniciansLog/techday/{empleado}/{day}', [TechniciansLogController::class, 'getPerTechDay']);
+
     Route::post('bays/getAll', [BayController::class, 'getAll']);
     Route::apiResource('qualification', QualificationController::class);
     Route::apiResource('technician', TechnicianController::class);
     Route::apiResource('bay', BayController::class);
     Route::apiResource('horasTechnician', HorasTechnicianController::class);
+    Route::apiResource('activityTechnician', ActivityTechnicianController::class);
+    Route::apiResource('techniciansInvoice', TechniciansInvoiceController::class);
+    Route::apiResource('techniciansLog', TechniciansLogController::class);
 
     //--------------------WorkOrder--------------------
     Route::get('wos/getform', [WorkOrderController::class, 'getForm']);

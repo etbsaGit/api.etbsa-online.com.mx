@@ -75,6 +75,16 @@ class WorkOrder extends Model
         return $this->hasMany(WorkOrderDoc::class, 'work_order_id');
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(TechniciansInvoice::class, 'wo_id');
+    }
+
+    public function techniciansLog()
+    {
+        return $this->hasMany(TechniciansInvoice::class, 'wo_id');
+    }
+
     protected static function boot()
     {
         parent::boot();
