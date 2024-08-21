@@ -9,6 +9,8 @@ use App\Models\Estatus;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
+use App\Models\TechniciansLog;
+use App\Models\ActivityTechnician;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
@@ -195,10 +197,25 @@ class BayController extends ApiController
             ->with('postDoc') // Cargar la relación 'postDoc'
             ->get();
 
+            $activityNames = [
+                'Diagnostico en campo',
+                'Servicio en campo'
+            ];
+
+            // Obtener IDs de actividades
+            $activityIds = ActivityTechnician::whereIn('nombre', $activityNames)->pluck('id');
+
+            // Obtener TechnicianLogs
+            $technicianLogs = TechniciansLog::whereIn('activity_technician_id', $activityIds)
+                ->whereIn('tecnico_id', $tecnicos->pluck('id'))
+                ->with('activityTechnician','tecnico') // Cargar la relación 'activity' si es necesario
+                ->get();
+
         $data = [
             'tecnicos' => $tecnicos,
             'post' => $post,
             'bays' => $bays,
+            'technicianLogs' => $technicianLogs, // Agregar los logs de técnicos
             'charts' => [
                 'en_uso' => $porcentajeBahiasEnUso,
                 'prod_taller' => $promedioProductividad,
@@ -266,10 +283,25 @@ class BayController extends ApiController
             ->with('postDoc') // Cargar la relación 'postDoc'
             ->get();
 
+        $activityNames = [
+            'Diagnostico en campo',
+            'Servicio en campo'
+        ];
+
+        // Obtener IDs de actividades
+        $activityIds = ActivityTechnician::whereIn('nombre', $activityNames)->pluck('id');
+
+        // Obtener TechnicianLogs
+        $technicianLogs = TechniciansLog::whereIn('activity_technician_id', $activityIds)
+            ->whereIn('tecnico_id', $tecnicos->pluck('id'))
+            ->with('activityTechnician','tecnico') // Cargar la relación 'activity' si es necesario
+            ->get();
+
         $data = [
             'tecnicos' => $tecnicos,
             'post' => $post,
             'bays' => $bays,
+            'technicianLogs' => $technicianLogs, // Agregar los logs de técnicos
             'charts' => [
                 'en_uso' => $porcentajeBahiasEnUso,
                 'prod_taller' => $promedioProductividad,
