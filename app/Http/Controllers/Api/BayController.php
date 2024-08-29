@@ -197,19 +197,12 @@ class BayController extends ApiController
             ->with('postDoc') // Cargar la relación 'postDoc'
             ->get();
 
-            $activityNames = [
-                'Diagnostico en campo',
-                'Servicio en campo'
-            ];
 
-            // Obtener IDs de actividades
-            $activityIds = ActivityTechnician::whereIn('nombre', $activityNames)->pluck('id');
-
-            // Obtener TechnicianLogs
-            $technicianLogs = TechniciansLog::whereIn('activity_technician_id', $activityIds)
-                ->whereIn('tecnico_id', $tecnicos->pluck('id'))
-                ->with('activityTechnician','tecnico') // Cargar la relación 'activity' si es necesario
-                ->get();
+        // Obtener TechnicianLogs
+        $technicianLogs = TechniciansLog::whereIn('tecnico_id', $tecnicos->pluck('id'))
+            ->with('activityTechnician', 'tecnico')
+            ->orderBy('hora_inicio', 'asc') // Ordena de la más temprana a la más tardía
+            ->get();
 
         $data = [
             'tecnicos' => $tecnicos,
@@ -283,19 +276,11 @@ class BayController extends ApiController
             ->with('postDoc') // Cargar la relación 'postDoc'
             ->get();
 
-        $activityNames = [
-            'Diagnostico en campo',
-            'Servicio en campo'
-        ];
-
-        // Obtener IDs de actividades
-        $activityIds = ActivityTechnician::whereIn('nombre', $activityNames)->pluck('id');
-
-        // Obtener TechnicianLogs
-        $technicianLogs = TechniciansLog::whereIn('activity_technician_id', $activityIds)
-            ->whereIn('tecnico_id', $tecnicos->pluck('id'))
-            ->with('activityTechnician','tecnico') // Cargar la relación 'activity' si es necesario
+        $technicianLogs = TechniciansLog::whereIn('tecnico_id', $tecnicos->pluck('id'))
+            ->with('activityTechnician', 'tecnico')
+            ->orderBy('hora_inicio', 'asc') // Ordena de la más temprana a la más tardía
             ->get();
+
 
         $data = [
             'tecnicos' => $tecnicos,
