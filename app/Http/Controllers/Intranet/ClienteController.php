@@ -15,6 +15,7 @@ use App\Models\Intranet\TechnologicalCapability;
 use App\Models\Intranet\ConstructionClassification;
 use App\Http\Requests\Intranet\Cliente\PutClienteRequest;
 use App\Http\Requests\Intranet\Cliente\StoreClienteRequest;
+use GuzzleHttp\Client;
 
 class ClienteController extends ApiController
 {
@@ -24,7 +25,7 @@ class ClienteController extends ApiController
     public function index(Request $request)
     {
         $filters = $request->all();
-        $clientes = Cliente::filterPage($filters)->with('stateEntity','town','classification','segmentation','technologicalCapability','tactic','constructionClassification')->paginate(10);
+        $clientes = Cliente::filterPage($filters)->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification')->paginate(10);
         return $this->respond($clientes);
     }
 
@@ -69,7 +70,6 @@ class ClienteController extends ApiController
             'states' => StateEntity::all(),
             'classifications' => Classification::all(),
             'segmentations' => Segmentation::all(),
-            'technologicalCapabilities' => TechnologicalCapability::all(),
             'tactics' => Tactic::all(),
             'constructionClassifications' => ConstructionClassification::all(),
         ];
@@ -91,6 +91,42 @@ class ClienteController extends ApiController
         Excel::import(new ClientesImport, $file);
 
         return $this->respond("Clientes importados con exito");
+    }
 
+    // ClienteController.php
+    public function getCapTech(Cliente $cliente)
+    {
+        // Obtén los IDs de las capacidades tecnológicas asociadas al cliente
+        $associatedCapabilityIds = $cliente->technologicalCapabilities->pluck('id');
+
+        // Obtén todas las capacidades tecnológicas
+        $allCapabilities = TechnologicalCapability::all();
+
+        // Prepara la respuesta con los IDs asociados y todas las capacidades tecnológicas
+        $data = [
+            'currentClassTech' => $cliente->currentClassTech,
+            'capabilities' => $associatedCapabilityIds,
+            'capTech' => $allCapabilities
+        ];
+
+        return $this->respond($data);
+    }
+
+
+    public function addCapTech(Request $request, Cliente $cliente)
+    {
+        // Valida el request para asegurarte de que se están enviando IDs válidos
+        $validated = $request->validate([
+            'capabilities' => 'nullable|array',
+            'capabilities.*' => 'nullable|exists:technological_capabilities,id',
+        ]);
+
+        // Obtén el array de IDs desde la solicitud
+        $capabilityIds = $validated['capabilities'];
+
+        // Sincroniza los IDs en la tabla pivote
+        $cliente->technologicalCapabilities()->sync($capabilityIds);
+
+        return $this->respondSuccess();
     }
 }

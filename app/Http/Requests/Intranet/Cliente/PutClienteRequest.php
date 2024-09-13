@@ -43,7 +43,6 @@ class PutClienteRequest extends FormRequest
 
             'classification_id' => ['nullable', 'integer', 'exists:classifications,id'],
             'segmentation_id' => ['nullable', 'integer', 'exists:segmentations,id'],
-            'technological_capability_id' => ['nullable', 'integer', 'exists:technological_capabilities,id'],
             'tactic_id' => ['nullable', 'integer', 'exists:tactics,id'],
             'construction_classification_id' => ['nullable', 'integer', 'exists:construction_classifications,id'],
         ];

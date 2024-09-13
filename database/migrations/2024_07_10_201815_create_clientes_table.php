@@ -41,9 +41,6 @@ return new class extends Migration
             $table->unsignedBigInteger('segmentation_id')->nullable();
             $table->foreign('segmentation_id')->references('id')->on('segmentations')->onDelete('restrict');
 
-            $table->unsignedBigInteger('technological_capability_id')->nullable();
-            $table->foreign('technological_capability_id')->references('id')->on('technological_capabilities')->onDelete('restrict');
-
             $table->unsignedBigInteger('tactic_id')->nullable();
             $table->foreign('tactic_id')->references('id')->on('tactics')->onDelete('restrict');
 

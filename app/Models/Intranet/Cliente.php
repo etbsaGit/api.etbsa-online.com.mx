@@ -30,10 +30,35 @@ class Cliente extends Model
         'codigo_postal',
         'classification_id',
         'segmentation_id',
-        'technological_capability_id',
         'tactic_id',
         'construction_classification_id'
     ];
+
+    protected $appends = ['currentClassTech'];
+
+    // Cliente.php (Modelo)
+    public function getCurrentClassTechAttribute()
+    {
+        // Define el orden de los niveles
+        $levels = ['Baja', 'Media', 'Alta', 'Experto'];
+
+        // Verifica si hay capacidades tecnológicas asociadas
+        if ($this->technologicalCapabilities->isEmpty()) {
+            return null;
+        }
+
+        // Encuentra el nivel más alto asociado al cliente
+        $highestLevelCapability = $this->technologicalCapabilities
+            ->sortBy(function ($capability) use ($levels) {
+                // Ordena por el índice del nivel en el array
+                return array_search($capability->level, $levels);
+            })
+            ->last(); // Obtiene el último elemento después de ordenar
+
+        // Retorna el nombre del nivel más alto
+        return $highestLevelCapability ? $highestLevelCapability->level : null;
+    }
+
 
     public function stateEntity()
     {
@@ -53,11 +78,6 @@ class Cliente extends Model
     public function segmentation()
     {
         return $this->belongsTo(Segmentation::class, 'segmentation_id');
-    }
-
-    public function technologicalCapability()
-    {
-        return $this->belongsTo(TechnologicalCapability::class, 'technological_capability_id');
     }
 
     public function tactic()
@@ -108,5 +128,10 @@ class Cliente extends Model
     public function clienteAbastecimiento()
     {
         return $this->hasMany(ClienteAbastecimiento::class, 'cliente_id');
+    }
+
+    public function technologicalCapabilities()
+    {
+        return $this->belongsToMany(TechnologicalCapability::class, 'p_clientes_technological_capabilities');
     }
 }
