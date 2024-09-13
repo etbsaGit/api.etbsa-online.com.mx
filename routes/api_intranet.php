@@ -61,6 +61,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('clienteRiego/cliente/{cliente}', [ClienteRiegoController::class, 'getPerCliente']);
     Route::get('clienteAbastecimiento/cliente/{cliente}', [ClienteAbastecimientoController::class, 'getPerCliente']);
     Route::post('clientes', [ClienteController::class, 'index']);
+    Route::post('cliente/add/capTech/{cliente}', [ClienteController::class, 'addCapTech']);
+    Route::get('cliente/get/capTech/{cliente}', [ClienteController::class, 'getCapTech']);
     Route::post('clientes/excel', [ClienteController::class, 'insetExcel']);
 
     Route::apiResource('construction-classification', ConstructionClassificationsController::class);

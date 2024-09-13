@@ -6,8 +6,9 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
-class StoreTechnologicalCapabilityRequest extends FormRequest
+class PutTechnologicalCapabilityRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +26,7 @@ class StoreTechnologicalCapabilityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'unique:technological_capabilities', 'max:191'],
+            'name' => ['required', 'string', Rule::unique('technological_capabilities')->ignore($this->route('technologicalCapability')->id), 'max:191'],
             'level' => ['required', 'string', 'max:191'],
         ];
     }

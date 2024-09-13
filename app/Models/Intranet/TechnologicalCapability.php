@@ -11,10 +11,12 @@ class TechnologicalCapability extends Model
 
     protected $fillable = [
         'name',
+        'level',
     ];
 
-    public function cliente()
+    public function clientes()
     {
-        return $this->hasMany(Cliente::class, 'technological_capability_id');
+        return $this->belongsToMany(Cliente::class, 'p_clientes_technological_capabilities');
     }
+
 }
