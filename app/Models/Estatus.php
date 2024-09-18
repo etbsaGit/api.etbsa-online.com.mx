@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Intranet\ClientesDoc;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -67,5 +68,10 @@ class Estatus extends Model
     public function activityTechnician()
     {
         return $this->hasMany(ActivityTechnician::class, 'status_id');
+    }
+
+    public function clienteDoc()
+    {
+        return $this->hasMany(ClientesDoc::class, 'status_id');
     }
 }

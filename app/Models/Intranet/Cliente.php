@@ -130,6 +130,11 @@ class Cliente extends Model
         return $this->hasMany(ClienteAbastecimiento::class, 'cliente_id');
     }
 
+    public function clienteDoc()
+    {
+        return $this->hasMany(ClientesDoc::class, 'cliente_id');
+    }
+
     public function technologicalCapabilities()
     {
         return $this->belongsToMany(TechnologicalCapability::class, 'p_clientes_technological_capabilities');

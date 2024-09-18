@@ -14,6 +14,7 @@ use App\Http\Controllers\Intranet\CondicionController;
 use App\Http\Controllers\Intranet\ClasEquipoController;
 use App\Http\Controllers\Intranet\ReferenciaController;
 use App\Http\Controllers\Intranet\TipoEquipoController;
+use App\Http\Controllers\Intranet\ClientesDocController;
 use App\Http\Controllers\Intranet\StateEntityController;
 use App\Http\Controllers\Intranet\TipoCultivoController;
 use App\Http\Controllers\Intranet\ClienteRiegoController;
@@ -64,6 +65,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('cliente/add/capTech/{cliente}', [ClienteController::class, 'addCapTech']);
     Route::get('cliente/get/capTech/{cliente}', [ClienteController::class, 'getCapTech']);
     Route::post('clientes/excel', [ClienteController::class, 'insetExcel']);
+    Route::get('clientesDoc/cliente/{cliente}', [ClientesDocController::class, 'getPerCliente']);
+
 
     Route::apiResource('construction-classification', ConstructionClassificationsController::class);
     Route::apiResource('tactic', TacticController::class);
@@ -91,4 +94,5 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('clienteCultivo', ClienteCultivoController::class);
     Route::apiResource('clienteRiego', ClienteRiegoController::class);
     Route::apiResource('clienteAbastecimiento', ClienteAbastecimientoController::class);
+    Route::apiResource('clientesDoc', ClientesDocController::class);
 });
