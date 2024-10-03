@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Intranet\Sale;
 use App\Models\Intranet\ClientesDoc;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -73,5 +74,10 @@ class Estatus extends Model
     public function clienteDoc()
     {
         return $this->hasMany(ClientesDoc::class, 'status_id');
+    }
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'status_id');
     }
 }

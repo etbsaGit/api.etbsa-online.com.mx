@@ -65,6 +65,27 @@ trait FilterableModel
         return $query;
     }
 
+    public function scopeFilterSale(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $value) {
+            if ($value !== null && $key !== 'page') {
+                if ($key === 'search') {
+                    $query->where(function ($query) use ($value) {
+                        $query->where('amount', 'LIKE', '%' . $value . '%')
+                            ->orWhere('serial', 'LIKE', '%' . $value . '%')
+                            ->orWhere('invoice', 'LIKE', '%' . $value . '%')
+                            ->orWhere('order', 'LIKE', '%' . $value . '%')
+                            ->orWhere('folio', 'LIKE', '%' . $value . '%')
+                            ->orWhere('economic', 'LIKE', '%' . $value . '%');
+                    });
+                } else {
+                    $query->where($key, 'LIKE', '%' . $value . '%');
+                }
+            }
+        }
+        return $query;
+    }
+
 
 
 

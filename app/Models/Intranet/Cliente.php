@@ -139,4 +139,9 @@ class Cliente extends Model
     {
         return $this->belongsToMany(TechnologicalCapability::class, 'p_clientes_technological_capabilities');
     }
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'cliente_id');
+    }
 }

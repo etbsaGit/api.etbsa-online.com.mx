@@ -27,4 +27,9 @@ class Referencia extends Model
     {
         return $this->belongsTo(Kinship::class, 'kinship_id');
     }
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'referencia_id');
+    }
 }

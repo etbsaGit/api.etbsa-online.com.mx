@@ -29,6 +29,7 @@ use App\Http\Controllers\Intranet\ClienteTechnologyController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
+use App\Http\Controllers\Intranet\SaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +67,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('cliente/get/capTech/{cliente}', [ClienteController::class, 'getCapTech']);
     Route::post('clientes/excel', [ClienteController::class, 'insetExcel']);
     Route::get('clientesDoc/cliente/{cliente}', [ClientesDocController::class, 'getPerCliente']);
+    Route::post('sales', [SaleController::class, 'index']);
+    Route::get('sale/options', [SaleController::class, 'getOptions']);
+    Route::get('sale/validated', [SaleController::class, 'getForValidate']);
+    Route::post('sale/post/validated', [SaleController::class, 'postValidate']);
 
 
     Route::apiResource('construction-classification', ConstructionClassificationsController::class);
@@ -95,4 +100,5 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('clienteRiego', ClienteRiegoController::class);
     Route::apiResource('clienteAbastecimiento', ClienteAbastecimientoController::class);
     Route::apiResource('clientesDoc', ClientesDocController::class);
+    Route::apiResource('sale', SaleController::class);
 });
