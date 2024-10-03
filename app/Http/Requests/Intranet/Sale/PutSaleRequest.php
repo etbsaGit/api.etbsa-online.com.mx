@@ -39,6 +39,8 @@ class PutSaleRequest extends FormRequest
             'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
             'status_id' => ['required', 'integer', 'exists:estatus,id'],
             'referencia_id' => ['nullable', 'integer', 'exists:referencias,id'],
+            'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
+            'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
         ];
     }
 

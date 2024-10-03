@@ -3,6 +3,8 @@
 namespace App\Models\Intranet;
 
 use App\Models\Estatus;
+use App\Models\Empleado;
+use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,7 +28,9 @@ class Sale extends Model
        'date',
        'cliente_id',
        'status_id',
-       'referencia_id'
+       'referencia_id',
+       'empleado_id',
+       'sucursal_id'
     ];
 
     public function cliente()
@@ -42,5 +46,15 @@ class Sale extends Model
     public function referencia()
     {
         return $this->belongsTo(Referencia::class, 'referencia_id');
+    }
+
+    public function empleado()
+    {
+        return $this->belongsTo(Empleado::class, 'empleado_id');
+    }
+
+    public function sucursal()
+    {
+        return $this->belongsTo(Sucursal::class, 'sucursal_id');
     }
 }

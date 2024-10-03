@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Intranet;
 
+use App\Models\Estatus;
+use App\Models\Empleado;
+use App\Models\Sucursal;
 use Illuminate\Http\Request;
 use App\Models\Intranet\Sale;
+use App\Models\Intranet\Cliente;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Sale\PutSaleRequest;
 use App\Http\Requests\Intranet\Sale\StoreSaleRequest;
 use App\Http\Requests\Intranet\Sale\StoreValidatedSaleRequest;
-use App\Models\Estatus;
-use App\Models\Intranet\Cliente;
 
 class SaleController extends ApiController
 {
@@ -19,6 +22,26 @@ class SaleController extends ApiController
     public function index(Request $request)
     {
         $filters = $request->all();
+
+        // Obtén el usuario autenticado
+        $user = Auth::user();
+
+        // Verifica si el usuario no es Admin
+        if (!$user->hasRole('Admin')) {
+            // Si no es Admin, establece el sucursal_id en el request a la sucursal del empleado
+            $filters['sucursal_id'] = $user->empleado->sucursal_id;
+
+            // Verifica si la sucursal_id corresponde al ID de 'Corporativo'
+            $corporativoSucursalId = Sucursal::where('nombre', 'Corporativo')->value('id');
+
+            if ($filters['sucursal_id'] === $corporativoSucursalId) {
+                // Reemplaza con el ID correspondiente a 'Celaya'
+                $celayaSucursalId = Sucursal::where('nombre', 'Celaya')->value('id');
+                $filters['sucursal_id'] = $celayaSucursalId;
+            }
+        }
+
+        // Filtra las ventas
         $sales = Sale::filterSale($filters)
             ->with('cliente', 'referencia', 'status')
             ->orderBy('date', 'desc') // Ordenar por 'date' de forma descendente
@@ -65,10 +88,15 @@ class SaleController extends ApiController
 
     public function getOptions()
     {
+        $activoStatusId = Estatus::where('nombre', 'Activo')->value('id');
+
         $data = [
             'clientes' => Cliente::all(),
             'statuses' => Estatus::where('tipo_estatus', 'sale')->get(),
+            'empleados' => Empleado::where('estatus_id', $activoStatusId)->orderBy('apellido_paterno')->get(),
+            'sucursales' => Sucursal::all()
         ];
+
         return $this->respond($data);
     }
 
