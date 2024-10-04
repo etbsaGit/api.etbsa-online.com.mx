@@ -76,7 +76,8 @@ trait FilterableModel
                             ->orWhere('invoice', 'LIKE', '%' . $value . '%')
                             ->orWhere('order', 'LIKE', '%' . $value . '%')
                             ->orWhere('folio', 'LIKE', '%' . $value . '%')
-                            ->orWhere('economic', 'LIKE', '%' . $value . '%');
+                            ->orWhere('economic', 'LIKE', '%' . $value . '%')
+                            ->orWhere('cancellation_folio', 'LIKE', '%' . $value . '%');
                     });
                 } else {
                     $query->where($key, 'LIKE', '%' . $value . '%');

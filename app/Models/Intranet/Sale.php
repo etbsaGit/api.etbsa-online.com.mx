@@ -30,7 +30,10 @@ class Sale extends Model
        'status_id',
        'referencia_id',
        'empleado_id',
-       'sucursal_id'
+       'sucursal_id',
+       'cancellation_date',
+       'cancellation_folio',
+       'cancellation'
     ];
 
     public function cliente()
