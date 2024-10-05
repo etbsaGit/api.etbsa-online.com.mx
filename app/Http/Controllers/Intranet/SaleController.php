@@ -43,7 +43,7 @@ class SaleController extends ApiController
 
         // Filtra las ventas
         $sales = Sale::filterSale($filters)
-            ->with('cliente', 'referencia', 'status')
+            ->with('cliente', 'referencia', 'status','empleado','sucursal')
             ->orderBy('date', 'desc') // Ordenar por 'date' de forma descendente
             ->paginate(10);
 
@@ -104,7 +104,7 @@ class SaleController extends ApiController
     {
         $sales = Sale::whereNull('validated')
             ->whereNotNull('invoice')
-            ->with('cliente', 'referencia', 'status')
+            ->with('cliente', 'referencia', 'status','empleado','sucursal')
             ->orderBy('date', 'desc')
             ->get();
 
