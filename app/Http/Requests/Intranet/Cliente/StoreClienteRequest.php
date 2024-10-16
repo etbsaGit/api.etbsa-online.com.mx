@@ -28,7 +28,7 @@ class StoreClienteRequest extends FormRequest
             "equip" => ['nullable', 'numeric', 'digits:5', 'unique:clientes,equip'],
             "nombre" => ['required', 'string', 'max:255'],
             'tipo' => ['required', 'in:moral,fisica'],
-            "rfc" => ['required', 'string', 'min:13', 'max:13', 'unique:clientes,rfc'],
+            "rfc" => ['required', 'string', 'min:12', 'max:13', 'unique:clientes,rfc'],
             "curp" => ['nullable', 'string', 'min:18', 'max:18', 'unique:clientes,curp'],
             "telefono" => ['required', 'numeric', 'digits:10', 'unique:clientes,telefono'],
             "telefono_casa" => ['nullable', 'numeric', 'digits:10', 'unique:clientes,telefono_casa'],
