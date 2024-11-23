@@ -79,6 +79,7 @@ class QualificationController extends Controller
 
         $lineasConstruccion = Linea::where('nombre', 'Construccion')->first();
         $lineasAgricola = Linea::where('nombre', 'Agricola')->first();
+        $sucursalId = $user->empleado?->sucursal->id;
 
         if (in_array('Admin', $roles)) {
 
@@ -102,24 +103,23 @@ class QualificationController extends Controller
                 }])
                 ->get();
         } elseif (in_array('Taller', $roles)) {
-            $sucursal = $user->empleado->sucursal;
 
             $tecnicosConstruccion = LineaTechnician::where('linea_id', $lineasConstruccion->id)
-                ->whereHas('technician.empleado', function ($query) use ($sucursal) {
-                    $query->where('estatus_id', 5)->where('sucursal_id', $sucursal->id);
+                ->whereHas('technician.empleado', function ($query) use ($sucursalId) {
+                    $query->where('estatus_id', 5)->where('sucursal_id', $sucursalId);
                 })
-                ->with(['technician.empleado' => function ($query) use ($sucursal) {
-                    $query->where('estatus_id', 5)->where('sucursal_id', $sucursal->id)
+                ->with(['technician.empleado' => function ($query) use ($sucursalId) {
+                    $query->where('estatus_id', 5)->where('sucursal_id', $sucursalId)
                         ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification']);
                 }])
                 ->get();
 
             $tecnicosAgricola = LineaTechnician::where('linea_id', $lineasAgricola->id)
-                ->whereHas('technician.empleado', function ($query) use ($sucursal) {
-                    $query->where('estatus_id', 5)->where('sucursal_id', $sucursal->id);
+                ->whereHas('technician.empleado', function ($query) use ($sucursalId) {
+                    $query->where('estatus_id', 5)->where('sucursal_id', $sucursalId);
                 })
-                ->with(['technician.empleado' => function ($query) use ($sucursal) {
-                    $query->where('estatus_id', 5)->where('sucursal_id', $sucursal->id)
+                ->with(['technician.empleado' => function ($query) use ($sucursalId) {
+                    $query->where('estatus_id', 5)->where('sucursal_id', $sucursalId)
                         ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification']);
                 }])
                 ->get();
@@ -128,12 +128,17 @@ class QualificationController extends Controller
         $empleadosTecnicosSinAsignar = Empleado::whereHas('puesto', function ($query) {
             $query->where('nombre', 'Tecnico');
         })
-            ->whereDoesntHave('technician')
-            ->whereHas('estatus', function ($query) {
-                $query->where('id', 5);
-            })
-            ->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification')
-            ->get();
+        ->whereDoesntHave('technician')
+        ->whereHas('estatus', function ($query) use ($sucursalId) {
+            $query->where('id', 5);
+            // Solo agregar la condición de sucursal_id si sucursalId no es nulo
+            if ($sucursalId !== null) {
+                $query->where('sucursal_id', $sucursalId);
+            }
+        })
+        ->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification')
+        ->get();
+
 
         $empleadosAgricolaSinTecnico = [];
         $empleadosConstruccionSinTecnico = [];

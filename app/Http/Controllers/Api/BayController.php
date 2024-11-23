@@ -169,6 +169,9 @@ class BayController extends ApiController
             ->whereHas('linea', function ($query) {
                 $query->where('nombre', 'agricola');
             })
+            ->whereHas('estatus', function ($query) {
+                $query->where('nombre', 'Activo');
+            })
             ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
             ->get();
 
@@ -247,6 +250,9 @@ class BayController extends ApiController
             })
             ->whereHas('linea', function ($query) {
                 $query->where('nombre', 'construccion');
+            })
+            ->whereHas('estatus', function ($query) {
+                $query->where('nombre', 'Activo');
             })
             ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
             ->get();
