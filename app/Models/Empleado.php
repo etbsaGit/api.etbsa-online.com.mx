@@ -10,13 +10,13 @@ use App\Models\Expediente;
 use App\Models\EstadoCivil;
 use App\Models\Departamento;
 use App\Models\TipoDeSangre;
+use App\Models\Intranet\Sale;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Notifications\Action;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Empleado extends Model
 {
@@ -76,7 +76,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra','apellidoCompleto'];
 
     public function picture(): Attribute
     {
@@ -88,6 +88,11 @@ class Empleado extends Model
     public function getNombreCompletoAttribute()
     {
         return $this->nombre . ' ' . $this->segundo_nombre . ' ' . $this->apellido_paterno . ' ' . $this->apellido_materno;
+    }
+
+    public function getApellidoCompletoAttribute()
+    {
+        return $this->apellido_paterno . ' ' . $this->apellido_materno . ' ' . $this->nombre . ' ' . $this->segundo_nombre;
     }
 
     // public function getDesempenoManoObraAttribute()
@@ -180,7 +185,6 @@ class Empleado extends Model
 
         // Devuelve el porcentaje
         return $porcentajeHorasFacturadas;
-
     }
 
     protected function defaultPathFolder(): Attribute
@@ -315,6 +319,13 @@ class Empleado extends Model
     public function skillRating()
     {
         return $this->hasMany(SkillRating::class, 'empleado_id');
+    }
+
+    // ---------------------------------Intranet.sale---------------------------------------------------------
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'empleado_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------

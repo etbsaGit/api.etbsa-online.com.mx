@@ -15,7 +15,6 @@ use App\Models\Intranet\TechnologicalCapability;
 use App\Models\Intranet\ConstructionClassification;
 use App\Http\Requests\Intranet\Cliente\PutClienteRequest;
 use App\Http\Requests\Intranet\Cliente\StoreClienteRequest;
-use GuzzleHttp\Client;
 
 class ClienteController extends ApiController
 {

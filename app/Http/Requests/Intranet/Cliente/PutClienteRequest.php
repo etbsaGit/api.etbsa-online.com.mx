@@ -29,7 +29,7 @@ class PutClienteRequest extends FormRequest
             "equip" => ['nullable', 'numeric', 'digits:5', Rule::unique('clientes')->ignore($this->route("cliente")->id)],
             "nombre" => ['required', 'string', 'max:255'],
             'tipo' => ['required', 'in:moral,fisica'],
-            "rfc" => ['required', 'string', 'min:13', 'max:13', Rule::unique('clientes')->ignore($this->route("cliente")->id)],
+            "rfc" => ['required', 'string', 'min:12', 'max:13', Rule::unique('clientes')->ignore($this->route("cliente")->id)],
             "curp" => ['nullable', 'string', 'min:18', 'max:18', Rule::unique('clientes')->ignore($this->route("cliente")->id)],
             "telefono" => ['required', 'numeric', 'digits:10', Rule::unique('clientes')->ignore($this->route("cliente")->id)],
             "telefono_casa" => ['nullable', 'numeric', 'digits:10', Rule::unique('clientes')->ignore($this->route("cliente")->id)],

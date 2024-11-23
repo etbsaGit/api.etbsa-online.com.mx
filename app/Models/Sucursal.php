@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Empleado;
+use App\Models\Intranet\Sale;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -43,7 +44,7 @@ class Sucursal extends Model
         return $this->hasMany(WorkOrder::class, 'sucursal_id');
     }
 
-     /**
+    /**
      * Get the travels that start from this sucursal.
      */
     public function startingTravels()
@@ -57,5 +58,13 @@ class Sucursal extends Model
     public function endingTravels()
     {
         return $this->hasMany(Travel::class, 'end_point');
+    }
+
+    /**
+     * Get the sales at this sucursal.
+     */
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'sucursal_id');
     }
 }

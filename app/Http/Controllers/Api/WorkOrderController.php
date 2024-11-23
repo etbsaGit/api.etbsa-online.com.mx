@@ -157,22 +157,27 @@ class WorkOrderController extends ApiController
             // Si el usuario tiene un empleado asociado, procedemos con la consulta de técnicos
             $tecnicos = Empleado::where('sucursal_id', $user->empleado->sucursal->id)
                 ->where('linea_id', $user->empleado->linea->id)
+                ->where('estatus_id', 5) // Agregamos la condición para el estatus
                 ->whereHas('puesto', function ($query) {
                     $query->where('nombre', 'tecnico');
-                })->get();
+                })
+                ->get();
 
             $bays = Bay::where('sucursal_id', $user->empleado->sucursal->id)
                 ->where('linea_id', $user->empleado->linea->id)
                 ->with('linea', 'sucursal')
                 ->get();
         } else {
-            // Si el usuario no tiene un empleado asociado, traemos todos los empleados con puesto 'tecnico'
-            $tecnicos = Empleado::whereHas('puesto', function ($query) {
-                $query->where('nombre', 'tecnico');
-            })->get();
+            // Si el usuario no tiene un empleado asociado, traemos todos los empleados con puesto 'tecnico' y estatus_id igual a 5
+            $tecnicos = Empleado::where('estatus_id', 5) // Agregamos la condición para el estatus
+                ->whereHas('puesto', function ($query) {
+                    $query->where('nombre', 'tecnico');
+                })
+                ->get();
 
             $bays = Bay::with('linea', 'sucursal')->get();
         }
+
 
         $data = [
             'tecnicos' => $tecnicos,
