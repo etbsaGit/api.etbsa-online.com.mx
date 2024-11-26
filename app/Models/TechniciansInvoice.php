@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class TechniciansInvoice extends Model
 {
     use HasFactory;
+
+    use FilterableModel;
 
     protected $fillable = [
         'folio',

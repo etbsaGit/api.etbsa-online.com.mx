@@ -30,6 +30,40 @@ trait FilterableModel
         }
     }
 
+    public function scopeFilterWithPage(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $value) {
+            if ($value !== null && $key !== 'page') {
+                if ($key === 'search') {
+                    $query->where(function ($query) use ($value) {
+                        $query->where('ot', 'LIKE', '%' . $value . '%')
+                            ->orWhere('cliente', 'LIKE', '%' . $value . '%')
+                            ->orWhere('maquina', 'LIKE', '%' . $value . '%');
+                    });
+                } else {
+                    $query->where($key, 'LIKE', '%' . $value . '%');
+                }
+            }
+        }
+        return $query;
+    }
+
+    public function scopeFilterInvoice(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $value) {
+            if ($value !== null && $key !== 'page') {
+                if ($key === 'search') {
+                    $query->where(function ($query) use ($value) {
+                        $query->where('folio', 'LIKE', '%' . $value . '%');
+                    });
+                } else {
+                    $query->where($key, 'LIKE', '%' . $value . '%');
+                }
+            }
+        }
+        return $query;
+    }
+
     public function scopeFilterPost(Builder $query, array $filters)
     {
         $first = true; // Flag to check if it's the first filter

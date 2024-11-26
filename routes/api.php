@@ -139,7 +139,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('horasTechnician/tech/{id}/{anio}', [HorasTechnicianController::class, 'getPerTech']);
 
     Route::get('techniciansInvoice/wo/{empleado}', [TechniciansInvoiceController::class, 'getWoPerTech']);
-    Route::get('techniciansInvoice/{empleado}', [TechniciansInvoiceController::class, 'getPerTech']);
+    Route::post('techniciansInvoice/empleado', [TechniciansInvoiceController::class, 'getPerTech']);
     Route::get('techniciansLog/options/{empleado?}', [TechniciansLogController::class, 'getOptions']);
     Route::get('techniciansLog/tech/{empleado}', [TechniciansLogController::class, 'getPerTech']);
     Route::get('techniciansLog/techday/{empleado}/{day}', [TechniciansLogController::class, 'getPerTechDay']);
