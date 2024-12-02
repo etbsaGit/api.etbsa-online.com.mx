@@ -76,7 +76,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra','apellidoCompleto'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto'];
 
     public function picture(): Attribute
     {
@@ -326,6 +326,13 @@ class Empleado extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class, 'empleado_id');
+    }
+
+    // ---------------------------------Rentals.periods---------------------------------------------------------
+
+    public function rentalPeriod()
+    {
+        return $this->hasMany(RentalPeriod::class, 'empleado_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------

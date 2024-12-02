@@ -64,6 +64,38 @@ trait FilterableModel
         return $query;
     }
 
+    public function scopeFilterRentalMachine(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $value) {
+            if ($value !== null && $key !== 'page') {
+                if ($key === 'search') {
+                    $query->where(function ($query) use ($value) {
+                        $query->where('serial', 'LIKE', '%' . $value . '%');
+                    });
+                } else {
+                    $query->where($key, 'LIKE', '%' . $value . '%');
+                }
+            }
+        }
+        return $query;
+    }
+
+    public function scopeFilterRentalPeriod(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $value) {
+            if ($value !== null && $key !== 'page') {
+                if ($key === 'search') {
+                    $query->where(function ($query) use ($value) {
+                        $query->where('folio', 'LIKE', '%' . $value . '%');
+                    });
+                } else {
+                    $query->where($key, 'LIKE', '%' . $value . '%');
+                }
+            }
+        }
+        return $query;
+    }
+
     public function scopeFilterPost(Builder $query, array $filters)
     {
         $first = true; // Flag to check if it's the first filter

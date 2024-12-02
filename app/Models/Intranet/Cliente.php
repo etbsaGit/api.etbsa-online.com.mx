@@ -2,6 +2,7 @@
 
 namespace App\Models\Intranet;
 
+use App\Models\RentalPeriod;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -143,5 +144,10 @@ class Cliente extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class, 'cliente_id');
+    }
+
+    public function rentalPeriod()
+    {
+        return $this->hasMany(RentalPeriod::class, 'cliente_id');
     }
 }

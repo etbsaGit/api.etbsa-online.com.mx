@@ -31,10 +31,12 @@ use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\DepartamentoController;
+use App\Http\Controllers\Api\RentalPeriodController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
 use App\Http\Controllers\Api\QualificationController;
+use App\Http\Controllers\Api\RentalMachineController;
 use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Api\TechniciansLogController;
 use App\Http\Controllers\Ecommerce\CategoryController;
@@ -228,6 +230,17 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('posts/auth', [PostController::class, 'getPerAuth']);
     Route::apiResource('post', PostController::class);
     Route::apiResource('postDoc', PostDocController::class);
+
+    //--------------------RentalMachine--------------------
+    Route::post('rentalMachines', [RentalMachineController::class, 'index']);
+    Route::get('rentalMachines/all', [RentalMachineController::class, 'getAll']);
+    Route::apiResource('rentalMachine', RentalMachineController::class);
+
+    //--------------------RentalPeriod--------------------
+    Route::post('rentalPeriods', [RentalPeriodController::class, 'index']);
+    Route::get('rentalPeriods/all', [RentalPeriodController::class, 'getPerCalendar']);
+    Route::get('rentalPeriods/mail/{rentalPeriod}', [RentalPeriodController::class, 'sendNotify']);
+    Route::apiResource('rentalPeriod', RentalPeriodController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
