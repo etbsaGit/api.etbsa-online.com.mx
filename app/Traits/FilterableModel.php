@@ -192,4 +192,19 @@ trait FilterableModel
             }
         }
     }
+
+    public function scopeFilterByTravelAdmin(Builder $query, array $filters)
+    {
+        foreach ($filters as $key => $value) {
+            if ($value !== null) { // Solo aplicar el filtro si el valor no es nulo
+                if ($key === 'start_point' || $key === 'end_point') {
+                    $query->whereHas('travel', function ($query) use ($key, $value) {
+                        $query->where($key, $value); // Filtrar por 'start_point' o 'end_point'
+                    });
+                } else {
+                    $query->where($key, $value); // Filtrar directamente para otros casos
+                }
+            }
+        }
+    }
 }
