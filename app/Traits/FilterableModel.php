@@ -98,17 +98,24 @@ trait FilterableModel
 
     public function scopeFilterPost(Builder $query, array $filters)
     {
-        $first = true; // Flag to check if it's the first filter
+        // Asegurarse de que no traiga registros con linea_id null
+        $query->whereNotNull('linea_id');
 
-        foreach ($filters as $key => $value) {
-            if ($value !== null) {
-                if ($first) {
-                    $query->where($key, $value);
-                    $first = false;
-                } else {
-                    $query->orWhere($key, $value);
+        if (isset($filters['linea_id']) && $filters['linea_id'] !== null) {
+            // Aplicar el filtro principal de linea_id
+            $query->where('linea_id', $filters['linea_id']);
+
+            // Remover el filtro de linea_id del array para evitar duplicados
+            unset($filters['linea_id']);
+
+            // Aplicar los demás filtros con orWhere dentro de un grupo
+            $query->where(function ($subQuery) use ($filters) {
+                foreach ($filters as $key => $value) {
+                    if ($value !== null) {
+                        $subQuery->orWhere($key, $value);
+                    }
                 }
-            }
+            });
         }
     }
 

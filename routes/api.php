@@ -225,9 +225,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('activities', ActivityController::class);
 
     //--------------------Post--------------------
+    Route::post('posts', [PostController::class, 'index']);
     Route::get('posts/forms', [PostController::class, 'getforms']);
     Route::post('posts/all', [PostController::class, 'getAll']);
     Route::get('posts/auth', [PostController::class, 'getPerAuth']);
+    Route::get('posts/gen', [PostController::class, 'getPostsWithNullRelations']);
     Route::apiResource('post', PostController::class);
     Route::apiResource('postDoc', PostDocController::class);
 
