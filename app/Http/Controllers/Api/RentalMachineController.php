@@ -22,7 +22,7 @@ class RentalMachineController extends ApiController
     {
         $filters = $request->all();
 
-        return $this->respond(RentalMachine::filterRentalMachine($filters)->paginate(10));
+        return $this->respond(RentalMachine::filter($filters)->paginate(10));
     }
 
     /**

@@ -132,7 +132,7 @@ class WorkOrderController extends ApiController
 
         $liberadoStatusId = Estatus::where('nombre', 'Liberado')->value('id');
 
-        $wos = WorkOrder::filterWithPage($filters)
+        $wos = WorkOrder::filter($filters)
             ->with('tecnico', 'estatus', 'estatusTaller', 'type', 'bay', 'sucursal', 'linea', 'workOrderDoc')
             ->orderByRaw("estatus_taller_id != ? desc", [$liberadoStatusId])  // Ordena primero los que no son "Liberado"
             ->orderBy('fecha_ingreso', 'desc')  // Luego ordena por fecha de actualización

@@ -18,6 +18,14 @@ class PutRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        // Si el estatus_id no es 6, elimina la clave 'desvinculacion'
+        if ($this->input('estatus_id') !== 6) {
+            $this->merge($this->except('desvinculacion'));
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -25,7 +33,8 @@ class PutRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
+            "base64" => ['nullable', 'string'],
             "nombre" => ['required', 'string', 'max:255'],
             "segundo_nombre" => ['nullable', 'string', 'max:255'],
             "apellido_paterno" => ['required', 'string', 'max:255'],
@@ -71,13 +80,22 @@ class PutRequest extends FormRequest
 
             "descripcion_puesto" => ['nullable','string','max:255'],
             "carrera" => ['nullable','string','max:255'],
-
-            'desvinculacion' => ['nullable','array'],
-            'desvinculacion.reason_id' => ['required_with:desvinculacion','integer','exists:estatus,id'],
-            'desvinculacion.estatus_id' => ['required_with:desvinculacion','integer','exists:estatus,id'],
-            'desvinculacion.date' => ['required_with:desvinculacion','date'],
-            'desvinculacion.comments' => ['nullable','string'],
         ];
+
+        $this->addDesvinculacionRules($rules);
+
+        return $rules;
+    }
+
+    protected function addDesvinculacionRules(array &$rules)
+    {
+        if ($this->input('estatus_id') === 6) {
+            $rules['desvinculacion'] = ['nullable', 'array'];
+            $rules['desvinculacion.reason_id'] = ['required_with:desvinculacion', 'integer', 'exists:estatus,id'];
+            $rules['desvinculacion.estatus_id'] = ['required_with:desvinculacion', 'integer', 'exists:estatus,id'];
+            $rules['desvinculacion.date'] = ['required_with:desvinculacion', 'date'];
+            $rules['desvinculacion.comments'] = ['nullable', 'string'];
+        }
     }
 
     function failedValidation(Validator $validator)

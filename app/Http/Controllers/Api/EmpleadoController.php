@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\EmpleadosExport;
 use App\Models\User;
 use App\Models\Linea;
 use App\Models\Puesto;
@@ -20,31 +21,44 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\Empleado\PicRequest;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
 use App\Models\Termination;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class EmpleadoController extends ApiController
 {
     use UploadableFile;
 
-    public function index()
-    {
-        return $this->respond(Empleado::paginate(5));
-    }
 
-    public function all()
+    public function index(Request $request)
     {
-        return response()->json(Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus'])->get());
+        $filters = $request->all();
+        $user = Auth::user();
+        $empleado = $user->empleado;
+
+        if ($user->hasRole('RRHH')) {
+            $empleados = Empleado::filter($filters)
+                ->where('estatus_id', 5)
+                ->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason'])
+                ->orderBy('sucursal_id')
+                ->paginate(10);
+        } else {
+            $empleados = $this->getAllSubordinates($empleado);
+        }
+
+        return $this->respond($empleados);
     }
 
     public function store(StoreRequest $request)
     {
-        return DB::transaction(function () use ($request) {
+        $data = $request->validated();
+
+        return DB::transaction(function () use ($request, $data) {
             return tap(
                 Empleado::create($request->validated()),
-                function (Empleado $empleado) use ($request) {
+                function (Empleado $empleado) use ($request, $data) {
                     $plantilla = Plantilla::find(1);
                     $ids = $plantilla->requisito->pluck('id');
 
@@ -68,8 +82,18 @@ class EmpleadoController extends ApiController
                         }
                     }
 
-                    // Verifica si el request contiene 'desvinculacion'
-                    if ($request->has('desvinculacion')) {
+                    if (!is_null($request['base64'])) {
+                        if ($empleado->fotografia) {
+                            Storage::disk('s3')->delete($empleado->fotografia);
+                        }
+                        $relativePath  = $this->saveImage($request['base64'], $empleado->default_path_folder);
+                        $request['base64'] = $relativePath;
+                        $updateData = ['fotografia' => $relativePath];
+                        $empleado->update($updateData);
+                    }
+
+                    // Verifica si en $data existe 'desvinculacion'
+                    if ((is_object($data) && property_exists($data, 'desvinculacion')) || (is_array($data) && array_key_exists('desvinculacion', $data))) {
                         $desvinculacionData = $request->input('desvinculacion');
                         Termination::create([
                             'reason_id' => $desvinculacionData['reason_id'],
@@ -145,8 +169,20 @@ class EmpleadoController extends ApiController
             }
         }
 
+        if (!is_null($request['base64'])) {
+            if ($empleado->fotografia) {
+                Storage::disk('s3')->delete($empleado->fotografia);
+            }
+            $relativePath  = $this->saveImage($request['base64'], $empleado->default_path_folder);
+            $request['base64'] = $relativePath;
+            $updateData = ['fotografia' => $relativePath];
+            $empleado->update($updateData);
+        }
+
+        $data = $request->validated();
+
         // Verifica si el request contiene información de desvinculación
-        if ($request->has('desvinculacion')) {
+        if ((is_object($data) && property_exists($data, 'desvinculacion')) || (is_array($data) && array_key_exists('desvinculacion', $data))) {
             // Extrae los datos de desvinculación de la solicitud
             $desvinculacionData = $request->input('desvinculacion');
 
@@ -183,19 +219,6 @@ class EmpleadoController extends ApiController
         return response()->json("ok");
     }
 
-    public function uploadPicture(PicRequest $request, Empleado $empleado)
-    {
-        if (!is_null($request['base64'])) {
-            if ($empleado->fotografia) {
-                Storage::disk('s3')->delete($empleado->fotografia);
-            }
-            $relativePath  = $this->saveImage($request['base64'], $empleado->default_path_folder);
-            $request['base64'] = $relativePath;
-            $updateData = ['fotografia' => $relativePath];
-            $empleado->update($updateData);
-        }
-    }
-
     public function findEmpleadoByRFCandINE($rfc, $ine)
     {
         $empleado = Empleado::where('rfc', $rfc)
@@ -226,6 +249,7 @@ class EmpleadoController extends ApiController
                 'user',
                 'estatus'
             ])
+            ->orderBy('apellido_paterno')
             ->get();
 
         $allSubordinates = collect();
@@ -236,47 +260,32 @@ class EmpleadoController extends ApiController
         return $allSubordinates;
     }
 
-    public function filtertwo(Request $request)
+    public function getforms()
     {
-        $filters = $request->all();
-
-        $filteredEmployees = Empleado::filtertwo($filters)->get();
-
-        return response()->json($filteredEmployees);
-    }
-
-    public function modeloNegocio(Request $request)
-    {
-        $filters = $request->all();
-        $user = Auth::user();
-        $empleado = $user->empleado;
-
-        if ($user->hasRole('RRHH')) {
-            $empleados = Empleado::filter($filters)->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason'])->get();
-        } else {
-            $empleados = $this->getAllSubordinates($empleado);
-        }
-
         $data = [
-            'empleados' => $empleados,
+            'empleados' => Empleado::where('estatus_id', 5)->orderBy('apellido_paterno')->get(),
+            'escolaridades' => Escolaridad::all(),
+            'estados_civiles' => EstadoCivil::all(),
+            'tipos_de_sangre' => TipoDeSangre::all(),
             'sucursales' => Sucursal::all(),
             'departamentos' => Departamento::all(),
             'lineas' => Linea::all(),
             'puestos' => Puesto::all(),
-            'estatus' => Estatus::where('tipo_estatus', 'empleado')->get()
+            'estatus' => Estatus::where('tipo_estatus', 'empleado')->get(),
+            'terminations' => Estatus::where('tipo_estatus', 'termination')->get(),
+            'reasons' => Estatus::where('tipo_estatus', 'terminationType')->get(),
         ];
-
         return $this->respond($data);
     }
 
-    public function personal()
+    public function getformsIndex()
     {
         $data = [
-            'escolaridades' => Escolaridad::all(),
-            'estados_civiles' => EstadoCivil::all(),
-            'tipos_de_sangre' => TipoDeSangre::all(),
+            'sucursales' => Sucursal::all(),
+            'departamentos' => Departamento::all(),
+            'lineas' => Linea::all(),
+            'puestos' => Puesto::all(),
         ];
-
         return $this->respond($data);
     }
 
@@ -306,4 +315,34 @@ class EmpleadoController extends ApiController
 
         return response()->json($employees);
     }
+
+    public function export(Request $request)
+    {
+        // Recoger los filtros desde la solicitud
+        $filters = $request->except(['search', 'page']);
+        // Crear una instancia de la clase de exportación con los filtros
+        $export = new EmpleadosExport($filters);
+
+        // Obtener los datos para verificar si están vacíos
+        $data = $export->collection();
+
+        // Verificar si no hay datos para exportar
+        if ($data->isEmpty()) {
+            return response()->json(['error' => 'No hay datos para exportar.']);
+        }
+
+        // Exportar el archivo en formato XLSX con los filtros aplicados
+        $fileContent = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+
+        // Convertir el contenido del archivo a Base64
+        $base64 = base64_encode($fileContent);
+
+        // Devolver la respuesta con el archivo en Base64
+        return response()->json([
+            'file_name' => 'empleados.xlsx',
+            'file_base64' => $base64,
+        ]);
+    }
+
+
 }

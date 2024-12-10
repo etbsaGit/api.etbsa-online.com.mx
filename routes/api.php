@@ -67,10 +67,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('archivo/all', [ArchivoController::class, 'all']);
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::get('documento/all', [DocumentoController::class, 'all']);
-    Route::get('empleado/all', [EmpleadoController::class, 'all']);
     Route::get('escolaridad/all', [EscolaridadController::class, 'all']);
     Route::get('estadoCivil/all', [EstadoCivilController::class, 'all']);
-    Route::get('Estatus/all', [EstatusController::class, 'all']);
     Route::get('expediente/all', [ExpedienteController::class, 'all']);
     Route::get('linea/all', [LineaController::class, 'all']);
     Route::get('plantilla/all', [PlantillaController::class, 'all']);
@@ -78,18 +76,20 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
-    Route::get('user/all', [UserController::class, 'all']);
+    Route::post('users/all', [UserController::class, 'all']);
 
     //--------------------Estatus--------------------
-    Route::get('estatus/all', [EstatusController::class, 'all']);
+    Route::post('estatuses', [EstatusController::class, 'index']);
     Route::get('estatus/{tipo}', [EstatusController::class, 'getPerType']);
 
     //--------------------Empleado--------------------
-    Route::post('empleado/filtertwo', [EmpleadoController::class, 'filtertwo']);
-    Route::post('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
-    Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
     Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
-    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
+
+    Route::get('empleado/forms', [EmpleadoController::class, 'getforms']);
+    Route::get('empleado/index', [EmpleadoController::class, 'getformsIndex']);
+    Route::post('empleados', [EmpleadoController::class, 'index']);
+    Route::post('empleados/excel', [EmpleadoController::class, 'export']);
+    Route::apiResource('empleado', EmpleadoController::class);
 
     //--------------------Expediente--------------------
     Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
@@ -171,7 +171,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('skillrating', SkillRaitngController::class);
 
     //--------------------Resource--------------------
-    Route::resource('empleado', EmpleadoController::class)->except("create", "edit");
     Route::resource('escolaridad', EscolaridadController::class)->except("create", "edit");
     Route::resource('estadoCivil', EstadoCivilController::class)->except("create", "edit");
     Route::resource('Estatus', EstatusController::class)->except("create", "edit");
@@ -260,6 +259,9 @@ Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'up
 
 //--------------------User--------------------
 Route::post('auth/login', [UserController::class, 'login']);
+Route::post('roles', [RoleController::class, 'index']);
+Route::post('permissions', [PermissionController::class, 'index']);
+
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
 

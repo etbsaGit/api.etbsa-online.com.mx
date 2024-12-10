@@ -25,7 +25,7 @@ class RentalPeriodController extends ApiController
     {
         $filters = $request->all();
 
-        $rentalPeriods = RentalPeriod::filterRentalPeriod($filters)
+        $rentalPeriods = RentalPeriod::filter($filters)
             ->with('cliente', 'rentalMachine')
             ->orderBy('end_date')
             ->paginate(10);

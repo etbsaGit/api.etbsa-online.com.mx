@@ -6,17 +6,19 @@ use App\Models\Estatus;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Estatus\PutRequest;
 use App\Http\Requests\Estatus\StoreRequest;
+use Illuminate\Http\Request;
+
 
 class EstatusController extends ApiController
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Estatus::paginate(5));
-    }
+        $filters = $request->all();
 
-    public function all()
-    {
-        return response()->json(Estatus::get());
+        $estatuses = Estatus::filter($filters)
+            ->orderBy('tipo_estatus')
+            ->paginate(10);
+        return $this->respond($estatuses);
     }
 
     public function store(StoreRequest $request)

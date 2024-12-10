@@ -74,7 +74,7 @@ class TechniciansInvoiceController extends ApiController
     {
         $filters = $request->all();
         // Consultar las WorkOrder que coincidan con el tecnico_id y el estatus_taller_id
-        $invoices = TechniciansInvoice::filterInvoice($filters)
+        $invoices = TechniciansInvoice::filter($filters)
             ->with('wo')
             ->orderBy('fecha', 'desc')
             ->paginate(10);

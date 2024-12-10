@@ -194,6 +194,12 @@ class Empleado extends Model
         );
     }
 
+    // -Scope-
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno', 'curp', 'rfc', 'telefono_institucional']);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

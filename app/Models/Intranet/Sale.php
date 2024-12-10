@@ -7,6 +7,7 @@ use App\Models\Empleado;
 use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Sale extends Model
@@ -16,25 +17,31 @@ class Sale extends Model
     use FilterableModel;
 
     protected $fillable = [
-       'amount',
-       'comments',
-       'feedback',
-       'serial',
-       'invoice',
-       'order',
-       'folio',
-       'economic',
-       'validated',
-       'date',
-       'cliente_id',
-       'status_id',
-       'referencia_id',
-       'empleado_id',
-       'sucursal_id',
-       'cancellation_date',
-       'cancellation_folio',
-       'cancellation'
+        'amount',
+        'comments',
+        'feedback',
+        'serial',
+        'invoice',
+        'order',
+        'folio',
+        'economic',
+        'validated',
+        'date',
+        'cliente_id',
+        'status_id',
+        'referencia_id',
+        'empleado_id',
+        'sucursal_id',
+        'cancellation_date',
+        'cancellation_folio',
+        'cancellation'
     ];
+
+    // -Scope-
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['amount', 'serial', 'invoice', 'order', 'folio', 'economic', 'cancellation_folio']);
+    }
 
     public function cliente()
     {

@@ -6,6 +6,7 @@ use App\Traits\FilterableModel;
 use App\Models\Intranet\Cliente;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -31,14 +32,14 @@ class RentalPeriod extends Model
     public function doc(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->document ? Storage::disk('s3')->url($this->document) : null
+            get: fn() => $this->document ? Storage::disk('s3')->url($this->document) : null
         );
     }
 
     protected function defaultPathFolder(): Attribute
     {
         return Attribute::make(
-            get: fn () => "Rentals/periods/id_" . $this->folio,
+            get: fn() => "Rentals/periods/id_" . $this->folio,
         );
     }
 
@@ -51,6 +52,12 @@ class RentalPeriod extends Model
                 Storage::disk('s3')->delete($rentalPeriod->document);
             }
         });
+    }
+
+    // -Scope-
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['folio']);
     }
 
     public function empleado()

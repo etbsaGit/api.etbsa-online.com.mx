@@ -24,7 +24,7 @@ class ClienteController extends ApiController
     public function index(Request $request)
     {
         $filters = $request->all();
-        $clientes = Cliente::filterPage($filters)->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification')->paginate(10);
+        $clientes = Cliente::filter($filters)->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification')->paginate(10);
         return $this->respond($clientes);
     }
 

@@ -6,93 +6,24 @@ use Illuminate\Database\Eloquent\Builder;
 
 trait FilterableModel
 {
-    // public function scopeFilter($query, array $filters): void
-    // {
-    //     $query->when($filters['search'] ?? null, function ($query, $search) {
-    //         $query->where(function ($query) use ($search) {
-    //             $query->where('name', 'like', '%'.$search.'%');
-    //         });
-    //     })->when($filters['trashed'] ?? null, function ($query, $trashed) {
-    //         if ($trashed === 'with') {
-    //             $query->withTrashed();
-    //         } elseif ($trashed === 'only') {
-    //             $query->onlyTrashed();
-    //         }
-    //     });
-    // }
-
-    public function scopeFilter(Builder $query, array $filters)
-    {
-        foreach ($filters as $key => $value) {
-            if ($value !== null) {
-                $query->where($key, $value);
-            }
-        }
-    }
-
-    public function scopeFilterWithPage(Builder $query, array $filters)
+    // -Final-
+    public function scopeFilterSearch(Builder $query, array $filters, array $searchColumns = [])
     {
         foreach ($filters as $key => $value) {
             if ($value !== null && $key !== 'page') {
-                if ($key === 'search') {
-                    $query->where(function ($query) use ($value) {
-                        $query->where('ot', 'LIKE', '%' . $value . '%')
-                            ->orWhere('cliente', 'LIKE', '%' . $value . '%')
-                            ->orWhere('maquina', 'LIKE', '%' . $value . '%');
+                if ($key === 'search' && !empty($searchColumns)) {
+                    $query->where(function ($query) use ($value, $searchColumns) {
+                        foreach ($searchColumns as $column) {
+                            $query->orWhere($column, 'LIKE', '%' . $value . '%');
+                        }
                     });
                 } else {
-                    $query->where($key, 'LIKE', '%' . $value . '%');
+                    // $query->where($key, 'LIKE', '%' . $value . '%');
+                    $query->where($key, $value);
                 }
             }
         }
-        return $query;
-    }
 
-    public function scopeFilterInvoice(Builder $query, array $filters)
-    {
-        foreach ($filters as $key => $value) {
-            if ($value !== null && $key !== 'page') {
-                if ($key === 'search') {
-                    $query->where(function ($query) use ($value) {
-                        $query->where('folio', 'LIKE', '%' . $value . '%');
-                    });
-                } else {
-                    $query->where($key, 'LIKE', '%' . $value . '%');
-                }
-            }
-        }
-        return $query;
-    }
-
-    public function scopeFilterRentalMachine(Builder $query, array $filters)
-    {
-        foreach ($filters as $key => $value) {
-            if ($value !== null && $key !== 'page') {
-                if ($key === 'search') {
-                    $query->where(function ($query) use ($value) {
-                        $query->where('serial', 'LIKE', '%' . $value . '%');
-                    });
-                } else {
-                    $query->where($key, 'LIKE', '%' . $value . '%');
-                }
-            }
-        }
-        return $query;
-    }
-
-    public function scopeFilterRentalPeriod(Builder $query, array $filters)
-    {
-        foreach ($filters as $key => $value) {
-            if ($value !== null && $key !== 'page') {
-                if ($key === 'search') {
-                    $query->where(function ($query) use ($value) {
-                        $query->where('folio', 'LIKE', '%' . $value . '%');
-                    });
-                } else {
-                    $query->where($key, 'LIKE', '%' . $value . '%');
-                }
-            }
-        }
         return $query;
     }
 
@@ -117,61 +48,6 @@ trait FilterableModel
                 }
             });
         }
-    }
-
-
-    public function scopeFilterPage(Builder $query, array $filters)
-    {
-        foreach ($filters as $key => $value) {
-            if ($value !== null && $key !== 'page') {
-                if ($key === 'search') {
-                    $query->where(function ($query) use ($value) {
-                        $query->where('nombre', 'LIKE', '%' . $value . '%')
-                            ->orWhere('telefono', 'LIKE', '%' . $value . '%')
-                            ->orWhere('rfc', 'LIKE', '%' . $value . '%');
-                    });
-                } else {
-                    $query->where($key, 'LIKE', '%' . $value . '%');
-                }
-            }
-        }
-        return $query;
-    }
-
-    public function scopeFilterSale(Builder $query, array $filters)
-    {
-        foreach ($filters as $key => $value) {
-            if ($value !== null && $key !== 'page') {
-                if ($key === 'search') {
-                    $query->where(function ($query) use ($value) {
-                        $query->where('amount', 'LIKE', '%' . $value . '%')
-                            ->orWhere('serial', 'LIKE', '%' . $value . '%')
-                            ->orWhere('invoice', 'LIKE', '%' . $value . '%')
-                            ->orWhere('order', 'LIKE', '%' . $value . '%')
-                            ->orWhere('folio', 'LIKE', '%' . $value . '%')
-                            ->orWhere('economic', 'LIKE', '%' . $value . '%')
-                            ->orWhere('cancellation_folio', 'LIKE', '%' . $value . '%');
-                    });
-                } else {
-                    $query->where($key, 'LIKE', '%' . $value . '%');
-                }
-            }
-        }
-        return $query;
-    }
-
-
-
-
-    public function scopeFilterone(Builder $query, array $filters)
-    {
-        $query->where(function ($query) use ($filters) {
-            foreach ($filters as $key => $value) {
-                if ($value !== null) {
-                    $query->orWhere($key, $value);
-                }
-            }
-        });
     }
 
     public function scopeFilterByTravel(Builder $query, array $filters)
