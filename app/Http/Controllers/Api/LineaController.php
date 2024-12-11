@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Linea;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Linea\PutRequest;
 use App\Http\Requests\Linea\StoreRequest;
 
 class LineaController extends ApiController
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Linea::paginate(5));
+        $filters = $request->all();
+        $lineas = Linea::filter($filters)->paginate(10);
+        return $this->respond($lineas);
     }
 
     public function all()

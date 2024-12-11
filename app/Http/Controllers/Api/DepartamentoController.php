@@ -3,20 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Departamento;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Departamento\PutRequest;
 use App\Http\Requests\Departamento\StoreRequest;
 
 class DepartamentoController extends ApiController
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Departamento::paginate(5));
-    }
-
-    public function all()
-    {
-        return response()->json(Departamento::get());
+        $filters = $request->all();
+        $departamentos = Departamento::filter($filters)->paginate(10);
+        return $this->respond($departamentos);
     }
 
     public function store(StoreRequest $request)

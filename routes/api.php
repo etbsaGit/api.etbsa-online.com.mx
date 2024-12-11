@@ -65,18 +65,27 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------Rutas All--------------------
     Route::get('antiguedad/all', [AntiguedadController::class, 'all']);
     Route::get('archivo/all', [ArchivoController::class, 'all']);
-    Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::get('documento/all', [DocumentoController::class, 'all']);
     Route::get('escolaridad/all', [EscolaridadController::class, 'all']);
     Route::get('estadoCivil/all', [EstadoCivilController::class, 'all']);
     Route::get('expediente/all', [ExpedienteController::class, 'all']);
-    Route::get('linea/all', [LineaController::class, 'all']);
     Route::get('plantilla/all', [PlantillaController::class, 'all']);
-    Route::get('puesto/all', [PuestoController::class, 'all']);
-    Route::get('requisito/all', [RequisitoController::class, 'all']);
-    Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
+    Route::get('linea/all', [LineaController::class, 'all']);
     Route::post('users/all', [UserController::class, 'all']);
+
+    //--------------------Catalogos para empleados-------------------
+    Route::post('departamentos', [DepartamentoController::class, 'index']);
+    Route::post('sucursales', [SucursalController::class, 'index']);
+    Route::post('lineas', [LineaController::class, 'index']);
+    Route::post('requisitos', [RequisitoController::class, 'index']);
+    Route::post('puestos/excel', [PuestoController::class, 'export']);
+    Route::post('puestos', [PuestoController::class, 'index']);
+    Route::apiResource('departamento', DepartamentoController::class);
+    Route::apiResource('sucursal', SucursalController::class);
+    Route::apiResource('linea', LineaController::class);
+    Route::apiResource('requisito', RequisitoController::class);
+    Route::apiResource('puesto', PuestoController::class);
 
     //--------------------Estatus--------------------
     Route::post('estatuses', [EstatusController::class, 'index']);
@@ -162,6 +171,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('workOrderDoc', WorkOrderDocController::class);
 
     //--------------------Skill--------------------
+    Route::post('skills', [SkillController::class, 'index']);
     Route::get('skill/puesto/{puesto}', [SkillController::class, 'getPerPuesto']);
     Route::apiResource('skill', SkillController::class);
 
@@ -175,17 +185,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('estadoCivil', EstadoCivilController::class)->except("create", "edit");
     Route::resource('Estatus', EstatusController::class)->except("create", "edit");
     Route::resource('expediente', ExpedienteController::class)->except("create", "edit");
-    Route::resource('linea', LineaController::class)->except("create", "edit");
     Route::resource('plantilla', PlantillaController::class)->except("create", "edit");
-    Route::resource('puesto', PuestoController::class)->except("create", "edit");
-    Route::resource('requisito', RequisitoController::class)->except("create", "edit");
-    Route::resource('sucursal', SucursalController::class)->except("create", "edit");
     Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
     Route::resource('estatus', EstatusController::class)->except("create", "edit");
     Route::resource('user', UserController::class)->except("create", "edit");
     Route::resource('antiguedad', AntiguedadController::class)->except("create", "edit");
     Route::resource('archivo', ArchivoController::class)->except("create", "edit");
-    Route::resource('departamento', DepartamentoController::class)->except("create", "edit");
     Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
     //--------------------User--------------------

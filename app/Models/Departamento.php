@@ -3,17 +3,24 @@
 namespace App\Models;
 
 use App\Models\Empleado;
+use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Departamento extends Model
 {
-    use HasFactory;
+    use HasFactory, FilterableModel;
 
     protected $fillable = [
         'nombre',
-
     ];
+
+    // -Scope-
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['nombre']);
+    }
 
     public function empleado()
     {

@@ -3,20 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Requisito;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Requisito\PutRequest;
 use App\Http\Requests\Requisito\StoreRequest;
 
 class RequisitoController extends ApiController
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Requisito::paginate(5));
-    }
-
-    public function all()
-    {
-        return response()->json(Requisito::with('expediente')->get());
+        $filters = $request->all();
+        $requisitos = Requisito::filter($filters)->paginate(10);
+        return $this->respond($requisitos);
     }
 
     public function store(StoreRequest $request)
