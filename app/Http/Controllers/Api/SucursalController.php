@@ -17,6 +17,11 @@ class SucursalController extends ApiController
         return $this->respond($sucursales);
     }
 
+    public function all()
+    {
+        return response()->json(Sucursal::get());
+    }
+
     public function store(StoreRequest $request)
     {
         $sucursal = Sucursal::create($request->only(['nombre', 'direccion']));

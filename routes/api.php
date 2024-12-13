@@ -72,6 +72,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('plantilla/all', [PlantillaController::class, 'all']);
     Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
     Route::get('linea/all', [LineaController::class, 'all']);
+    Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::post('users/all', [UserController::class, 'all']);
 
     //--------------------Catalogos para empleados-------------------
