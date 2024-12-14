@@ -302,4 +302,147 @@ class BayController extends ApiController
 
         return response()->json($data);
     }
+
+    public function getDisponibility()
+    {
+        $user = Auth::user();
+        $empleado = $user->empleado;
+
+        // Si el empleado es null, obtener técnicos activos globalmente
+        if (!$empleado) {
+            $tecnicos = $this->filterTecnicosByTechnicianLog(Empleado::whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+                ->whereHas('estatus', function ($query) {
+                    $query->where('nombre', 'Activo');
+                }));
+
+            return $this->respond($tecnicos);
+        }
+
+        // Si el empleado existe, continuar con los filtros de sucursal y línea
+        $sucursal = $empleado->sucursal;
+        $linea = $empleado->linea;
+
+        $tecnicos = $this->filterTecnicosByTechnicianLog(Empleado::where('sucursal_id', $sucursal->id)
+            ->whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+            ->whereHas('linea', function ($query) use ($linea) {
+                $query->where('id', $linea->id);
+            })
+            ->whereHas('estatus', function ($query) {
+                $query->where('nombre', 'Activo');
+            }));
+
+        return $this->respond($tecnicos);
+    }
+
+    private function filterTecnicosByTechnicianLog($query)
+    {
+        $today = now()->toDateString();
+
+        // Obtener todos los técnicos (para asegurar que nadie sea excluido prematuramente)
+        $allTecnicos = $query->with('techniciansLog.activityTechnician')->get();
+
+        // Filtrar técnicos con TechnicianLog del día y actividades específicas
+        $withLogs = $allTecnicos->filter(function ($tecnico) use ($today) {
+            return $tecnico->techniciansLog->contains(function ($log) use ($today) {
+                return $log->created_at->toDateString() === $today &&
+                    in_array($log->activityTechnician->nombre, ['Servicio en campo', 'Diagnostico en campo']);
+            });
+        });
+
+        // Obtener técnicos que no están en withLogs
+        $withoutLogs = $allTecnicos->diff($withLogs);
+
+        return [
+            'withLogs' => $withLogs->values(),
+            'withoutLogs' => $withoutLogs->values(),
+        ];
+    }
+
+    public function getCalendar()
+    {
+        $user = Auth::user();
+        $empleado = $user->empleado;
+
+        // Si el empleado es null, obtener técnicos activos globalmente
+        if (!$empleado) {
+            $tecnicos = Empleado::whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+                ->whereHas('estatus', function ($query) {
+                    $query->where('nombre', 'Activo');
+                })
+                ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
+                ->get();
+        } else {
+            // Si el empleado existe, continuar con los filtros de sucursal y línea
+            $sucursal = $empleado->sucursal;
+            $linea = $empleado->linea;
+
+            $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
+                ->whereHas('puesto', function ($query) {
+                    $query->where('nombre', 'tecnico');
+                })
+                ->whereHas('linea', function ($query) use ($linea) {
+                    $query->where('id', $linea->id);
+                })
+                ->whereHas('estatus', function ($query) {
+                    $query->where('nombre', 'Activo');
+                })
+                ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
+                ->get();
+        }
+
+        $today = now()->toDateString();
+
+        $technicianLogs = TechniciansLog::whereIn('tecnico_id', $tecnicos->pluck('id'))
+            ->whereDate('fecha', '>=', $today) // Filtra logs con fecha igual o posterior a hoy
+            ->with('activityTechnician', 'tecnico')
+            ->orderBy('hora_inicio', 'asc') // Ordena de la más temprana a la más tardía
+            ->get();
+
+        return $this->respond($technicianLogs);
+    }
+
+    public function getTech()
+    {
+        $user = Auth::user();
+        $empleado = $user->empleado;
+
+        // Si el empleado es null, obtener técnicos activos globalmente
+        if (!$empleado) {
+            $tecnicos = Empleado::whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+                ->whereHas('estatus', function ($query) {
+                    $query->where('nombre', 'Activo');
+                })
+                ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
+                ->get();
+
+            return $this->respond($tecnicos);
+        }
+
+        // Si el empleado existe, continuar con los filtros de sucursal y línea
+        $sucursal = $empleado->sucursal;
+        $linea = $empleado->linea;
+
+        $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
+            ->whereHas('puesto', function ($query) {
+                $query->where('nombre', 'tecnico');
+            })
+            ->whereHas('linea', function ($query) use ($linea) {
+                $query->where('id', $linea->id);
+            })
+            ->whereHas('estatus', function ($query) {
+                $query->where('nombre', 'Activo');
+            })
+            ->with('sucursal', 'technician') // Cargar la relación 'sucursal'
+            ->get();
+
+        return $this->respond($tecnicos);
+    }
 }

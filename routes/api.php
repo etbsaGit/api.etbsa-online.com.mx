@@ -148,6 +148,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('pantalla/agricola/{sucursal}', [BayController::class, 'pantallaAgricola']);
     Route::get('pantalla/construccion/{sucursal}', [BayController::class, 'pantallaConstruccion']);
 
+    Route::get('tech', [BayController::class, 'getTech']);
+    Route::get('tech/disponibility', [BayController::class, 'getDisponibility']);
+    Route::get('tech/calendar', [BayController::class, 'getCalendar']);
+
     Route::get('horasTechnician/tech/{id}/{anio}', [HorasTechnicianController::class, 'getPerTech']);
 
     Route::get('techniciansInvoice/wo/{empleado}', [TechniciansInvoiceController::class, 'getWoPerTech']);

@@ -21,6 +21,6 @@ class ActivityTechnician extends Model
 
     public function techniciansLog()
     {
-        return $this->hasMany(TechniciansInvoice::class, 'activity_technician_id');
+        return $this->hasMany(TechniciansLog::class, 'activity_technician_id');
     }
 }
