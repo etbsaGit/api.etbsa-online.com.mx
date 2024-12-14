@@ -17,6 +17,11 @@ class DepartamentoController extends ApiController
         return $this->respond($departamentos);
     }
 
+    public function all()
+    {
+        return response()->json(Departamento::get());
+    }
+
     public function store(StoreRequest $request)
     {
         return response()->json(Departamento::create($request->validated()));

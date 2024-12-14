@@ -29,15 +29,15 @@ trait FilterableModel
 
     public function scopeFilterPost(Builder $query, array $filters)
     {
-        // Asegurarse de que no traiga registros con linea_id null
-        $query->whereNotNull('linea_id');
+        // Asegurarse de que no traiga registros con departamento_id null
+        $query->whereNotNull('departamento_id');
 
-        if (isset($filters['linea_id']) && $filters['linea_id'] !== null) {
-            // Aplicar el filtro principal de linea_id
-            $query->where('linea_id', $filters['linea_id']);
+        if (isset($filters['departamento_id']) && $filters['departamento_id'] !== null) {
+            // Aplicar el filtro principal de departamento_id
+            $query->where('departamento_id', $filters['departamento_id']);
 
-            // Remover el filtro de linea_id del array para evitar duplicados
-            unset($filters['linea_id']);
+            // Remover el filtro de departamento_id del array para evitar duplicados
+            unset($filters['departamento_id']);
 
             // Aplicar los demás filtros con orWhere dentro de un grupo
             $query->where(function ($subQuery) use ($filters) {

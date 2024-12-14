@@ -131,8 +131,8 @@ class PostController extends ApiController
         // }
 
         if ($user && $user->empleado && $user->empleado->sucursal()->where('nombre', 'Corporativo')->doesntExist()) {
-            // $filters['linea_id'] = $user->empleado->linea->id;
-            $filters['departamento_id'] = $user->empleado->departamento->id;
+            $filters['linea_id'] = $user->empleado->linea->id;
+            // $filters['departamento_id'] = $user->empleado->departamento->id;
             $filters['sucursal_id'] = $user->empleado->sucursal->id;
             $filters['puesto_id'] = $user->empleado->puesto->id;
         }
@@ -162,13 +162,13 @@ class PostController extends ApiController
         $user = Auth::user();
         $empleado = $user->empleado;
 
-        // Filtrar posts con `linea_id = null` y condiciones estrictas
+        // Filtrar posts con `departamento_id = null` y condiciones estrictas
         $postsWithNullRelations = Post::with('user.empleado', 'estatus', 'linea', 'sucursal', 'departamento', 'puesto', 'postDoc')
-            ->whereNull('linea_id') // Siempre se aplica
+            ->whereNull('departamento_id') // Siempre se aplica
             ->where(function ($query) use ($empleado) {
                 $query->where(function ($subQuery) use ($empleado) {
-                    $subQuery->whereNull('departamento_id') // `departamento_id` es NULL
-                        ->orWhere('departamento_id', $empleado?->departamento_id); // O coincide con el empleado
+                    $subQuery->whereNull('linea_id') // `linea_id` es NULL
+                        ->orWhere('linea_id', $empleado?->linea_id); // O coincide con el empleado
                 })->where(function ($subQuery) use ($empleado) {
                     $subQuery->whereNull('puesto_id') // `puesto_id` es NULL
                         ->orWhere('puesto_id', $empleado?->puesto_id); // O coincide con el empleado
