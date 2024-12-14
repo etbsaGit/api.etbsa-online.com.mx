@@ -31,10 +31,12 @@ use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\DepartamentoController;
+use App\Http\Controllers\Api\RentalPeriodController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
 use App\Http\Controllers\Api\QualificationController;
+use App\Http\Controllers\Api\RentalMachineController;
 use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Api\TechniciansLogController;
 use App\Http\Controllers\Ecommerce\CategoryController;
@@ -63,31 +65,42 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------Rutas All--------------------
     Route::get('antiguedad/all', [AntiguedadController::class, 'all']);
     Route::get('archivo/all', [ArchivoController::class, 'all']);
-    Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::get('documento/all', [DocumentoController::class, 'all']);
-    Route::get('empleado/all', [EmpleadoController::class, 'all']);
     Route::get('escolaridad/all', [EscolaridadController::class, 'all']);
     Route::get('estadoCivil/all', [EstadoCivilController::class, 'all']);
-    Route::get('Estatus/all', [EstatusController::class, 'all']);
     Route::get('expediente/all', [ExpedienteController::class, 'all']);
-    Route::get('linea/all', [LineaController::class, 'all']);
     Route::get('plantilla/all', [PlantillaController::class, 'all']);
-    Route::get('puesto/all', [PuestoController::class, 'all']);
-    Route::get('requisito/all', [RequisitoController::class, 'all']);
-    Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::get('tipoDeSangre/all', [TipoDeSangreController::class, 'all']);
-    Route::get('user/all', [UserController::class, 'all']);
+    Route::get('linea/all', [LineaController::class, 'all']);
+    Route::get('sucursal/all', [SucursalController::class, 'all']);
+    Route::get('departamento/all', [DepartamentoController::class, 'all']);
+    Route::post('users/all', [UserController::class, 'all']);
+
+    //--------------------Catalogos para empleados-------------------
+    Route::post('departamentos', [DepartamentoController::class, 'index']);
+    Route::post('sucursales', [SucursalController::class, 'index']);
+    Route::post('lineas', [LineaController::class, 'index']);
+    Route::post('requisitos', [RequisitoController::class, 'index']);
+    Route::post('puestos/excel', [PuestoController::class, 'export']);
+    Route::post('puestos', [PuestoController::class, 'index']);
+    Route::apiResource('departamento', DepartamentoController::class);
+    Route::apiResource('sucursal', SucursalController::class);
+    Route::apiResource('linea', LineaController::class);
+    Route::apiResource('requisito', RequisitoController::class);
+    Route::apiResource('puesto', PuestoController::class);
 
     //--------------------Estatus--------------------
-    Route::get('estatus/all', [EstatusController::class, 'all']);
+    Route::post('estatuses', [EstatusController::class, 'index']);
     Route::get('estatus/{tipo}', [EstatusController::class, 'getPerType']);
 
     //--------------------Empleado--------------------
-    Route::post('empleado/filtertwo', [EmpleadoController::class, 'filtertwo']);
-    Route::post('empleado/negocios', [EmpleadoController::class, 'modeloNegocio']);
-    Route::get('empleado/personal', [EmpleadoController::class, 'personal']);
     Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
-    Route::post('empleado/uploadPicture/{empleado}', [EmpleadoController::class, 'uploadPicture']);
+
+    Route::get('empleado/forms', [EmpleadoController::class, 'getforms']);
+    Route::get('empleado/index', [EmpleadoController::class, 'getformsIndex']);
+    Route::post('empleados', [EmpleadoController::class, 'index']);
+    Route::post('empleados/excel', [EmpleadoController::class, 'export']);
+    Route::apiResource('empleado', EmpleadoController::class);
 
     //--------------------Expediente--------------------
     Route::get('/buscar-expediente/{tipoModelo}/{idModelo}', [ExpedienteController::class, 'buscarExpedientePorArchivable']);
@@ -136,10 +149,14 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('pantalla/agricola/{sucursal}', [BayController::class, 'pantallaAgricola']);
     Route::get('pantalla/construccion/{sucursal}', [BayController::class, 'pantallaConstruccion']);
 
+    Route::get('tech', [BayController::class, 'getTech']);
+    Route::get('tech/disponibility', [BayController::class, 'getDisponibility']);
+    Route::get('tech/calendar', [BayController::class, 'getCalendar']);
+
     Route::get('horasTechnician/tech/{id}/{anio}', [HorasTechnicianController::class, 'getPerTech']);
 
     Route::get('techniciansInvoice/wo/{empleado}', [TechniciansInvoiceController::class, 'getWoPerTech']);
-    Route::get('techniciansInvoice/{empleado}', [TechniciansInvoiceController::class, 'getPerTech']);
+    Route::post('techniciansInvoice/empleado', [TechniciansInvoiceController::class, 'getPerTech']);
     Route::get('techniciansLog/options/{empleado?}', [TechniciansLogController::class, 'getOptions']);
     Route::get('techniciansLog/tech/{empleado}', [TechniciansLogController::class, 'getPerTech']);
     Route::get('techniciansLog/techday/{empleado}/{day}', [TechniciansLogController::class, 'getPerTechDay']);
@@ -160,6 +177,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('workOrderDoc', WorkOrderDocController::class);
 
     //--------------------Skill--------------------
+    Route::post('skills', [SkillController::class, 'index']);
     Route::get('skill/puesto/{puesto}', [SkillController::class, 'getPerPuesto']);
     Route::apiResource('skill', SkillController::class);
 
@@ -169,22 +187,16 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('skillrating', SkillRaitngController::class);
 
     //--------------------Resource--------------------
-    Route::resource('empleado', EmpleadoController::class)->except("create", "edit");
     Route::resource('escolaridad', EscolaridadController::class)->except("create", "edit");
     Route::resource('estadoCivil', EstadoCivilController::class)->except("create", "edit");
     Route::resource('Estatus', EstatusController::class)->except("create", "edit");
     Route::resource('expediente', ExpedienteController::class)->except("create", "edit");
-    Route::resource('linea', LineaController::class)->except("create", "edit");
     Route::resource('plantilla', PlantillaController::class)->except("create", "edit");
-    Route::resource('puesto', PuestoController::class)->except("create", "edit");
-    Route::resource('requisito', RequisitoController::class)->except("create", "edit");
-    Route::resource('sucursal', SucursalController::class)->except("create", "edit");
     Route::resource('tipoDeSangre', TipoDeSangreController::class)->except("create", "edit");
     Route::resource('estatus', EstatusController::class)->except("create", "edit");
     Route::resource('user', UserController::class)->except("create", "edit");
     Route::resource('antiguedad', AntiguedadController::class)->except("create", "edit");
     Route::resource('archivo', ArchivoController::class)->except("create", "edit");
-    Route::resource('departamento', DepartamentoController::class)->except("create", "edit");
     Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
     //--------------------User--------------------
@@ -223,11 +235,24 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('activities', ActivityController::class);
 
     //--------------------Post--------------------
+    Route::post('posts', [PostController::class, 'index']);
     Route::get('posts/forms', [PostController::class, 'getforms']);
     Route::post('posts/all', [PostController::class, 'getAll']);
     Route::get('posts/auth', [PostController::class, 'getPerAuth']);
+    Route::get('posts/gen', [PostController::class, 'getPostsWithNullRelations']);
     Route::apiResource('post', PostController::class);
     Route::apiResource('postDoc', PostDocController::class);
+
+    //--------------------RentalMachine--------------------
+    Route::post('rentalMachines', [RentalMachineController::class, 'index']);
+    Route::get('rentalMachines/all', [RentalMachineController::class, 'getAll']);
+    Route::apiResource('rentalMachine', RentalMachineController::class);
+
+    //--------------------RentalPeriod--------------------
+    Route::post('rentalPeriods', [RentalPeriodController::class, 'index']);
+    Route::get('rentalPeriods/all', [RentalPeriodController::class, 'getPerCalendar']);
+    Route::get('rentalPeriods/mail/{rentalPeriod}', [RentalPeriodController::class, 'sendNotify']);
+    Route::apiResource('rentalPeriod', RentalPeriodController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
@@ -245,6 +270,9 @@ Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'up
 
 //--------------------User--------------------
 Route::post('auth/login', [UserController::class, 'login']);
+Route::post('roles', [RoleController::class, 'index']);
+Route::post('permissions', [PermissionController::class, 'index']);
+
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
 

@@ -3,20 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Sucursal;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Sucursal\PutRequest;
 use App\Http\Requests\Sucursal\StoreRequest;
 
 class SucursalController extends ApiController
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Sucursal::paginate(5));
+        $filters = $request->all();
+        $sucursales = Sucursal::filter($filters)->paginate(10);
+        return $this->respond($sucursales);
     }
 
     public function all()
     {
-        return response()->json(Sucursal::with(['linea'])->get());
+        return response()->json(Sucursal::get());
     }
 
     public function store(StoreRequest $request)

@@ -89,7 +89,7 @@ class QualificationController extends Controller
                 })
                 ->with(['technician.empleado' => function ($query) {
                     $query->where('estatus_id', 5)
-                        ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification']);
+                        ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician']);
                 }])
                 ->get();
 
@@ -99,7 +99,7 @@ class QualificationController extends Controller
                 })
                 ->with(['technician.empleado' => function ($query) {
                     $query->where('estatus_id', 5)
-                        ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification']);
+                        ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician']);
                 }])
                 ->get();
         } elseif (in_array('Taller', $roles)) {
@@ -110,7 +110,7 @@ class QualificationController extends Controller
                 })
                 ->with(['technician.empleado' => function ($query) use ($sucursalId) {
                     $query->where('estatus_id', 5)->where('sucursal_id', $sucursalId)
-                        ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification']);
+                        ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician']);
                 }])
                 ->get();
 
@@ -120,7 +120,7 @@ class QualificationController extends Controller
                 })
                 ->with(['technician.empleado' => function ($query) use ($sucursalId) {
                     $query->where('estatus_id', 5)->where('sucursal_id', $sucursalId)
-                        ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification']);
+                        ->with(['linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician']);
                 }])
                 ->get();
         }
@@ -128,16 +128,16 @@ class QualificationController extends Controller
         $empleadosTecnicosSinAsignar = Empleado::whereHas('puesto', function ($query) {
             $query->where('nombre', 'Tecnico');
         })
-        ->whereDoesntHave('technician')
-        ->whereHas('estatus', function ($query) use ($sucursalId) {
-            $query->where('id', 5);
-            // Solo agregar la condición de sucursal_id si sucursalId no es nulo
-            if ($sucursalId !== null) {
-                $query->where('sucursal_id', $sucursalId);
-            }
-        })
-        ->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification')
-        ->get();
+            ->whereDoesntHave('technician')
+            ->whereHas('estatus', function ($query) use ($sucursalId) {
+                $query->where('id', 5);
+                // Solo agregar la condición de sucursal_id si sucursalId no es nulo
+                if ($sucursalId !== null) {
+                    $query->where('sucursal_id', $sucursalId);
+                }
+            })
+            ->with('linea', 'departamento', 'sucursal', 'puesto', 'qualification', 'technician')
+            ->get();
 
 
         $empleadosAgricolaSinTecnico = [];

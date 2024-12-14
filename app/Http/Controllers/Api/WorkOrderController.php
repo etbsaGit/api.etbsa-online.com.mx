@@ -125,28 +125,21 @@ class WorkOrderController extends ApiController
         $user = Auth::user();
         $filters = $request->all();
 
-        $roles = $user->roles->pluck('name')->toArray();
-
-        // Base query
-        $query = WorkOrder::with('tecnico', 'estatus', 'estatusTaller', 'type', 'bay', 'sucursal', 'linea', 'workOrderDoc');
-
-        if (in_array('Admin', $roles)) {
-            // Si el usuario tiene rol de servicio, obtener todas las wos
-            $wos = $query->filter($filters)->get();
-        } elseif (in_array('Taller', $roles)) {
-            // Si el usuario tiene rol de taller, filtrar por sucursal_id y linea_id del empleado
-            $empleado = $user->empleado;
-            if ($empleado && isset($empleado->sucursal_id) && isset($empleado->linea_id)) {
-                $query->where('sucursal_id', $empleado->sucursal_id)
-                    ->where('linea_id', $empleado->linea_id);
-            }
-            $wos = $query->get();
-        } else {
-            // Si el usuario no tiene los roles mencionados, devolver un error o un resultado vacío
-            $wos = collect();
+        if (!$user->hasRole('Admin') && $user->hasRole('Taller') && $user->empleado) {
+            $filters['sucursal_id'] = $user->empleado->sucursal_id;
+            $filters['linea_id'] = $user->empleado->linea_id;
         }
 
+        $liberadoStatusId = Estatus::where('nombre', 'Liberado')->value('id');
+
+        $wos = WorkOrder::filter($filters)
+            ->with('tecnico', 'estatus', 'estatusTaller', 'type', 'bay', 'sucursal', 'linea', 'workOrderDoc')
+            ->orderByRaw("estatus_taller_id != ? desc", [$liberadoStatusId])  // Ordena primero los que no son "Liberado"
+            ->orderBy('fecha_ingreso', 'desc')  // Luego ordena por fecha de actualización
+            ->paginate(10);
+
         return $this->respond($wos);
+
     }
 
     public function getForm()

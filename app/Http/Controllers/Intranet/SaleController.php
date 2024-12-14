@@ -42,7 +42,7 @@ class SaleController extends ApiController
         }
 
         // Filtra las ventas
-        $sales = Sale::filterSale($filters)
+        $sales = Sale::filter($filters)
             ->with('cliente', 'referencia', 'status','empleado','sucursal')
             ->orderBy('date', 'desc') // Ordenar por 'date' de forma descendente
             ->paginate(10);

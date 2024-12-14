@@ -6,13 +6,18 @@ use App\Http\Controllers\ApiController;
 use Spatie\Permission\Models\Permission;
 use App\Http\Requests\Permission\PutRequest;
 use App\Http\Requests\Permission\StoreRequest;
-
-
+use Illuminate\Http\Request;
 class PermissionController extends ApiController
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Permission::with('roles')->get());
+        $filters = $request->all();
+
+        $permissions = Permission::filter($filters)
+            ->with('roles')
+            ->paginate(10);
+        return $this->respond($permissions);
+
     }
 
     public function store(StoreRequest $request)

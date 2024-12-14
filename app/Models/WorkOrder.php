@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class WorkOrder extends Model
@@ -34,6 +35,12 @@ class WorkOrder extends Model
         'sucursal_id',
         'linea_id'
     ];
+
+    // -Scope-
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['ot', 'cliente','maquina']);
+    }
 
     public function tecnico()
     {

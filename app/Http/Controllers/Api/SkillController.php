@@ -6,17 +6,20 @@ use App\Models\Skill;
 use App\Models\Puesto;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Skill\PutRequest;
 use App\Http\Requests\Skill\StoreRequest;
 
-class SkillController extends Controller
+class SkillController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Skill::with('puesto')->get());
+        $filters = $request->all();
+        $skills = Skill::filter($filters)->with('puesto')->paginate(10);
+        return $this->respond($skills);
     }
 
     /**

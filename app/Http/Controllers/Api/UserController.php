@@ -51,11 +51,14 @@ class UserController extends ApiController
         return response()->json(User::paginate(5));
     }
 
-    public function all()
+    public function all(Request $request)
     {
-        return response()->json(User::with('roles', 'roles.permissions', 'empleado', 'permissions', 'evaluee')
-        ->orderBy('email')
-        ->get());
+        $filters = $request->all();
+        $users = User::filter($filters)
+            ->with('roles', 'roles.permissions', 'empleado', 'permissions', 'evaluee')
+            ->orderBy('email')
+            ->paginate(10);
+        return $this->respond($users);
     }
 
     public function store(StoreRequest $request)

@@ -9,6 +9,7 @@ use App\Models\Empleado;
 use App\Models\Sucursal;
 use App\Mail\TravelMailable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Event\StoreEventRequest;
@@ -33,8 +34,31 @@ class EventController extends ApiController
     public function getAll(Request $request)
     {
         $filters = $request->all();
-        $events = Event::filterByTravel($filters)->with('activity', 'empleado', 'parentEvent', 'childEvents', 'travel', 'travel.startPointR', 'travel.endPointR')->get();
-        return $this->respond($events);
+        $sucursalCorpId = Sucursal::where('nombre', 'Corporativo')->value('id');
+
+        $user = Auth::user();
+
+        if (!$user->hasRole('Admin') && $user->empleado && $user->empleado->sucursal_id != $sucursalCorpId) {
+            $filters['end_point'] = $user->empleado->sucursal_id;
+
+            $events = Event::filterByTravel($filters)
+                ->with('activity', 'empleado', 'parentEvent', 'childEvents', 'travel', 'travel.startPointR', 'travel.endPointR')
+                ->get();
+        }
+
+        if ($user->hasRole('Admin') || $user->empleado->sucursal_id == $sucursalCorpId) {
+            $events = Event::filterByTravelAdmin($filters)
+                ->with('activity', 'empleado', 'parentEvent', 'childEvents', 'travel', 'travel.startPointR', 'travel.endPointR')
+                ->get();
+        }
+
+
+        $data = [
+            'sucursales' => Sucursal::all(),
+            'eventos' => $events,
+        ];
+
+        return $this->respond($data);
     }
 
     /**
@@ -59,7 +83,7 @@ class EventController extends ApiController
      */
     public function show(Event $event)
     {
-        return response()->json($event->load('activity', 'empleado', 'parentEvent', 'childEvents', 'travel', 'travel.startPointR', 'travel.endPointR'));
+        return response()->json($event->load('activity', 'empleado', 'parentEvent', 'childEvents.empleado', 'travel', 'travel.startPointR', 'travel.endPointR'));
     }
 
     /**
@@ -183,11 +207,11 @@ class EventController extends ApiController
                 // Construir los datos para el correo
                 $to_email = $activity->empleado->correo_institucional;
                 $correo = [
-                    'from_name'=>$event->empleado->nombreCompleto,
+                    'from_name' => $event->empleado->nombreCompleto,
                     'to_name' => $activity->empleado->nombreCompleto,
                     'activity_details' => $activity->details,
                     'comments' => $activity->comments,
-                    'date'=>$activity->event->date
+                    'date' => $activity->event->date
                 ];
 
                 // Enviar el correo usando el Mailable creado (TravelMailable en este caso)

@@ -23,9 +23,29 @@ class PostController extends ApiController
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(Post::with('user', 'user.empleado', 'linea', 'sucursal', 'departamento', 'puesto', 'estatus', 'postDoc')->get());
+        $filters = $request->all();
+
+        $allPosts = Post::filter($filters)
+            ->with('user', 'user.empleado', 'linea', 'sucursal', 'departamento', 'puesto', 'estatus', 'postDoc')
+            ->get();
+
+        // Agrupar los posts por estatus
+        $postsGroupedByStatus = $allPosts->groupBy(function ($post) {
+            return $post->estatus->nombre ?? 'Sin estatus'; // Agrupa por el nombre del estatus o asigna "Sin estatus" si es nulo
+        });
+
+        $data = [
+            'posts' => $postsGroupedByStatus,
+            'lineas' => Linea::all(),
+            'sucursales' => Sucursal::all(),
+            'departamentos' => Departamento::all(),
+            'puestos' => Puesto::all(),
+            'estatus' => Estatus::where('tipo_estatus', 'post')->get()
+        ];
+
+        return $this->respond($data);
     }
 
     /**
@@ -112,7 +132,7 @@ class PostController extends ApiController
 
         if ($user && $user->empleado && $user->empleado->sucursal()->where('nombre', 'Corporativo')->doesntExist()) {
             $filters['linea_id'] = $user->empleado->linea->id;
-            $filters['departamento_id'] = $user->empleado->departamento->id;
+            // $filters['departamento_id'] = $user->empleado->departamento->id;
             $filters['sucursal_id'] = $user->empleado->sucursal->id;
             $filters['puesto_id'] = $user->empleado->puesto->id;
         }
@@ -121,17 +141,13 @@ class PostController extends ApiController
             ->with('user', 'user.empleado', 'linea', 'sucursal', 'departamento', 'puesto', 'estatus', 'postDoc')
             ->get();
 
-        $postsWithNullRelations = Post::with('user', 'user.empleado', 'linea', 'sucursal', 'departamento', 'puesto', 'estatus', 'postDoc')
-            ->whereNull('linea_id')
-            ->whereNull('sucursal_id')
-            ->whereNull('departamento_id')
-            ->whereNull('puesto_id')
-            ->get();
-
-        $posts = $postsWithNullRelations->merge($allPosts)->sortByDesc('updated_at')->values();
+        // Agrupar los posts por estatus
+        $postsGroupedByStatus = $allPosts->groupBy(function ($post) {
+            return $post->estatus->nombre ?? 'Sin estatus'; // Agrupa por el nombre del estatus o asigna "Sin estatus" si es nulo
+        });
 
         $data = [
-            'post' => $posts,
+            'posts' => $postsGroupedByStatus,
             'lineas' => Linea::all(),
             'sucursales' => Sucursal::all(),
             'departamentos' => Departamento::all(),
@@ -141,10 +157,62 @@ class PostController extends ApiController
         return $this->respond($data);
     }
 
+    public function getPostsWithNullRelations()
+    {
+        $user = Auth::user();
+        $empleado = $user->empleado;
+
+        // Filtrar posts con `departamento_id = null` y condiciones estrictas
+        $postsWithNullRelations = Post::with('user.empleado', 'estatus', 'linea', 'sucursal', 'departamento', 'puesto', 'postDoc')
+            ->whereNull('departamento_id') // Siempre se aplica
+            ->where(function ($query) use ($empleado) {
+                $query->where(function ($subQuery) use ($empleado) {
+                    $subQuery->whereNull('linea_id') // `linea_id` es NULL
+                        ->orWhere('linea_id', $empleado?->linea_id); // O coincide con el empleado
+                })->where(function ($subQuery) use ($empleado) {
+                    $subQuery->whereNull('puesto_id') // `puesto_id` es NULL
+                        ->orWhere('puesto_id', $empleado?->puesto_id); // O coincide con el empleado
+                });
+            })
+            ->get();
+
+        // Agrupar los posts por estatus
+        $postsGroupedByStatus = $postsWithNullRelations->groupBy(function ($post) {
+            return $post->estatus->nombre ?? 'Sin estatus'; // Agrupa por nombre del estatus o asigna "Sin estatus" si es nulo
+        });
+
+        $data = [
+            'posts' => $postsGroupedByStatus,
+            'lineas' => Linea::all(),
+            'sucursales' => Sucursal::all(),
+            'departamentos' => Departamento::all(),
+            'puestos' => Puesto::all(),
+            'estatus' => Estatus::where('tipo_estatus', 'post')->get()
+        ];
+
+        return $this->respond($data);
+    }
+
     public function getPerAuth()
     {
         $user = Auth::user();
+
         $posts = Post::where('user_id', $user->id)->with('user', 'user.empleado', 'linea', 'sucursal', 'departamento', 'puesto', 'estatus', 'postDoc')->get();
-        return $this->respond($posts);
+
+        // Agrupar los posts por estatus
+        $postsGroupedByStatus = $posts->groupBy(function ($post) {
+            return $post->estatus->nombre ?? 'Sin estatus'; // Agrupa por nombre del estatus o asigna "Sin estatus" si es nulo
+        });
+
+        $data = [
+            'posts' => $postsGroupedByStatus,
+            'lineas' => Linea::all(),
+            'sucursales' => Sucursal::all(),
+            'departamentos' => Departamento::all(),
+            'puestos' => Puesto::all(),
+            'estatus' => Estatus::where('tipo_estatus', 'post')->get()
+        ];
+
+        return $this->respond($data);
     }
 }

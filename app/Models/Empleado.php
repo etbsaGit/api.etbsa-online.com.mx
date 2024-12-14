@@ -76,7 +76,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra','apellidoCompleto'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto'];
 
     public function picture(): Attribute
     {
@@ -192,6 +192,12 @@ class Empleado extends Model
         return Attribute::make(
             get: fn() => "empleados/id_" . $this->id . "/foto_de_perfil",
         );
+    }
+
+    // -Scope-
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno', 'curp', 'rfc', 'telefono_institucional']);
     }
 
     public function user()
@@ -326,6 +332,13 @@ class Empleado extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class, 'empleado_id');
+    }
+
+    // ---------------------------------Rentals.periods---------------------------------------------------------
+
+    public function rentalPeriod()
+    {
+        return $this->hasMany(RentalPeriod::class, 'empleado_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------

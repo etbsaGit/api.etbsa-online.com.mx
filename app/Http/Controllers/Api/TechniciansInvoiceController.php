@@ -70,10 +70,14 @@ class TechniciansInvoiceController extends ApiController
     }
 
 
-    public function getPerTech(Empleado $empleado)
+    public function getPerTech(Request $request)
     {
+        $filters = $request->all();
         // Consultar las WorkOrder que coincidan con el tecnico_id y el estatus_taller_id
-        $invoices = TechniciansInvoice::where('tecnico_id', $empleado->id)->with('wo')->get();
+        $invoices = TechniciansInvoice::filter($filters)
+            ->with('wo')
+            ->orderBy('fecha', 'desc')
+            ->paginate(10);
 
         return $this->respond($invoices);
     }

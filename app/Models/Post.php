@@ -6,6 +6,8 @@ use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
+
 
 class Post extends Model
 {
@@ -25,6 +27,12 @@ class Post extends Model
         'puesto_id',
         'estatus_id'
     ];
+
+    // -Scope-
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['name', 'email']);
+    }
 
     public function user()
     {
