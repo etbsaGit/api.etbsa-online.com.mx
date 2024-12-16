@@ -366,9 +366,10 @@ class BayController extends ApiController
     {
         $user = Auth::user();
         $empleado = $user->empleado;
+        $roles = $user->roles->pluck('name')->toArray();
 
         // Si el empleado es null, obtener técnicos activos globalmente
-        if (!$empleado) {
+        if (!$empleado || in_array('Admin', $roles)) {
             $tecnicos = Empleado::whereHas('puesto', function ($query) {
                 $query->where('nombre', 'tecnico');
             })
@@ -411,9 +412,10 @@ class BayController extends ApiController
     {
         $user = Auth::user();
         $empleado = $user->empleado;
+        $roles = $user->roles->pluck('name')->toArray();
 
         // Si el empleado es null, obtener técnicos activos globalmente
-        if (!$empleado) {
+        if (!$empleado || in_array('Admin', $roles)) {
             $tecnicos = Empleado::whereHas('puesto', function ($query) {
                 $query->where('nombre', 'tecnico');
             })

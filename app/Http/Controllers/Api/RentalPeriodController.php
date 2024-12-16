@@ -108,7 +108,7 @@ class RentalPeriodController extends ApiController
         $vendedorAsignado = $rentalPeriod->empleado;
 
         $correos = [
-            'contadorGeneral' => $contadorGeneral->user?->email,
+            'contadorGeneral' => 'contabilidadcf@etbsa.com.mx',
             'gerenteRentas' => $gerenteRentas->user?->email,
             'vendedorAsignado' => $vendedorAsignado->user?->email,
         ];

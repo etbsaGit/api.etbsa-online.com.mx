@@ -20,6 +20,12 @@ class Bay extends Model
         'linea_id'
     ];
 
+    // -Scope-
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['nombre']);
+    }
+
     public function estatus()
     {
         return $this->belongsTo(Estatus::class, 'estatus_id');
