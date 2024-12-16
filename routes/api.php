@@ -75,6 +75,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::post('users/all', [UserController::class, 'all']);
+    Route::get('requisito/all', [RequisitoController::class, 'all']);
 
     //--------------------Catalogos para empleados-------------------
     Route::post('departamentos', [DepartamentoController::class, 'index']);

@@ -17,6 +17,12 @@ class RequisitoController extends ApiController
         return $this->respond($requisitos);
     }
 
+    public function all()
+    {
+        $requisitos = Requisito::get();
+        return $this->respond($requisitos);
+    }
+
     public function store(StoreRequest $request)
     {
         return response()->json(Requisito::create($request->validated()));
