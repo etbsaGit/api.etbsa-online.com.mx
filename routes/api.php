@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\SkillRaitngController;
+use App\Http\Controllers\Api\VacationDayController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\DepartamentoController;
 use App\Http\Controllers\Api\RentalPeriodController;
@@ -254,6 +255,15 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('rentalPeriods/all', [RentalPeriodController::class, 'getPerCalendar']);
     Route::get('rentalPeriods/mail/{rentalPeriod}', [RentalPeriodController::class, 'sendNotify']);
     Route::apiResource('rentalPeriod', RentalPeriodController::class);
+
+    //--------------------Vacations--------------------
+    Route::post('vacationDays', [VacationDayController::class, 'index']);
+    Route::post('vacationDays/auth', [VacationDayController::class, 'myIndex']);
+    Route::post('vacationDay/storeOnly', [VacationDayController::class, 'storeOnly']);
+    Route::get('vacationDay/forms', [VacationDayController::class, 'getforms']);
+    Route::get('vacationDay/on/{vacationDay}', [VacationDayController::class, 'setValidatedOn']);
+    Route::get('vacationDay/off/{vacationDay}', [VacationDayController::class, 'setValidatedOff']);
+    Route::apiResource('vacationDay', VacationDayController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

@@ -12,6 +12,7 @@ use App\Models\Departamento;
 use App\Models\TipoDeSangre;
 use App\Models\Intranet\Sale;
 use App\Traits\FilterableModel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Builder;
@@ -76,7 +77,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones'];
 
     public function picture(): Attribute
     {
@@ -93,6 +94,29 @@ class Empleado extends Model
     public function getApellidoCompletoAttribute()
     {
         return $this->apellido_paterno . ' ' . $this->apellido_materno . ' ' . $this->nombre . ' ' . $this->segundo_nombre;
+    }
+
+    public function getAniosVacacionesAttribute()
+    {
+        $fechaIngreso = \Carbon\Carbon::parse($this->fecha_de_ingreso);
+        $hoy = \Carbon\Carbon::now();
+        $aniosCumplidos = $fechaIngreso->diffInYears($hoy);
+
+        $dias_correspondientes = Antiguedad::where('id', $aniosCumplidos)->value('dias_correspondientes');
+
+        // Obtener el conteo de vacationDays para este empleado y años cumplidos
+        $vacationDaysCount = VacationDay::where('empleado_id', $this->id)
+            ->where('anios_cumplidos', $aniosCumplidos)
+            ->where('validated', 1)
+            ->sum('dias_disfrute');
+
+        $resultados = [
+            'cumplidos' => $aniosCumplidos,
+            'correspondientes' => $dias_correspondientes,
+            'subtotal' => $dias_correspondientes - $vacationDaysCount,
+        ];
+
+        return $resultados;
     }
 
     // public function getDesempenoManoObraAttribute()
@@ -339,6 +363,13 @@ class Empleado extends Model
     public function rentalPeriod()
     {
         return $this->hasMany(RentalPeriod::class, 'empleado_id');
+    }
+
+    // ---------------------------------VacationDay---------------------------------------------------------
+
+    public function vacationDays()
+    {
+        return $this->hasMany(VacationDay::class, 'empleado_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------

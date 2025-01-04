@@ -74,4 +74,11 @@ class Sucursal extends Model
     {
         return $this->hasMany(Sale::class, 'sucursal_id');
     }
+
+    // ---------------------------------VacationDay---------------------------------------------------------
+
+    public function vacationDays()
+    {
+        return $this->hasMany(VacationDay::class, 'sucursal_id');
+    }
 }
