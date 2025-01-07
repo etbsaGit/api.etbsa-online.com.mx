@@ -29,6 +29,22 @@ class VacationDay extends Model
         'comentarios'
     ];
 
+    protected $appends = ['color'];
+
+    public function getColorAttribute()
+    {
+        // Obtener el ID del empleado asociado al evento
+        $employeeId = $this->empleado_id;
+
+        // Usar el ID del empleado para generar un color único
+        // Aquí se puede utilizar cualquier algoritmo de generación de colores
+        // Por ejemplo, puedes convertir el ID a un valor hexadecimal y tomar solo los primeros 6 caracteres
+        $color = substr(md5($employeeId), 0, 6);
+
+        // Devolver el color en formato hexadecimal
+        return '#' . $color;
+    }
+
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {

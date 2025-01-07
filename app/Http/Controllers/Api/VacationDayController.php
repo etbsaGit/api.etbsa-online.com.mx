@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Carbon\Carbon;
 use App\Models\Puesto;
 use App\Models\Empleado;
 use App\Models\Sucursal;
@@ -222,5 +223,29 @@ class VacationDayController extends ApiController
             }
         }
         return $this->respondSuccess();
+    }
+
+    public function getVacationCalendar($date)
+    {
+        // Convierte la fecha proporcionada en un objeto Carbon para manejar el mes y año
+        $parsedDate = Carbon::parse($date);
+        $month = $parsedDate->month;
+        $year = $parsedDate->year;
+
+        // Consulta con Eloquent para filtrar los registros e incluir la relación
+        $vacationDays = VacationDay::with('empleado') // Incluye la relación 'empleado'
+            ->where('validated', 1) // Solo registros validados
+            ->where(function ($query) use ($month, $year) {
+                $query->where(function ($subQuery) use ($month, $year) {
+                    $subQuery->whereMonth('fecha_inicio', $month)
+                        ->whereYear('fecha_inicio', $year);
+                })->orWhere(function ($subQuery) use ($month, $year) {
+                    $subQuery->whereMonth('fecha_termino', $month)
+                        ->whereYear('fecha_termino', $year);
+                });
+            })
+            ->get();
+
+        return $this->respond($vacationDays);
     }
 }

@@ -263,6 +263,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('vacationDay/forms', [VacationDayController::class, 'getforms']);
     Route::get('vacationDay/on/{vacationDay}', [VacationDayController::class, 'setValidatedOn']);
     Route::get('vacationDay/off/{vacationDay}', [VacationDayController::class, 'setValidatedOff']);
+    Route::get('vacationDay/calendar/{date}', [VacationDayController::class, 'getVacationCalendar']);
     Route::apiResource('vacationDay', VacationDayController::class);
 });
 //--------------------landingPage--------------------
