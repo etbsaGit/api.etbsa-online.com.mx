@@ -344,5 +344,45 @@ class EmpleadoController extends ApiController
         ]);
     }
 
+    public function getVacations(Request $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
 
+        // Validar las fechas del request
+        $request->validate([
+            'from' => 'required|date',
+            'to' => 'required|date|after_or_equal:from',
+        ]);
+
+        // Filtrar empleados con días de vacaciones entre las fechas indicadas
+        $employees = Empleado::with([
+            'archivable',
+            'archivable.requisito',
+            'escolaridad',
+            'departamento',
+            'estado_civil',
+            'jefe_directo',
+            'linea',
+            'puesto',
+            'sucursal',
+            'tipo_de_sangre',
+            'user',
+            'estatus',
+            'termination.estatus',
+            'termination.reason',
+        ])
+            ->whereHas('vacationDays', function ($query) use ($from, $to) {
+                $query->where(function ($q) use ($from, $to) {
+                    $q->whereBetween('fecha_inicio', [$from, $to])
+                        ->orWhereBetween('fecha_termino', [$from, $to])
+                        ->orWhere(function ($q2) use ($from, $to) {
+                            $q2->where('fecha_inicio', '<', $from)
+                                ->where('fecha_termino', '>', $to);
+                        });
+                });
+            })->paginate(10);
+
+        return response()->json($employees);
+    }
 }
