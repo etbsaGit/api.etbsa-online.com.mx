@@ -130,6 +130,15 @@ class WorkOrderController extends ApiController
             $filters['linea_id'] = $user->empleado->linea_id;
         }
 
+        // Verificar si la línea tiene nombre "combo" y ajustar los filtros
+        if (isset($filters['linea_id'])) {
+            $lineaNombre = Linea::where('id', $filters['linea_id'])->value('nombre');
+            if ($lineaNombre === 'Combo') {
+                unset($filters['linea_id']); // Eliminar el filtro de línea
+                $filters['sucursal_id'] = $user->empleado->sucursal_id; // Solo aplicar filtro de sucursal
+            }
+        }
+
         $liberadoStatusId = Estatus::where('nombre', 'Liberado')->value('id');
 
         $wos = WorkOrder::filter($filters)
@@ -139,7 +148,6 @@ class WorkOrderController extends ApiController
             ->paginate(10);
 
         return $this->respond($wos);
-
     }
 
     public function getForm()

@@ -102,6 +102,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('empleado/index', [EmpleadoController::class, 'getformsIndex']);
     Route::post('empleados', [EmpleadoController::class, 'index']);
     Route::post('empleados/excel', [EmpleadoController::class, 'export']);
+    Route::post('empleados/excel/vacations', [EmpleadoController::class, 'exportVacations']);
     Route::post('empleados/vacations', [EmpleadoController::class, 'getVacations']);
     Route::apiResource('empleado', EmpleadoController::class);
 

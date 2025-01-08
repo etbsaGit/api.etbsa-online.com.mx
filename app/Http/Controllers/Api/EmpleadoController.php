@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Exports\EmpleadosExport;
+use App\Exports\EmpleadosVacationsExport;
 use App\Models\User;
 use App\Models\Linea;
 use App\Models\Puesto;
@@ -322,6 +323,39 @@ class EmpleadoController extends ApiController
         $filters = $request->except(['search', 'page']);
         // Crear una instancia de la clase de exportación con los filtros
         $export = new EmpleadosExport($filters);
+
+        // Obtener los datos para verificar si están vacíos
+        $data = $export->collection();
+
+        // Verificar si no hay datos para exportar
+        if ($data->isEmpty()) {
+            return response()->json(['error' => 'No hay datos para exportar.']);
+        }
+
+        // Exportar el archivo en formato XLSX con los filtros aplicados
+        $fileContent = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+
+        // Convertir el contenido del archivo a Base64
+        $base64 = base64_encode($fileContent);
+
+        // Devolver la respuesta con el archivo en Base64
+        return response()->json([
+            'file_name' => 'empleados.xlsx',
+            'file_base64' => $base64,
+        ]);
+    }
+
+    public function exportVacations(Request $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
+
+        // Validar que 'from' y 'to' no estén vacíos
+        if (empty($from) || empty($to)) {
+            return response()->json(['Fechas vacías' => 'Los campos "Del:" y "Al:" son obligatorios.'], 400);
+        }
+
+        $export = new EmpleadosVacationsExport($from, $to);
 
         // Obtener los datos para verificar si están vacíos
         $data = $export->collection();
