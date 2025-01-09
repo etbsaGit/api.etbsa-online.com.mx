@@ -36,7 +36,7 @@ class StoreEventRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'date' => ['required', 'date_format:Y-m-d'],
+            'date' => ['required', 'date'],
             'available_seats' => ['required', 'integer'],
             'empleado_id' => ['required', 'exists:empleados,id'],
             'travels' => ['required', 'array'],

@@ -41,4 +41,11 @@ class Puesto extends Model
     {
         return $this->hasMany(Post::class, 'puesto_id');
     }
+
+    // ---------------------------------VacationDay---------------------------------------------------------
+
+    public function vacationDays()
+    {
+        return $this->hasMany(VacationDay::class, 'puesto_id');
+    }
 }

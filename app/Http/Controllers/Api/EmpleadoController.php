@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Exports\EmpleadosExport;
+use App\Exports\EmpleadosVacationsExport;
 use App\Models\User;
 use App\Models\Linea;
 use App\Models\Puesto;
@@ -344,5 +345,78 @@ class EmpleadoController extends ApiController
         ]);
     }
 
+    public function exportVacations(Request $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
 
+        // Validar que 'from' y 'to' no estén vacíos
+        if (empty($from) || empty($to)) {
+            return response()->json(['Fechas vacías' => 'Los campos "Del:" y "Al:" son obligatorios.'], 400);
+        }
+
+        $export = new EmpleadosVacationsExport($from, $to);
+
+        // Obtener los datos para verificar si están vacíos
+        $data = $export->collection();
+
+        // Verificar si no hay datos para exportar
+        if ($data->isEmpty()) {
+            return response()->json(['error' => 'No hay datos para exportar.']);
+        }
+
+        // Exportar el archivo en formato XLSX con los filtros aplicados
+        $fileContent = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+
+        // Convertir el contenido del archivo a Base64
+        $base64 = base64_encode($fileContent);
+
+        // Devolver la respuesta con el archivo en Base64
+        return response()->json([
+            'file_name' => 'empleados.xlsx',
+            'file_base64' => $base64,
+        ]);
+    }
+
+    public function getVacations(Request $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
+
+        // Validar las fechas del request
+        $request->validate([
+            'from' => 'required|date',
+            'to' => 'required|date|after_or_equal:from',
+        ]);
+
+        // Filtrar empleados con días de vacaciones entre las fechas indicadas
+        $employees = Empleado::with([
+            'archivable',
+            'archivable.requisito',
+            'escolaridad',
+            'departamento',
+            'estado_civil',
+            'jefe_directo',
+            'linea',
+            'puesto',
+            'sucursal',
+            'tipo_de_sangre',
+            'user',
+            'estatus',
+            'termination.estatus',
+            'termination.reason',
+        ])
+            ->whereHas('vacationDays', function ($query) use ($from, $to) {
+                $query->where(function ($q) use ($from, $to) {
+                    $q->whereBetween('fecha_inicio', [$from, $to])
+                        ->orWhereBetween('fecha_termino', [$from, $to])
+                        ->orWhere(function ($q2) use ($from, $to) {
+                            $q2->where('fecha_inicio', '<', $from)
+                                ->where('fecha_termino', '>', $to);
+                        });
+                });
+            })->paginate(10);
+
+        return response()->json($employees);
+    }
 }

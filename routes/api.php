@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
 use App\Http\Controllers\Api\SkillRaitngController;
+use App\Http\Controllers\Api\VacationDayController;
 use App\Http\Controllers\Ecommerce\BrandController;
 use App\Http\Controllers\Api\DepartamentoController;
 use App\Http\Controllers\Api\RentalPeriodController;
@@ -43,6 +44,7 @@ use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
+use App\Http\Controllers\Api\IncapacityController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 
 /*
@@ -101,6 +103,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('empleado/index', [EmpleadoController::class, 'getformsIndex']);
     Route::post('empleados', [EmpleadoController::class, 'index']);
     Route::post('empleados/excel', [EmpleadoController::class, 'export']);
+    Route::post('empleados/excel/vacations', [EmpleadoController::class, 'exportVacations']);
+    Route::post('empleados/vacations', [EmpleadoController::class, 'getVacations']);
     Route::apiResource('empleado', EmpleadoController::class);
 
     //--------------------Expediente--------------------
@@ -254,6 +258,22 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('rentalPeriods/all', [RentalPeriodController::class, 'getPerCalendar']);
     Route::get('rentalPeriods/mail/{rentalPeriod}', [RentalPeriodController::class, 'sendNotify']);
     Route::apiResource('rentalPeriod', RentalPeriodController::class);
+
+    //--------------------Vacations--------------------
+    Route::post('vacationDays', [VacationDayController::class, 'index']);
+    Route::post('vacationDays/auth', [VacationDayController::class, 'myIndex']);
+    Route::post('vacationDay/storeOnly', [VacationDayController::class, 'storeOnly']);
+    Route::get('vacationDay/forms', [VacationDayController::class, 'getforms']);
+    Route::get('vacationDay/on/{vacationDay}', [VacationDayController::class, 'setValidatedOn']);
+    Route::get('vacationDay/off/{vacationDay}', [VacationDayController::class, 'setValidatedOff']);
+    Route::get('vacationDay/calendar/{date}', [VacationDayController::class, 'getVacationCalendar']);
+    Route::apiResource('vacationDay', VacationDayController::class);
+
+    //--------------------Incapacity--------------------
+    Route::post('incapacities', [IncapacityController::class, 'index']);
+    Route::get('incapacity/forms', [IncapacityController::class, 'getforms']);
+    Route::get('incapacity/calendar/{date}', [IncapacityController::class, 'getIncapacityCalendar']);
+    Route::apiResource('incapacity', IncapacityController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
