@@ -44,6 +44,7 @@ use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
+use App\Http\Controllers\Api\IncapacityController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 
 /*
@@ -267,6 +268,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('vacationDay/off/{vacationDay}', [VacationDayController::class, 'setValidatedOff']);
     Route::get('vacationDay/calendar/{date}', [VacationDayController::class, 'getVacationCalendar']);
     Route::apiResource('vacationDay', VacationDayController::class);
+
+    //--------------------Incapacity--------------------
+    Route::post('incapacities', [IncapacityController::class, 'index']);
+    Route::get('incapacity/forms', [IncapacityController::class, 'getforms']);
+    Route::get('incapacity/calendar/{date}', [IncapacityController::class, 'getIncapacityCalendar']);
+    Route::apiResource('incapacity', IncapacityController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
