@@ -12,6 +12,8 @@ class Incapacity extends Model
     use HasFactory, FilterableModel;
 
     protected $fillable = [
+        'folio',
+        'inicial',
         'empleado_id',
         'sucursal_id',
         'puesto_id',
@@ -19,10 +21,11 @@ class Incapacity extends Model
         'fecha_inicio',
         'fecha_termino',
         'fecha_regreso',
-        'comentarios'
+        'comentarios',
+        'incapacity_id'
     ];
 
-    protected $appends = ['color'];
+    protected $appends = ['color', 'total', 'latestDate'];
 
     public function getColorAttribute()
     {
@@ -38,10 +41,58 @@ class Incapacity extends Model
         return '#' . $color;
     }
 
+    public function getTotalAttribute()
+    {
+        // Calcula los días del registro principal
+        $parentDays = 0;
+        if (!empty($this->fecha_inicio) && !empty($this->fecha_termino)) {
+            $parentDays = \Carbon\Carbon::parse($this->fecha_inicio)
+                ->diffInDays(\Carbon\Carbon::parse($this->fecha_termino)) + 1; // +1 para incluir el día final
+        }
+
+        // Calcula los días de los hijos
+        $childrenDays = $this->children
+            ->map(function ($child) {
+                if (!empty($child['fecha_inicio']) && !empty($child['fecha_termino'])) {
+                    return \Carbon\Carbon::parse($child['fecha_inicio'])
+                        ->diffInDays(\Carbon\Carbon::parse($child['fecha_termino'])) + 1;
+                }
+                return 0;
+            })
+            ->sum();
+
+        // Retorna el total
+        return $parentDays + $childrenDays;
+    }
+
+    public function getLatestDateAttribute()
+    {
+        // Obtén la fecha de regreso del padre como un objeto Carbon, o null si no existe
+        $latestReturnDate = !empty($this->fecha_regreso)
+            ? \Carbon\Carbon::parse($this->fecha_regreso)
+            : null;
+
+        // Recorre las fechas de regreso de los hijos
+        foreach ($this->children as $child) {
+            if (!empty($child['fecha_regreso'])) {
+                $childReturnDate = \Carbon\Carbon::parse($child['fecha_regreso']);
+
+                // Si no hay fecha principal o la fecha del hijo es más grande, actualízala
+                if ($latestReturnDate === null || $childReturnDate->greaterThan($latestReturnDate)) {
+                    $latestReturnDate = $childReturnDate;
+                }
+            }
+        }
+
+        // Devuelve la fecha más lejana como cadena, o null si no hay fechas
+        return $latestReturnDate ? $latestReturnDate->toDateString() : null;
+    }
+
+
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['comentarios']);
+        return $this->scopeFilterSearch($query, $filters, ['folio', 'comentarios']);
     }
 
     public function empleado()
@@ -62,5 +113,23 @@ class Incapacity extends Model
     public function estatus()
     {
         return $this->belongsTo(Estatus::class, 'estatus_id');
+    }
+
+    /**
+     * Relación: Incapacidad padre.
+     * Cada incapacidad puede pertenecer a una incapacidad "padre".
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Incapacity::class, 'incapacity_id');
+    }
+
+    /**
+     * Relación: Incapacidades hijas.
+     * Cada incapacidad puede tener muchas incapacidades "hijas".
+     */
+    public function children()
+    {
+        return $this->hasMany(Incapacity::class, 'incapacity_id');
     }
 }

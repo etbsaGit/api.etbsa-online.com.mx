@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
 use App\Models\Puesto;
+use App\Models\Estatus;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use App\Models\Incapacity;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Incapacity\IncapacityRequest;
-use App\Models\Estatus;
+use App\Http\Requests\Incapacity\IncapacityPutRequest;
 
 class IncapacityController extends ApiController
 {
@@ -23,7 +24,8 @@ class IncapacityController extends ApiController
         $filters = $request->all();
 
         $incapacities = Incapacity::filter($filters)
-            ->with(['empleado', 'sucursal', 'puesto', 'estatus'])
+            ->with(['empleado', 'sucursal', 'puesto', 'estatus', 'children'])
+            ->where('inicial', 1)
             ->orderBy('id', 'desc') // Ordenar por ID de forma descendente
             ->paginate(10);
 
@@ -45,17 +47,29 @@ class IncapacityController extends ApiController
      */
     public function show(Incapacity $incapacity)
     {
-        return $this->respond($incapacity->load('empleado', 'puesto', 'sucursal','estatus'));
+        return $this->respond($incapacity->load('empleado', 'puesto', 'sucursal', 'estatus', 'children'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(IncapacityRequest $request, Incapacity $incapacity)
+    public function update(IncapacityPutRequest $request, Incapacity $incapacity)
     {
+        // Actualiza el registro principal
         $incapacity->update($request->validated());
 
-        return $this->respond($incapacity);
+        // Procesa los registros en 'children'
+        if ($request->has('children')) {
+            foreach ($request->input('children') as $childData) {
+                // Usa updateOrCreate para actualizar o crear registros en la base de datos
+                $incapacity->children()->updateOrCreate(
+                    ['id' => $childData['id'] ?? null], // Busca por 'id' si existe, o crea uno nuevo
+                    $childData // Actualiza o crea con estos datos
+                );
+            }
+        }
+
+        return $this->respond($incapacity->load('children')); // Retorna el registro con los hijos cargados
     }
 
     /**
