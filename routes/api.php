@@ -78,6 +78,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::post('users/all', [UserController::class, 'all']);
     Route::get('requisito/all', [RequisitoController::class, 'all']);
+    Route::get('puesto/all', [PuestoController::class, 'all']);
 
     //--------------------Catalogos para empleados-------------------
     Route::post('departamentos', [DepartamentoController::class, 'index']);
@@ -100,6 +101,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
 
     Route::get('empleado/forms', [EmpleadoController::class, 'getforms']);
+    Route::post('empleado/negocios', [EmpleadoController::class, 'negocios']);
     Route::get('empleado/index', [EmpleadoController::class, 'getformsIndex']);
     Route::post('empleados', [EmpleadoController::class, 'index']);
     Route::post('empleados/excel', [EmpleadoController::class, 'export']);
@@ -174,6 +176,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('activityTechnician', ActivityTechnicianController::class);
     Route::apiResource('techniciansInvoice', TechniciansInvoiceController::class);
     Route::apiResource('techniciansLog', TechniciansLogController::class);
+
+    //--------------------Bays--------------------
+    Route::get('bays/sucursal', [BayController::class, 'getSucursal']);
+
 
     //--------------------WorkOrder--------------------
     Route::get('wos/getform', [WorkOrderController::class, 'getForm']);

@@ -35,6 +35,8 @@ class StoreWorkOrderRequest extends FormRequest
             'mano_obra' => ['nullable', 'numeric'],
             'refacciones' => ['nullable', 'numeric'],
             'horas_facturadas' => ['nullable', 'numeric'],
+            'km' => ['nullable', 'numeric'],
+            'foraneo' => ['nullable', 'numeric'],
             'horas_reales' => ['nullable', 'numeric'],
             'comentarios' => ['nullable', 'string', 'max:191'],
             'tecnico_id' => ['nullable', 'exists:empleados,id'],

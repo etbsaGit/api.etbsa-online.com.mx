@@ -19,6 +19,11 @@ class PuestoController extends ApiController
         return $this->respond($puestos);
     }
 
+    public function all()
+    {
+        return $this->respond(Puesto::get());
+    }
+
     public function store(StoreRequest $request)
     {
         return response()->json(Puesto::create($request->validated()));
