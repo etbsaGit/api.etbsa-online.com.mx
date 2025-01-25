@@ -77,7 +77,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones','prod'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones', 'prod'];
 
     public function picture(): Attribute
     {
@@ -121,22 +121,22 @@ class Empleado extends Model
 
     public function getProdAttribute()
     {
-       // Obtén el primer día del mes actual
-       $startOfMonth = now()->startOfMonth();
+        // Obtén el primer día del mes actual
+        $startOfMonth = now()->startOfMonth();
 
-       // Obtén el último día del mes actual
-       $endOfMonth = now()->endOfMonth();
+        // Obtén el último día del mes actual
+        $endOfMonth = now()->endOfMonth();
 
-       // Obtén los invoices relacionados con el empleado
-       // Filtra por el mes actual
-       $invoices = $this->invoices()
-           ->whereBetween('fecha', [$startOfMonth, $endOfMonth])
-           ->get();
+        // Obtén los invoices relacionados con el empleado
+        // Filtra por el mes actual
+        $invoices = $this->invoices()
+            ->whereBetween('fecha', [$startOfMonth, $endOfMonth])
+            ->get();
 
         // Suma las horas facturadas de cada invoice
         $totalHorasFacturadas = $invoices->sum('horas_facturadas');
 
-           $resultados = [
+        $resultados = [
             'horas' => $totalHorasFacturadas,
             'value' => $totalHorasFacturadas * 800,
         ];
@@ -395,6 +395,13 @@ class Empleado extends Model
     public function vacationDays()
     {
         return $this->hasMany(VacationDay::class, 'empleado_id');
+    }
+
+    // ---------------------------------Visits---------------------------------------------------------
+
+    public function visits()
+    {
+        return $this->hasMany(Visit::class, 'empleado_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------

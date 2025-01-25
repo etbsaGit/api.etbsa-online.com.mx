@@ -46,6 +46,7 @@ use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\IncapacityController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
+use App\Http\Controllers\Api\VisitController;
 
 /*
 |--------------------------------------------------------------------------
@@ -280,6 +281,14 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('incapacity/forms', [IncapacityController::class, 'getforms']);
     Route::get('incapacity/calendar/{date}', [IncapacityController::class, 'getIncapacityCalendar']);
     Route::apiResource('incapacity', IncapacityController::class);
+
+    //--------------------Visits--------------------
+    Route::post('visits', [VisitController::class, 'index']);
+    Route::get('visit/forms', [VisitController::class, 'getforms']);
+    Route::get('visit/calendar/{date}', [VisitController::class, 'getVisitCalendar']);
+    Route::apiResource('visit', VisitController::class);
+
+
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
