@@ -404,6 +404,10 @@ class Empleado extends Model
         return $this->hasMany(Visit::class, 'empleado_id');
     }
 
+    public function prospects()
+    {
+        return $this->hasMany(Prospect::class, 'empleado_id');
+    }
     // ---------------------------------scope---------------------------------------------------------
 
     public function scopeFiltertwo(Builder $query, array $filters)

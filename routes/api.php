@@ -45,6 +45,7 @@ use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\IncapacityController;
+use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\VisitController;
 
@@ -288,7 +289,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('visit/calendar/{date}', [VisitController::class, 'getVisitCalendar']);
     Route::apiResource('visit', VisitController::class);
 
-
+    //--------------------Prospect--------------------
+    Route::post('prospects', [ProspectController::class, 'index']);
+    Route::get('prospect/forms', [ProspectController::class, 'getforms']);
+    Route::apiResource('prospect', ProspectController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
