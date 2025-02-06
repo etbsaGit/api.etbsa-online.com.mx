@@ -2,6 +2,7 @@
 
 namespace App\Models\Intranet;
 
+use App\Models\ProspectRiego;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,5 +19,10 @@ class Riego extends Model
     public function clienteRiego()
     {
         return $this->hasMany(ClienteRiego::class, 'riego_id');
+    }
+
+    public function prospectRiego()
+    {
+        return $this->hasMany(ProspectRiego::class, 'riego_id');
     }
 }

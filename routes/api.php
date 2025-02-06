@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\RentalPeriodController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
+use App\Http\Controllers\Api\ProspectRiegoController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Api\RentalMachineController;
 use App\Http\Controllers\Ecommerce\ProductController;
@@ -300,6 +301,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('prospectCultivo/options', [ProspectCultivoController::class, 'getOptions']);
     Route::apiResource('prospectCultivo', ProspectCultivoController::class);
 
+    //--------------------ProspectRiego--------------------
+    Route::get('prospectRiego/prospect/{prospect}', [ProspectRiegoController::class, 'getPerProspect']);
+    Route::apiResource('prospectRiego', ProspectRiegoController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

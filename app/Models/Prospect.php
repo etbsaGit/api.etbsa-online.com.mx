@@ -33,4 +33,9 @@ class Prospect extends Model
     {
         return $this->hasMany(ProspectCultivo::class, 'prospect_id');
     }
+
+    public function prospectRiego()
+    {
+        return $this->hasMany(ProspectRiego::class, 'prospect_id');
+    }
 }
