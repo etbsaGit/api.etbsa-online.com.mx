@@ -28,4 +28,9 @@ class Prospect extends Model
     {
         return $this->belongsTo(Empleado::class, 'empleado_id');
     }
+
+    public function prospectCultivo()
+    {
+        return $this->hasMany(ProspectCultivo::class, 'prospect_id');
+    }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\LineaController;
 use App\Http\Controllers\Api\SkillController;
+use App\Http\Controllers\Api\VisitController;
 use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\PuestoController;
 use App\Http\Controllers\Api\SurveyController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Api\EstatusController;
 use App\Http\Controllers\Api\PostDocController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
+use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\SucursalController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\PlantillaController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\Api\RequisitoController;
 use App\Http\Controllers\Api\WorkOrderController;
 use App\Http\Controllers\Api\AntiguedadController;
 use App\Http\Controllers\Api\ExpedienteController;
+use App\Http\Controllers\Api\IncapacityController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\EscolaridadController;
@@ -43,11 +46,9 @@ use App\Http\Controllers\Api\TechniciansLogController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\HorasTechnicianController;
+use App\Http\Controllers\Api\ProspectCultivoController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
-use App\Http\Controllers\Api\IncapacityController;
-use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
-use App\Http\Controllers\Api\VisitController;
 
 /*
 |--------------------------------------------------------------------------
@@ -293,6 +294,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('prospects', [ProspectController::class, 'index']);
     Route::get('prospect/forms', [ProspectController::class, 'getforms']);
     Route::apiResource('prospect', ProspectController::class);
+
+    //--------------------ProspectCultivo--------------------
+    Route::get('prospectCultivo/prospect/{prospect}', [ProspectCultivoController::class, 'getPerProspect']);
+    Route::get('prospectCultivo/options', [ProspectCultivoController::class, 'getOptions']);
+    Route::apiResource('prospectCultivo', ProspectCultivoController::class);
+
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

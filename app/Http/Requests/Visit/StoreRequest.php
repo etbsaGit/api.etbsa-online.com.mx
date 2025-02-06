@@ -41,8 +41,8 @@ class StoreRequest extends FormRequest
             'cultivos' => ['nullable'],
             'hectareas' => ['nullable', 'string', 'max:255'],
             'maquinaria' => ['nullable', 'string', 'max:255'],
-            'comentarios' => ['nullable', 'string', 'max:255'],
-            'retroalimentacion' => ['nullable', 'string', 'max:255'],
+            'comentarios' => ['nullable', 'string', 'max:65000'],
+            'retroalimentacion' => ['nullable', 'string', 'max:65000'],
             'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
         ];
     }
