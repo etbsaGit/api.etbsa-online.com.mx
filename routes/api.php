@@ -50,6 +50,7 @@ use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ProspectCultivoController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
+use App\Http\Controllers\Api\ProspectDistribucionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -304,6 +305,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------ProspectRiego--------------------
     Route::get('prospectRiego/prospect/{prospect}', [ProspectRiegoController::class, 'getPerProspect']);
     Route::apiResource('prospectRiego', ProspectRiegoController::class);
+
+    //--------------------ProspectDictribucion--------------------
+    Route::get('prospectDistribucion/prospect/{prospect}', [ProspectDistribucionController::class, 'getPerProspect']);
+    Route::apiResource('prospectDistribucion', ProspectDistribucionController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
