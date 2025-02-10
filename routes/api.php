@@ -48,6 +48,7 @@ use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ProspectCultivoController;
+use App\Http\Controllers\Api\ProspectMaquinaController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
@@ -309,6 +310,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------ProspectDictribucion--------------------
     Route::get('prospectDistribucion/prospect/{prospect}', [ProspectDistribucionController::class, 'getPerProspect']);
     Route::apiResource('prospectDistribucion', ProspectDistribucionController::class);
+
+    //--------------------ProspectMaquina--------------------
+    Route::get('prospectMaquina/prospect/{prospect}', [ProspectMaquinaController::class, 'getPerProspect']);
+    Route::get('prospectMaquina/options', [ProspectMaquinaController::class, 'getOptions']);
+    Route::apiResource('prospectMaquina', ProspectMaquinaController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
