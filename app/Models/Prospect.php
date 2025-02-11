@@ -15,7 +15,8 @@ class Prospect extends Model
         'nombre',
         'ubicacion',
         'telefono',
-        'empleado_id'
+        'empleado_id',
+        'candidato_agp'
     ];
 
     // -Scope-
@@ -47,5 +48,15 @@ class Prospect extends Model
     public function prospectMaquina()
     {
         return $this->hasMany(ProspectMaquina::class, 'prospect_id');
+    }
+
+    public function prospectAgp()
+    {
+        return $this->hasMany(ProspectAgp::class, 'prospect_id');
+    }
+
+    public function prospectServicio()
+    {
+        return $this->hasMany(ProspectServicio::class, 'prospect_id');
     }
 }

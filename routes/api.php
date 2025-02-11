@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
+use App\Http\Controllers\Api\ProspectAgpController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Api\VacationDayController;
 use App\Http\Controllers\Ecommerce\BrandController;
@@ -49,6 +50,7 @@ use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ProspectCultivoController;
 use App\Http\Controllers\Api\ProspectMaquinaController;
+use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
@@ -310,6 +312,14 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------ProspectDictribucion--------------------
     Route::get('prospectDistribucion/prospect/{prospect}', [ProspectDistribucionController::class, 'getPerProspect']);
     Route::apiResource('prospectDistribucion', ProspectDistribucionController::class);
+
+    //--------------------ProspectAgp--------------------
+    Route::get('prospectAgp/prospect/{prospect}', [ProspectAgpController::class, 'getPerProspect']);
+    Route::apiResource('prospectAgp', ProspectAgpController::class);
+
+    //--------------------Prospectservicio--------------------
+    Route::get('prospectServicio/prospect/{prospect}', [ProspectServicioController::class, 'getPerProspect']);
+    Route::apiResource('prospectServicio', ProspectServicioController::class);
 
     //--------------------ProspectMaquina--------------------
     Route::get('prospectMaquina/prospect/{prospect}', [ProspectMaquinaController::class, 'getPerProspect']);

@@ -30,6 +30,7 @@ class PutRequest extends FormRequest
             "ubicacion" => ['required', 'string', 'max:255'],
             "telefono" => ['required', 'numeric', 'digits:10', Rule::unique('prospects')->ignore($this->route("prospect")->id)],
             'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
+            'candidato_agp' => ['required','boolean']
         ];
     }
 
