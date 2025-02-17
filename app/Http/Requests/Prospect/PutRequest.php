@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Requests\Incapacity;
+namespace App\Http\Requests\Prospect;
 
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
-class IncapacityRequest extends FormRequest
+class PutRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,17 +26,11 @@ class IncapacityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'folio' => ['required', 'unique:incapacities,folio'],
-            'inicial' => ['required', 'boolean'],
+            "nombre" => ['required', 'string', 'max:255'],
+            "ubicacion" => ['required', 'string', 'max:255'],
+            "telefono" => ['required', 'numeric', 'digits:10', Rule::unique('prospects')->ignore($this->route("prospect")->id)],
             'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
-            'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
-            'puesto_id' => ['required', 'integer', 'exists:puestos,id'],
-            'estatus_id' => ['required', 'integer', 'exists:estatus,id'],
-            'fecha_inicio' => ['required', 'date'],
-            'fecha_termino' => ['required', 'date'],
-            'fecha_regreso' => ['required', 'date'],
-            'comentarios' => ['nullable', 'string', 'max:255'],
-            'incapacity_id' => ['nullable', 'integer', 'exists:incapacities,id'],
+            'candidato_agp' => ['required','boolean']
         ];
     }
 

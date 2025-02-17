@@ -77,7 +77,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones', 'prod'];
 
     public function picture(): Attribute
     {
@@ -114,6 +114,31 @@ class Empleado extends Model
             'cumplidos' => $aniosCumplidos,
             'correspondientes' => $dias_correspondientes,
             'subtotal' => $dias_correspondientes - $vacationDaysCount,
+        ];
+
+        return $resultados;
+    }
+
+    public function getProdAttribute()
+    {
+        // Obtén el primer día del mes actual
+        $startOfMonth = now()->startOfMonth();
+
+        // Obtén el último día del mes actual
+        $endOfMonth = now()->endOfMonth();
+
+        // Obtén los invoices relacionados con el empleado
+        // Filtra por el mes actual
+        $invoices = $this->invoices()
+            ->whereBetween('fecha', [$startOfMonth, $endOfMonth])
+            ->get();
+
+        // Suma las horas facturadas de cada invoice
+        $totalHorasFacturadas = $invoices->sum('horas_facturadas');
+
+        $resultados = [
+            'horas' => $totalHorasFacturadas,
+            'value' => $totalHorasFacturadas * 800,
         ];
 
         return $resultados;
@@ -372,6 +397,17 @@ class Empleado extends Model
         return $this->hasMany(VacationDay::class, 'empleado_id');
     }
 
+    // ---------------------------------Visits---------------------------------------------------------
+
+    public function visits()
+    {
+        return $this->hasMany(Visit::class, 'empleado_id');
+    }
+
+    public function prospects()
+    {
+        return $this->hasMany(Prospect::class, 'empleado_id');
+    }
     // ---------------------------------scope---------------------------------------------------------
 
     public function scopeFiltertwo(Builder $query, array $filters)

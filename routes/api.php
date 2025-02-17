@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\LineaController;
 use App\Http\Controllers\Api\SkillController;
+use App\Http\Controllers\Api\VisitController;
 use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\PuestoController;
 use App\Http\Controllers\Api\SurveyController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Api\EstatusController;
 use App\Http\Controllers\Api\PostDocController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
+use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\SucursalController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\PlantillaController;
@@ -24,10 +26,12 @@ use App\Http\Controllers\Api\RequisitoController;
 use App\Http\Controllers\Api\WorkOrderController;
 use App\Http\Controllers\Api\AntiguedadController;
 use App\Http\Controllers\Api\ExpedienteController;
+use App\Http\Controllers\Api\IncapacityController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
+use App\Http\Controllers\Api\ProspectAgpController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Api\VacationDayController;
 use App\Http\Controllers\Ecommerce\BrandController;
@@ -36,6 +40,7 @@ use App\Http\Controllers\Api\RentalPeriodController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
+use App\Http\Controllers\Api\ProspectRiegoController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Api\RentalMachineController;
 use App\Http\Controllers\Ecommerce\ProductController;
@@ -43,9 +48,12 @@ use App\Http\Controllers\Api\TechniciansLogController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\HorasTechnicianController;
+use App\Http\Controllers\Api\ProspectCultivoController;
+use App\Http\Controllers\Api\ProspectMaquinaController;
+use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
-use App\Http\Controllers\Api\IncapacityController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
+use App\Http\Controllers\Api\ProspectDistribucionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,6 +86,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
     Route::post('users/all', [UserController::class, 'all']);
     Route::get('requisito/all', [RequisitoController::class, 'all']);
+    Route::get('puesto/all', [PuestoController::class, 'all']);
 
     //--------------------Catalogos para empleados-------------------
     Route::post('departamentos', [DepartamentoController::class, 'index']);
@@ -100,6 +109,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
 
     Route::get('empleado/forms', [EmpleadoController::class, 'getforms']);
+    Route::post('empleado/negocios', [EmpleadoController::class, 'negocios']);
     Route::get('empleado/index', [EmpleadoController::class, 'getformsIndex']);
     Route::post('empleados', [EmpleadoController::class, 'index']);
     Route::post('empleados/excel', [EmpleadoController::class, 'export']);
@@ -174,6 +184,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('activityTechnician', ActivityTechnicianController::class);
     Route::apiResource('techniciansInvoice', TechniciansInvoiceController::class);
     Route::apiResource('techniciansLog', TechniciansLogController::class);
+
+    //--------------------Bays--------------------
+    Route::get('bays/sucursal', [BayController::class, 'getSucursal']);
+
 
     //--------------------WorkOrder--------------------
     Route::get('wos/getform', [WorkOrderController::class, 'getForm']);
@@ -274,6 +288,44 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('incapacity/forms', [IncapacityController::class, 'getforms']);
     Route::get('incapacity/calendar/{date}', [IncapacityController::class, 'getIncapacityCalendar']);
     Route::apiResource('incapacity', IncapacityController::class);
+
+    //--------------------Visits--------------------
+    Route::post('visits', [VisitController::class, 'index']);
+    Route::get('visit/forms', [VisitController::class, 'getforms']);
+    Route::post('visit/kardex', [VisitController::class, 'getEmployeesWithVisits']);
+    Route::get('visit/calendar/{date}', [VisitController::class, 'getVisitCalendar']);
+    Route::apiResource('visit', VisitController::class);
+
+    //--------------------Prospect--------------------
+    Route::post('prospects', [ProspectController::class, 'index']);
+    Route::get('prospect/forms', [ProspectController::class, 'getforms']);
+    Route::apiResource('prospect', ProspectController::class);
+
+    //--------------------ProspectCultivo--------------------
+    Route::get('prospectCultivo/prospect/{prospect}', [ProspectCultivoController::class, 'getPerProspect']);
+    Route::get('prospectCultivo/options', [ProspectCultivoController::class, 'getOptions']);
+    Route::apiResource('prospectCultivo', ProspectCultivoController::class);
+
+    //--------------------ProspectRiego--------------------
+    Route::get('prospectRiego/prospect/{prospect}', [ProspectRiegoController::class, 'getPerProspect']);
+    Route::apiResource('prospectRiego', ProspectRiegoController::class);
+
+    //--------------------ProspectDictribucion--------------------
+    Route::get('prospectDistribucion/prospect/{prospect}', [ProspectDistribucionController::class, 'getPerProspect']);
+    Route::apiResource('prospectDistribucion', ProspectDistribucionController::class);
+
+    //--------------------ProspectAgp--------------------
+    Route::get('prospectAgp/prospect/{prospect}', [ProspectAgpController::class, 'getPerProspect']);
+    Route::apiResource('prospectAgp', ProspectAgpController::class);
+
+    //--------------------Prospectservicio--------------------
+    Route::get('prospectServicio/prospect/{prospect}', [ProspectServicioController::class, 'getPerProspect']);
+    Route::apiResource('prospectServicio', ProspectServicioController::class);
+
+    //--------------------ProspectMaquina--------------------
+    Route::get('prospectMaquina/prospect/{prospect}', [ProspectMaquinaController::class, 'getPerProspect']);
+    Route::get('prospectMaquina/options', [ProspectMaquinaController::class, 'getOptions']);
+    Route::apiResource('prospectMaquina', ProspectMaquinaController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

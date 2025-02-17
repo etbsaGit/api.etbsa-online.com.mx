@@ -2,8 +2,9 @@
 
 namespace App\Models\Intranet;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\ProspectCultivo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class TipoCultivo extends Model
 {
@@ -18,5 +19,10 @@ class TipoCultivo extends Model
     public function clienteCultivo()
     {
         return $this->hasMany(ClienteCultivo::class, 'tipo_cultivo_id');
+    }
+
+    public function prospectCultivo()
+    {
+        return $this->hasMany(ProspectCultivo::class, 'tipo_cultivo_id');
     }
 }

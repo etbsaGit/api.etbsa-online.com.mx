@@ -447,4 +447,16 @@ class BayController extends ApiController
 
         return $this->respond($tecnicos);
     }
+
+    public function getSucursal()
+    {
+        // Obtener las sucursales con las relaciones necesarias
+        $data = Sucursal::with('bay.workOrder.workOrderDoc','bay.workOrder.estatus','bay.workOrder.tecnico','bay.linea')->get();
+
+        return $this->respond($data);
+    }
+
+
+
+
 }

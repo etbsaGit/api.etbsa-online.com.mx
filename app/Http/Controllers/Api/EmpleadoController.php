@@ -279,6 +279,20 @@ class EmpleadoController extends ApiController
         return $this->respond($data);
     }
 
+    public function negocios(Request $request)
+    {
+        $filters = $request->all();
+
+        $data = [
+            'empleados' => Empleado::filter($filters)->where('estatus_id', 5)->orderBy('apellido_paterno')->get(),
+            'sucursales' => Sucursal::all(),
+            'departamentos' => Departamento::all(),
+            'lineas' => Linea::all(),
+            'puestos' => Puesto::all(),
+        ];
+        return $this->respond($data);
+    }
+
     public function getformsIndex()
     {
         $data = [

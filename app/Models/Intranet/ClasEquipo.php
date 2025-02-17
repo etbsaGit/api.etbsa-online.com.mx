@@ -2,8 +2,9 @@
 
 namespace App\Models\Intranet;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\ProspectMaquina;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ClasEquipo extends Model
 {
@@ -19,4 +20,10 @@ class ClasEquipo extends Model
     {
         return $this->hasMany(Machine::class, 'clas_equipo_id');
     }
+
+    public function prospectMaquina()
+    {
+        return $this->hasMany(ProspectMaquina::class, 'clas_equipo_id');
+    }
+
 }

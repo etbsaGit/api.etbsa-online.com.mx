@@ -41,7 +41,7 @@ class EventController extends ApiController
         if (!$user->hasRole('Admin') && $user->empleado && $user->empleado->sucursal_id != $sucursalCorpId) {
             $filters['end_point'] = $user->empleado->sucursal_id;
 
-            $events = Event::filterByTravel($filters)
+            $events = Event::filterByTravelAdmin($filters)
                 ->with('activity', 'empleado', 'parentEvent', 'childEvents', 'travel', 'travel.startPointR', 'travel.endPointR')
                 ->get();
         }

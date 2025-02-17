@@ -48,7 +48,7 @@ class UserController extends ApiController
     // -----------------------------------------------------
     public function index()
     {
-        return response()->json(User::paginate(5));
+        return response()->json(User::get());
     }
 
     public function all(Request $request)

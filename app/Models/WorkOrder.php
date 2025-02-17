@@ -23,6 +23,8 @@ class WorkOrder extends Model
         'fecha_entrega',
         'mano_obra',
         'refacciones',
+        'km',
+        'foraneo',
         'horas_facturadas',
         'horas_reales',
         'comentarios',

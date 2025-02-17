@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests\Incapacity;
+namespace App\Http\Requests\ProspectRiego;
 
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
-class IncapacityRequest extends FormRequest
+class StoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,17 +25,10 @@ class IncapacityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'folio' => ['required', 'unique:incapacities,folio'],
-            'inicial' => ['required', 'boolean'],
-            'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
-            'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
-            'puesto_id' => ['required', 'integer', 'exists:puestos,id'],
-            'estatus_id' => ['required', 'integer', 'exists:estatus,id'],
-            'fecha_inicio' => ['required', 'date'],
-            'fecha_termino' => ['required', 'date'],
-            'fecha_regreso' => ['required', 'date'],
-            'comentarios' => ['nullable', 'string', 'max:255'],
-            'incapacity_id' => ['nullable', 'integer', 'exists:incapacities,id'],
+            "hectareas_propias" => ['integer','nullable'],
+            "hectareas_rentadas" => ['integer','nullable'],
+            'prospect_id' => ['required', 'integer', 'exists:prospects,id'],
+            'riego_id' => ['required', 'integer', 'exists:riegos,id'],
         ];
     }
 

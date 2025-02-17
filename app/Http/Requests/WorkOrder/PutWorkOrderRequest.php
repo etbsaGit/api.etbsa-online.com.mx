@@ -34,6 +34,8 @@ class PutWorkOrderRequest extends FormRequest
             'fecha_entrega' => ['nullable', 'date'],
             'mano_obra' => ['nullable', 'numeric'],
             'refacciones' => ['nullable', 'numeric'],
+            'km' => ['nullable', 'numeric'],
+            'foraneo' => ['nullable', 'numeric'],
             'horas_facturadas' => ['nullable', 'numeric'],
             'horas_reales' => ['nullable', 'numeric'],
             'comentarios' => ['nullable', 'string', 'max:191'],
