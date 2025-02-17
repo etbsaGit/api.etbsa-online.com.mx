@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,12 +14,8 @@ class Visit extends Model
 
     protected $fillable = [
         'dia',
-        'cliente',
         'ubicacion',
-        'telefono',
-        'cultivos',
-        'hectareas',
-        'maquinaria',
+        'prospect_id',
         'empleado_id',
         'comentarios',
         'retroalimentacion'
@@ -43,17 +40,29 @@ class Visit extends Model
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['dia', 'cliente', 'ubicacion', 'telefono', 'cultivos', 'hectareas', 'maquinaria',]);
-    }
+        // Filtrado por 'month' y 'year' si existen
+        if (isset($filters['month']) && isset($filters['year'])) {
+            $startDate = Carbon::create($filters['year'], $filters['month'], 1)->startOfMonth();
+            $endDate = Carbon::create($filters['year'], $filters['month'], 1)->endOfMonth();
 
-    public function getCultivosAttribute($value)
-    {
-        // Si el valor no es nulo, convertirlo en un array de strings en minúsculas
-        return $value ? array_map('strtolower', array_map('trim', explode(', ', $value))) : [];
+            $query->whereBetween('dia', [$startDate, $endDate]);
+        }
+
+        // Filtrado por 'empleado_id' si está presente
+        if (isset($filters['empleado_id'])) {
+            $query->where('empleado_id', $filters['empleado_id']);
+        }
+
+        return $query;
     }
 
     public function empleado()
     {
         return $this->belongsTo(Empleado::class, 'empleado_id');
+    }
+
+    public function prospect()
+    {
+        return $this->belongsTo(Prospect::class, 'prospect_id');
     }
 }

@@ -59,4 +59,9 @@ class Prospect extends Model
     {
         return $this->hasMany(ProspectServicio::class, 'prospect_id');
     }
+
+    public function visits()
+    {
+        return $this->hasMany(Visit::class, 'prospect_id');
+    }
 }

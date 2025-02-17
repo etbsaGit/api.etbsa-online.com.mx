@@ -9,15 +9,6 @@ use Illuminate\Validation\ValidationException;
 
 class StoreRequest extends FormRequest
 {
-        /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation()
-    {
-        $this->merge([
-            'cultivos' => is_array($this->cultivos) ? implode(', ', $this->cultivos) : $this->cultivos,
-        ]);
-    }
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -35,14 +26,10 @@ class StoreRequest extends FormRequest
     {
         return [
             'dia' => ['required', 'date'],
-            'cliente' => ['required', 'string', 'max:255'],
             'ubicacion' => ['required', 'string', 'max:255'],
-            'telefono' => ['nullable', 'string', 'max:255'],
-            'cultivos' => ['nullable'],
-            'hectareas' => ['nullable', 'string', 'max:255'],
-            'maquinaria' => ['nullable', 'string', 'max:255'],
             'comentarios' => ['nullable', 'string', 'max:65000'],
             'retroalimentacion' => ['nullable', 'string', 'max:65000'],
+            'prospect_id' => ['required', 'integer', 'exists:prospects,id'],
             'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
         ];
     }
