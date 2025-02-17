@@ -15,6 +15,7 @@ class ProspectRiego extends Model
     protected $fillable = [
         'hectareas_propias',
         'hectareas_rentadas',
+        'marca',
         'prospect_id',
         'riego_id',
     ];

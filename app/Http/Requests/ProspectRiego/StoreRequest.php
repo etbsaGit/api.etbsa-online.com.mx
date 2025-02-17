@@ -27,6 +27,7 @@ class StoreRequest extends FormRequest
         return [
             "hectareas_propias" => ['integer','nullable'],
             "hectareas_rentadas" => ['integer','nullable'],
+            "marca" => ['string','nullable'],
             'prospect_id' => ['required', 'integer', 'exists:prospects,id'],
             'riego_id' => ['required', 'integer', 'exists:riegos,id'],
         ];
