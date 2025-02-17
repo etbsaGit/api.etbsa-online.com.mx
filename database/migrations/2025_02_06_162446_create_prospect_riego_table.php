@@ -17,6 +17,8 @@ return new class extends Migration
             $table->integer('hectareas_propias');
             $table->integer('hectareas_rentadas');
 
+            $table->string('marca');
+
             $table->unsignedBigInteger('prospect_id')->nullable();
             $table->foreign('prospect_id')->references('id')->on('prospects')->onDelete('restrict');
 
