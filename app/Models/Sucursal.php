@@ -81,4 +81,16 @@ class Sucursal extends Model
     {
         return $this->hasMany(VacationDay::class, 'sucursal_id');
     }
+
+    // ---------------------------------Used---------------------------------------------------------
+
+    public function originUsed()
+    {
+        return $this->hasMany(Used::class, 'origin_id');
+    }
+
+    public function locationUsed()
+    {
+        return $this->hasMany(Used::class, 'location_id');
+    }
 }

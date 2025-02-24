@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BayController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\UsedController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\LineaController;
@@ -54,6 +55,7 @@ use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
+use App\Http\Controllers\Api\UsedDocController;
 
 /*
 |--------------------------------------------------------------------------
@@ -326,6 +328,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('prospectMaquina/prospect/{prospect}', [ProspectMaquinaController::class, 'getPerProspect']);
     Route::get('prospectMaquina/options', [ProspectMaquinaController::class, 'getOptions']);
     Route::apiResource('prospectMaquina', ProspectMaquinaController::class);
+
+    //--------------------Used--------------------
+    Route::post('useds', [UsedController::class, 'index']);
+    Route::get('used/forms', [UsedController::class, 'getforms']);
+    Route::apiResource('used', UsedController::class);
+    Route::apiResource('usedDoc', UsedDocController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

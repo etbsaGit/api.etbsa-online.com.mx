@@ -2,6 +2,7 @@
 
 namespace App\Models\Intranet;
 
+use App\Models\Used;
 use App\Models\ProspectMaquina;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,5 +25,10 @@ class TipoEquipo extends Model
     public function prospectMaquina()
     {
         return $this->hasMany(ProspectMaquina::class, 'tipo_equipo_id');
+    }
+
+    public function useds()
+    {
+        return $this->hasMany(Used::class, 'tipo_equipo_id');
     }
 }

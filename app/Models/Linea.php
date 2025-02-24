@@ -50,4 +50,9 @@ class Linea extends Model
     {
         return $this->hasMany(WorkOrder::class, 'linea_id');
     }
+
+    public function useds()
+    {
+        return $this->hasMany(Used::class, 'linea_id');
+    }
 }
