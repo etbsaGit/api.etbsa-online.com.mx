@@ -12,6 +12,7 @@ use App\Http\Controllers\ApiController;
 use App\Http\Requests\Visit\StoreRequest;
 use App\Models\Prospect;
 use App\Models\Sucursal;
+use PDF;
 
 class VisitController extends ApiController
 {
@@ -150,5 +151,104 @@ class VisitController extends ApiController
         }])->get();
 
         return response()->json($employees);
+    }
+
+    public function getFormReport()
+    {
+        $empleados = Empleado::whereHas('visits')->get();
+
+        return $this->respond($empleados);
+    }
+
+    public function getReport(Request $request)
+    {
+        $year = $request->year;
+        $month = $request->month;
+        $empleadoId = $request->empleado_id;
+
+        $empleado = Empleado::with(['sucursal', 'prospects' => function ($query) use ($year, $month, $empleadoId) {
+            $query->whereHas('visits', function ($visitQuery) use ($year, $month, $empleadoId) {
+                $visitQuery->whereYear('dia', $year)
+                    ->whereMonth('dia', $month)
+                    ->where('empleado_id', $empleadoId);
+            })->with([
+                'visits' => function ($visitQuery) use ($year, $month, $empleadoId) {
+                    $visitQuery->whereYear('dia', $year)
+                        ->whereMonth('dia', $month)
+                        ->where('empleado_id', $empleadoId);
+                },
+                'prospectCultivo.cultivo',
+                'prospectCultivo.tipoCultivo',
+
+                'prospectRiego.riego',
+
+                'prospectDistribucion',
+
+                'prospectMaquina.marca',
+                'prospectMaquina.condicion',
+                'prospectMaquina.clasEquipo',
+                'prospectMaquina.tipoEquipo',
+
+                'prospectAgp',
+                'prospectServicio'
+            ]);
+        }])->find($empleadoId);
+
+        if (!$empleado) {
+            return response()->json(['message' => 'Empleado no encontrado'], 404);
+        }
+
+        return $this->respond($empleado);
+    }
+
+    public function getReportPdf(Request $request)
+    {
+        $year = $request->year;
+        $month = $request->month;
+        $empleadoId = $request->empleado_id;
+
+        $empleado = Empleado::with(['sucursal', 'prospects' => function ($query) use ($year, $month, $empleadoId) {
+            $query->whereHas('visits', function ($visitQuery) use ($year, $month, $empleadoId) {
+                $visitQuery->whereYear('dia', $year)
+                    ->whereMonth('dia', $month)
+                    ->where('empleado_id', $empleadoId);
+            })->with([
+                'visits' => function ($visitQuery) use ($year, $month, $empleadoId) {
+                    $visitQuery->whereYear('dia', $year)
+                        ->whereMonth('dia', $month)
+                        ->where('empleado_id', $empleadoId);
+                },
+                'prospectCultivo.cultivo',
+                'prospectCultivo.tipoCultivo',
+                'prospectRiego.riego',
+                'prospectDistribucion',
+                'prospectMaquina.marca',
+                'prospectMaquina.condicion',
+                'prospectMaquina.clasEquipo',
+                'prospectMaquina.tipoEquipo',
+                'prospectAgp',
+                'prospectServicio'
+            ]);
+        }])->find($empleadoId);
+
+        if (!$empleado) {
+            return response()->json(['message' => 'Empleado no encontrado'], 404);
+        }
+
+        // Generar PDF en horizontal
+        $pdf = Pdf::loadView('pdf.visit.reportVisitEmployee', ['empleado' => $empleado])
+            ->setPaper('a4', 'landscape'); // 'a4' es el tamaño y 'landscape' lo pone en horizontal
+
+        // Descargar el PDF
+        // return $pdf->download('reporte_empleado_' . $empleado->id . '.pdf');
+
+        // Obtener el contenido del PDF como cadena binaria
+        $pdfContent = $pdf->output();
+
+        // Convertir el contenido a Base64
+        $pdfBase64 = base64_encode($pdfContent);
+
+        // Retornar el PDF en Base64
+        return $this->respond($pdfBase64);
     }
 }

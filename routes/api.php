@@ -293,6 +293,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------Visits--------------------
     Route::post('visits', [VisitController::class, 'index']);
+    Route::post('visits/report', [VisitController::class, 'getReport']);
+    Route::post('visits/reportPDF', [VisitController::class, 'getReportPdf']);
+    Route::get('visits/formReport', [VisitController::class, 'getFormReport']);
     Route::get('visit/forms', [VisitController::class, 'getforms']);
     Route::post('visit/kardex', [VisitController::class, 'getEmployeesWithVisits']);
     Route::get('visit/calendar/{date}', [VisitController::class, 'getVisitCalendar']);
