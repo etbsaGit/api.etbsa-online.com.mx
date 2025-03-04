@@ -109,6 +109,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------Empleado--------------------
     Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
+    Route::get('empleado/alta/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesNew']);
 
     Route::get('empleado/forms', [EmpleadoController::class, 'getforms']);
     Route::post('empleado/negocios', [EmpleadoController::class, 'negocios']);
@@ -283,6 +284,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('vacationDay/on/{vacationDay}', [VacationDayController::class, 'setValidatedOn']);
     Route::get('vacationDay/off/{vacationDay}', [VacationDayController::class, 'setValidatedOff']);
     Route::get('vacationDay/calendar/{date}', [VacationDayController::class, 'getVacationCalendar']);
+    Route::post('vacationDay/report', [VacationDayController::class, 'getReport']);
+    Route::post('vacationDay/reportPDF', [VacationDayController::class, 'exportReport']);
     Route::apiResource('vacationDay', VacationDayController::class);
 
     //--------------------Incapacity--------------------

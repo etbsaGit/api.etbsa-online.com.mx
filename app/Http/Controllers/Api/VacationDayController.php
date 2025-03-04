@@ -14,6 +14,8 @@ use App\Mail\VacationOffMailable;
 use App\Mail\VacationStoreMailable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmployeeVacationExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\VacationDay\VacationDayRequest;
 
@@ -263,5 +265,107 @@ class VacationDayController extends ApiController
             ->get();
 
         return $this->respond($vacationDays);
+    }
+
+    public function getReport(Request $request)
+    {
+        $start = $request->start;
+        $end = $request->end;
+        $sucursal_id = $request->sucursal_id;
+
+        // Validación: start no puede ser después de end
+        if (Carbon::parse($start)->gt(Carbon::parse($end))) {
+            return response()->json([
+                'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
+            ], 422);
+        }
+
+        $employees = Empleado::where('sucursal_id', $sucursal_id)->whereHas('vacationDays', function ($query) use ($start, $end) {
+            $query->where('validated', 1)
+                ->where(function ($q) use ($start, $end) {
+                    $q->whereBetween('fecha_inicio', [$start, $end])
+                        ->orWhereBetween('fecha_termino', [$start, $end])
+                        ->orWhere(function ($q) use ($start, $end) {
+                            $q->where('fecha_inicio', '<=', $start)
+                                ->where('fecha_termino', '>=', $end);
+                        });
+                });
+        })->with(['vacationDays' => function ($query) use ($start, $end) {
+            $query->where('validated', 1)
+                ->where(function ($q) use ($start, $end) {
+                    $q->whereBetween('fecha_inicio', [$start, $end])
+                        ->orWhereBetween('fecha_termino', [$start, $end])
+                        ->orWhere(function ($q) use ($start, $end) {
+                            $q->where('fecha_inicio', '<=', $start)
+                                ->where('fecha_termino', '>=', $end);
+                        });
+                })->select('empleado_id', 'fecha_inicio', 'fecha_termino');
+        }])->with('sucursal')->get();
+
+        // Agregar vacationDetails con los días específicos
+        $employees->transform(function ($employee) use ($start, $end) {
+            $vacationDays = [];
+
+            foreach ($employee->vacationDays as $vacation) {
+                // Asegurar que fecha_inicio y fecha_termino estén dentro del rango
+                $periodStart = Carbon::parse($vacation->fecha_inicio);
+                $periodEnd = Carbon::parse($vacation->fecha_termino);
+
+                if ($periodEnd->lt($start) || $periodStart->gt($end)) {
+                    continue; // Si las vacaciones están fuera del rango, omitirlas
+                }
+
+                // Limitar los días generados al rango solicitado
+                $currentDate = $periodStart->copy();
+                $finalDate = $periodEnd->copy();
+
+                while ($currentDate->lte($finalDate)) {
+                    if ($currentDate->gte($start) && $currentDate->lte($end)) {
+                        $vacationDays[] = $currentDate->toDateString();
+                    }
+                    $currentDate->addDay();
+                }
+            }
+
+            $employee->vacationDetails = array_values(array_unique($vacationDays)); // Evita duplicados
+            return $employee;
+        });
+
+        return $this->respond($employees);
+    }
+
+    public function exportReport(Request $request)
+    {
+        $start = $request->start;
+        $end = $request->end;
+        $sucursal_id = $request->sucursal_id;
+
+        if (Carbon::parse($start)->gt(Carbon::parse($end))) {
+            return response()->json([
+                'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
+            ], 422);
+        }
+
+        $export = new EmployeeVacationExport($start, $end, $sucursal_id);
+
+        // Obtener los datos para verificar si están vacíos
+        $data = $export->collection();
+
+        // Verificar si no hay datos para exportar
+        if ($data->isEmpty()) {
+            return response()->json(['error' => 'No hay datos para exportar.']);
+        }
+
+        // Exportar el archivo en formato XLSX con los filtros aplicados
+        $fileContent = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+
+        // Convertir el contenido del archivo a Base64
+        $base64 = base64_encode($fileContent);
+
+        // Devolver la respuesta con el archivo en Base64
+        return response()->json([
+            'file_name' => Sucursal::find($sucursal_id)->nombre,
+            'file_base64' => $base64,
+        ]);
     }
 }

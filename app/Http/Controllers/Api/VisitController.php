@@ -235,6 +235,11 @@ class VisitController extends ApiController
             return response()->json(['message' => 'Empleado no encontrado'], 404);
         }
 
+        // Formatear los números de teléfono de los prospectos
+        foreach ($empleado->prospects as $prospect) {
+            $prospect->telefono = $this->formatPhoneNumber($prospect->telefono);
+        }
+
         // Generar PDF en horizontal
         $pdf = Pdf::loadView('pdf.visit.reportVisitEmployee', ['empleado' => $empleado])
             ->setPaper('a4', 'landscape'); // 'a4' es el tamaño y 'landscape' lo pone en horizontal
@@ -250,5 +255,14 @@ class VisitController extends ApiController
 
         // Retornar el PDF en Base64
         return $this->respond($pdfBase64);
+    }
+
+    public function formatPhoneNumber($phone)
+    {
+        $phone = preg_replace('/\D/', '', $phone); // Eliminar caracteres no numéricos
+        if (strlen($phone) === 10) {
+            return "(" . substr($phone, 0, 3) . ") " . substr($phone, 3, 3) . "-" . substr($phone, 6, 2) . "-" . substr($phone, 8, 2);
+        }
+        return $phone; // Si no tiene 10 dígitos, devolver tal cual
     }
 }

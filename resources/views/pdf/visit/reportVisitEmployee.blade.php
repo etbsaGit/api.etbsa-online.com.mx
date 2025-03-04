@@ -56,7 +56,8 @@
             background: #fff;
         }
 
-        th, td {
+        th,
+        td {
             padding: 10px;
             text-align: left;
             border: 1px solid #ddd;
@@ -96,7 +97,7 @@
         <!-- Cuadro por cada prospecto -->
         @foreach ($empleado->prospects as $prospect)
             <div class="prospect-box">
-                <h3>{{ $prospect->nombre }}</h3>
+                <h3>{{ $prospect->nombre }} {{ $prospect->telefono }}</h3>
 
                 <!-- Visitas -->
                 <div class="section-title">Visitas Realizadas</div>
@@ -128,7 +129,7 @@
 
                 <!-- Cultivos -->
                 @if ($prospect->prospectCultivo->isNotEmpty())
-                <div class="section-title">Cultivos</div>
+                    <div class="section-title">Cultivos</div>
                     <table>
                         <thead>
                             <tr>
@@ -151,7 +152,7 @@
 
                 <!-- Riego -->
                 @if ($prospect->prospectRiego->isNotEmpty())
-                <div class="section-title">Riego</div>
+                    <div class="section-title">Riego</div>
                     <table>
                         <thead>
                             <tr>
@@ -178,7 +179,7 @@
 
                 <!-- distribucion -->
                 @if ($prospect->prospectDistribucion->isNotEmpty())
-                <div class="section-title">Distribucion</div>
+                    <div class="section-title">Distribucion</div>
                     <table>
                         <thead>
                             <tr>
@@ -205,7 +206,7 @@
 
                 <!-- Maquinaria  -->
                 @if ($prospect->prospectMaquina->isNotEmpty())
-                <div class="section-title">Maquinas</div>
+                    <div class="section-title">Maquinas</div>
                     <table>
                         <thead>
                             <tr>
@@ -236,7 +237,7 @@
 
                 <!-- distribucion -->
                 @if ($prospect->prospectAgp->isNotEmpty())
-                <div class="section-title">Agricultura de precisión</div>
+                    <div class="section-title">Agricultura de precisión</div>
                     <table>
                         <thead>
                             <tr>
@@ -260,7 +261,7 @@
 
                 <!-- Servicio -->
                 @if ($prospect->prospectServicio->isNotEmpty())
-                <div class="section-title">Servicios posventa</div>
+                    <div class="section-title">Servicios posventa</div>
                     <table>
                         <thead>
                             <tr>
@@ -281,13 +282,6 @@
                 @else
                     <p class="text-muted">Este prospecto no tiene proveedores de servicios de posventa</p>
                 @endif
-
-
-
-
-
-
-
             </div>
         @endforeach
     </div>

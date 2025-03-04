@@ -433,4 +433,42 @@ class EmpleadoController extends ApiController
 
         return response()->json($employees);
     }
+
+    public function getEmployeesNew($anio = null, $mes = null)
+    {
+        // Validamos que al menos el año esté presente
+        if (!$anio) {
+            return response()->json(['error' => 'El año es requerido'], 400);
+        }
+
+        // Relaciones a cargar
+        $relations = [
+            'archivable',
+            'archivable.requisito',
+            'escolaridad',
+            'departamento',
+            'estado_civil',
+            'jefe_directo',
+            'linea',
+            'puesto',
+            'sucursal',
+            'tipo_de_sangre',
+            'user',
+            'estatus',
+            'termination.estatus',
+            'termination.reason'
+        ];
+
+        // Query para filtrar por año y opcionalmente por mes
+        $query = Empleado::with($relations)
+            ->whereYear('fecha_de_ingreso', $anio);
+
+        if ($mes) {
+            $query->whereMonth('fecha_de_ingreso', $mes);
+        }
+
+        $empleados = $query->get();
+
+        return response()->json($empleados);
+    }
 }
