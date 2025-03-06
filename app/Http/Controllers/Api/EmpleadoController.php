@@ -76,6 +76,14 @@ class EmpleadoController extends ApiController
                             ['email' => $correo],
                             ['password' => Hash::make('password123'), 'name' => $empleado->nombre]
                         );
+
+                        if ($usuario->empleado) {
+                            // Si ya existe un usuario asociado, lo desvinculamos
+                            $usuario->empleado->user_id = null;
+                            $usuario->empleado->correo_institucional = null;
+                            $usuario->empleado->save(); // Guardamos el cambio
+                        }
+
                         if (!$empleado->user) {
                             $empleado->user()->associate($usuario);
                             $empleado->save();
@@ -163,6 +171,13 @@ class EmpleadoController extends ApiController
         $correo = $request->correo_institucional;
         if ($correo) {
             $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make("password123"), 'name' => $empleado->nombre]);
+            // Verificamos si el empleado ya tiene un usuario asociado
+            if ($usuario->empleado) {
+                // Si ya existe un usuario asociado, lo desvinculamos
+                $usuario->empleado->correo_institucional = null;
+                $usuario->empleado->user_id = null;
+                $usuario->empleado->save(); // Guardamos el cambio
+            }
             if (!$empleado->user) {
                 $empleado->user()->associate($usuario);
                 $empleado->save();

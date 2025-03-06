@@ -8,6 +8,7 @@ use App\Models\Linea;
 use App\Models\Estatus;
 use App\Models\Empleado;
 use App\Models\Sucursal;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\TechniciansLog;
 use App\Models\ActivityTechnician;
@@ -450,13 +451,20 @@ class BayController extends ApiController
 
     public function getSucursal()
     {
-        // Obtener las sucursales con las relaciones necesarias
-        $data = Sucursal::with('bay.workOrder.workOrderDoc','bay.workOrder.estatus','bay.workOrder.tecnico','bay.linea')->get();
+        $data = Sucursal::with('bay.workOrder.workOrderDoc', 'bay.workOrder.estatus', 'bay.workOrder.tecnico', 'bay.linea')
+            ->get()
+            ->each(function ($sucursal) {
+                if ($sucursal->relationLoaded('bay')) {
+                    // Convertimos la colección a array, aplicamos natsort() y la volvemos a convertir en colección
+                    $sortedBays = $sucursal->bay->sort(function ($a, $b) {
+                        return strnatcmp($a->nombre, $b->nombre);
+                    })->values();
+
+                    // Sobrescribimos la relación con la nueva colección ordenada
+                    $sucursal->setRelation('bay', $sortedBays);
+                }
+            });
 
         return $this->respond($data);
     }
-
-
-
-
 }

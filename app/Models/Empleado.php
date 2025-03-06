@@ -77,13 +77,33 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones', 'prod'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones', 'prod', 'vacationPeriod'];
 
     public function picture(): Attribute
     {
         return Attribute::make(
             get: fn() => $this->fotografia ? Storage::disk('s3')->url($this->fotografia) : null
         );
+    }
+
+    public function getVacationPeriodAttribute()
+    {
+        $fecha_de_ingreso = \Carbon\Carbon::parse($this->fecha_de_ingreso);
+        $hoy = now();
+
+        // Obtener el aniversario más reciente en el año actual
+        $ultimo_aniversario = $fecha_de_ingreso->copy()->year($hoy->year);
+
+        // Si el aniversario de este año aún no ha ocurrido, tomar el del año pasado
+        if ($ultimo_aniversario->greaterThan($hoy)) {
+            $ultimo_aniversario->subYear();
+        }
+
+        // El periodo inicia en el año siguiente al aniversario más reciente
+        $anio_inicio = $ultimo_aniversario->year;
+        $anio_fin = $anio_inicio + 1;
+
+        return "$anio_inicio-$anio_fin";
     }
 
     public function getNombreCompletoAttribute()

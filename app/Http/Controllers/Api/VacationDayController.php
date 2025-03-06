@@ -158,7 +158,6 @@ class VacationDayController extends ApiController
             ->where('departamento_id', Departamento::where('nombre', 'Recursos Humanos')->value('id'))
             ->first();
 
-        $cc = Empleado::where('puesto_id', Puesto::where('nombre', 'Coordinador de compras')->value('id'))->first();
         $dg = Empleado::where('puesto_id', Puesto::where('nombre', 'Director general')->value('id'))->first();
         $da = Empleado::where('puesto_id', Puesto::where('nombre', 'Director administrativo')->value('id'))->first();
 
@@ -170,11 +169,6 @@ class VacationDayController extends ApiController
             'solicitante' => $solicitante->correo_institucional,
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
         ];
-
-        // Agregar correo de $cc si el vacationDay tiene un vehículo utilitario
-        if ($vacationDay->vehiculo_utilitario) {
-            $correos['cc'] = $cc?->correo_institucional; // Agregar correo si $cc no es null
-        }
 
         // Si el jefe es DG, agregar también DA, y viceversa
         if ($jefe && $jefe->id === $dg?->id) {
@@ -201,12 +195,17 @@ class VacationDayController extends ApiController
 
         $solicitante = $vacationDay->empleado;
         $jefe = $vacationDay->empleado->jefe_directo;
+        $cc = Empleado::where('puesto_id', Puesto::where('nombre', 'Coordinador de compras')->value('id'))->first();
 
         $correos = [
             'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
             'solicitante' => $solicitante->correo_institucional,
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
         ];
+
+        if ($vacationDay->vehiculo_utilitario) {
+            $correos['cc'] = $cc?->correo_institucional; // Agregar correo si $cc no es null
+        }
 
         foreach ($correos as $to_email) {
             if ($to_email) {
@@ -228,12 +227,17 @@ class VacationDayController extends ApiController
 
         $solicitante = $vacationDay->empleado;
         $jefe = $vacationDay->empleado->jefe_directo;
+        $cc = Empleado::where('puesto_id', Puesto::where('nombre', 'Coordinador de compras')->value('id'))->first();
 
         $correos = [
             'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
             'solicitante' => $solicitante->correo_institucional,
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
         ];
+
+        if ($vacationDay->vehiculo_utilitario) {
+            $correos['cc'] = $cc?->correo_institucional; // Agregar correo si $cc no es null
+        }
 
         foreach ($correos as $to_email) {
             if ($to_email) {
