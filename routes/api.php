@@ -53,6 +53,7 @@ use App\Http\Controllers\Api\ProspectCultivoController;
 use App\Http\Controllers\Api\ProspectMaquinaController;
 use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
+use App\Http\Controllers\Api\FestivoController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
 use App\Http\Controllers\Api\UsedDocController;
@@ -108,8 +109,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('estatus/{tipo}', [EstatusController::class, 'getPerType']);
 
     //--------------------Empleado--------------------
-    Route::get('empleado/baja/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesTerminations']);
-    Route::get('empleado/alta/{anio?}/{mes?}', [EmpleadoController::class, 'getEmployeesNew']);
+    Route::post('empleado/baja', [EmpleadoController::class, 'getEmployeesTerminations']);
+    Route::post('empleado/alta', [EmpleadoController::class, 'getEmployeesNew']);
 
     Route::get('empleado/forms', [EmpleadoController::class, 'getforms']);
     Route::post('empleado/negocios', [EmpleadoController::class, 'negocios']);
@@ -118,6 +119,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('empleados/excel', [EmpleadoController::class, 'export']);
     Route::post('empleados/excel/vacations', [EmpleadoController::class, 'exportVacations']);
     Route::post('empleados/vacations', [EmpleadoController::class, 'getVacations']);
+    Route::post('empleados/vacations/force', [EmpleadoController::class, 'employeeForce']);
     Route::apiResource('empleado', EmpleadoController::class);
 
     //--------------------Expediente--------------------
@@ -280,7 +282,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('vacationDays', [VacationDayController::class, 'index']);
     Route::post('vacationDays/auth', [VacationDayController::class, 'myIndex']);
     Route::post('vacationDay/storeOnly', [VacationDayController::class, 'storeOnly']);
-    Route::get('vacationDay/forms', [VacationDayController::class, 'getforms']);
+    Route::get('vacationDay/forms/{year}', [VacationDayController::class, 'getforms']);
     Route::get('vacationDay/on/{vacationDay}', [VacationDayController::class, 'setValidatedOn']);
     Route::get('vacationDay/off/{vacationDay}', [VacationDayController::class, 'setValidatedOff']);
     Route::get('vacationDay/calendar/{date}', [VacationDayController::class, 'getVacationCalendar']);
@@ -307,6 +309,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------Prospect--------------------
     Route::post('prospects', [ProspectController::class, 'index']);
     Route::get('prospect/forms', [ProspectController::class, 'getforms']);
+    Route::get('prospect/sub/{empleado}', [ProspectController::class, 'getAllSubordinates']);
     Route::apiResource('prospect', ProspectController::class);
 
     //--------------------ProspectCultivo--------------------
@@ -340,6 +343,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('used/forms', [UsedController::class, 'getforms']);
     Route::apiResource('used', UsedController::class);
     Route::apiResource('usedDoc', UsedDocController::class);
+
+    //--------------------Festivo--------------------
+    Route::post('festivos', [FestivoController::class, 'index']);
+    Route::get('festivo/option/{year}', [FestivoController::class, 'getFecha']);
+    Route::apiResource('festivo', FestivoController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

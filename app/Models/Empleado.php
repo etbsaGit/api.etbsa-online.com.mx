@@ -428,6 +428,11 @@ class Empleado extends Model
     {
         return $this->hasMany(Prospect::class, 'empleado_id');
     }
+
+    public function cliente()
+    {
+        return $this->hasMany(Prospect::class, 'vendedor_id');
+    }
     // ---------------------------------scope---------------------------------------------------------
 
     public function scopeFiltertwo(Builder $query, array $filters)

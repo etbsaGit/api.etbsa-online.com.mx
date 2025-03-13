@@ -25,12 +25,12 @@ class ProspectController extends ApiController
 
         if ($user->hasRole('Admin') || ($sc && $user->empleado->sucursal_id == $sc->id)) {
             $prospect = Prospect::filter($filters)
-                ->with(['empleado'])
+                ->with(['empleado','vendedor'])
                 ->paginate(10);
         } else {
             $prospect = Prospect::filter($filters)
                 ->where('empleado_id', $user->empleado->id)
-                ->with(['empleado'])
+                ->with(['empleado','vendedor'])
                 ->paginate(10);
         }
 
@@ -52,7 +52,7 @@ class ProspectController extends ApiController
      */
     public function show(Prospect $prospect)
     {
-        return $this->respond($prospect->load('empleado'));
+        return $this->respond($prospect->load('empleado','vendedor'));
     }
 
     /**
@@ -78,9 +78,23 @@ class ProspectController extends ApiController
     public function getforms()
     {
         $data = [
-            'empleados' => Empleado::where('estatus_id', 5)->orderBy('apellido_paterno')->get(),
+            'empleados' => Empleado::where('estatus_id', 5)
+                ->whereHas('puesto', function ($query) {
+                    $query->where('nombre', 'like', '%gerente%');
+                })
+                ->orderBy('apellido_paterno')
+                ->get(),
         ];
 
         return $this->respond($data);
+    }
+
+    public function getAllSubordinates(Empleado $empleado)
+    {
+        $subordinates = Empleado::where('sucursal_id', $empleado->sucursal_id)
+            ->orderBy('apellido_paterno')
+            ->get();
+
+        return $this->respond(['subordinates' => $subordinates]);
     }
 }

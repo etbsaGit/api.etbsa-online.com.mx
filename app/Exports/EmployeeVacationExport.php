@@ -2,12 +2,13 @@
 
 namespace App\Exports;
 
-use App\Models\Empleado;
 use Carbon\Carbon;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use App\Models\Festivo;
+use App\Models\Empleado;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
 class EmployeeVacationExport implements FromCollection, WithHeadings, ShouldAutoSize, WithMapping
 {
@@ -28,77 +29,89 @@ class EmployeeVacationExport implements FromCollection, WithHeadings, ShouldAuto
         $end = Carbon::parse($this->end);
         $sucursal_id = $this->sucursal_id;
 
+        // Obtener festivos como array formateado correctamente
+        $festivos = Festivo::pluck('fecha')->map(fn($date) => Carbon::parse($date)->toDateString())->toArray();
 
-        // Obtener todos los empleados con sus días de vacaciones dentro del rango
-        $employees = Empleado::where('sucursal_id', $sucursal_id)->whereHas('vacationDays', function ($query) use ($start, $end) {
-            $query->where('validated', 1)
-                ->where(function ($q) use ($start, $end) {
-                    $q->whereBetween('fecha_inicio', [$start, $end])
-                        ->orWhereBetween('fecha_termino', [$start, $end])
-                        ->orWhere(function ($q) use ($start, $end) {
-                            $q->where('fecha_inicio', '<=', $start)
-                                ->where('fecha_termino', '>=', $end);
-                        });
-                });
-        })->with(['vacationDays' => function ($query) use ($start, $end) {
-            $query->where('validated', 1)
-                ->where(function ($q) use ($start, $end) {
-                    $q->whereBetween('fecha_inicio', [$start, $end])
-                        ->orWhereBetween('fecha_termino', [$start, $end])
-                        ->orWhere(function ($q) use ($start, $end) {
-                            $q->where('fecha_inicio', '<=', $start)
-                                ->where('fecha_termino', '>=', $end);
-                        });
-                })->select('empleado_id', 'fecha_inicio', 'fecha_termino');
-        }])->get();
+        // Obtener empleados con vacaciones válidas
+        $employees = Empleado::where('sucursal_id', $sucursal_id)
+            ->whereHas('vacationDays', function ($query) use ($start, $end, $festivos) {
+                $query->where('validated', 1)
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('fecha_inicio', [$start, $end])
+                            ->orWhereBetween('fecha_termino', [$start, $end])
+                            ->orWhere(function ($q) use ($start, $end) {
+                                $q->where('fecha_inicio', '<=', $start)
+                                    ->where('fecha_termino', '>=', $end);
+                            });
+                    });
+            })
+            ->with(['vacationDays' => function ($query) use ($start, $end, $festivos) {
+                $query->where('validated', 1)
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('fecha_inicio', [$start, $end])
+                            ->orWhereBetween('fecha_termino', [$start, $end])
+                            ->orWhere(function ($q) use ($start, $end) {
+                                $q->where('fecha_inicio', '<=', $start)
+                                    ->where('fecha_termino', '>=', $end);
+                            });
+                    })
+                    ->select('empleado_id', 'fecha_inicio', 'fecha_termino');
+            }])
+            ->get();
 
         // Crear los datos para las filas
         $data = [];
 
-        // Primero agregamos los encabezados: solo los empleados
+        // Encabezados: nombres de los empleados
         $header = [];
         foreach ($employees as $employee) {
             $header[] = $employee->nombreCompleto;
         }
 
-        // Ahora, por cada empleado, agregamos sus fechas de vacaciones
+        // Inicializamos un arreglo para almacenar las fechas de vacaciones de cada empleado
         $vacationDates = [];
-
-        // Inicializamos un arreglo para cada empleado
         foreach ($employees as $employee) {
-            $vacationDates[$employee->id] = [];
+            $vacationDays = [];
+
             foreach ($employee->vacationDays as $vacation) {
                 $periodStart = Carbon::parse($vacation->fecha_inicio);
                 $periodEnd = Carbon::parse($vacation->fecha_termino);
 
                 $currentDate = $periodStart->copy();
                 while ($currentDate->lte($periodEnd)) {
-                    if ($currentDate->gte($start) && $currentDate->lte($end)) {
-                        // Formateamos la fecha a dd/mm/aaaa
-                        $vacationDates[$employee->id][] = $currentDate->format('d-m-Y');
+                    if ($currentDate->gte($start) && $currentDate->lte($end) &&
+                        !in_array($currentDate->toDateString(), $festivos) && // Excluir festivos
+                        $currentDate->dayOfWeek !== Carbon::SUNDAY // Excluir domingos
+                    ) {
+                        $vacationDays[] = $currentDate->format('d-m-Y');
                     }
                     $currentDate->addDay();
                 }
             }
+
+            // Evitar duplicados en las fechas
+            $vacationDates[$employee->id] = array_values(array_unique($vacationDays));
         }
 
-        // Creamos filas para cada fecha
-        $maxRows = max(array_map('count', $vacationDates)); // Determinamos la cantidad máxima de fechas para cualquier empleado
+        // Determinar la cantidad máxima de filas necesarias
+        $maxRows = max(array_map('count', $vacationDates));
 
+        // Crear filas con las fechas de vacaciones de cada empleado
         for ($i = 0; $i < $maxRows; $i++) {
             $row = [];
             foreach ($employees as $employee) {
-                // Añadimos la fecha correspondiente del empleado o dejamos vacío si no tiene más fechas
-                $row[] = isset($vacationDates[$employee->id][$i]) ? $vacationDates[$employee->id][$i] : '';
+                $row[] = $vacationDates[$employee->id][$i] ?? ''; // Si no hay fecha, dejar vacío
             }
             $data[] = $row;
         }
 
-        // Añadimos el encabezado con los empleados al principio
+        // Insertar el encabezado al principio
         array_unshift($data, $header);
 
         return collect($data);
     }
+
+
 
     public function headings(): array
     {

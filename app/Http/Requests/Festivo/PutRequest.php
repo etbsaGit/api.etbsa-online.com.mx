@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Requests\Prospect;
+namespace App\Http\Requests\Festivo;
 
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
-class StoreRequest extends FormRequest
+class PutRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,11 +27,7 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre" => ['required', 'string', 'max:255'],
-            "ubicacion" => ['required', 'string', 'max:255'],
-            "telefono" => ['required', 'numeric', 'digits:10', 'unique:prospects,telefono'],
-            'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
-            'candidato_agp' => ['required','boolean'],
-            'vendedor_id' => ['nullable', 'integer', 'exists:empleados,id'],
+            'fecha' => ['required', 'date', Rule::unique('festivos')->ignore($this->route("festivo")->id)],
         ];
     }
 

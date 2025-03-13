@@ -16,7 +16,8 @@ class Prospect extends Model
         'ubicacion',
         'telefono',
         'empleado_id',
-        'candidato_agp'
+        'candidato_agp',
+        'vendedor_id'
     ];
 
     // -Scope-
@@ -28,6 +29,11 @@ class Prospect extends Model
     public function empleado()
     {
         return $this->belongsTo(Empleado::class, 'empleado_id');
+    }
+
+    public function vendedor()
+    {
+        return $this->belongsTo(Empleado::class, 'vendedor_id');
     }
 
     public function prospectCultivo()

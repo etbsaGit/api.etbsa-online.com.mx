@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Prospect;
+namespace App\Http\Requests\Festivo;
 
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
@@ -26,11 +26,7 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre" => ['required', 'string', 'max:255'],
-            "ubicacion" => ['required', 'string', 'max:255'],
-            "telefono" => ['required', 'numeric', 'digits:10', 'unique:prospects,telefono'],
-            'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
-            'candidato_agp' => ['required','boolean'],
-            'vendedor_id' => ['nullable', 'integer', 'exists:empleados,id'],
+            'fecha' => ['required', 'date', 'unique:festivos,fecha'],
         ];
     }
 

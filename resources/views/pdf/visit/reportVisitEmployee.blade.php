@@ -83,6 +83,27 @@
             color: #7f8c8d;
             font-style: italic;
         }
+
+        .prospect-info {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.prospect-item {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.prospect-label {
+    font-weight: bold;
+    color: #ecf0f1;
+}
+
+.prospect-value {
+    color: #bdc3c7;
+}
     </style>
 </head>
 
@@ -97,7 +118,22 @@
         <!-- Cuadro por cada prospecto -->
         @foreach ($empleado->prospects as $prospect)
             <div class="prospect-box">
-                <h3>{{ $prospect->nombre }} {{ $prospect->telefono }}</h3>
+                <h3>
+                    <div class="prospect-info">
+                        <div class="prospect-item">
+                            <span class="prospect-label">Prospecto:</span>
+                            <span class="prospect-value">{{ $prospect->nombre }}</span>
+                        </div>
+                        <div class="prospect-item">
+                            <span class="prospect-label">Teléfono:</span>
+                            <span class="prospect-value">{{ $prospect->telefono }}</span>
+                        </div>
+                        <div class="prospect-item">
+                            <span class="prospect-label">Vendedor:</span>
+                            <span class="prospect-value">{{ $prospect->vendedor->nombreCompleto }}</span>
+                        </div>
+                    </div>
+                </h3>
 
                 <!-- Visitas -->
                 <div class="section-title">Visitas Realizadas</div>

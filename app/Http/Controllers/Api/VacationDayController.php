@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
 use App\Models\Puesto;
+use App\Models\Festivo;
 use App\Models\Empleado;
 use App\Models\Sucursal;
 use App\Models\VacationDay;
@@ -116,7 +117,7 @@ class VacationDayController extends ApiController
         return $this->respondSuccess();
     }
 
-    public function getforms()
+    public function getforms($year)
     {
         $user = Auth::user();
         $empleado = $user->empleado;
@@ -129,10 +130,17 @@ class VacationDayController extends ApiController
             $empleados = $this->getAllSubordinates($empleado);
         }
 
+        $fechas = Festivo::whereYear('fecha', $year)
+            ->orWhereYear('fecha', $year - 1)
+            ->orWhereYear('fecha', $year + 1)
+            ->pluck('fecha')
+            ->toArray();
+
         $data = [
             'empleados' => $empleados,
             'puestos' => Puesto::all(),
-            'sucursales' => Sucursal::all()
+            'sucursales' => Sucursal::all(),
+            'festivos' => $fechas,
         ];
 
         return $this->respond($data);
@@ -284,34 +292,49 @@ class VacationDayController extends ApiController
             ], 422);
         }
 
-        $employees = Empleado::where('sucursal_id', $sucursal_id)->whereHas('vacationDays', function ($query) use ($start, $end) {
-            $query->where('validated', 1)
-                ->where(function ($q) use ($start, $end) {
-                    $q->whereBetween('fecha_inicio', [$start, $end])
-                        ->orWhereBetween('fecha_termino', [$start, $end])
-                        ->orWhere(function ($q) use ($start, $end) {
-                            $q->where('fecha_inicio', '<=', $start)
-                                ->where('fecha_termino', '>=', $end);
-                        });
-                });
-        })->with(['vacationDays' => function ($query) use ($start, $end) {
-            $query->where('validated', 1)
-                ->where(function ($q) use ($start, $end) {
-                    $q->whereBetween('fecha_inicio', [$start, $end])
-                        ->orWhereBetween('fecha_termino', [$start, $end])
-                        ->orWhere(function ($q) use ($start, $end) {
-                            $q->where('fecha_inicio', '<=', $start)
-                                ->where('fecha_termino', '>=', $end);
-                        });
-                })->select('empleado_id', 'fecha_inicio', 'fecha_termino');
-        }])->with('sucursal')->get();
+        // Obtener festivos como array asegurando formato DATE
+        $festivos = Festivo::pluck('fecha')->map(fn($date) => Carbon::parse($date)->toDateString())->toArray();
+
+        $employees = Empleado::where('sucursal_id', $sucursal_id)
+            ->whereHas('vacationDays', function ($query) use ($start, $end, $festivos) {
+                $query->where('validated', 1)
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('fecha_inicio', [$start, $end])
+                            ->orWhereBetween('fecha_termino', [$start, $end])
+                            ->orWhere(function ($q) use ($start, $end) {
+                                $q->where('fecha_inicio', '<=', $start)
+                                    ->where('fecha_termino', '>=', $end);
+                            });
+                    })
+                    ->whereNotIn('fecha_inicio', $festivos) // Excluir festivos
+                    ->whereNotIn('fecha_termino', $festivos) // Excluir festivos
+                    ->whereRaw("DAYOFWEEK(fecha_inicio) != 1") // Excluir domingos
+                    ->whereRaw("DAYOFWEEK(fecha_termino) != 1"); // Excluir domingos
+            })
+            ->with(['vacationDays' => function ($query) use ($start, $end, $festivos) {
+                $query->where('validated', 1)
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('fecha_inicio', [$start, $end])
+                            ->orWhereBetween('fecha_termino', [$start, $end])
+                            ->orWhere(function ($q) use ($start, $end) {
+                                $q->where('fecha_inicio', '<=', $start)
+                                    ->where('fecha_termino', '>=', $end);
+                            });
+                    })
+                    ->whereNotIn('fecha_inicio', $festivos) // Excluir festivos
+                    ->whereNotIn('fecha_termino', $festivos) // Excluir festivos
+                    ->whereRaw("DAYOFWEEK(fecha_inicio) != 1") // Excluir domingos
+                    ->whereRaw("DAYOFWEEK(fecha_termino) != 1") // Excluir domingos
+                    ->select('empleado_id', 'fecha_inicio', 'fecha_termino');
+            }])
+            ->with('sucursal')
+            ->get();
 
         // Agregar vacationDetails con los días específicos
-        $employees->transform(function ($employee) use ($start, $end) {
+        $employees->transform(function ($employee) use ($start, $end, $festivos) {
             $vacationDays = [];
 
             foreach ($employee->vacationDays as $vacation) {
-                // Asegurar que fecha_inicio y fecha_termino estén dentro del rango
                 $periodStart = Carbon::parse($vacation->fecha_inicio);
                 $periodEnd = Carbon::parse($vacation->fecha_termino);
 
@@ -324,7 +347,12 @@ class VacationDayController extends ApiController
                 $finalDate = $periodEnd->copy();
 
                 while ($currentDate->lte($finalDate)) {
-                    if ($currentDate->gte($start) && $currentDate->lte($end)) {
+                    // Excluir domingos y festivos
+                    if (
+                        $currentDate->gte($start) && $currentDate->lte($end) &&
+                        !in_array($currentDate->toDateString(), $festivos) &&
+                        $currentDate->dayOfWeek !== Carbon::SUNDAY
+                    ) {
                         $vacationDays[] = $currentDate->toDateString();
                     }
                     $currentDate->addDay();

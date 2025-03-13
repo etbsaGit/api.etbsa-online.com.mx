@@ -92,7 +92,12 @@ class VisitController extends ApiController
         }
 
         $data = [
-            'empleados' => Empleado::where('estatus_id', 5)->orderBy('apellido_paterno')->get(),
+            'empleados' => Empleado::where('estatus_id', 5)
+                ->whereHas('puesto', function ($query) {
+                    $query->where('nombre', 'like', '%gerente%');
+                })
+                ->orderBy('apellido_paterno')
+                ->get(),
             'prospects' => $prospects,
         ];
 
@@ -166,7 +171,7 @@ class VisitController extends ApiController
         $month = $request->month;
         $empleadoId = $request->empleado_id;
 
-        $empleado = Empleado::with(['sucursal', 'prospects' => function ($query) use ($year, $month, $empleadoId) {
+        $empleado = Empleado::with(['sucursal', 'prospects.vendedor', 'prospects' => function ($query) use ($year, $month, $empleadoId) {
             $query->whereHas('visits', function ($visitQuery) use ($year, $month, $empleadoId) {
                 $visitQuery->whereYear('dia', $year)
                     ->whereMonth('dia', $month)
@@ -207,7 +212,7 @@ class VisitController extends ApiController
         $month = $request->month;
         $empleadoId = $request->empleado_id;
 
-        $empleado = Empleado::with(['sucursal', 'prospects' => function ($query) use ($year, $month, $empleadoId) {
+        $empleado = Empleado::with(['sucursal', 'prospects.vendedor', 'prospects' => function ($query) use ($year, $month, $empleadoId) {
             $query->whereHas('visits', function ($visitQuery) use ($year, $month, $empleadoId) {
                 $visitQuery->whereYear('dia', $year)
                     ->whereMonth('dia', $month)

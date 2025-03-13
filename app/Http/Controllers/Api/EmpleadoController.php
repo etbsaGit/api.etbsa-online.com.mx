@@ -319,8 +319,16 @@ class EmpleadoController extends ApiController
         return $this->respond($data);
     }
 
-    public function getEmployeesTerminations($anio = null, $mes = null)
+    public function getEmployeesTerminations(Request $request)
     {
+        $anio = $request->year;
+        $mes = $request->month;
+
+        // Validación: Si se pasa un mes, el año debe ser obligatorio
+        if ($mes && !$anio) {
+            return response()->json(['error' => 'El año es obligatorio si se pasa un mes'], 400);
+        }
+
         $query = Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason']); // Cargar las relaciones sucursal y termination
 
         // Agregar filtros para la fecha en la relación termination
@@ -345,6 +353,7 @@ class EmpleadoController extends ApiController
 
         return response()->json($employees);
     }
+
 
     public function export(Request $request)
     {
@@ -449,11 +458,13 @@ class EmpleadoController extends ApiController
         return response()->json($employees);
     }
 
-    public function getEmployeesNew($anio = null, $mes = null)
+    public function getEmployeesNew(Request $request)
     {
-        // Validamos que al menos el año esté presente
-        if (!$anio) {
-            return response()->json(['error' => 'El año es requerido'], 400);
+        $anio = $request->year;
+        $mes = $request->month;
+        // Validación de entrada
+        if (!$anio && !$mes) {
+            return response()->json(['error' => 'El año o el mes es requerido'], 400);
         }
 
         // Relaciones a cargar
@@ -474,16 +485,42 @@ class EmpleadoController extends ApiController
             'termination.reason'
         ];
 
-        // Query para filtrar por año y opcionalmente por mes
-        $query = Empleado::with($relations)
-            ->whereYear('fecha_de_ingreso', $anio);
+        // Query básica
+        $query = Empleado::where('estatus_id', 5)->with($relations);
 
+        // Si se pasa un año, filtra por el año
+        if ($anio) {
+            $query->whereYear('fecha_de_ingreso', $anio);
+        }
+
+        // Si se pasa un mes, filtra por el mes sin importar el año
         if ($mes) {
             $query->whereMonth('fecha_de_ingreso', $mes);
         }
 
+        // Ejecuta la consulta
         $empleados = $query->get();
 
         return response()->json($empleados);
+    }
+
+    public function employeeForce(Request $request)
+    {
+        $date = $request->date;
+        $sucursal_id = $request->sucursal_id;
+
+        $employees = Empleado::with('sucursal')
+            ->where('estatus_id', 5)
+            ->where('sucursal_id', $sucursal_id)
+            ->where(function ($query) use ($date) {
+                $query->whereDoesntHave('vacationDays', function ($q) use ($date) {
+                    $q->where('fecha_inicio', '<=', $date)
+                        ->where('fecha_termino', '>=', $date)
+                        ->where('validated', 1);
+                });
+            })
+            ->get();
+
+        return $this->respond($employees);
     }
 }
