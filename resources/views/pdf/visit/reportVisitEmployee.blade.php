@@ -130,7 +130,7 @@
                         </div>
                         <div class="prospect-item">
                             <span class="prospect-label">Vendedor:</span>
-                            <span class="prospect-value">{{ $prospect->vendedor->nombreCompleto }}</span>
+                            <span class="prospect-value">{{ $prospect->vendedor?->nombreCompleto }}</span>
                         </div>
                     </div>
                 </h3>
