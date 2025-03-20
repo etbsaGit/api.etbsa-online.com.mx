@@ -69,27 +69,31 @@ class EmpleadoController extends ApiController
                     // Adjunta requisitos a través de la relación
                     $expediente->requisito()->syncWithPivotValues($ids, ['comentaio' => 'com 1']);
 
-                    // Se le crea un usuario
-                    $correo = $empleado->correo_institucional;
+                    $correo = $request->correo_institucional;
                     if ($correo) {
                         $usuario = User::firstOrCreate(
                             ['email' => $correo],
-                            ['password' => Hash::make('password123'), 'name' => $empleado->nombre]
+                            ['password' => Hash::make("password123"), 'name' => $empleado->nombre]
                         );
 
-                        if ($usuario->empleado) {
-                            // Si ya existe un usuario asociado, lo desvinculamos
-                            $usuario->empleado->user_id = null;
-                            $usuario->empleado->correo_institucional = null;
-                            $usuario->empleado->save(); // Guardamos el cambio
+                        // Si el usuario ya está asociado a otro empleado, desvinculamos al empleado anterior
+                        if ($usuario->empleado && $usuario->empleado->id !== $empleado->id) {
+                            $empleadoAnterior = $usuario->empleado;
+                            $empleadoAnterior->correo_institucional = null;
+                            $empleadoAnterior->user_id = null;
+                            $empleadoAnterior->save(); // Guardamos la desvinculación
                         }
 
-                        if (!$empleado->user) {
+                        // Asociamos el usuario al nuevo empleado
+                        if (!$empleado->user || $empleado->user->id !== $usuario->id) {
                             $empleado->user()->associate($usuario);
                             $empleado->save();
+
+                            // Aseguramos que tenga el rol adecuado
                             $empleado->user->syncRoles('Empleado');
                         }
                     }
+
 
                     if (!is_null($request['base64'])) {
                         if ($empleado->fotografia) {
@@ -162,6 +166,7 @@ class EmpleadoController extends ApiController
             'estado_civil_id',
             'tipo_de_sangre_id',
             'jefe_directo_id',
+            'notificar_id',
             'estatus_id',
 
             'descripcion_puesto',
@@ -170,20 +175,29 @@ class EmpleadoController extends ApiController
 
         $correo = $request->correo_institucional;
         if ($correo) {
-            $usuario = User::firstOrCreate(['email' => $correo], ['password' => Hash::make("password123"), 'name' => $empleado->nombre]);
-            // Verificamos si el empleado ya tiene un usuario asociado
-            if ($usuario->empleado) {
-                // Si ya existe un usuario asociado, lo desvinculamos
-                $usuario->empleado->correo_institucional = null;
-                $usuario->empleado->user_id = null;
-                $usuario->empleado->save(); // Guardamos el cambio
+            $usuario = User::firstOrCreate(
+                ['email' => $correo],
+                ['password' => Hash::make("password123"), 'name' => $empleado->nombre]
+            );
+
+            // Si el usuario ya está asociado a otro empleado, desvinculamos al empleado anterior
+            if ($usuario->empleado && $usuario->empleado->id !== $empleado->id) {
+                $empleadoAnterior = $usuario->empleado;
+                $empleadoAnterior->correo_institucional = null;
+                $empleadoAnterior->user_id = null;
+                $empleadoAnterior->save(); // Guardamos la desvinculación
             }
-            if (!$empleado->user) {
+
+            // Asociamos el usuario al nuevo empleado
+            if (!$empleado->user || $empleado->user->id !== $usuario->id) {
                 $empleado->user()->associate($usuario);
                 $empleado->save();
+
+                // Aseguramos que tenga el rol adecuado
                 $empleado->user->syncRoles('Empleado');
             }
         }
+
 
         if (!is_null($request['base64'])) {
             if ($empleado->fotografia) {

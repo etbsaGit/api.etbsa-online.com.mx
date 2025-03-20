@@ -69,6 +69,7 @@ class Empleado extends Model
         'estado_civil_id',
         'tipo_de_sangre_id',
         'jefe_directo_id',
+        'notificar_id',
         'estatus_id',
 
         'descripcion_puesto',
@@ -433,6 +434,19 @@ class Empleado extends Model
     {
         return $this->hasMany(Prospect::class, 'vendedor_id');
     }
+
+    // ---------------------------------Notificar---------------------------------------------------------
+
+    public function notificar()
+    {
+        return $this->belongsTo(Empleado::class, 'notificar_id');
+    }
+
+    public function destinatario()
+    {
+        return $this->hasMany(Empleado::class, 'notificar_id');
+    }
+
     // ---------------------------------scope---------------------------------------------------------
 
     public function scopeFiltertwo(Builder $query, array $filters)

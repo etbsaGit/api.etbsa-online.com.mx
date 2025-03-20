@@ -82,4 +82,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Post::class, 'user_id');
     }
+
+    public function suggestion()
+    {
+        return $this->hasMany(Suggestion::class, 'user_id');
+    }
 }

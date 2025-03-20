@@ -75,6 +75,7 @@ class PutRequest extends FormRequest
             "tipo_de_sangre_id" => ['nullable', 'integer'],
             "expediente_id" => ['nullable', 'integer', Rule::unique('empleados')->ignore($this->route("empleado")->id)],
             "jefe_directo_id" => ['nullable', 'integer'],
+            "notificar_id" => ['nullable', 'integer'],
 
             "estatus_id"=>['required','integer'],
 

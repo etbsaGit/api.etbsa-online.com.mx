@@ -88,4 +88,9 @@ class Estatus extends Model
     {
         return $this->hasMany(Sale::class, 'status_id');
     }
+
+    public function suggestion()
+    {
+        return $this->hasMany(Suggestion::class, 'estatus_id');
+    }
 }

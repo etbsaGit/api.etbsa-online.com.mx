@@ -76,6 +76,7 @@ class StoreRequest extends FormRequest
             "tipo_de_sangre_id" => ['nullable', 'integer'],
             "expediente_id" => ['nullable', 'integer', 'unique:empleados,expediente_id'],
             "jefe_directo_id" => ['nullable', 'integer'],
+            "notificar_id" => ['nullable', 'integer'],
             "estatus_id" => ['required', 'integer'],
             "descripcion_puesto" => ['nullable', 'string', 'max:255'],
             "carrera" => ['nullable', 'string', 'max:255'],

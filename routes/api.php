@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\PuestoController;
 use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\ArchivoController;
 use App\Http\Controllers\Api\EstatusController;
+use App\Http\Controllers\Api\FestivoController;
 use App\Http\Controllers\Api\PostDocController;
+use App\Http\Controllers\Api\UsedDocController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\ProspectController;
@@ -29,6 +31,7 @@ use App\Http\Controllers\Api\AntiguedadController;
 use App\Http\Controllers\Api\ExpedienteController;
 use App\Http\Controllers\Api\IncapacityController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\SuggestionController;
 use App\Http\Controllers\Api\TechnicianController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
@@ -53,10 +56,8 @@ use App\Http\Controllers\Api\ProspectCultivoController;
 use App\Http\Controllers\Api\ProspectMaquinaController;
 use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
-use App\Http\Controllers\Api\FestivoController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
-use App\Http\Controllers\Api\UsedDocController;
 
 /*
 |--------------------------------------------------------------------------
@@ -348,6 +349,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('festivos', [FestivoController::class, 'index']);
     Route::get('festivo/option/{year}', [FestivoController::class, 'getFecha']);
     Route::apiResource('festivo', FestivoController::class);
+
+    //--------------------Suggestion--------------------
+    Route::post('suggestions', [SuggestionController::class, 'index']);
+    Route::post('suggestion/trash', [SuggestionController::class, 'getOnlyTrashed']);
+    Route::apiResource('suggestion', SuggestionController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
