@@ -27,15 +27,16 @@
             font-size: 20px;
             font-weight: bold;
             color: #2c3e50;
-            /* border-top: 3px solid #3498db; */
             padding-top: 5px;
             margin-top: 15px;
         }
 
         .prospect-box {
-            border: 2px solid #3498db;
+            border: 2px solid #00642a;
+            /* Verde */
             margin-bottom: 20px;
-            background-color: #ecf0f1;
+            background-color: #ecf9f1;
+            /* Verde claro */
             border-radius: 8px;
             overflow: hidden;
         }
@@ -45,7 +46,8 @@
             color: #fff;
             margin: 0;
             padding: 15px;
-            background-color: #2980b9;
+            background-color: #00642a;
+            /* Verde */
             text-align: center;
         }
 
@@ -64,7 +66,8 @@
         }
 
         th {
-            background-color: #3498db;
+            background-color: #00642a;
+            /* Verde */
             color: white;
             font-weight: bold;
         }
@@ -80,30 +83,30 @@
         }
 
         .text-muted {
-            color: #7f8c8d;
+            color: #808080;
             font-style: italic;
         }
 
         .prospect-info {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
 
-.prospect-item {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
+        .prospect-item {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
 
-.prospect-label {
-    font-weight: bold;
-    color: #ecf0f1;
-}
+        .prospect-label {
+            font-weight: bold;
+            color: #ecf0f1;
+        }
 
-.prospect-value {
-    color: #bdc3c7;
-}
+        .prospect-value {
+            color: #bdc3c7;
+        }
     </style>
 </head>
 

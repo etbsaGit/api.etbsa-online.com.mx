@@ -104,8 +104,12 @@ class Empleado extends Model
         $anio_inicio = $ultimo_aniversario->year;
         $anio_fin = $anio_inicio + 1;
 
-        return "$anio_inicio-$anio_fin";
+        // Obtener el mes de ingreso en formato abreviado (ej. "Nov")
+        $mes_ingreso = $fecha_de_ingreso->format('M');
+
+        return strtolower("$mes_ingreso - $anio_inicio / $mes_ingreso - $anio_fin");
     }
+
 
     public function getNombreCompletoAttribute()
     {
