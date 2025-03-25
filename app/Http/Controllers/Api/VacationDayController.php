@@ -33,7 +33,8 @@ class VacationDayController extends ApiController
         if ($user->hasRole('RRHH')) {
             $vacations = VacationDay::filter($filters)
                 ->with(['empleado', 'sucursal', 'puesto'])
-                ->orderBy('id', 'desc') // Ordenar por ID de forma descendente
+                ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
+                ->orderBy('fecha_inicio', 'desc')
                 ->paginate(10);
         } else {
             // Obtiene el arreglo de empleados subordinados
@@ -46,7 +47,8 @@ class VacationDayController extends ApiController
             $vacations = VacationDay::filter($filters)
                 ->whereIn('empleado_id', $empleadoIds)
                 ->with(['empleado', 'sucursal', 'puesto'])
-                ->orderBy('id', 'desc')
+                ->orderBy('validated', 'asc')
+                ->orderBy('fecha_inicio', 'desc')
                 ->paginate(10);
         }
 
@@ -64,7 +66,8 @@ class VacationDayController extends ApiController
 
         $vacations = VacationDay::filter($filters)
             ->with(['empleado', 'sucursal', 'puesto'])
-            ->orderBy('id', 'desc') // Ordenar por ID de forma descendente
+            ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
+            ->orderBy('fecha_inicio', 'desc')
             ->paginate(10);
 
         return $this->respond($vacations);
