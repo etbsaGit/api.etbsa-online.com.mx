@@ -87,4 +87,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Suggestion::class, 'user_id');
     }
+
+    public function vacationCreated()
+    {
+        return $this->hasMany(VacationDay::class, 'created_by');
+    }
+
+    public function vacationValidate()
+    {
+        return $this->hasMany(VacationDay::class, 'validate_by');
+    }
 }

@@ -422,6 +422,11 @@ class Empleado extends Model
         return $this->hasMany(VacationDay::class, 'empleado_id');
     }
 
+    public function cubre()
+    {
+        return $this->hasMany(VacationDay::class, 'cubre');
+    }
+
     // ---------------------------------Visits---------------------------------------------------------
 
     public function visits()

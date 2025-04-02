@@ -27,6 +27,28 @@ trait FilterableModel
         return $query;
     }
 
+    public function scopeFilterSearchVacation(Builder $query, array $filters, array $searchColumns = [])
+    {
+        foreach ($filters as $key => $value) {
+            if ($key !== 'page') {
+                if ($key === 'search' && !empty($searchColumns) && $value !== null) {
+                    $query->where(function ($query) use ($value, $searchColumns) {
+                        foreach ($searchColumns as $column) {
+                            $query->orWhere($column, 'LIKE', '%' . $value . '%');
+                        }
+                    });
+                } elseif ($key === 'validated' && $value === null) {
+                    $query->whereNull('validated');
+                } elseif ($value !== null) {
+                    $query->where($key, $value);
+                }
+            }
+        }
+
+        return $query;
+    }
+
+
     public function scopeFilterPost(Builder $query, array $filters)
     {
         // Asegurarse de que no traiga registros con departamento_id null

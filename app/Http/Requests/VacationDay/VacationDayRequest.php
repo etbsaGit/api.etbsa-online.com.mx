@@ -17,6 +17,16 @@ class VacationDayRequest extends FormRequest
         return true;
     }
 
+     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'user_id' => auth()->id(),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -40,6 +50,8 @@ class VacationDayRequest extends FormRequest
             'fecha_regreso' => ['required', 'date'],
             'validated' => ['nullable', 'boolean'],
             'comentarios' => ['nullable', 'string', 'max:255'],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'cubre' => ['required', 'integer', 'exists:empleados,id'],
         ];
     }
 

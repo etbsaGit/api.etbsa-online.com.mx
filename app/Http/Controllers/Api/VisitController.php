@@ -246,8 +246,16 @@ class VisitController extends ApiController
         }
 
         // Generar PDF en horizontal
-        $pdf = Pdf::loadView('pdf.visit.reportVisitEmployee', ['empleado' => $empleado])
-            ->setPaper('a4', 'landscape'); // 'a4' es el tamaño y 'landscape' lo pone en horizontal
+        $pdf = Pdf::loadView('pdf.visit.reportVisitEmployee', [
+            'empleado' => $empleado,
+            'month' => Carbon::createFromFormat('m', $month)
+                ->locale('es')
+                ->isoFormat('MMMM'),
+
+            'year' => $year
+        ])
+            ->setPaper('a4', 'landscape');
+
 
         // Descargar el PDF
         // return $pdf->download('reporte_empleado_' . $empleado->id . '.pdf');

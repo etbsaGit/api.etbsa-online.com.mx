@@ -15,12 +15,40 @@
         }
 
         .container {
-            max-width: 900px;
             width: 100%;
-            margin: 20px auto;
+            padding: 0px;
             background: #fff;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
+        }
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 3px solid #447c1f;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #447c1f;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .avatar {
+            width: 100px;
+            height: 60px;
+            object-fit: cover;
+            margin-left: 15px;
+        }
+
+        .avatar2 {
+            width: 120px;
+            height: 60px;
+            object-fit: cover;
+            margin-left: 75%;
         }
 
         .section-title {
@@ -32,7 +60,7 @@
         }
 
         .prospect-box {
-            border: 2px solid #00642a;
+            border: 2px solid #447c1f;
             /* Verde */
             margin-bottom: 20px;
             background-color: #ecf9f1;
@@ -46,7 +74,7 @@
             color: #fff;
             margin: 0;
             padding: 15px;
-            background-color: #00642a;
+            background-color: #447c1f;
             /* Verde */
             text-align: center;
         }
@@ -66,7 +94,7 @@
         }
 
         th {
-            background-color: #00642a;
+            background-color: #447c1f;
             /* Verde */
             color: white;
             font-weight: bold;
@@ -114,6 +142,11 @@
 
     <div class="container">
         <!-- Información del Empleado -->
+        <div class="header-container">
+            <img src="storage/images/logo40.png" alt="Avatar" class="avatar">
+            <img src="storage/images/logo.png" alt="Avatar" class="avatar2">
+            <div class="header">Reporte de Visitas del mes de {{$month}} del {{$year}}</div>
+        </div>
         <div class="section-title">Información del Empleado</div>
         <p><strong>Nombre:</strong> {{ $empleado->nombreCompleto }}</p>
         <p><strong>Sucursal:</strong> {{ optional($empleado->sucursal)->nombre ?? 'No disponible' }}</p>

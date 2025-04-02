@@ -26,7 +26,10 @@ class VacationDay extends Model
         'fecha_termino',
         'fecha_regreso',
         'validated',
-        'comentarios'
+        'comentarios',
+        'created_by',
+        'validate_by',
+        'cubre'
     ];
 
     protected $appends = ['color'];
@@ -48,7 +51,7 @@ class VacationDay extends Model
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['comentarios']);
+        return $this->scopeFilterSearchVacation($query, $filters, ['comentarios']);
     }
 
     public function empleado()
@@ -64,5 +67,20 @@ class VacationDay extends Model
     public function puesto()
     {
         return $this->belongsTo(Puesto::class, 'puesto_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function validateBy()
+    {
+        return $this->belongsTo(User::class, 'validate_by');
+    }
+
+    public function cubre()
+    {
+        return $this->belongsTo(Empleado::class, 'cubre');
     }
 }

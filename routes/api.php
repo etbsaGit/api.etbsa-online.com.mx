@@ -288,6 +288,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('vacationDay/off/{vacationDay}', [VacationDayController::class, 'setValidatedOff']);
     Route::get('vacationDay/calendar/{date}', [VacationDayController::class, 'getVacationCalendar']);
     Route::post('vacationDay/report', [VacationDayController::class, 'getReport']);
+    Route::post('vacationDay/employeeReport', [VacationDayController::class, 'getEmployeeReport']);
+    Route::post('vacationDay/employeeReportPdf', [VacationDayController::class, 'getEmployeeReportPdf']);
     Route::post('vacationDay/reportPDF', [VacationDayController::class, 'exportReport']);
     Route::apiResource('vacationDay', VacationDayController::class);
 
