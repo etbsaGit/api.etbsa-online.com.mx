@@ -33,7 +33,7 @@ class VacationDayController extends ApiController
 
         if ($user->hasRole('RRHH')) {
             $vacations = VacationDay::filter($filters)
-                ->with(['empleado', 'sucursal', 'puesto'])
+                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel'])
                 ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
                 ->orderBy('fecha_inicio', 'desc')
                 ->paginate(10);
@@ -47,7 +47,7 @@ class VacationDayController extends ApiController
             // Filtra las VacationDay únicamente de los empleados en el arreglo
             $vacations = VacationDay::filter($filters)
                 ->whereIn('empleado_id', $empleadoIds)
-                ->with(['empleado', 'sucursal', 'puesto'])
+                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel'])
                 ->orderBy('validated', 'asc')
                 ->orderBy('fecha_inicio', 'desc')
                 ->paginate(10);
@@ -66,7 +66,7 @@ class VacationDayController extends ApiController
         }
 
         $vacations = VacationDay::filter($filters)
-            ->with(['empleado', 'sucursal', 'puesto'])
+            ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel'])
             ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
             ->orderBy('fecha_inicio', 'desc')
             ->paginate(10);
@@ -153,6 +153,7 @@ class VacationDayController extends ApiController
             'empleados' => $empleados,
             'puestos' => Puesto::all(),
             'sucursales' => Sucursal::all(),
+            'departamentos' => Departamento::all(),
             'festivos' => $fechas,
             'empleadosAll' => $empleadosAll,
         ];
@@ -225,6 +226,7 @@ class VacationDayController extends ApiController
         $solicitante = $vacationDay->empleado;
         $jefe = $vacationDay->empleado->jefe_directo;
         $not = $vacationDay->empleado->notificar;
+        $qc = $vacationDay->cubre_rel;
         $cc = Empleado::where('puesto_id', Puesto::where('nombre', 'Coordinador de compras')->value('id'))->first();
 
         $correos = [
@@ -232,6 +234,9 @@ class VacationDayController extends ApiController
             'solicitante' => $solicitante->correo_institucional,
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
             'notificar' => $not ? $not->correo_institucional : null,
+            'qc' => $qc
+                ? $qc->correo_institucional
+                : null,
         ];
 
         if ($vacationDay->vehiculo_utilitario) {

@@ -79,7 +79,7 @@ class VacationDay extends Model
         return $this->belongsTo(User::class, 'validate_by');
     }
 
-    public function cubre()
+    public function cubre_rel()
     {
         return $this->belongsTo(Empleado::class, 'cubre');
     }
