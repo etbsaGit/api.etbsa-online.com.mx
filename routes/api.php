@@ -286,7 +286,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('vacationDay/forms/{year}', [VacationDayController::class, 'getforms']);
     Route::get('vacationDay/on/{vacationDay}', [VacationDayController::class, 'setValidatedOn']);
     Route::get('vacationDay/off/{vacationDay}', [VacationDayController::class, 'setValidatedOff']);
-    Route::get('vacationDay/calendar/{date}', [VacationDayController::class, 'getVacationCalendar']);
+    Route::post('vacationDay/calendar/{date}', [VacationDayController::class, 'getVacationCalendar']);
     Route::post('vacationDay/report', [VacationDayController::class, 'getReport']);
     Route::post('vacationDay/employeeReport', [VacationDayController::class, 'getEmployeeReport']);
     Route::post('vacationDay/employeeReportPdf', [VacationDayController::class, 'getEmployeeReportPdf']);

@@ -31,4 +31,11 @@ class Departamento extends Model
     {
         return $this->hasMany(Post::class, 'departamento_id');
     }
+
+    // ---------------------------------VacationDay---------------------------------------------------------
+
+    public function vacationDays()
+    {
+        return $this->hasMany(VacationDay::class, 'puesto_id');
+    }
 }

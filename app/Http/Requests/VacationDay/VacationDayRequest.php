@@ -38,6 +38,7 @@ class VacationDayRequest extends FormRequest
             'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
             'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
             'puesto_id' => ['required', 'integer', 'exists:puestos,id'],
+            'departamento_id' => ['required', 'integer', 'exists:departamentos,id'],
             'vehiculo_utilitario' => ['nullable', 'string', 'max:255'],
             'periodo_correspondiente' => ['required', 'string', 'max:255'],
             'anios_cumplidos' => ['required', 'integer'],

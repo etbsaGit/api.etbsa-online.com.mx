@@ -33,7 +33,7 @@ class VacationDayController extends ApiController
 
         if ($user->hasRole('RRHH')) {
             $vacations = VacationDay::filter($filters)
-                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel'])
+                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento'])
                 ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
                 ->orderBy('fecha_inicio', 'desc')
                 ->paginate(10);
@@ -47,7 +47,7 @@ class VacationDayController extends ApiController
             // Filtra las VacationDay únicamente de los empleados en el arreglo
             $vacations = VacationDay::filter($filters)
                 ->whereIn('empleado_id', $empleadoIds)
-                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel'])
+                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento'])
                 ->orderBy('validated', 'asc')
                 ->orderBy('fecha_inicio', 'desc')
                 ->paginate(10);
@@ -66,7 +66,7 @@ class VacationDayController extends ApiController
         }
 
         $vacations = VacationDay::filter($filters)
-            ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel'])
+            ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento'])
             ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
             ->orderBy('fecha_inicio', 'desc')
             ->paginate(10);
@@ -98,7 +98,7 @@ class VacationDayController extends ApiController
      */
     public function show(VacationDay $vacationDay)
     {
-        return $this->respond($vacationDay->load('empleado', 'puesto', 'sucursal'));
+        return $this->respond($vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel', 'departamento'));
     }
 
     /**
@@ -302,8 +302,9 @@ class VacationDayController extends ApiController
         return $this->respondSuccess();
     }
 
-    public function getVacationCalendar($date)
+    public function getVacationCalendar(Request $request, $date)
     {
+        $filters = $request->all();
         $user = Auth::user();
         $empleado = $user->empleado;
 
@@ -317,7 +318,8 @@ class VacationDayController extends ApiController
         $year = $parsedDate->year;
 
         // Construcción de la consulta base con filtro de fecha
-        $vacationDaysQuery = VacationDay::with('empleado')
+        $vacationDaysQuery = VacationDay::filter($filters)
+            ->with('empleado')
             ->where('validated', 1)
             ->where(function ($query) use ($month, $year) {
                 $query->whereMonth('fecha_inicio', $month)->whereYear('fecha_inicio', $year)

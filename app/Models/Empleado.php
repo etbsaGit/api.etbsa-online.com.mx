@@ -89,7 +89,7 @@ class Empleado extends Model
 
     public function getVacationPeriodAttribute()
     {
-        $fecha_de_ingreso = \Carbon\Carbon::parse($this->fecha_de_ingreso);
+        $fecha_de_ingreso = \Carbon\Carbon::parse($this->fecha_de_ingreso)->locale('es');
         $hoy = now();
 
         // Obtener el aniversario más reciente en el año actual
@@ -104,11 +104,12 @@ class Empleado extends Model
         $anio_inicio = $ultimo_aniversario->year;
         $anio_fin = $anio_inicio + 1;
 
-        // Obtener el mes de ingreso en formato abreviado (ej. "Nov")
-        $mes_ingreso = $fecha_de_ingreso->format('M');
+        // Obtener el mes de ingreso en español (abreviado)
+        $mes_ingreso = $fecha_de_ingreso->translatedFormat('M');
 
         return strtolower("$mes_ingreso - $anio_inicio / $mes_ingreso - $anio_fin");
     }
+
 
 
     public function getNombreCompletoAttribute()

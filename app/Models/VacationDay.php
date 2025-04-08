@@ -5,16 +5,18 @@ namespace App\Models;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class VacationDay extends Model
 {
-    use HasFactory, FilterableModel;
+    use HasFactory, FilterableModel, SoftDeletes;
 
     protected $fillable = [
         'empleado_id',
         'sucursal_id',
         'puesto_id',
+        'departamento_id',
         'vehiculo_utilitario',
         'periodo_correspondiente',
         'anios_cumplidos',
@@ -67,6 +69,11 @@ class VacationDay extends Model
     public function puesto()
     {
         return $this->belongsTo(Puesto::class, 'puesto_id');
+    }
+
+    public function departamento()
+    {
+        return $this->belongsTo(Departamento::class, 'departamento_id');
     }
 
     public function createdBy()
