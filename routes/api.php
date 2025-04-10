@@ -58,6 +58,7 @@ use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
+use App\Http\Controllers\Api\VehicleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -356,6 +357,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('suggestions', [SuggestionController::class, 'index']);
     Route::post('suggestion/trash', [SuggestionController::class, 'getOnlyTrashed']);
     Route::apiResource('suggestion', SuggestionController::class);
+
+    //--------------------vehicle--------------------
+    Route::post('vehicles', [VehicleController::class, 'index']);
+    Route::post('vehicle/asign/{vehicle}', [VehicleController::class, 'asignEmployees']);
+    Route::get('vehicle/forms', [VehicleController::class, 'getforms']);
+    Route::apiResource('vehicle', VehicleController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

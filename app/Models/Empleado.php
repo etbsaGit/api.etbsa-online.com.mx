@@ -71,6 +71,7 @@ class Empleado extends Model
         'jefe_directo_id',
         'notificar_id',
         'estatus_id',
+        'vehicle_id',
 
         'descripcion_puesto',
         'carrera',
@@ -455,6 +456,13 @@ class Empleado extends Model
     public function destinatario()
     {
         return $this->hasMany(Empleado::class, 'notificar_id');
+    }
+
+    // ---------------------------------Vehicle---------------------------------------------------------
+
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------

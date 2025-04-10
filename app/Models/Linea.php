@@ -55,4 +55,11 @@ class Linea extends Model
     {
         return $this->hasMany(Used::class, 'linea_id');
     }
+
+    // ---------------------------------Vehicle---------------------------------------------------------
+
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'linea_id');
+    }
 }

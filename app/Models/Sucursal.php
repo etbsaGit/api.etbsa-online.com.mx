@@ -93,4 +93,11 @@ class Sucursal extends Model
     {
         return $this->hasMany(Used::class, 'location_id');
     }
+
+        // ---------------------------------Vehicle---------------------------------------------------------
+
+        public function vehicles()
+        {
+            return $this->hasMany(Vehicle::class, 'sucursal_id');
+        }
 }

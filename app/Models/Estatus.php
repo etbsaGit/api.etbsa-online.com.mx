@@ -93,4 +93,11 @@ class Estatus extends Model
     {
         return $this->hasMany(Suggestion::class, 'estatus_id');
     }
+
+        // ---------------------------------Vehicle---------------------------------------------------------
+
+        public function vehicles()
+        {
+            return $this->hasMany(Vehicle::class, 'estatus_id');
+        }
 }
