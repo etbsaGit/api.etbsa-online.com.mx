@@ -128,7 +128,7 @@ class VacationDayController extends ApiController
 
         if ($user->hasRole('RRHH')) {
             $empleados = Empleado::where('estatus_id', 5)
-                ->with('vehicle')
+                ->with('vehicle', 'jefe_directo', 'notificar')
                 ->orderBy('apellido_paterno')
                 ->get();
         } else {
@@ -137,7 +137,7 @@ class VacationDayController extends ApiController
 
         if ($empleado && !$user->hasRole('RRHH')) {
             $empleadosAll = Empleado::where('estatus_id', 5)
-                ->with('vehicle')
+                ->with('vehicle', 'jefe_directo', 'notificar')
                 ->where('sucursal_id', $empleado->sucursal_id)
                 ->orderBy('apellido_paterno')
                 ->get();

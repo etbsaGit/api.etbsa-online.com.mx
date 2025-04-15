@@ -28,6 +28,7 @@ class StoreWorkOrderRequest extends FormRequest
         return [
             'ot' => ['required', 'integer', 'unique:work_orders'],
             'cliente' => ['required', 'string', 'max:255'],
+            'telefono' => ['required', 'numeric'],
             'maquina' => ['required', 'string', 'max:255'],
             'descripcion' => ['required', 'string'],
             'fecha_ingreso' => ['required', 'date'],
