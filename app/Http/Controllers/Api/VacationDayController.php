@@ -570,33 +570,33 @@ class VacationDayController extends ApiController
         // Obtener festivos como array asegurando formato DATE
         $festivos = Festivo::pluck('fecha')->map(fn($date) => Carbon::parse($date)->toDateString())->toArray();
 
-         // Obtener el empleado con vacaciones validadas dentro del periodo
-         $employee = Empleado::where('id', $empleado_id)
-         ->whereHas('vacationDays', function ($query) use ($start, $end) {
-             $query->where('validated', 1)
-                 ->where(function ($q) use ($start, $end) {
-                     $q->whereBetween('fecha_inicio', [$start, $end])
-                         ->orWhereBetween('fecha_termino', [$start, $end])
-                         ->orWhere(function ($q) use ($start, $end) {
-                             $q->where('fecha_inicio', '<=', $start)
-                                 ->where('fecha_termino', '>=', $end);
-                         });
-                 });
-         })
-         ->with(['vacationDays' => function ($query) use ($start, $end) {
-             $query->where('validated', 1)
-                 ->where(function ($q) use ($start, $end) {
-                     $q->whereBetween('fecha_inicio', [$start, $end])
-                         ->orWhereBetween('fecha_termino', [$start, $end])
-                         ->orWhere(function ($q) use ($start, $end) {
-                             $q->where('fecha_inicio', '<=', $start)
-                                 ->where('fecha_termino', '>=', $end);
-                         });
-                 })
-                 ->select('empleado_id', 'fecha_inicio', 'fecha_termino');
-         }])
-         ->with('sucursal')
-         ->first();
+        // Obtener el empleado con vacaciones validadas dentro del periodo
+        $employee = Empleado::where('id', $empleado_id)
+            ->whereHas('vacationDays', function ($query) use ($start, $end) {
+                $query->where('validated', 1)
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('fecha_inicio', [$start, $end])
+                            ->orWhereBetween('fecha_termino', [$start, $end])
+                            ->orWhere(function ($q) use ($start, $end) {
+                                $q->where('fecha_inicio', '<=', $start)
+                                    ->where('fecha_termino', '>=', $end);
+                            });
+                    });
+            })
+            ->with(['vacationDays' => function ($query) use ($start, $end) {
+                $query->where('validated', 1)
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('fecha_inicio', [$start, $end])
+                            ->orWhereBetween('fecha_termino', [$start, $end])
+                            ->orWhere(function ($q) use ($start, $end) {
+                                $q->where('fecha_inicio', '<=', $start)
+                                    ->where('fecha_termino', '>=', $end);
+                            });
+                    })
+                    ->select('empleado_id', 'fecha_inicio', 'fecha_termino');
+            }])
+            ->with('sucursal')
+            ->first();
 
         if (!$employee) {
             return response()->json(['error' => 'Empleado no encontrado o sin vacaciones registradas en este periodo.'], 404);
