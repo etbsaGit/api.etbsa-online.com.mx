@@ -127,24 +127,39 @@ class Empleado extends Model
     {
         $fechaIngreso = \Carbon\Carbon::parse($this->fecha_de_ingreso);
         $hoy = \Carbon\Carbon::now();
-        $aniosCumplidos = $fechaIngreso->diffInYears($hoy);
+
+        // Determina el año actual de aniversario
+        $anioActual = $hoy->year;
+        $mesDiaIngreso = $fechaIngreso->copy()->format('m-d');
+
+        $inicioPeriodo = \Carbon\Carbon::createFromFormat('Y-m-d', "$anioActual-$mesDiaIngreso");
+        if ($hoy->lt($inicioPeriodo)) {
+            // Si aún no ha llegado al aniversario este año, restamos un año
+            $inicioPeriodo->subYear();
+        }
+        $finPeriodo = $inicioPeriodo->copy()->addYear()->subDay();
+
+        $aniosCumplidos = $fechaIngreso->diffInYears($inicioPeriodo);
 
         $dias_correspondientes = Antiguedad::where('id', $aniosCumplidos)->value('dias_correspondientes');
 
-        // Obtener el conteo de vacationDays para este empleado y años cumplidos
         $vacationDaysCount = VacationDay::where('empleado_id', $this->id)
             ->where('anios_cumplidos', $aniosCumplidos)
             ->where('validated', 1)
+            ->whereBetween('fecha_inicio', [$inicioPeriodo, $finPeriodo])
             ->sum('dias_disfrute');
 
-        $resultados = [
+        return [
             'cumplidos' => $aniosCumplidos,
             'correspondientes' => $dias_correspondientes,
             'subtotal' => $dias_correspondientes - $vacationDaysCount,
+            'periodo' => [
+                'inicio' => $inicioPeriodo->toDateString(),
+                'fin' => $finPeriodo->toDateString(),
+            ],
         ];
-
-        return $resultados;
     }
+
 
     public function getProdAttribute()
     {
@@ -463,6 +478,14 @@ class Empleado extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
+    }
+
+    // ---------------------------------Contacto de emergencia---------------------------------------------------------
+
+
+    public function empleadosContact()
+    {
+        return $this->hasMany(EmpleadosContact::class, 'empleado_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------

@@ -22,7 +22,7 @@ class Vehicle extends Model
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearchVacation($query, $filters, ['placas']);
+        return $this->scopeFilterSearch($query, $filters, ['placas']);
     }
 
     public function departamento()

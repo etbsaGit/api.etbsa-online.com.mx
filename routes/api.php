@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\EstatusController;
 use App\Http\Controllers\Api\FestivoController;
 use App\Http\Controllers\Api\PostDocController;
 use App\Http\Controllers\Api\UsedDocController;
+use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\ProspectController;
@@ -54,11 +55,11 @@ use App\Http\Controllers\Ecommerce\FeaturesController;
 use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ProspectCultivoController;
 use App\Http\Controllers\Api\ProspectMaquinaController;
+use App\Http\Controllers\Api\EmpleadosContactController;
 use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
-use App\Http\Controllers\Api\VehicleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -363,6 +364,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('vehicle/asign/{vehicle}', [VehicleController::class, 'asignEmployees']);
     Route::get('vehicle/forms', [VehicleController::class, 'getforms']);
     Route::apiResource('vehicle', VehicleController::class);
+
+    //--------------------EmpleadosContact--------------------
+    Route::post('empleadosContacts', [EmpleadosContactController::class, 'index']);
+    Route::apiResource('empleadosContact', EmpleadosContactController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

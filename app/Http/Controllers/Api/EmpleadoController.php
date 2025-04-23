@@ -42,7 +42,7 @@ class EmpleadoController extends ApiController
         if ($user->hasRole('RRHH')) {
             $empleados = Empleado::filter($filters)
                 ->where('estatus_id', 5)
-                ->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason'])
+                ->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason', 'empleadosContact.kinship'])
                 ->orderBy('sucursal_id')
                 ->paginate(10);
         } else {
