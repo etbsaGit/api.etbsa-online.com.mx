@@ -25,34 +25,34 @@ class CajaCategoriaController extends ApiController
      */
     public function store(StoreRequest $request)
     {
-        $cajaCategoria = CajaCategoria::create($request->validated());
+        $cajaCategorium = CajaCategoria::create($request->validated());
 
-        return $this->respondCreated($cajaCategoria);
+        return $this->respondCreated($cajaCategorium);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(CajaCategoria $cajaCategoria)
+    public function show(CajaCategoria $cajaCategorium)
     {
-        return $this->respond($cajaCategoria);
+        return $this->respond($cajaCategorium);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(PutRequest $request, CajaCategoria $cajaCategoria)
+    public function update(PutRequest $request, CajaCategoria $cajaCategorium)
     {
-        $cajaCategoria->update($request->validated());
-        return $this->respond($cajaCategoria);
+        $cajaCategorium->update($request->validated());
+        return $this->respond($cajaCategorium);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CajaCategoria $cajaCategoria)
+    public function destroy(CajaCategoria $cajaCategorium)
     {
-        $cajaCategoria->delete();
+        $cajaCategorium->delete();
         return $this->respondSuccess();
     }
 }

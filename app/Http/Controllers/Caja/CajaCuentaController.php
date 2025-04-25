@@ -26,34 +26,34 @@ class CajaCuentaController extends ApiController
      */
     public function store(StoreRequest $request)
     {
-        $cajaCuenta = CajaCuenta::create($request->validated());
+        $cajaCuentum = CajaCuenta::create($request->validated());
 
-        return $this->respondCreated($cajaCuenta);
+        return $this->respondCreated($cajaCuentum);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(CajaCuenta $cajaCuenta)
+    public function show(CajaCuenta $cajaCuentum)
     {
-        return $this->respond($cajaCuenta);
+        return $this->respond($cajaCuentum);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(PutRequest $request, CajaCuenta $cajaCuenta)
+    public function update(PutRequest $request, CajaCuenta $cajaCuentum)
     {
-        $cajaCuenta->update($request->validated());
+        $cajaCuentum->update($request->validated());
         return $this->respond($request);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CajaCuenta $cajaCuenta)
+    public function destroy(CajaCuenta $cajaCuentum)
     {
-        $cajaCuenta->delete();
+        $cajaCuentum->delete();
         return $this->respondSuccess();
     }
 

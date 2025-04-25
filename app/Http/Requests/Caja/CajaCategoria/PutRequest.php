@@ -26,7 +26,7 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => ['required', 'string', Rule::unique('caja_categorias')->ignore($this->route('cajaCategoria')->id)],
+            'nombre' => ['required', 'string', Rule::unique('caja_categorias')->ignore($this->route('cajaCategorium')->id)],
             'descripcion' => ['nullable', 'string'],
         ];
     }
