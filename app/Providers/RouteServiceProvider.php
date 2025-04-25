@@ -38,6 +38,11 @@ class RouteServiceProvider extends ServiceProvider
                 ->namespace($this->namespace)
                 ->group(base_path('routes/api_intranet.php'));
 
+            Route::prefix('api/caja')
+                ->middleware('api')
+                ->namespace($this->namespace)
+                ->group(base_path('routes/api_caja.php'));
+
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });
