@@ -367,6 +367,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------EmpleadosContact--------------------
     Route::post('empleadosContacts', [EmpleadosContactController::class, 'index']);
+    Route::get('empleadosContact/forms', [EmpleadosContactController::class, 'getforms']);
     Route::apiResource('empleadosContact', EmpleadosContactController::class);
 });
 //--------------------landingPage--------------------
