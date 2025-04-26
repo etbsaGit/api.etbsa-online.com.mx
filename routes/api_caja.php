@@ -6,6 +6,7 @@ use App\Http\Controllers\Caja\CajaBancoController;
 use App\Http\Controllers\Caja\CajaCuentaController;
 use App\Http\Controllers\Caja\CajaCategoriaController;
 use App\Http\Controllers\Caja\CajaTiposPagosController;
+use App\Http\Controllers\Caja\CajaDenominacionController;
 use App\Http\Controllers\Caja\CajaTiposFacturaController;
 
 
@@ -45,4 +46,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('cajaCuentas', [CajaCuentaController::class, 'index']);
     Route::get('cajaCuenta/forms', [CajaCuentaController::class, 'getforms']);
     Route::apiResource('cajaCuenta', CajaCuentaController::class);
+
+    //--------------------CajaDenominacion--------------------
+    Route::post('cajaDenominaciones', [CajaDenominacionController::class, 'index']);
+    Route::apiResource('cajaDenominacion', CajaDenominacionController::class);
 });
