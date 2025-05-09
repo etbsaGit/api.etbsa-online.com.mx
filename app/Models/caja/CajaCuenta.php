@@ -27,4 +27,11 @@ class CajaCuenta extends Model
     {
         return $this->belongsTo(CajaBanco::class, 'caja_banco_id');
     }
+
+    // ---------------------------------Pago---------------------------------------------------------
+
+    public function transaccion()
+    {
+        return $this->hasMany(CajaTransaccion::class, 'cuenta_id');
+    }
 }

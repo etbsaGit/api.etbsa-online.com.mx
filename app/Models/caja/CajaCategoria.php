@@ -12,13 +12,20 @@ class CajaCategoria extends Model
     use HasFactory, FilterableModel;
 
     protected $fillable = [
-       'nombre',
-       'descripcion'
+        'nombre',
+        'descripcion'
     ];
 
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['nombre','descripcion']);
+        return $this->scopeFilterSearch($query, $filters, ['nombre', 'descripcion']);
+    }
+
+    // ---------------------------------Pago---------------------------------------------------------
+
+    public function pagos()
+    {
+        return $this->hasMany(CajaPago::class, 'categoria_id');
     }
 }

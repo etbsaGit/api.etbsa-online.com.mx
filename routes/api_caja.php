@@ -2,10 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Caja\CajaPagoController;
 use App\Http\Controllers\Caja\CajaBancoController;
 use App\Http\Controllers\Caja\CajaCuentaController;
 use App\Http\Controllers\Caja\CajaCategoriaController;
 use App\Http\Controllers\Caja\CajaTiposPagosController;
+use App\Http\Controllers\Caja\CajaTransaccionController;
 use App\Http\Controllers\Caja\CajaDenominacionController;
 use App\Http\Controllers\Caja\CajaTiposFacturaController;
 
@@ -28,6 +30,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------CajaCategoria--------------------
     Route::post('cajaCategorias', [CajaCategoriaController::class, 'index']);
+    Route::get('cajaCategorias/all', [CajaCategoriaController::class, 'all']);
     Route::apiResource('cajaCategoria', CajaCategoriaController::class);
 
     //--------------------CajaTiposPago--------------------
@@ -50,4 +53,17 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------CajaDenominacion--------------------
     Route::post('cajaDenominaciones', [CajaDenominacionController::class, 'index']);
     Route::apiResource('cajaDenominacion', CajaDenominacionController::class);
+
+    //--------------------CajaTransaccion--------------------
+    Route::post('cajaTransacciones', [CajaTransaccionController::class, 'index']);
+    Route::get('cajaTransaccion/now', [CajaTransaccionController::class, 'getPerDay']);
+    Route::get('cajaTransaccion/report/{fecha}', [CajaTransaccionController::class, 'getReportPerDay']);
+    Route::get('cajaTransaccion/report/excel/{fecha}', [CajaTransaccionController::class, 'getReportExcelPerDay']);
+    Route::post('cajaTransaccion/report/category', [CajaTransaccionController::class, 'getReportPerDayCategory']);
+    Route::post('cajaTransaccion/report/pdf', [CajaTransaccionController::class, 'getReportPdfPerDayCategory']);
+    Route::get('cajaTransaccion/forms', [CajaTransaccionController::class, 'getforms']);
+    Route::apiResource('cajaTransaccion', CajaTransaccionController::class);
+
+    //--------------------CajaPago--------------------
+    Route::apiResource('cajaPago', CajaPagoController::class);
 });

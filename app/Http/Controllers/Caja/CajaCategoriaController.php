@@ -20,6 +20,11 @@ class CajaCategoriaController extends ApiController
         return $this->respond(CajaCategoria::filter($filters)->paginate(10));
     }
 
+    public function all()
+    {
+        return $this->respond(CajaCategoria::get());
+    }
+
     /**
      * Store a newly created resource in storage.
      */

@@ -21,4 +21,9 @@ class CajaTiposFactura extends Model
     {
         return $this->scopeFilterSearch($query, $filters, ['nombre', 'descripcion']);
     }
+
+    public function cajaTransaccion()
+    {
+        return $this->hasMany(CajaTransaccion::class, 'tipo_factura_id');
+    }
 }

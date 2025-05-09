@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Caja\CajaPago;
 use App\Models\Empleado;
 use App\Models\Intranet\Sale;
 use App\Traits\FilterableModel;
@@ -94,10 +95,17 @@ class Sucursal extends Model
         return $this->hasMany(Used::class, 'location_id');
     }
 
-        // ---------------------------------Vehicle---------------------------------------------------------
+    // ---------------------------------Vehicle---------------------------------------------------------
 
-        public function vehicles()
-        {
-            return $this->hasMany(Vehicle::class, 'sucursal_id');
-        }
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'sucursal_id');
+    }
+
+    // ---------------------------------Pago---------------------------------------------------------
+
+    public function pagos()
+    {
+        return $this->hasMany(CajaPago::class, 'sucursal_id');
+    }
 }

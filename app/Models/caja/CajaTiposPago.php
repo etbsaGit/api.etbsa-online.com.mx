@@ -21,4 +21,11 @@ class CajaTiposPago extends Model
     {
         return $this->scopeFilterSearch($query, $filters, ['nombre', 'descripcion']);
     }
+
+    // ---------------------------------Pago---------------------------------------------------------
+
+    public function transaccion()
+    {
+        return $this->hasMany(CajaTransaccion::class, 'tipo_pago_id');
+    }
 }
