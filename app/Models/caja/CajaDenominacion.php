@@ -24,4 +24,9 @@ class CajaDenominacion extends Model
     {
         return $this->scopeFilterSearch($query, $filters, ['nombre', 'valor', 'tipo']);
     }
+
+    public function detalleEfectivo()
+    {
+        return $this->hasMany(CajaDetalleEfectivo::class, 'denominacion_id');
+    }
 }

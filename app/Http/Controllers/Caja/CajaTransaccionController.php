@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
 use App\Models\Caja\CajaPago;
+use App\Models\Caja\CajaCorte;
 use App\Models\Caja\CajaCuenta;
 use App\Models\Intranet\Cliente;
 use App\Models\Caja\CajaCategoria;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Caja\CajaTransaccion;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Caja\CajaDenominacion;
 use App\Models\Caja\CajaTiposFactura;
 use App\Exports\CajaTransaccionExport;
 use App\Http\Controllers\ApiController;
@@ -142,7 +144,7 @@ class CajaTransaccionController extends ApiController
         $data = [
             'sucursales' => Sucursal::all(),
             'categorias' => CajaCategoria::all(),
-            'cuentas' => CajaCuenta::with('cajaBanco')->get(),
+            'cuentas' => CajaCuenta::with('cajaBanco', 'sucursal', 'categoria')->get(),
             'tipos_pago' => CajaTiposPago::all(),
             'tipos_factura' => CajaTiposFactura::all(),
             'clientes' => Cliente::all()
@@ -166,7 +168,18 @@ class CajaTransaccionController extends ApiController
             return $item->total > 0;
         })->values();
 
-        return $this->respond($data);
+        $denominaciones = CajaDenominacion::all();
+
+        // Obtener el corte de caja con esa fecha
+        $cajaCorte = CajaCorte::whereDate('fecha_corte', $fecha)->with('detalleEfectivo.denominacion')->first();
+
+        $res = [
+            'data' => $data,
+            'denominaciones' => $denominaciones,
+            'corte' => $cajaCorte
+        ];
+
+        return $this->respond($res);
     }
 
     public function getReportExcelPerDay($fecha)

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Caja\CajaCorte;
 use App\Traits\FilterableModel;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Caja\CajaTransaccion;
@@ -103,5 +104,10 @@ class User extends Authenticatable
     public function cajaTransaccion()
     {
         return $this->hasMany(CajaTransaccion::class, 'user_id');
+    }
+
+    public function cortes()
+    {
+        return $this->hasMany(CajaCorte::class, 'user_id');
     }
 }

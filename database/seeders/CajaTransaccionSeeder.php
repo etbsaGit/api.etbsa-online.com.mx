@@ -24,7 +24,7 @@ class CajaTransaccionSeeder extends Seeder
                 'comentarios' => null,
                 'validado' => 0,
                 'cliente_id' => rand(1, 100),
-                'user_id' => 2,
+                'user_id' => 269,
                 'tipo_factura_id' => rand(1, 2),
                 'cuenta_id' => 2,
                 'fecha_pago' => Carbon::now()->subDays(rand(1, 30))->toDateString(),

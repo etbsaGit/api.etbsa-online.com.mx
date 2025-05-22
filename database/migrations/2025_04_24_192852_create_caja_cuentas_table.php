@@ -20,6 +20,12 @@ return new class extends Migration
             $table->unsignedBigInteger('caja_banco_id')->nullable();
             $table->foreign('caja_banco_id')->references('id')->on('caja_bancos')->onDelete('restrict');
 
+            $table->unsignedBigInteger('sucursal_id')->nullable();
+            $table->foreign('sucursal_id')->references('id')->on('sucursales')->onDelete('restrict');
+
+            $table->unsignedBigInteger('caja_categoria_id')->nullable();
+            $table->foreign('caja_categoria_id')->references('id')->on('caja_categorias')->onDelete('restrict');
+
             $table->timestamps();
         });
     }

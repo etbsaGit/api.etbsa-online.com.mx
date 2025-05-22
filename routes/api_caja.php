@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Caja\CajaPagoController;
 use App\Http\Controllers\Caja\CajaBancoController;
+use App\Http\Controllers\Caja\CajaCorteController;
 use App\Http\Controllers\Caja\CajaCuentaController;
 use App\Http\Controllers\Caja\CajaCategoriaController;
 use App\Http\Controllers\Caja\CajaTiposPagosController;
@@ -66,4 +67,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------CajaPago--------------------
     Route::apiResource('cajaPago', CajaPagoController::class);
+
+    //--------------------CajaCorte--------------------
+    Route::apiResource('cajaCorte', CajaCorteController::class);
 });

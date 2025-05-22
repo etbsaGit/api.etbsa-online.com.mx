@@ -8,6 +8,8 @@ use App\Models\Caja\CajaCuenta;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Caja\CajaCuenta\PutRequest;
 use App\Http\Requests\Caja\CajaCuenta\StoreRequest;
+use App\Models\Caja\CajaCategoria;
+use App\Models\Sucursal;
 
 class CajaCuentaController extends ApiController
 {
@@ -18,7 +20,7 @@ class CajaCuentaController extends ApiController
     {
         $filters = $request->all();
 
-        return $this->respond(CajaCuenta::filter($filters)->with('cajaBanco')->paginate(10));
+        return $this->respond(CajaCuenta::filter($filters)->with('cajaBanco','sucursal','categoria')->paginate(10));
     }
 
     /**
@@ -60,7 +62,9 @@ class CajaCuentaController extends ApiController
     public function getforms()
     {
         $data = [
-            'bancos' => CajaBanco::all()
+            'bancos' => CajaBanco::all(),
+            'categorias' => CajaCategoria::all(),
+            'sucursales' => Sucursal::all()
         ];
         return $this->respond($data);
     }

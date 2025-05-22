@@ -28,4 +28,11 @@ class CajaCategoria extends Model
     {
         return $this->hasMany(CajaPago::class, 'categoria_id');
     }
+
+    // ---------------------------------CajaCuenta---------------------------------------------------------
+
+    public function cuentas()
+    {
+        return $this->hasMany(CajaCuenta::class, 'caja_categoria_id');
+    }
 }

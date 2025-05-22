@@ -2,6 +2,7 @@
 
 namespace App\Models\Caja;
 
+use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,7 +15,9 @@ class CajaCuenta extends Model
     protected $fillable = [
         'numeroCuenta',
         'descripcion',
-        'caja_banco_id'
+        'caja_banco_id',
+        'sucursal_id',
+        'caja_categoria_id'
     ];
 
     // -Scope-
@@ -26,6 +29,16 @@ class CajaCuenta extends Model
     public function cajaBanco()
     {
         return $this->belongsTo(CajaBanco::class, 'caja_banco_id');
+    }
+
+    public function sucursal()
+    {
+        return $this->belongsTo(Sucursal::class, 'sucursal_id');
+    }
+
+    public function categoria()
+    {
+        return $this->belongsTo(CajaCategoria::class, 'caja_categoria_id');
     }
 
     // ---------------------------------Pago---------------------------------------------------------

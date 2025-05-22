@@ -26,9 +26,11 @@ class PutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'numeroCuenta' => ['required', 'string',Rule::unique('caja_cuentas')->ignore($this->route('cajaCuentum')->id)],
+            'numeroCuenta' => ['required', 'string', Rule::unique('caja_cuentas')->ignore($this->route('cajaCuentum')->id)],
             'descripcion' => ['nullable', 'string'],
             'caja_banco_id' => ['required', 'integer', 'exists:caja_bancos,id'],
+            'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
+            'caja_categoria_id' => ['required', 'integer', 'exists:caja_categorias,id'],
         ];
     }
 
