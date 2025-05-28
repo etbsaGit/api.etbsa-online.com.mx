@@ -41,6 +41,7 @@ class UserController extends ApiController
                 'Empleado.departamento',
                 'Empleado.jefe_directo',
                 'Empleado.archivable',
+                'Empleado.vehicle',
                 'Empleado.archivable.requisito',
                 'Empleado.empleadosContact.kinship',
                 'Roles',

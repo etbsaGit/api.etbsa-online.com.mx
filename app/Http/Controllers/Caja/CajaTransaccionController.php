@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Caja;
 
 use PDF;
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
 use App\Models\Caja\CajaPago;
@@ -33,7 +34,11 @@ class CajaTransaccionController extends ApiController
     {
         $filters = $request->all();
 
-        return $this->respond(CajaTransaccion::filter($filters)->with('cliente', 'user', 'tipoFactura')->paginate(10));
+        $cajaTransaccion = CajaTransaccion::filter($filters)
+            ->with('tipoFactura', 'cliente', 'user.empleado', 'pagos.sucursal', 'cuenta.cajaBanco', 'pagos.categoria', 'tipoPago')
+            ->paginate(10);
+
+        return $this->respond($cajaTransaccion);
     }
 
     /**
@@ -147,7 +152,8 @@ class CajaTransaccionController extends ApiController
             'cuentas' => CajaCuenta::with('cajaBanco', 'sucursal', 'categoria')->get(),
             'tipos_pago' => CajaTiposPago::all(),
             'tipos_factura' => CajaTiposFactura::all(),
-            'clientes' => Cliente::all()
+            'clientes' => Cliente::all(),
+            'users' => User::has('cajaTransaccion')->get()
         ];
         return $this->respond($data);
     }
@@ -289,5 +295,18 @@ class CajaTransaccionController extends ApiController
 
         // Retornar el PDF en Base64
         return $this->respond($pdfBase64);
+    }
+
+    public function changeStatus(CajaTransaccion $cajaTransaccion)
+    {
+        if ($cajaTransaccion->validado == 1) {
+            $cajaTransaccion->validado = 0;
+        } elseif ($cajaTransaccion->validado == 0) {
+            $cajaTransaccion->validado = 1;
+        }
+
+        $cajaTransaccion->save();
+
+        return $this->respondSuccess();
     }
 }

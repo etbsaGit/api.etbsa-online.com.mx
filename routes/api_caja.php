@@ -63,6 +63,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('cajaTransaccion/report/category', [CajaTransaccionController::class, 'getReportPerDayCategory']);
     Route::post('cajaTransaccion/report/pdf', [CajaTransaccionController::class, 'getReportPdfPerDayCategory']);
     Route::get('cajaTransaccion/forms', [CajaTransaccionController::class, 'getforms']);
+    Route::put('cajaTransaccion/validado/{cajaTransaccion}', [CajaTransaccionController::class, 'changeStatus']);
     Route::apiResource('cajaTransaccion', CajaTransaccionController::class);
 
     //--------------------CajaPago--------------------
