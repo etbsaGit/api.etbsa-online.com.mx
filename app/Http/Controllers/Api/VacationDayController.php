@@ -253,7 +253,7 @@ class VacationDayController extends ApiController
 
         foreach ($correos as $to_email) {
             if ($to_email) {
-                Mail::to($to_email)->send(new VacationOnMailable($vacationDay->load('empleado', 'puesto', 'sucursal')));
+                Mail::to($to_email)->send(new VacationOnMailable($vacationDay->load('empleado', 'puesto', 'sucursal','validateBy.empleado')));
             }
         }
 
@@ -298,7 +298,7 @@ class VacationDayController extends ApiController
 
         foreach ($correos as $to_email) {
             if ($to_email) {
-                Mail::to($to_email)->send(new VacationOffMailable($vacationDay->load('empleado', 'puesto', 'sucursal')));
+                Mail::to($to_email)->send(new VacationOffMailable($vacationDay->load('empleado', 'puesto', 'sucursal','validateBy.empleado')));
             }
         }
         return $this->respondSuccess();
