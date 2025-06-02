@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('caja_transacciones', function (Blueprint $table) {
             $table->id();
-            $table->string('factura');
+            $table->string('factura')->nullable();
             $table->string('folio');
             $table->string('serie');
             $table->string('uuid');
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->date('fecha_pago');
 
             $table->unsignedBigInteger('cliente_id')->nullable();
-            $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('restrict');
+            $table->foreign('cliente_id')->references('id')->on('caja_clientes')->onDelete('restrict');
 
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('restrict');

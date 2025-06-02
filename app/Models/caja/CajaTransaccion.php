@@ -48,7 +48,7 @@ class CajaTransaccion extends Model
 
     public function cliente()
     {
-        return $this->belongsTo(Cliente::class, 'cliente_id');
+        return $this->belongsTo(CajaCliente::class, 'cliente_id');
     }
 
     public function user()

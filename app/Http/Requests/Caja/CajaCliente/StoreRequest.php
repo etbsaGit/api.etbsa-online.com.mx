@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Caja\CajaCuenta;
+namespace App\Http\Requests\Caja\CajaCliente;
 
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,13 +25,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'numeroCuenta' => ['required', 'string', 'unique:caja_cuentas'],
-            'descripcion' => ['nullable', 'string'],
-            'moneda' => ['required', 'string'],
-            'caja_banco_id' => ['required', 'integer', 'exists:caja_bancos,id'],
-            'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
-            'caja_categoria_id' => ['required', 'integer', 'exists:caja_categorias,id'],
-
+            'clave' => ['required', 'string', 'unique:caja_clientes'],
+            'nombre' => ['required', 'string', 'unique:caja_clientes'],
         ];
     }
 

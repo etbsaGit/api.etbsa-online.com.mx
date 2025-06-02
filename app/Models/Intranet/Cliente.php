@@ -157,9 +157,4 @@ class Cliente extends Model
     {
         return $this->hasMany(RentalPeriod::class, 'cliente_id');
     }
-
-    public function cajaTransaccion()
-    {
-        return $this->hasMany(CajaTransaccion::class, 'cliente_id');
-    }
 }

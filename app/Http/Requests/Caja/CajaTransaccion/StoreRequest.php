@@ -33,13 +33,13 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'factura' => ['required', 'string', 'unique:caja_transacciones'],
+            'factura' => ['nullable', 'string', 'unique:caja_transacciones'],
             'folio' => ['required', 'string', 'unique:caja_transacciones'],
             'serie' => ['required', 'string', 'unique:caja_transacciones'],
             'uuid' => ['required', 'string', 'unique:caja_transacciones'],
             'comentarios' => ['nullable', 'string'],
             "validado" => ['required', 'boolean'],
-            'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
+            'cliente_id' => ['nullable', 'integer', 'exists:caja_clientes,id'],
             'user_id' => ['required', 'exists:users,id'],
             'tipo_factura_id' => ['required', 'integer', 'exists:caja_tipos_facturas,id'],
             'fecha_pago' => ['required', 'date'],

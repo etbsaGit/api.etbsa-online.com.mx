@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Requests\Caja\CajaCuenta;
+namespace App\Http\Requests\Caja\CajaCliente;
 
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
-class StoreRequest extends FormRequest
+class PutRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,13 +26,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'numeroCuenta' => ['required', 'string', 'unique:caja_cuentas'],
-            'descripcion' => ['nullable', 'string'],
-            'moneda' => ['required', 'string'],
-            'caja_banco_id' => ['required', 'integer', 'exists:caja_bancos,id'],
-            'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
-            'caja_categoria_id' => ['required', 'integer', 'exists:caja_categorias,id'],
-
+            'clave' => ['required', 'string', Rule::unique('caja_clientes')->ignore($this->route('cajaCliente')->id)],
+            'nombre' => ['required', 'string', Rule::unique('caja_clientes')->ignore($this->route('cajaCliente')->id)],
         ];
     }
 

@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->string('numeroCuenta');
             $table->string('descripcion');
+            $table->string('moneda');
 
             $table->unsignedBigInteger('caja_banco_id')->nullable();
             $table->foreign('caja_banco_id')->references('id')->on('caja_bancos')->onDelete('restrict');

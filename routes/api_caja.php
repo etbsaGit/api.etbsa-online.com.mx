@@ -6,6 +6,7 @@ use App\Http\Controllers\Caja\CajaPagoController;
 use App\Http\Controllers\Caja\CajaBancoController;
 use App\Http\Controllers\Caja\CajaCorteController;
 use App\Http\Controllers\Caja\CajaCuentaController;
+use App\Http\Controllers\Caja\CajaClienteController;
 use App\Http\Controllers\Caja\CajaCategoriaController;
 use App\Http\Controllers\Caja\CajaTiposPagosController;
 use App\Http\Controllers\Caja\CajaTransaccionController;
@@ -71,4 +72,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------CajaCorte--------------------
     Route::apiResource('cajaCorte', CajaCorteController::class);
+
+    //--------------------CajaCliente--------------------
+    Route::post('cajaClientes', [CajaClienteController::class, 'index']);
+    Route::apiResource('cajaCliente', CajaClienteController::class);
 });

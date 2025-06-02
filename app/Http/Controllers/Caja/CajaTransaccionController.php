@@ -24,6 +24,7 @@ use App\Exports\CajaTransaccionExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Caja\CajaTransaccion\PutRequest;
 use App\Http\Requests\Caja\CajaTransaccion\StoreRequest;
+use App\Models\Caja\CajaCliente;
 
 class CajaTransaccionController extends ApiController
 {
@@ -152,7 +153,7 @@ class CajaTransaccionController extends ApiController
             'cuentas' => CajaCuenta::with('cajaBanco', 'sucursal', 'categoria')->get(),
             'tipos_pago' => CajaTiposPago::all(),
             'tipos_factura' => CajaTiposFactura::all(),
-            'clientes' => Cliente::all(),
+            'clientes' => CajaCliente::all(),
             'users' => User::has('cajaTransaccion')->get()
         ];
         return $this->respond($data);

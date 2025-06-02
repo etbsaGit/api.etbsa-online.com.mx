@@ -15,6 +15,7 @@ class CajaCuenta extends Model
     protected $fillable = [
         'numeroCuenta',
         'descripcion',
+        'moneda',
         'caja_banco_id',
         'sucursal_id',
         'caja_categoria_id'
