@@ -15,7 +15,11 @@ return new class extends Migration
             $table->id();
 
             $table->decimal('monto', 9, 2);
-            $table->string('descripcion');
+            $table->string('descripcion')->nullable();
+            $table->string('serie')->nullable();
+
+            $table->unsignedBigInteger('marca_id')->nullable();
+            $table->foreign('marca_id')->references('id')->on('marcas')->onDelete('restrict');
 
             $table->unsignedBigInteger('sucursal_id')->nullable();
             $table->foreign('sucursal_id')->references('id')->on('sucursales')->onDelete('restrict');

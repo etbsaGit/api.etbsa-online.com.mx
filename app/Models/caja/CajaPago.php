@@ -3,6 +3,7 @@
 namespace App\Models\Caja;
 
 use App\Models\Sucursal;
+use App\Models\Intranet\Marca;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,6 +16,8 @@ class CajaPago extends Model
     protected $fillable = [
         'monto',
         'descripcion',
+        'serie',
+        'marca_id',
         'sucursal_id',
         'categoria_id',
         'transaccion_id',
@@ -24,6 +27,11 @@ class CajaPago extends Model
     public function scopeFilter(Builder $query, array $filters)
     {
         return $this->scopeFilterSearch($query, $filters, ['monto', 'descripcion']);
+    }
+
+    public function marca()
+    {
+        return $this->belongsTo(Marca::class, 'marca_id');
     }
 
     public function sucursal()

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('uuid');
             $table->string('comentarios');
             $table->boolean('validado');
+            $table->boolean('iva');
             $table->date('fecha_pago');
 
             $table->unsignedBigInteger('cliente_id')->nullable();

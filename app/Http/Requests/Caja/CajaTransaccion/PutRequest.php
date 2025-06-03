@@ -40,6 +40,7 @@ class PutRequest extends FormRequest
             'uuid' => ['required', 'string', Rule::unique('caja_transacciones')->ignore($this->route('cajaTransaccion')->id)],
             'comentarios' => ['nullable', 'string'],
             "validado" => ['required', 'boolean'],
+            "iva" => ['required', 'boolean'],
             'cliente_id' => ['nullable', 'integer', 'exists:caja_clientes,id'],
             'user_id' => ['required', 'exists:users,id'],
             'tipo_factura_id' => ['required', 'integer', 'exists:caja_tipos_facturas,id'],
@@ -51,7 +52,9 @@ class PutRequest extends FormRequest
             'pagos' => ['required', 'array', 'min:1'],
             'pagos.*.id' => ['nullable', 'integer', 'exists:caja_pagos,id'],
             'pagos.*.monto' => ['required', 'numeric'],
-            'pagos.*.descripcion' => ['required', 'string'],
+            'pagos.*.descripcion' => ['nullable', 'string'],
+            'pagos.*.serie' => ['nullable', 'string'],
+            'pagos.*.marca_id' => ['nullable', 'integer', 'exists:marcas,id'],
             'pagos.*.sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
             'pagos.*.categoria_id' => ['required', 'integer', 'exists:caja_categorias,id'],
         ];

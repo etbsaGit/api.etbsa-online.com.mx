@@ -9,7 +9,9 @@ use App\Models\Sucursal;
 use Illuminate\Http\Request;
 use App\Models\Caja\CajaPago;
 use App\Models\Caja\CajaCorte;
+use App\Models\Intranet\Marca;
 use App\Models\Caja\CajaCuenta;
+use App\Models\Caja\CajaCliente;
 use App\Models\Intranet\Cliente;
 use App\Models\Caja\CajaCategoria;
 use App\Models\Caja\CajaTiposPago;
@@ -24,7 +26,6 @@ use App\Exports\CajaTransaccionExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Caja\CajaTransaccion\PutRequest;
 use App\Http\Requests\Caja\CajaTransaccion\StoreRequest;
-use App\Models\Caja\CajaCliente;
 
 class CajaTransaccionController extends ApiController
 {
@@ -36,7 +37,7 @@ class CajaTransaccionController extends ApiController
         $filters = $request->all();
 
         $cajaTransaccion = CajaTransaccion::filter($filters)
-            ->with('tipoFactura', 'cliente', 'user.empleado', 'pagos.sucursal', 'cuenta.cajaBanco', 'pagos.categoria', 'tipoPago')
+            ->with('tipoFactura', 'cliente', 'user.empleado', 'pagos.sucursal', 'cuenta.cajaBanco', 'pagos.categoria', 'pagos.marca', 'tipoPago')
             ->paginate(10);
 
         return $this->respond($cajaTransaccion);
@@ -61,6 +62,7 @@ class CajaTransaccionController extends ApiController
                 'uuid' => $data['uuid'],
                 'comentarios' => $data['comentarios'],
                 'validado' => $data['validado'],
+                'iva' => $data['iva'],
                 'cliente_id' => $data['cliente_id'],
                 'user_id' => $data['user_id'],
                 'tipo_factura_id' => $data['tipo_factura_id'],
@@ -74,6 +76,8 @@ class CajaTransaccionController extends ApiController
                     'transaccion_id' => $cajaTransaccion->id,
                     'monto' => $pago['monto'],
                     'descripcion' => $pago['descripcion'],
+                    'serie' => $pago['serie'],
+                    'marca_id' => $pago['marca_id'],
                     'sucursal_id' => $pago['sucursal_id'],
                     'categoria_id' => $pago['categoria_id'],
                 ]);
@@ -139,7 +143,7 @@ class CajaTransaccionController extends ApiController
         $data = CajaTransaccion::whereDate('created_at', now())
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->with('tipoFactura', 'cliente', 'user.empleado', 'pagos.sucursal', 'cuenta.cajaBanco', 'pagos.categoria', 'tipoPago')
+            ->with('tipoFactura', 'cliente', 'user.empleado', 'pagos.sucursal', 'cuenta.cajaBanco', 'pagos.categoria', 'tipoPago','pagos.marca')
             ->get();
 
         return $this->respond($data);
@@ -154,7 +158,8 @@ class CajaTransaccionController extends ApiController
             'tipos_pago' => CajaTiposPago::all(),
             'tipos_factura' => CajaTiposFactura::all(),
             'clientes' => CajaCliente::all(),
-            'users' => User::has('cajaTransaccion')->get()
+            'users' => User::has('cajaTransaccion')->get(),
+            'marcas' => Marca::all()
         ];
         return $this->respond($data);
     }
@@ -164,16 +169,15 @@ class CajaTransaccionController extends ApiController
         $fecha = $fecha ? Carbon::parse($fecha)->toDateString() : Carbon::today()->toDateString();
 
         $data = CajaTiposPago::with(['transaccion' => function ($query) use ($fecha) {
-            $query->whereDate('created_at', $fecha)->with('pagos.sucursal', 'pagos.categoria', 'cuenta.cajaBanco');
+            $query->whereDate('created_at', $fecha)->with('pagos.sucursal', 'pagos.categoria', 'cuenta.cajaBanco','pagos.marca');
         }])->get();
 
         // Calcular el total por tipo de pago, protegiendo en caso de que 'transaccion' sea null
         $data = $data->map(function ($item) {
-            $item->total = optional($item->transaccion)->sum('total') ?? 0;
+            $item->total = $item->transaccion->sum(fn($trans) => $trans->total->total_con_iva ?? 0);
             return $item;
-        })->filter(function ($item) {
-            return $item->total > 0;
-        })->values();
+        })->filter(fn($item) => $item->total > 0)->values();
+
 
         $denominaciones = CajaDenominacion::all();
 

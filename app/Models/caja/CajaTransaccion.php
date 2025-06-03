@@ -24,6 +24,7 @@ class CajaTransaccion extends Model
         'uuid',
         'comentarios',
         'validado',
+        'iva',
         'cliente_id',
         'user_id',
         'tipo_factura_id',
@@ -36,7 +37,21 @@ class CajaTransaccion extends Model
     protected function total(): Attribute
     {
         return Attribute::get(function () {
-            return $this->pagos->sum('monto');
+            $totalSinIva = $this->pagos->sum('monto');
+
+            if ($this->iva) {
+                $iva = round($totalSinIva * 0.16, 2);
+            } else {
+                $iva = 0;
+            }
+
+            $totalConIva = round($totalSinIva + $iva, 2);
+
+            return (object) [
+                'total_sin_iva' => round($totalSinIva, 2),
+                'iva' => $iva,
+                'total_con_iva' => $totalConIva,
+            ];
         });
     }
 

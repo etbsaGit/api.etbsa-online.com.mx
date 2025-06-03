@@ -39,6 +39,7 @@ class StoreRequest extends FormRequest
             'uuid' => ['required', 'string', 'unique:caja_transacciones'],
             'comentarios' => ['nullable', 'string'],
             "validado" => ['required', 'boolean'],
+            "iva" => ['required', 'boolean'],
             'cliente_id' => ['nullable', 'integer', 'exists:caja_clientes,id'],
             'user_id' => ['required', 'exists:users,id'],
             'tipo_factura_id' => ['required', 'integer', 'exists:caja_tipos_facturas,id'],
@@ -49,8 +50,9 @@ class StoreRequest extends FormRequest
             // Validación del array pagos
             'pagos' => ['required', 'array', 'min:1'],
             'pagos.*.monto' => ['required', 'numeric'],
-            'pagos.*.descripcion' => ['required', 'string'],
-
+            'pagos.*.descripcion' => ['nullable', 'string'],
+            'pagos.*.serie' => ['nullable', 'string','unique:caja_pagos'],
+            'pagos.*.marca_id' => ['nullable', 'integer', 'exists:marcas,id'],
             'pagos.*.sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
             'pagos.*.categoria_id' => ['required', 'integer', 'exists:caja_categorias,id'],
 
