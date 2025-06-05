@@ -53,13 +53,15 @@ class Cliente extends Model
             : $this->distribucion()->get();
 
         // Sumar valores
-        $hectareasConectadas = $clienteTechnology->sum('hectareas_conectadas');
+        $hectareasConectadas = $clienteTechnology->sum('hectareas');
         $hectareasRentadas   = $distribuciones->sum('hectareas_rentadas');
         $hectareasPropias    = $distribuciones->sum('hectareas_propias');
 
         // Calcular hectáreas sin conectar
         $totalDistribuidas   = $hectareasPropias + $hectareasRentadas;
-        $hectareasSinConectar = max(0, $totalDistribuidas - $hectareasConectadas);
+        // $hectareasSinConectar = max(0, $totalDistribuidas - $hectareasConectadas);
+        $hectareasSinConectar = $totalDistribuidas - $hectareasConectadas;
+
 
         return (object) [
             'hectareas_conectadas'   => $hectareasConectadas,
