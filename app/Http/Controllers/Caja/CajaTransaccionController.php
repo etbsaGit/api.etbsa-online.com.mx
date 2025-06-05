@@ -143,7 +143,7 @@ class CajaTransaccionController extends ApiController
         $data = CajaTransaccion::whereDate('created_at', now())
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->with('tipoFactura', 'cliente', 'user.empleado', 'pagos.sucursal', 'cuenta.cajaBanco', 'pagos.categoria', 'tipoPago','pagos.marca')
+            ->with('tipoFactura', 'cliente', 'user.empleado', 'pagos.sucursal', 'cuenta.cajaBanco', 'pagos.categoria', 'tipoPago', 'pagos.marca')
             ->get();
 
         return $this->respond($data);
@@ -151,25 +151,51 @@ class CajaTransaccionController extends ApiController
 
     public function getforms()
     {
+        $user = auth()->user();
+
+        // Obtener la sucursal "Corporativo"
+        $corporativoSucursal = Sucursal::where('nombre', 'Corporativo')->first();
+
+        // Obtener cuentas según el rol
+        if ($user->hasRole('AdminCaja')) {
+            // Si es adminCaja, traer todas las cuentas
+            $cuentas = CajaCuenta::with('cajaBanco', 'sucursal', 'categoria')->get();
+        } else {
+            // Si no es adminCaja, traer solo las cuentas de su sucursal y de la sucursal "Corporativo"
+            $userSucursalId = optional($user->empleado)->sucursal_id;
+
+            $cuentas = CajaCuenta::with('cajaBanco', 'sucursal', 'categoria')
+                ->where(function ($query) use ($userSucursalId, $corporativoSucursal) {
+                    $query->where('sucursal_id', $userSucursalId);
+
+                    if ($corporativoSucursal) {
+                        $query->orWhere('sucursal_id', $corporativoSucursal->id);
+                    }
+                })
+                ->get();
+        }
+
         $data = [
             'sucursales' => Sucursal::all(),
             'categorias' => CajaCategoria::all(),
-            'cuentas' => CajaCuenta::with('cajaBanco', 'sucursal', 'categoria')->get(),
+            'cuentas' => $cuentas,
             'tipos_pago' => CajaTiposPago::all(),
             'tipos_factura' => CajaTiposFactura::all(),
             'clientes' => CajaCliente::all(),
             'users' => User::has('cajaTransaccion')->get(),
             'marcas' => Marca::all()
         ];
+
         return $this->respond($data);
     }
+
 
     public function getReportPerDay($fecha)
     {
         $fecha = $fecha ? Carbon::parse($fecha)->toDateString() : Carbon::today()->toDateString();
 
         $data = CajaTiposPago::with(['transaccion' => function ($query) use ($fecha) {
-            $query->whereDate('created_at', $fecha)->with('pagos.sucursal', 'pagos.categoria', 'cuenta.cajaBanco','pagos.marca');
+            $query->whereDate('created_at', $fecha)->with('pagos.sucursal', 'pagos.categoria', 'cuenta.cajaBanco', 'pagos.marca');
         }])->get();
 
         // Calcular el total por tipo de pago, protegiendo en caso de que 'transaccion' sea null

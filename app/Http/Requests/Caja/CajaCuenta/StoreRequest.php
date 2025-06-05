@@ -28,10 +28,10 @@ class StoreRequest extends FormRequest
             'numeroCuenta' => ['required', 'string', 'unique:caja_cuentas'],
             'descripcion' => ['nullable', 'string'],
             'moneda' => ['required', 'string'],
+            'numero_banco' => ['required', 'integer'],
             'caja_banco_id' => ['required', 'integer', 'exists:caja_bancos,id'],
             'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
-            'caja_categoria_id' => ['required', 'integer', 'exists:caja_categorias,id'],
-
+            'caja_categoria_id' => ['nullable', 'integer', 'exists:caja_categorias,id'],
         ];
     }
 

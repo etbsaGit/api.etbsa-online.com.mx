@@ -16,6 +16,7 @@ class CajaCuenta extends Model
         'numeroCuenta',
         'descripcion',
         'moneda',
+        'numero_banco',
         'caja_banco_id',
         'sucursal_id',
         'caja_categoria_id'
