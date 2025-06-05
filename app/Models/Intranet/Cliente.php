@@ -37,7 +37,37 @@ class Cliente extends Model
         'construction_classification_id'
     ];
 
-    protected $appends = ['currentClassTech'];
+    protected $appends = ['currentClassTech', 'hectareasConectadas'];
+
+    // app/Models/Cliente.php
+
+    public function getHectareasConectadasAttribute()
+    {
+        // Obtener relaciones (cargadas o no)
+        $clienteTechnology = $this->relationLoaded('clienteTechnology')
+            ? $this->clienteTechnology
+            : $this->clienteTechnology()->get();
+
+        $distribuciones = $this->relationLoaded('distribucion')
+            ? $this->distribucion
+            : $this->distribucion()->get();
+
+        // Sumar valores
+        $hectareasConectadas = $clienteTechnology->sum('hectareas_conectadas');
+        $hectareasRentadas   = $distribuciones->sum('hectareas_rentadas');
+        $hectareasPropias    = $distribuciones->sum('hectareas_propias');
+
+        // Calcular hectáreas sin conectar
+        $totalDistribuidas   = $hectareasPropias + $hectareasRentadas;
+        $hectareasSinConectar = max(0, $totalDistribuidas - $hectareasConectadas);
+
+        return (object) [
+            'hectareas_conectadas'   => $hectareasConectadas,
+            'hectareas_rentadas'     => $hectareasRentadas,
+            'hectareas_propias'      => $hectareasPropias,
+            'hectareas_sin_conectar' => $hectareasSinConectar,
+        ];
+    }
 
     // Cliente.php (Modelo)
     public function getCurrentClassTechAttribute()

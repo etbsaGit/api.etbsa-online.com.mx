@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Intranet;
 
 use Illuminate\Http\Request;
 use App\Models\Intranet\Cliente;
+use App\Exports\ClientesNTExport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\ApiController;
 use App\Models\Intranet\ClienteTechnology;
 use App\Http\Requests\Intranet\ClienteTechnology\StoreClienteTechnologyRequest;
@@ -59,5 +61,53 @@ class ClienteTechnologyController extends ApiController
             ->with('nuevaTecnologia')
             ->get();
         return $this->respond($machine);
+    }
+
+    public function getClientesNT(Request $request)
+    {
+        $filters = $request->all();
+        $clientes = Cliente::where(function ($query) {
+            $query->whereHas('clienteTechnology')
+                ->orWhereHas('distribucion');
+        })
+            ->filter($filters)
+            ->with('stateEntity', 'town')
+            ->paginate(10);
+
+        return $this->respond($clientes);
+    }
+
+    public function getClientesNTxls(Request $request)
+    {
+        $filters = $request->all();
+        $clientes = Cliente::where(function ($query) {
+            $query->whereHas('clienteTechnology')
+                ->orWhereHas('distribucion');
+        })
+            ->filter($filters)
+            ->with('stateEntity', 'town')
+            ->get();
+
+        // Exportar a Excel en memoria
+        $export = new ClientesNTExport($clientes);
+
+        $data = $export->collection();
+
+        // Verificar si no hay datos para exportar
+        if ($data->isEmpty()) {
+            return response()->json(['error' => 'No hay datos para exportar.']);
+        }
+
+        $fileContent = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+
+        // Convertir el contenido del archivo a Base64
+        $base64 = base64_encode($fileContent);
+
+        return response()->json([
+            'file_name' => 'clientes_export.xlsx',
+            'file_base64' => $base64,
+        ]);
+
+        return $this->respond($clientes);
     }
 }
