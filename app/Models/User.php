@@ -8,9 +8,11 @@ use App\Models\Caja\CajaCorte;
 use App\Traits\FilterableModel;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Caja\CajaTransaccion;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Builder;
+use App\Notifications\CustomResetPassword;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -28,6 +30,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'two_factor_code',
+        'two_factor_expires_at',
     ];
 
     /**
@@ -49,6 +53,11 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new CustomResetPassword($token));
+    }
 
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
@@ -109,5 +118,15 @@ class User extends Authenticatable
     public function cortes()
     {
         return $this->hasMany(CajaCorte::class, 'user_id');
+    }
+
+    public function propuestasCreadas()
+    {
+        return $this->hasMany(Propuesta::class, 'created_by');
+    }
+
+    public function propuestasAuth()
+    {
+        return $this->hasMany(Propuesta::class, 'auth_by');
     }
 }

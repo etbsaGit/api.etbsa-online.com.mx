@@ -124,4 +124,11 @@ class Sucursal extends Model
     {
         return $this->hasMany(CajaCorte::class, 'sucursal_id');
     }
+
+    // ---------------------------------Requisiciones---------------------------------------------------------
+
+    public function requisiciones()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'sucursal_id');
+    }
 }

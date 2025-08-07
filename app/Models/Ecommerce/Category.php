@@ -2,11 +2,12 @@
 
 namespace App\Models\Ecommerce;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Propuesta;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Category extends Model
 {
@@ -26,14 +27,14 @@ class Category extends Model
     public function logopath(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->logo ? Storage::disk('s3')->url($this->logo) : null
+            get: fn() => $this->logo ? Storage::disk('s3')->url($this->logo) : null
         );
     }
 
     protected function defaultPathFolder(): Attribute
     {
         return Attribute::make(
-            get: fn () => "images/vendors/id_" . $this->id,
+            get: fn() => "images/vendors/id_" . $this->id,
         );
     }
 
@@ -68,5 +69,10 @@ class Category extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_categories', 'category_id', 'product_id');
+    }
+
+    public function propuestas()
+    {
+        return $this->hasMany(Propuesta::class, 'category_id');
     }
 }

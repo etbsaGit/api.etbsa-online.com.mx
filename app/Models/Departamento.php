@@ -45,4 +45,16 @@ class Departamento extends Model
     {
         return $this->hasMany(Vehicle::class, 'departamento_id');
     }
+
+    // ---------------------------------Requisiciones---------------------------------------------------------
+
+    public function requisiciones()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'departamento_id');
+    }
+
+    public function propuestas()
+    {
+        return $this->hasMany(Propuesta::class, 'departamento_id');
+    }
 }

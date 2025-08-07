@@ -279,6 +279,16 @@ class EmpleadoController extends ApiController
         return response()->json("ok");
     }
 
+    public function destroyPic(Empleado $empleado)
+    {
+        if ($empleado->fotografia) {
+            Storage::disk('s3')->delete($empleado->fotografia);
+        }
+        $updateData = ['fotografia' => null];
+        $empleado->update($updateData);
+        return response()->json("ok");
+    }
+
     public function findEmpleadoByRFCandINE($rfc, $ine)
     {
         $empleado = Empleado::where('rfc', $rfc)
