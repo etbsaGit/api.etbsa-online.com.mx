@@ -146,6 +146,11 @@
             <h3>Información Adicional</h3>
             <p><strong>Creado el:</strong> {{ \Carbon\Carbon::parse($data['created_at'])->format('d/m/Y') }}</p>
             <p><strong>Actualizado el:</strong> {{ \Carbon\Carbon::parse($data['updated_at'])->format('d/m/Y') }}</p>
+
+            <h3>Autorizacion</h3>
+            <p><strong>Rechazada por:</strong> {{ $data->validateBy->empleado->nombreCompleto ?? 'N/A' }}</p>
+            <p><strong>El dia:</strong> {{ \Carbon\Carbon::parse($data['updated_at'])->format('d/m/Y') }}</p>
+
         </div>
 
         <div class="footer">

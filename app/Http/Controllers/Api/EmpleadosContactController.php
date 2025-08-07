@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Models\EmpleadosContact;
+use App\Models\Intranet\Kinship;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\EmpleadosContact\PutRequest;
 use App\Http\Requests\EmpleadosContact\StoreRequest;
@@ -55,5 +56,13 @@ class EmpleadosContactController extends ApiController
     {
         $empleadosContact->delete();
         return $this->respondSuccess();
+    }
+
+    public function getforms()
+    {
+        $data = [
+            'kinships' => Kinship::whereNotIn('name', ['Jefe', 'Jefa', 'Proveedor'])->get()
+        ];
+        return $this->respond($data);
     }
 }

@@ -33,7 +33,7 @@ class VacationDayController extends ApiController
 
         if ($user->hasRole('RRHH')) {
             $vacations = VacationDay::filter($filters)
-                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento'])
+                ->with(['empleado.vehicle', 'sucursal', 'puesto', 'cubre_rel', 'departamento','validateBy.empleado'])
                 ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
                 ->orderBy('fecha_inicio', 'desc')
                 ->paginate(10);
@@ -47,7 +47,7 @@ class VacationDayController extends ApiController
             // Filtra las VacationDay únicamente de los empleados en el arreglo
             $vacations = VacationDay::filter($filters)
                 ->whereIn('empleado_id', $empleadoIds)
-                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento'])
+                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento','validateBy.empleado'])
                 ->orderBy('validated', 'asc')
                 ->orderBy('fecha_inicio', 'desc')
                 ->paginate(10);
@@ -66,7 +66,7 @@ class VacationDayController extends ApiController
         }
 
         $vacations = VacationDay::filter($filters)
-            ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento'])
+            ->with(['empleado.vehicle', 'sucursal', 'puesto', 'cubre_rel', 'departamento','validateBy.empleado'])
             ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
             ->orderBy('fecha_inicio', 'desc')
             ->paginate(10);
@@ -98,7 +98,7 @@ class VacationDayController extends ApiController
      */
     public function show(VacationDay $vacationDay)
     {
-        return $this->respond($vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel', 'departamento'));
+        return $this->respond($vacationDay->load('empleado.vehicle', 'puesto', 'sucursal', 'cubre_rel', 'departamento','validateBy.empleado'));
     }
 
     /**
@@ -253,7 +253,7 @@ class VacationDayController extends ApiController
 
         foreach ($correos as $to_email) {
             if ($to_email) {
-                Mail::to($to_email)->send(new VacationOnMailable($vacationDay->load('empleado', 'puesto', 'sucursal')));
+                Mail::to($to_email)->send(new VacationOnMailable($vacationDay->load('empleado', 'puesto', 'sucursal','validateBy.empleado')));
             }
         }
 
@@ -298,7 +298,7 @@ class VacationDayController extends ApiController
 
         foreach ($correos as $to_email) {
             if ($to_email) {
-                Mail::to($to_email)->send(new VacationOffMailable($vacationDay->load('empleado', 'puesto', 'sucursal')));
+                Mail::to($to_email)->send(new VacationOffMailable($vacationDay->load('empleado', 'puesto', 'sucursal','validateBy.empleado')));
             }
         }
         return $this->respondSuccess();

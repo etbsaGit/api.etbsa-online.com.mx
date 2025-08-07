@@ -24,8 +24,10 @@ use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\ProspectController;
 use App\Http\Controllers\Api\SucursalController;
+use App\Http\Controllers\Api\CandidatoController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\PlantillaController;
+use App\Http\Controllers\Api\PropuestaController;
 use App\Http\Controllers\Api\RequisitoController;
 use App\Http\Controllers\Api\WorkOrderController;
 use App\Http\Controllers\Api\AntiguedadController;
@@ -34,8 +36,10 @@ use App\Http\Controllers\Api\IncapacityController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\SuggestionController;
 use App\Http\Controllers\Api\TechnicianController;
+use App\Http\Controllers\Api\CompetenciaController;
 use App\Http\Controllers\Api\EscolaridadController;
 use App\Http\Controllers\Api\EstadoCivilController;
+use App\Http\Controllers\Api\HerramientaController;
 use App\Http\Controllers\Api\ProspectAgpController;
 use App\Http\Controllers\Api\SkillRaitngController;
 use App\Http\Controllers\Api\VacationDayController;
@@ -45,6 +49,7 @@ use App\Http\Controllers\Api\RentalPeriodController;
 use App\Http\Controllers\Api\TipoDeSangreController;
 use App\Http\Controllers\Api\WorkOrderDocController;
 use App\Http\Controllers\Ecommerce\VendorController;
+use App\Http\Controllers\Api\CandidatoNotaController;
 use App\Http\Controllers\Api\ProspectRiegoController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Api\RentalMachineController;
@@ -59,6 +64,7 @@ use App\Http\Controllers\Api\EmpleadosContactController;
 use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
+use App\Http\Controllers\Api\RequisicionPersonalController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
 
 /*
@@ -115,6 +121,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('empleado/baja', [EmpleadoController::class, 'getEmployeesTerminations']);
     Route::post('empleado/alta', [EmpleadoController::class, 'getEmployeesNew']);
 
+    Route::delete('empleado/destroyPic/{empleado}', [EmpleadoController::class, 'destroyPic']);
     Route::get('empleado/forms', [EmpleadoController::class, 'getforms']);
     Route::post('empleado/negocios', [EmpleadoController::class, 'negocios']);
     Route::get('empleado/index', [EmpleadoController::class, 'getformsIndex']);
@@ -367,7 +374,34 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------EmpleadosContact--------------------
     Route::post('empleadosContacts', [EmpleadosContactController::class, 'index']);
+    Route::get('empleadosContact/forms', [EmpleadosContactController::class, 'getforms']);
     Route::apiResource('empleadosContact', EmpleadosContactController::class);
+
+    //--------------------Requisicion de empleados--------------------
+    Route::post('competencias', [CompetenciaController::class, 'index']);
+    Route::apiResource('competencia', CompetenciaController::class);
+
+    Route::post('herramientas', [HerramientaController::class, 'index']);
+    Route::apiResource('herramienta', HerramientaController::class);
+
+    Route::post('candidatos', [CandidatoController::class, 'index']);
+    Route::get('candidatos/month/{date}', [CandidatoController::class, 'getPerMonth']);
+    Route::get('candidatos/xls', [CandidatoController::class, 'getXls']);
+    Route::apiResource('candidato', CandidatoController::class);
+
+    Route::apiResource('candidatoNota', CandidatoNotaController::class);
+
+    Route::post('requisicionPersonales', [RequisicionPersonalController::class, 'index']);
+    Route::get('requisicionPersonal/forms', [RequisicionPersonalController::class, 'getforms']);
+    Route::get('requisicionPersonal/status/{requisicionPersonal}/{estatus}', [RequisicionPersonalController::class, 'changeEstatus']);
+    Route::get('requisicionPersonal/auth/{requisicionPersonal}/{auth}', [RequisicionPersonalController::class, 'changeAuth']);
+
+    Route::apiResource('requisicionPersonal', RequisicionPersonalController::class);
+
+    //--------------------Propuestas--------------------
+    Route::post('propuestas', [PropuestaController::class, 'index']);
+    Route::get('propuesta/forms', [PropuestaController::class, 'getforms']);
+    Route::apiResource('propuesta', PropuestaController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
@@ -385,6 +419,10 @@ Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'up
 
 //--------------------User--------------------
 Route::post('auth/login', [UserController::class, 'login']);
+Route::post('auth/verify', [UserController::class, 'verify2FA']);
+Route::post('auth/forgot-password', [UserController::class, 'sendResetLink']);
+Route::post('auth/reset-password', [UserController::class, 'reset']);
+
 Route::post('roles', [RoleController::class, 'index']);
 Route::post('permissions', [PermissionController::class, 'index']);
 

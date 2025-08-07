@@ -101,4 +101,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('clienteAbastecimiento', ClienteAbastecimientoController::class);
     Route::apiResource('clientesDoc', ClientesDocController::class);
     Route::apiResource('sale', SaleController::class);
+
+    Route::post('nt/clientes', [ClienteTechnologyController::class, 'getClientesNT']);
+    Route::post('nt/clientes/xls', [ClienteTechnologyController::class, 'getClientesNTxls']);
 });

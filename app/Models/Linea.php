@@ -62,4 +62,16 @@ class Linea extends Model
     {
         return $this->hasMany(Vehicle::class, 'linea_id');
     }
+
+    // ---------------------------------Requisiciones---------------------------------------------------------
+
+    public function requisiciones()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'linea_id');
+    }
+
+    public function propuestas()
+    {
+        return $this->hasMany(Propuesta::class, 'linea_id');
+    }
 }

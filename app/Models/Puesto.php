@@ -48,4 +48,11 @@ class Puesto extends Model
     {
         return $this->hasMany(VacationDay::class, 'puesto_id');
     }
+
+    // ---------------------------------Requisiciones---------------------------------------------------------
+
+    public function requisiciones()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'puesto_id');
+    }
 }

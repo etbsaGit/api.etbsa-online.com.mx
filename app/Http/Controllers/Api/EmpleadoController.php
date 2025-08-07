@@ -32,7 +32,6 @@ class EmpleadoController extends ApiController
 {
     use UploadableFile;
 
-
     public function index(Request $request)
     {
         $filters = $request->all();
@@ -41,7 +40,6 @@ class EmpleadoController extends ApiController
 
         if ($user->hasRole('RRHH')) {
             $empleados = Empleado::filter($filters)
-                ->where('estatus_id', 5)
                 ->with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason', 'empleadosContact.kinship'])
                 ->orderBy('sucursal_id')
                 ->paginate(10);
@@ -115,6 +113,22 @@ class EmpleadoController extends ApiController
                             'comments' => $desvinculacionData['comments'] ?? null,
                             'empleado_id' => $empleado->id
                         ]);
+
+                        // Si el empleado tiene un usuario relacionado
+                        if ($empleado->user) {
+                            $user = $empleado->user;
+                            $user->password = Hash::make("baja$2025"); // Cambiar contraseña
+
+                            // Quitar todos los roles y permisos
+                            $user->syncRoles([]);
+                            $user->syncPermissions([]);
+
+                            $user->save();
+
+                            // Desvincular al usuario del empleado
+                            $empleado->user_id = null;
+                            $empleado->save();
+                        }
                     }
                 }
             );
@@ -238,6 +252,22 @@ class EmpleadoController extends ApiController
                     'empleado_id' => $empleado->id
                 ]);
             }
+
+            // Si el empleado tiene un usuario relacionado
+            if ($empleado->user) {
+                $user = $empleado->user;
+                $user->password = Hash::make("baja$2025"); // Cambiar contraseña
+
+                // Quitar todos los roles y permisos
+                $user->syncRoles([]);
+                $user->syncPermissions([]);
+
+                $user->save();
+
+                // Desvincular al usuario del empleado
+                $empleado->user_id = null;
+                $empleado->save();
+            }
         }
 
         return response()->json($empleado);
@@ -246,6 +276,16 @@ class EmpleadoController extends ApiController
     public function destroy(Empleado $empleado)
     {
         $empleado->delete();
+        return response()->json("ok");
+    }
+
+    public function destroyPic(Empleado $empleado)
+    {
+        if ($empleado->fotografia) {
+            Storage::disk('s3')->delete($empleado->fotografia);
+        }
+        $updateData = ['fotografia' => null];
+        $empleado->update($updateData);
         return response()->json("ok");
     }
 
@@ -329,6 +369,7 @@ class EmpleadoController extends ApiController
             'departamentos' => Departamento::all(),
             'lineas' => Linea::all(),
             'puestos' => Puesto::all(),
+            'estatus' => Estatus::where('tipo_estatus', 'empleado')->get(),
         ];
         return $this->respond($data);
     }

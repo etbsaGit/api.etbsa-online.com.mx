@@ -488,6 +488,33 @@ class Empleado extends Model
         return $this->hasMany(EmpleadosContact::class, 'empleado_id');
     }
 
+    // ---------------------------------Requisiciones de empleado---------------------------------------------------------
+    public function requisicionesSolicitadas()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'solicita_id');
+    }
+
+    public function requisicionesAutorizadas()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'autoriza_id');
+    }
+
+    public function authBy()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'auth_by');
+    }
+
+    public function requisicionesVoBo()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'vo_bo_id');
+    }
+
+    public function requisicionesRecibidas()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'recibe_id');
+    }
+
+
     // ---------------------------------scope---------------------------------------------------------
 
     public function scopeFiltertwo(Builder $query, array $filters)

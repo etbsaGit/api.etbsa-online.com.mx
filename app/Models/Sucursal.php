@@ -3,7 +3,10 @@
 namespace App\Models;
 
 use App\Models\Empleado;
+use App\Models\Caja\CajaPago;
 use App\Models\Intranet\Sale;
+use App\Models\Caja\CajaCorte;
+use App\Models\Caja\CajaCuenta;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -94,10 +97,38 @@ class Sucursal extends Model
         return $this->hasMany(Used::class, 'location_id');
     }
 
-        // ---------------------------------Vehicle---------------------------------------------------------
+    // ---------------------------------Vehicle---------------------------------------------------------
 
-        public function vehicles()
-        {
-            return $this->hasMany(Vehicle::class, 'sucursal_id');
-        }
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'sucursal_id');
+    }
+
+    // ---------------------------------Pago---------------------------------------------------------
+
+    public function pagos()
+    {
+        return $this->hasMany(CajaPago::class, 'sucursal_id');
+    }
+
+    // ---------------------------------CajaCuenta---------------------------------------------------------
+
+    public function cuentas()
+    {
+        return $this->hasMany(CajaCuenta::class, 'sucursal_id');
+    }
+
+    // ---------------------------------CajaCorte---------------------------------------------------------
+
+    public function cortes()
+    {
+        return $this->hasMany(CajaCorte::class, 'sucursal_id');
+    }
+
+    // ---------------------------------Requisiciones---------------------------------------------------------
+
+    public function requisiciones()
+    {
+        return $this->hasMany(RequisicionPersonal::class, 'sucursal_id');
+    }
 }
