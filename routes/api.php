@@ -234,10 +234,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::resource('documento', DocumentoController::class)->except("create", "edit");
 
     //--------------------User--------------------
-
     Route::post('auth/logout', [UserController::class, 'logout']);
     Route::post('auth/change', [UserController::class, 'changePassword']);
     Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
+
+    Route::post('enviar-correo-verificacion', [UserController::class, 'enviarCorreoVerificacion']);
+    Route::post('verificar-correo', [UserController::class, 'verificarCorreo']);
 
     //--------------------landingPage/admin--------------------
     Route::get('formProduct', [ProductController::class, 'formProduct']);

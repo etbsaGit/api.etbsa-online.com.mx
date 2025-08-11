@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use Carbon\Carbon;
 use App\Models\User;
+use App\Mail\VerifyEmail;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\TwoFactorCodeMail;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\User\PutRequest;
@@ -27,16 +31,45 @@ class UserController extends ApiController
         if (Auth::attempt($credentials)) {
             $user = User::where('email', $request->email)->first();
 
-            // Generar y guardar el código 2FA
+            // Si el usuario NO tiene email verificado → login directo sin 2FA
+            if (is_null($user->email_verified_at)) {
+                // Cargar relaciones necesarias
+                $user->load(
+                    'Evaluee',
+                    'Evaluee.question',
+                    'Empleado',
+                    'Empleado.escolaridad',
+                    'Empleado.estado_civil',
+                    'Empleado.tipo_de_sangre',
+                    'Empleado.puesto',
+                    'Empleado.sucursal',
+                    'Empleado.linea',
+                    'Empleado.departamento',
+                    'Empleado.jefe_directo',
+                    'Empleado.archivable',
+                    'Empleado.vehicle',
+                    'Empleado.archivable.requisito',
+                    'Empleado.empleadosContact.kinship',
+                    'Roles',
+                    'Permissions'
+                );
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Login exitoso sin 2FA (email no verificado)',
+                    'data' => $user,
+                    'token' => $user->createToken('myapptoken')->plainTextToken
+                ]);
+            }
+
+            // Si el email está verificado → flujo normal de 2FA
             $user->two_factor_code = rand(100000, 999999);
             $user->two_factor_expires_at = now()->addMinutes(10);
             $user->save();
 
-            // Enviar código por correo
             Mail::to($user->email)->send(new TwoFactorCodeMail($user));
 
-            // Cerrar sesión por seguridad hasta que se verifique el código
-            Auth::logout();
+            Auth::logout(); // cerrar sesión hasta que verifique el código
 
             return response()->json([
                 'status' => true,
@@ -48,6 +81,7 @@ class UserController extends ApiController
 
         return response()->json("Usuario y/o contraseña inválido", 401);
     }
+
 
     public function verify2FA(Request $request)
     {
@@ -116,7 +150,7 @@ class UserController extends ApiController
             : response()->json(['message' => 'No se pudo enviar el correo.'], 400);
     }
 
-     public function reset(Request $request)
+    public function reset(Request $request)
     {
         $request->validate([
             'token' => 'required',
@@ -140,6 +174,46 @@ class UserController extends ApiController
         } else {
             return response()->json(['message' => __($status)], 400);
         }
+    }
+
+    public function enviarCorreoVerificacion(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no autenticado'], 401);
+        }
+
+        $user->email_verification_token = Str::random(60);
+        $user->save();
+
+        $verificationUrl = config('app.frontend_url') . "/verificar-correo?token=" . $user->email_verification_token;
+
+        Mail::to($user->email)->send(new VerifyEmail($verificationUrl));
+
+        return response()->json(['message' => 'Correo de verificación enviado']);
+    }
+
+    public function verificarCorreo(Request $request)
+    {
+        $token = $request['token'];
+
+        if (!$token) {
+            return response()->json(['message' => 'Token no proporcionado'], 400);
+        }
+
+        $user = User::where('email_verification_token', $token)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Token inválido'], 404);
+        }
+
+        $user->email_verified_at = Carbon::now();
+        $user->email_verification_token = null;
+        $user->save();
+
+        // Aquí podrías redirigir al front o devolver JSON según necesites
+        return response()->json(['message' => 'Correo verificado correctamente']);
     }
 
     public function logout(Request $request)

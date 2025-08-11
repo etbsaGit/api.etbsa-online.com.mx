@@ -41,7 +41,7 @@ class CandidatoController extends ApiController
             if ($candidato->cv) {
                 Storage::disk('s3')->delete($candidato->cv);
             }
-            $relativePath  = $this->saveImage($request['base64'], $candidato->default_path_folder);
+            $relativePath  = $this->saveDoc($request['base64'], $candidato->default_path_folder);
             $request['base64'] = $relativePath;
             $updateData = ['cv' => $relativePath];
             $candidato->update($updateData);
@@ -81,7 +81,7 @@ class CandidatoController extends ApiController
             if ($candidato->cv) {
                 Storage::disk('s3')->delete($candidato->cv);
             }
-            $relativePath  = $this->saveImage($request['base64'], $candidato->default_path_folder);
+            $relativePath  = $this->saveDoc($request['base64'], $candidato->default_path_folder);
             $request['base64'] = $relativePath;
             $updateData = ['cv' => $relativePath];
             $candidato->update($updateData);
