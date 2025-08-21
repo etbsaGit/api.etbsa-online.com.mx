@@ -514,6 +514,12 @@ class Empleado extends Model
         return $this->hasMany(RequisicionPersonal::class, 'recibe_id');
     }
 
+    // ---------------------------------Services---------------------------------------------------------
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'empleado_id');
+    }
+
 
     // ---------------------------------scope---------------------------------------------------------
 

@@ -49,4 +49,9 @@ class Vehicle extends Model
     {
         return $this->hasMany(Empleado::class, 'vehicle_id');
     }
+
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'vehicle_id');
+    }
 }

@@ -105,4 +105,10 @@ class Estatus extends Model
     {
         return $this->hasMany(Propuesta::class, 'estatus_id');
     }
+
+    // ---------------------------------Services---------------------------------------------------------
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'estatus_id');
+    }
 }

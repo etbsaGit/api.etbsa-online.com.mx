@@ -66,6 +66,8 @@ use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\RequisicionPersonalController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
+use App\Http\Controllers\Api\ServiceArchiveController;
+use App\Http\Controllers\Api\ServiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -404,6 +406,17 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('propuestas', [PropuestaController::class, 'index']);
     Route::get('propuesta/forms', [PropuestaController::class, 'getforms']);
     Route::apiResource('propuesta', PropuestaController::class);
+
+    //--------------------service--------------------
+    Route::post('services', [ServiceController::class, 'index']);
+    Route::get('service/forms', [ServiceController::class, 'getforms']);
+    Route::get('service/status/{service}/{status}', [ServiceController::class, 'changeEstatus']);
+    Route::get('serviceArchive/status/{serviceArchive}/{status}', [ServiceArchiveController::class, 'changeEstatus']);
+
+
+    Route::apiResource('service', ServiceController::class);
+    Route::apiResource('serviceArchive', ServiceArchiveController::class);
+
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
