@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>
-        @if(is_null($service->status))
+        @if (is_null($service->status))
             Nuevo Servicio Creado
         @else
             Servicio Actualizado
         @endif
     </title>
 </head>
+
 <body style="font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
 
-    <table align="center" width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; margin-top: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); overflow: hidden;">
+    <table align="center" width="600" cellpadding="0" cellspacing="0"
+        style="background-color: #ffffff; margin-top: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); overflow: hidden;">
         <tr>
             <td style="background-color: #4CAF50; color: #ffffff; padding: 20px; text-align: center;">
                 <h1 style="margin: 0; font-size: 24px;">
-                    @if(is_null($service->status))
+                    @if (is_null($service->status))
                         Nuevo Servicio Creado
                     @else
                         Servicio Actualizado
@@ -43,16 +46,19 @@
 
                     <tr>
                         <td style="font-weight: bold;">Estatus:</td>
-                        <td style="font-weight: bold; color:
-                            @if($service->status === 1) #28a745
+                        <td
+                            style="font-weight: bold; color:
+                            @if ($service->status === 1) #28a745
+                            @elseif($service->status === 2) #4BA8DA
                             @elseif($service->status === 0) #FF0000
-                            @else #FFA500
-                            @endif
+                            @else #FFA500 @endif
                         ">
-                            @if(is_null($service->status))
+                            @if (is_null($service->status))
                                 En espera de autorización
                             @elseif($service->status === 1)
                                 Autorizado
+                            @elseif($service->status === 2)
+                                Pre-Autorizado
                             @elseif($service->status === 0)
                                 Rechazado
                             @endif
@@ -74,8 +80,9 @@
                     <tr>
                         <td style="font-weight: bold;">Empleado:</td>
                         <td>
-                            {{ $service->empleado->nombreCompleto ?? $service->empleado->nombre ?? 'N/A' }}<br>
-                            <img src="{{ $service->empleado->picture ?? '' }}" alt="Foto Empleado" width="80" style="border-radius: 50%; margin-top: 5px;">
+                            {{ $service->empleado->nombreCompleto ?? ($service->empleado->nombre ?? 'N/A') }}<br>
+                            <img src="{{ $service->empleado->picture ?? '' }}" alt="Foto Empleado" width="80"
+                                style="border-radius: 50%; margin-top: 5px;">
                         </td>
                     </tr>
 
@@ -94,4 +101,5 @@
     </table>
 
 </body>
+
 </html>

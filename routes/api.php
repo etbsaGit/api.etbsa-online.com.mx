@@ -123,6 +123,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('empleado/baja', [EmpleadoController::class, 'getEmployeesTerminations']);
     Route::post('empleado/alta', [EmpleadoController::class, 'getEmployeesNew']);
 
+    Route::get('notify/icon', [EmpleadoController::class, 'iconCharge']);
     Route::delete('empleado/destroyPic/{empleado}', [EmpleadoController::class, 'destroyPic']);
     Route::get('empleado/forms', [EmpleadoController::class, 'getforms']);
     Route::post('empleado/negocios', [EmpleadoController::class, 'negocios']);
@@ -416,7 +417,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     Route::apiResource('service', ServiceController::class);
     Route::apiResource('serviceArchive', ServiceArchiveController::class);
-
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
@@ -448,3 +448,8 @@ Route::apiResource('permission', PermissionController::class);
 
 //--------------------Expediente--------------------
 Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmpleadoByRFCandINE']);
+
+//--------------------Bolsa de trabajo--------------------
+Route::get('bolsa/all', [RequisicionPersonalController::class, 'getAll']);
+Route::post('bolsa', [CandidatoController::class, 'store']);
+

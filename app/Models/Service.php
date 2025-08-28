@@ -20,6 +20,7 @@ class Service extends Model
         'vehicle_id',
         'empleado_id',
         'estatus_id',
+        'feedback',
     ];
 
     protected static function boot()

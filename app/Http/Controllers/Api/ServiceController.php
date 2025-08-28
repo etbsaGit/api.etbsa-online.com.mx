@@ -28,12 +28,35 @@ class ServiceController extends ApiController
         $filters = $request->all();
         $user = auth()->user();
 
-        // si no tiene rol "cc", filtrar por empleado_id
-        if (!$user->hasRole('cc')) {
+        $query = Service::filter($filters);
+
+        // Caso: usuario con rol "service"
+        if ($user->hasRole('service')) {
+            $sucursalId = $user->empleado->sucursal_id;
+
+            $query->whereHas('vehicle', function ($q) use ($sucursalId) {
+                $q->where('sucursal_id', $sucursalId);
+            });
+        }
+        // Caso: usuario normal (que no es cc ni service)
+        elseif (!$user->hasRole('cc')) {
             $filters['empleado_id'] = $user->empleado->id;
+            $query->where('empleado_id', $filters['empleado_id']);
         }
 
-        return $this->respond(Service::filter($filters)->with('vehicle.estatus', 'empleado', 'estatus', 'archives')->latest()->paginate(10));
+        $service = $query
+            ->with(
+                'vehicle.estatus',
+                'vehicle.sucursal',
+                'vehicle.departamento',
+                'empleado',
+                'estatus',
+                'archives'
+            )
+            ->latest()
+            ->paginate(10);
+
+        return $this->respond($service);
     }
 
     /**
@@ -55,18 +78,17 @@ class ServiceController extends ApiController
             }
         }
 
-        // Cargar relaciones necesarias
         $service->load(['vehicle.estatus', 'empleado', 'estatus']);
 
-        // Obtener todos los usuarios con rol 'cc'
-        $users = User::all()->filter(fn($user) => $user->hasRole('cc'));
+        $emails = $this->getServiceRecipients($service);
 
-        foreach ($users as $user) {
-            Mail::to($user->email)->send(new ServiceEmail($service));
+        foreach ($emails as $email) {
+            Mail::to($email)->send(new ServiceEmail($service));
         }
 
         return $this->respondCreated($service);
     }
+
 
     /**
      * Display the specified resource.
@@ -116,16 +138,16 @@ class ServiceController extends ApiController
                 ->orderBy('apellido_paterno', 'asc')
                 ->get();
         } else {
-            $empleado = Empleado::with('vehicle')
-                ->where('id', $user->empleado->id)
-                ->first();
-
-            $empleados = $empleado ? collect([$empleado]) : collect([]);
+            $empleados = Empleado::with('vehicle')
+                ->where('sucursal_id', $user->empleado->sucursal_id)
+                ->whereHas('vehicle')
+                ->orderBy('apellido_paterno', 'asc')
+                ->get();
         }
 
         $data = [
             'estatus'  => Estatus::where('tipo_estatus', 'service')->get(),
-            'vehicles' => Vehicle::all(),
+            'vehicles' => Vehicle::with('estatus')->get(),
             'empleados' => $empleados,
         ];
 
@@ -139,15 +161,54 @@ class ServiceController extends ApiController
         $service->status = $status;
         $service->save();
 
-        // Cargar relaciones necesarias
         $service->load(['vehicle.estatus', 'empleado', 'estatus']);
 
-        // Obtener todos los usuarios con rol 'cc'
-        $email = $service->empleado->correo_institucional;
+        $emails = $this->getServiceRecipients($service);
 
-        Mail::to($email)->send(new ServiceEmail($service));
+        foreach ($emails as $email) {
+            Mail::to($email)->send(new ServiceEmail($service));
+        }
 
         return $this->respondSuccess();
+    }
 
+
+    private function getServiceRecipients(Service $service): array
+    {
+        // Aseguramos cargar relaciones necesarias
+        $service->loadMissing(['vehicle.sucursal', 'empleado.jefe_directo']);
+
+        $emails = [];
+
+        // Usuarios con rol "cc"
+        $usersCC = User::all()->filter(fn($user) => $user->hasRole('cc'));
+        $emails = array_merge($emails, $usersCC->pluck('email')->toArray());
+
+        // Correo institucional del empleado
+        if (!empty($service->empleado?->correo_institucional)) {
+            $emails[] = $service->empleado->correo_institucional;
+        }
+
+        // Correo institucional del jefe directo
+        if (!empty($service->empleado?->jefe_directo?->correo_institucional)) {
+            $emails[] = $service->empleado->jefe_directo->correo_institucional;
+        }
+
+        // Usuario(s) con rol "service" de la misma sucursal del vehículo
+        $usersService = User::whereHas('roles', fn($q) => $q->where('name', 'service'))
+            ->whereHas(
+                'empleado',
+                fn($q) =>
+                $q->where('sucursal_id', $service->vehicle->sucursal_id)
+            )
+            ->get();
+
+        foreach ($usersService as $usr) {
+            if (!empty($usr->email)) {
+                $emails[] = $usr->email;
+            }
+        }
+
+        return array_unique($emails);
     }
 }

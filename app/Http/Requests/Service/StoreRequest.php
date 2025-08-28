@@ -26,11 +26,12 @@ class StoreRequest extends FormRequest
     {
         return [
             'description' => ['required', 'string'],
-            'status' => ['nullable','boolean'],
+            'status' => ['nullable','integer'],
             'km' => ['required', 'integer'],
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
             'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
             'estatus_id' => ['required', 'integer', 'exists:estatus,id'],
+            'feedback' => ['nullable', 'string'],
         ];
     }
 

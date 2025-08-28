@@ -10,16 +10,20 @@ use App\Models\Escolaridad;
 use App\Models\Herramienta;
 use App\Models\Departamento;
 use Illuminate\Http\Request;
+use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\DB;
 use App\Models\RequisicionPersonal;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\ApiController;
 use App\Mail\RequisicionAutorizadaMail;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\RequisicionPersonal\StoreRequest;
 
 class RequisicionPersonalController extends ApiController
 {
+    use UploadableFile;
+
     /**
      * Display a listing of the resource.
      */
@@ -95,6 +99,16 @@ class RequisicionPersonalController extends ApiController
             $requisicionPersonal->herramientas()->sync($request->input('herramientas'));
         }
 
+        if (!is_null($request['base64'])) {
+            if ($requisicionPersonal->path) {
+                Storage::disk('s3')->delete($requisicionPersonal->path);
+            }
+            $relativePath  = $this->saveDoc($request['base64'], $requisicionPersonal->default_path_folder);
+            $request['base64'] = $relativePath;
+            $updateData = ['path' => $relativePath];
+            $requisicionPersonal->update($updateData);
+        }
+
         return $this->respond($requisicionPersonal);
     }
 
@@ -141,6 +155,16 @@ class RequisicionPersonalController extends ApiController
             // Actualizar herramientas (IDs simples)
             if ($request->has('herramientas')) {
                 $requisicionPersonal->herramientas()->sync($request->input('herramientas'));
+            }
+
+            if (!is_null($request['base64'])) {
+                if ($requisicionPersonal->path) {
+                    Storage::disk('s3')->delete($requisicionPersonal->path);
+                }
+                $relativePath  = $this->saveDoc($request['base64'], $requisicionPersonal->default_path_folder);
+                $request['base64'] = $relativePath;
+                $updateData = ['path' => $relativePath];
+                $requisicionPersonal->update($updateData);
             }
 
             DB::commit();
@@ -245,5 +269,24 @@ class RequisicionPersonalController extends ApiController
         $requisicionPersonal->estatus = $estatus;
         $requisicionPersonal->save();
         return $this->respondSuccess();
+    }
+
+    public function getAll()
+    {
+        $requisiciones = RequisicionPersonal::where('autorizacion', 1)
+            ->where('estatus', 1)
+            ->with([
+                'puesto',
+                'sucursal',
+                'linea',
+                'departamento',
+                'escolaridad',
+
+                'competencias',
+                'herramientas',
+            ])
+            ->get();
+
+        return $this->respond($requisiciones);
     }
 }

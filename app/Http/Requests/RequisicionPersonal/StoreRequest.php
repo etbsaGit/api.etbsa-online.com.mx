@@ -52,6 +52,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            "base64" => ['nullable', 'string'],
             'sexo' => 'nullable|string|in:Masculino,Femenino,Ambos,Otro', // cambiado de array a string
 
             'rango_edad' => 'nullable|string', // cambiado de array a string

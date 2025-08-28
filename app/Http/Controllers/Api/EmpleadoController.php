@@ -24,6 +24,8 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Empleado\PutRequest;
 use App\Http\Requests\Empleado\StoreRequest;
+use App\Models\Candidato;
+use App\Models\Suggestion;
 use App\Models\Termination;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -577,5 +579,17 @@ class EmpleadoController extends ApiController
             ->get();
 
         return $this->respond($employees);
+    }
+
+    public function iconCharge()
+    {
+        $suggestionsCount = Suggestion::where('status', 0)->count();
+
+        $candidatesCount = Candidato::where('status_1', 'Postulado desde la bolsa de trabajo')->count();
+
+        return response()->json([
+            'pending_suggestions' => $suggestionsCount,
+            'candidates' => $candidatesCount,
+        ]);
     }
 }

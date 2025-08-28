@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class RequisicionPersonal extends Model
@@ -37,7 +39,36 @@ class RequisicionPersonal extends Model
         'autorizacion',
         'estatus',
         'auth_by',
+        'path',
     ];
+
+    protected $appends = ['realpath', 'count'];
+
+    public function realpath(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->path ? Storage::disk('s3')->url($this->path) : null
+        );
+    }
+
+    protected function defaultPathFolder(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => "requisicion/" . $this->id,
+        );
+    }
+
+    public function count(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->candidatos()
+                ->where('status_1', 'Postulado desde la bolsa de trabajo')
+                ->count()
+        );
+    }
+
+
+
 
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
