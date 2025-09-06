@@ -143,6 +143,9 @@
             <p><strong>Correo Institucional:</strong> {{ $data['empleado']['correo_institucional'] }}</p>
             <p><strong>Fecha de Ingreso:</strong> {{ \Carbon\Carbon::parse($data['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
 
+            <h3>Quien cubre</h3>
+            <p>{{ $data['cubre_rel']['nombreCompleto'] }}</p>
+
             <h3>Información Adicional</h3>
             <p><strong>Creado el:</strong> {{ \Carbon\Carbon::parse($data['created_at'])->format('d/m/Y') }}</p>
             <p><strong>Actualizado el:</strong> {{ \Carbon\Carbon::parse($data['updated_at'])->format('d/m/Y') }}</p>

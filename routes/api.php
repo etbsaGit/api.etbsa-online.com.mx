@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ArchivoController;
 use App\Http\Controllers\Api\EstatusController;
 use App\Http\Controllers\Api\FestivoController;
 use App\Http\Controllers\Api\PostDocController;
+use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\UsedDocController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\ActivityController;
@@ -54,20 +55,22 @@ use App\Http\Controllers\Api\ProspectRiegoController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Api\RentalMachineController;
 use App\Http\Controllers\Ecommerce\ProductController;
+use App\Http\Controllers\Api\ServiceArchiveController;
 use App\Http\Controllers\Api\TechniciansLogController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
+use App\Http\Controllers\Api\CreditoConceptoController;
+use App\Http\Controllers\Api\CreditoRelacionController;
 use App\Http\Controllers\Api\HorasTechnicianController;
 use App\Http\Controllers\Api\ProspectCultivoController;
 use App\Http\Controllers\Api\ProspectMaquinaController;
 use App\Http\Controllers\Api\EmpleadosContactController;
 use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
+use App\Http\Controllers\Api\CreditoDeclaracionController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\RequisicionPersonalController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
-use App\Http\Controllers\Api\ServiceArchiveController;
-use App\Http\Controllers\Api\ServiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -417,6 +420,17 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     Route::apiResource('service', ServiceController::class);
     Route::apiResource('serviceArchive', ServiceArchiveController::class);
+
+    //--------------------Credito--------------------
+    Route::post('creditoConceptos', [CreditoConceptoController::class, 'index']);
+    Route::apiResource('creditoConcepto', CreditoConceptoController::class);
+
+    Route::get('creditoDeclaracion/forms', [CreditoDeclaracionController::class, 'getforms']);
+    Route::post('creditoDeclaracions', [CreditoDeclaracionController::class, 'index']);
+    Route::get('creditoDeclaracion/status/{creditoDeclaracion}/{status}', [CreditoDeclaracionController::class, 'changeEstatus']);
+    Route::apiResource('creditoDeclaracion', CreditoDeclaracionController::class);
+
+    Route::apiResource('creditoRelacion', CreditoRelacionController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
@@ -452,4 +466,3 @@ Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmp
 //--------------------Bolsa de trabajo--------------------
 Route::get('bolsa/all', [RequisicionPersonalController::class, 'getAll']);
 Route::post('bolsa', [CandidatoController::class, 'store']);
-

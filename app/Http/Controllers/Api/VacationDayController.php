@@ -189,12 +189,14 @@ class VacationDayController extends ApiController
         $solicitante = $vacationDay->empleado;
         $jefe = $vacationDay->empleado->jefe_directo;
         $not = $vacationDay->empleado->notificar;
+        $cubre_rel = $vacationDay->cubre_rel;
 
         $correos = [
             'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
             'solicitante' => $solicitante->correo_institucional,
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
             'notificar' => $not ? $not->correo_institucional : null,
+            'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
         ];
 
         // Si el jefe es DG, agregar también DA, y viceversa
@@ -206,7 +208,7 @@ class VacationDayController extends ApiController
 
         foreach ($correos as $to_email) {
             if ($to_email) {
-                Mail::to($to_email)->send(new VacationStoreMailable($vacationDay->load('empleado', 'puesto', 'sucursal')));
+                Mail::to($to_email)->send(new VacationStoreMailable($vacationDay->load('empleado', 'puesto', 'sucursal','cubre_rel')));
             }
         }
     }

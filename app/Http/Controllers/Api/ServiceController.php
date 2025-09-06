@@ -30,14 +30,15 @@ class ServiceController extends ApiController
 
         $query = Service::filter($filters);
 
-        // Caso: usuario con rol "service"
-        if ($user->hasRole('service')) {
+        // Caso: usuario con rol "service" y que tenga empleado
+        if ($user->hasRole('service') && $user->empleado) {
             $sucursalId = $user->empleado->sucursal_id;
 
             $query->whereHas('vehicle', function ($q) use ($sucursalId) {
                 $q->where('sucursal_id', $sucursalId);
             });
         }
+
         // Caso: usuario normal (que no es cc ni service)
         elseif (!$user->hasRole('cc')) {
             $filters['empleado_id'] = $user->empleado->id;

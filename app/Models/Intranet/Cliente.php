@@ -3,6 +3,7 @@
 namespace App\Models\Intranet;
 
 use App\Models\Caja\CajaTransaccion;
+use App\Models\CreditoDeclaracion;
 use App\Models\RentalPeriod;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
@@ -188,5 +189,10 @@ class Cliente extends Model
     public function rentalPeriod()
     {
         return $this->hasMany(RentalPeriod::class, 'cliente_id');
+    }
+
+    public function declaraciones()
+    {
+        return $this->hasMany(CreditoDeclaracion::class, 'cliente_id');
     }
 }
