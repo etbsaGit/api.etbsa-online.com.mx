@@ -136,6 +136,11 @@ class Cliente extends Model
         return $this->hasMany(Referencia::class, 'cliente_id');
     }
 
+    public function referenciaComercial()
+    {
+        return $this->hasMany(ReferenciaComercial::class, 'cliente_id');
+    }
+
     public function representante()
     {
         return $this->hasOne(Representante::class, 'cliente_id');
@@ -194,5 +199,20 @@ class Cliente extends Model
     public function declaraciones()
     {
         return $this->hasMany(CreditoDeclaracion::class, 'cliente_id');
+    }
+
+    public function invercionesAgricolas()
+    {
+        return $this->hasMany(AgricolaInversion::class, 'cliente_id');
+    }
+
+    public function invercionesGanaderas()
+    {
+        return $this->hasMany(GanaderaInversion::class, 'cliente_id');
+    }
+
+    public function fincas()
+    {
+        return $this->hasMany(Finca::class, 'cliente_id');
     }
 }

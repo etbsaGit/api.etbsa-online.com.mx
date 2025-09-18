@@ -2,9 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Intranet\SaleController;
 use App\Http\Controllers\Intranet\TownController;
 use App\Http\Controllers\Intranet\MarcaController;
 use App\Http\Controllers\Intranet\RiegoController;
+use App\Http\Controllers\Intranet\GanadoController;
 use App\Http\Controllers\Intranet\TacticController;
 use App\Http\Controllers\Intranet\ClienteController;
 use App\Http\Controllers\Intranet\CultivoController;
@@ -25,11 +27,14 @@ use App\Http\Controllers\Intranet\AbastecimientoController;
 use App\Http\Controllers\Intranet\ClienteCultivoController;
 use App\Http\Controllers\Intranet\ClassificationsController;
 use App\Http\Controllers\Intranet\NuevaTecnologiaController;
+use App\Http\Controllers\Intranet\AgricolaInversionController;
 use App\Http\Controllers\Intranet\ClienteTechnologyController;
+use App\Http\Controllers\Intranet\GanaderaInversionController;
+use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
-use App\Http\Controllers\Intranet\SaleController;
+use App\Http\Controllers\Intranet\FincaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,7 +76,13 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('sale/options', [SaleController::class, 'getOptions']);
     Route::get('sale/validated', [SaleController::class, 'getForValidate']);
     Route::post('sale/post/validated', [SaleController::class, 'postValidate']);
-
+    Route::get('referenciaComercial/cliente/{cliente}', [ReferenciaComercialController::class, 'getPerCliente']);
+    Route::get('agricolaInversion/cliente/{cliente}/{year}', [AgricolaInversionController::class, 'getPerCliente']);
+    Route::get('agricolaInversion/options', [AgricolaInversionController::class, 'getOptions']);
+    Route::get('ganaderaInversion/cliente/{cliente}/{year}', [GanaderaInversionController::class, 'getPerCliente']);
+    Route::get('ganaderaInversion/options', [GanaderaInversionController::class, 'getOptions']);
+    Route::get('finca/cliente/{cliente}', [FincaController::class, 'getPerCliente']);
+    Route::get('finca/options', [FincaController::class, 'getOptions']);
 
     Route::apiResource('construction-classification', ConstructionClassificationsController::class);
     Route::apiResource('tactic', TacticController::class);
@@ -101,6 +112,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('clienteAbastecimiento', ClienteAbastecimientoController::class);
     Route::apiResource('clientesDoc', ClientesDocController::class);
     Route::apiResource('sale', SaleController::class);
+    Route::apiResource('referenciaComercial', ReferenciaComercialController::class);
+    Route::apiResource('agricolaInversion', AgricolaInversionController::class);
+    Route::apiResource('ganado', GanadoController::class);
+    Route::apiResource('ganaderaInversion', GanaderaInversionController::class);
+    Route::apiResource('finca', FincaController::class);
 
     Route::post('nt/clientes', [ClienteTechnologyController::class, 'getClientesNT']);
     Route::post('nt/clientes/xls', [ClienteTechnologyController::class, 'getClientesNTxls']);

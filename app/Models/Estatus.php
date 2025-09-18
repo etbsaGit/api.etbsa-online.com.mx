@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use App\Models\Intranet\Sale;
-use App\Models\Intranet\ClientesDoc;
+use App\Models\Intranet\Finca;
 use App\Traits\FilterableModel;
+use App\Models\Intranet\ClientesDoc;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -110,5 +111,11 @@ class Estatus extends Model
     public function services()
     {
         return $this->hasMany(Service::class, 'estatus_id');
+    }
+
+    // ---------------------------------Finca---------------------------------------------------------
+    public function fincas()
+    {
+        return $this->hasMany(Finca::class, 'estatus_id');
     }
 }
