@@ -215,4 +215,14 @@ class Cliente extends Model
     {
         return $this->hasMany(Finca::class, 'cliente_id');
     }
+
+    public function analiticas()
+    {
+        return $this->hasMany(Analitica::class, 'cliente_id');
+    }
+
+    public function ingresos()
+    {
+        return $this->hasMany(Ingreso::class, 'cliente_id');
+    }
 }

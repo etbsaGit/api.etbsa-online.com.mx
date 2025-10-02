@@ -4,16 +4,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Intranet\SaleController;
 use App\Http\Controllers\Intranet\TownController;
+use App\Http\Controllers\Intranet\FincaController;
 use App\Http\Controllers\Intranet\MarcaController;
 use App\Http\Controllers\Intranet\RiegoController;
 use App\Http\Controllers\Intranet\GanadoController;
 use App\Http\Controllers\Intranet\TacticController;
 use App\Http\Controllers\Intranet\ClienteController;
 use App\Http\Controllers\Intranet\CultivoController;
+use App\Http\Controllers\Intranet\IngresoController;
 use App\Http\Controllers\Intranet\KinshipController;
 use App\Http\Controllers\Intranet\MachineController;
+use App\Http\Controllers\Intranet\AnaliticaController;
 use App\Http\Controllers\Intranet\CondicionController;
 use App\Http\Controllers\Intranet\ClasEquipoController;
+use App\Http\Controllers\Intranet\IngresoDocController;
 use App\Http\Controllers\Intranet\ReferenciaController;
 use App\Http\Controllers\Intranet\TipoEquipoController;
 use App\Http\Controllers\Intranet\ClientesDocController;
@@ -34,7 +38,6 @@ use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
-use App\Http\Controllers\Intranet\FincaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +86,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('ganaderaInversion/options', [GanaderaInversionController::class, 'getOptions']);
     Route::get('finca/cliente/{cliente}', [FincaController::class, 'getPerCliente']);
     Route::get('finca/options', [FincaController::class, 'getOptions']);
+    Route::get('analitica/cliente/{cliente}', [AnaliticaController::class, 'getPerCliente']);
+    Route::get('analitica/report/{analitica}', [AnaliticaController::class, 'getReport']);
+
+    Route::get('ingreso/cliente/{cliente}', [IngresoController::class, 'getPerCliente']);
+
 
     Route::apiResource('construction-classification', ConstructionClassificationsController::class);
     Route::apiResource('tactic', TacticController::class);
@@ -117,6 +125,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('ganado', GanadoController::class);
     Route::apiResource('ganaderaInversion', GanaderaInversionController::class);
     Route::apiResource('finca', FincaController::class);
+    Route::apiResource('analitica', AnaliticaController::class);
+    Route::apiResource('ingreso', IngresoController::class);
+    Route::apiResource('ingresoDoc', IngresoDocController::class);
 
     Route::post('nt/clientes', [ClienteTechnologyController::class, 'getClientesNT']);
     Route::post('nt/clientes/xls', [ClienteTechnologyController::class, 'getClientesNTxls']);
