@@ -30,4 +30,9 @@ class Cultivo extends Model
     {
         return $this->hasMany(AgricolaInversion::class, 'cultivo_id');
     }
+
+        public function invercionesA()
+    {
+        return $this->hasMany(InversionesAgricola::class, 'cultivo_id');
+    }
 }

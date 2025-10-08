@@ -5,7 +5,7 @@ namespace App\Models\Intranet;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class GanaderaInversion extends Model
+class InversionesGanadera extends Model
 {
     use HasFactory;
 
@@ -14,13 +14,11 @@ class GanaderaInversion extends Model
         'ciclo',
         'unidades',
         'costo',
-        'cantidad',
-        'precio',
         'ganado_id',
         'cliente_id',
     ];
 
-    protected $appends = ['total', 'ingreso', 'utilidad'];
+    protected $appends = ['total'];
 
     public function cliente()
     {
@@ -35,15 +33,5 @@ class GanaderaInversion extends Model
     public function getTotalAttribute()
     {
         return $this->unidades * $this->costo;
-    }
-
-    public function getIngresoAttribute()
-    {
-        return $this->cantidad * $this->unidades * $this->precio;
-    }
-
-    public function getUtilidadAttribute()
-    {
-        return $this->ingreso - $this->total;
     }
 }

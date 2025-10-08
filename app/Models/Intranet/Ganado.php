@@ -17,4 +17,9 @@ class Ganado extends Model
     {
         return $this->hasMany(GanaderaInversion::class, 'ganado_id');
     }
+
+    public function inverciones()
+    {
+        return $this->hasMany(InversionesGanadera::class, 'ganado_id');
+    }
 }

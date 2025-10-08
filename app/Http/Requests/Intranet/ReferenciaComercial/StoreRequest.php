@@ -28,6 +28,9 @@ class StoreRequest extends FormRequest
             "nombre" => ['required', 'string', 'max:255'],
             "telefono" => ['required', 'numeric', 'digits:10'],
             'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
+            "negocio" => ['required', 'string', 'max:255'],
+            "domicilio" => ['required', 'string', 'max:255'],
+            "empresa" => ['required', 'string', 'max:255'],
         ];
     }
 

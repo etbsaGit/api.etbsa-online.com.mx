@@ -34,6 +34,8 @@ use App\Http\Controllers\Intranet\NuevaTecnologiaController;
 use App\Http\Controllers\Intranet\AgricolaInversionController;
 use App\Http\Controllers\Intranet\ClienteTechnologyController;
 use App\Http\Controllers\Intranet\GanaderaInversionController;
+use App\Http\Controllers\Intranet\InversionesAgricolaController;
+use App\Http\Controllers\Intranet\InversionesGanaderaController;
 use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
@@ -56,79 +58,162 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
-    Route::get('town/state/{id}', [TownController::class, 'getPerState']);
+    /**
+     * ────────────────────────────────
+     *  📦 RUTAS AGRUPADAS POR CONTROLADOR
+     * ────────────────────────────────
+     */
+
+    // 🔹 Abastecimiento
+    Route::apiResource('abastecimiento', AbastecimientoController::class);
+
+    // 🔹 Agricola ingresos
+    Route::get('agricolaInversion/cliente/{cliente}/{year}', [AgricolaInversionController::class, 'getPerCliente']);
+    Route::get('agricolaInversion/options', [AgricolaInversionController::class, 'getOptions']);
+    Route::apiResource('agricolaInversion', AgricolaInversionController::class);
+
+    // 🔹 Agricola Inversión
+    Route::get('inversionesAgricola/cliente/{cliente}/{year}', [InversionesAgricolaController::class, 'getPerCliente']);
+    Route::get('inversionesAgricola/options', [InversionesAgricolaController::class, 'getOptions']);
+    Route::apiResource('inversionesAgricola', InversionesAgricolaController::class);
+
+    // 🔹 Analitica
+    Route::get('analitica/cliente/{cliente}', [AnaliticaController::class, 'getPerCliente']);
+    Route::get('analitica/report/{analitica}', [AnaliticaController::class, 'getReport']);
+    Route::apiResource('analitica', AnaliticaController::class);
+
+    // 🔹 Classifications
+    Route::apiResource('classification', ClassificationsController::class);
+
+    // 🔹 ClasEquipo
+    Route::apiResource('clasEquipo', ClasEquipoController::class);
+
+    // 🔹 Cliente
+    Route::post('clientes', [ClienteController::class, 'index']);
+    Route::post('clientes/excel', [ClienteController::class, 'insetExcel']);
+    Route::post('cliente/add/capTech/{cliente}', [ClienteController::class, 'addCapTech']);
+    Route::get('cliente/get/capTech/{cliente}', [ClienteController::class, 'getCapTech']);
     Route::get('cliente/options', [ClienteController::class, 'getOptions']);
+    Route::apiResource('cliente', ClienteController::class);
+
+    // 🔹 Cliente Abastecimiento
+    Route::get('clienteAbastecimiento/cliente/{cliente}', [ClienteAbastecimientoController::class, 'getPerCliente']);
+    Route::apiResource('clienteAbastecimiento', ClienteAbastecimientoController::class);
+
+    // 🔹 Cliente Cultivo
+    Route::get('clienteCultivo/cliente/{cliente}', [ClienteCultivoController::class, 'getPerCliente']);
+    Route::get('clienteCultivo/options', [ClienteCultivoController::class, 'getOptions']);
+    Route::apiResource('clienteCultivo', ClienteCultivoController::class);
+
+    // 🔹 Cliente Riego
+    Route::get('clienteRiego/cliente/{cliente}', [ClienteRiegoController::class, 'getPerCliente']);
+    Route::apiResource('clienteRiego', ClienteRiegoController::class);
+
+    // 🔹 Cliente Technology
+    Route::get('clienteTechnology/cliente/{cliente}', [ClienteTechnologyController::class, 'getPerCliente']);
+    Route::post('nt/clientes', [ClienteTechnologyController::class, 'getClientesNT']);
+    Route::post('nt/clientes/xls', [ClienteTechnologyController::class, 'getClientesNTxls']);
+    Route::apiResource('clienteTechnology', ClienteTechnologyController::class);
+
+    // 🔹 ClientesDoc
+    Route::get('clientesDoc/cliente/{cliente}', [ClientesDocController::class, 'getPerCliente']);
+    Route::apiResource('clientesDoc', ClientesDocController::class);
+
+    // 🔹 Condicion
+    Route::apiResource('condicion', CondicionController::class);
+
+    // 🔹 Construction Classification
+    Route::apiResource('construction-classification', ConstructionClassificationsController::class);
+
+    // 🔹 Cultivo
+    Route::apiResource('cultivo', CultivoController::class);
+
+    // 🔹 Distribución
+    Route::get('distribucion/cliente/{cliente}', [DistribucionController::class, 'getPerCliente']);
+    Route::apiResource('distribucion', DistribucionController::class);
+
+    // 🔹 Finca
+    Route::get('finca/cliente/{cliente}', [FincaController::class, 'getPerCliente']);
+    Route::get('finca/options', [FincaController::class, 'getOptions']);
+    Route::apiResource('finca', FincaController::class);
+
+    // 🔹 Ganado
+    Route::apiResource('ganado', GanadoController::class);
+
+    // 🔹 Ganadera ingresos
+    Route::get('ganaderaInversion/cliente/{cliente}/{year}', [GanaderaInversionController::class, 'getPerCliente']);
+    Route::get('ganaderaInversion/options', [GanaderaInversionController::class, 'getOptions']);
+    Route::apiResource('ganaderaInversion', GanaderaInversionController::class);
+
+    // 🔹 Ganadera Inversión
+    Route::get('inversionesGanadera/cliente/{cliente}/{year}', [InversionesGanaderaController::class, 'getPerCliente']);
+    Route::get('inversionesGanadera/options', [InversionesGanaderaController::class, 'getOptions']);
+    Route::apiResource('inversionesGanadera', InversionesGanaderaController::class);
+
+    // 🔹 Ingreso
+    Route::get('ingreso/cliente/{cliente}/{year}', [IngresoController::class, 'getPerCliente']);
+    Route::apiResource('ingreso', IngresoController::class);
+
+    // 🔹 IngresoDoc
+    Route::apiResource('ingresoDoc', IngresoDocController::class);
+
+    // 🔹 Kinship
+    Route::apiResource('kinship', KinshipController::class);
+
+    // 🔹 Marca
+    Route::apiResource('marca', MarcaController::class);
+
+    // 🔹 Machine
+    Route::get('machine/cliente/{cliente}', [MachineController::class, 'getPerCliente']);
+    Route::get('machine/options', [MachineController::class, 'getOptions']);
+    Route::apiResource('machine', MachineController::class);
+
+    // 🔹 Nueva Tecnología
+    Route::apiResource('nuevaTecnologia', NuevaTecnologiaController::class);
+
+    // 🔹 Referencia
     Route::get('referencia/cliente/{cliente}', [ReferenciaController::class, 'getPerCliente']);
     Route::put('referencia/{referencia}', [ReferenciaController::class, 'update']);
     Route::delete('referencia/{referencia}', [ReferenciaController::class, 'destroy']);
+    Route::apiResource('referencia', ReferenciaController::class);
+
+    // 🔹 Referencia Comercial
+    Route::get('referenciaComercial/cliente/{cliente}', [ReferenciaComercialController::class, 'getPerCliente']);
+    Route::apiResource('referenciaComercial', ReferenciaComercialController::class);
+
+    // 🔹 Representante
     Route::get('representante/cliente/{cliente}', [RepresentanteController::class, 'getPerCliente']);
-    Route::get('machine/cliente/{cliente}', [MachineController::class, 'getPerCliente']);
-    Route::get('machine/options', [MachineController::class, 'getOptions']);
-    Route::get('clienteTechnology/cliente/{cliente}', [ClienteTechnologyController::class, 'getPerCliente']);
-    Route::get('distribucion/cliente/{cliente}', [DistribucionController::class, 'getPerCliente']);
-    Route::get('clienteCultivo/cliente/{cliente}', [ClienteCultivoController::class, 'getPerCliente']);
-    Route::get('clienteCultivo/options', [ClienteCultivoController::class, 'getOptions']);
-    Route::get('clienteRiego/cliente/{cliente}', [ClienteRiegoController::class, 'getPerCliente']);
-    Route::get('clienteAbastecimiento/cliente/{cliente}', [ClienteAbastecimientoController::class, 'getPerCliente']);
-    Route::post('clientes', [ClienteController::class, 'index']);
-    Route::post('cliente/add/capTech/{cliente}', [ClienteController::class, 'addCapTech']);
-    Route::get('cliente/get/capTech/{cliente}', [ClienteController::class, 'getCapTech']);
-    Route::post('clientes/excel', [ClienteController::class, 'insetExcel']);
-    Route::get('clientesDoc/cliente/{cliente}', [ClientesDocController::class, 'getPerCliente']);
+    Route::apiResource('representante', RepresentanteController::class);
+
+    // 🔹 Riego
+    Route::apiResource('riego', RiegoController::class);
+
+    // 🔹 Sale
     Route::post('sales', [SaleController::class, 'index']);
     Route::get('sale/options', [SaleController::class, 'getOptions']);
     Route::get('sale/validated', [SaleController::class, 'getForValidate']);
     Route::post('sale/post/validated', [SaleController::class, 'postValidate']);
-    Route::get('referenciaComercial/cliente/{cliente}', [ReferenciaComercialController::class, 'getPerCliente']);
-    Route::get('agricolaInversion/cliente/{cliente}/{year}', [AgricolaInversionController::class, 'getPerCliente']);
-    Route::get('agricolaInversion/options', [AgricolaInversionController::class, 'getOptions']);
-    Route::get('ganaderaInversion/cliente/{cliente}/{year}', [GanaderaInversionController::class, 'getPerCliente']);
-    Route::get('ganaderaInversion/options', [GanaderaInversionController::class, 'getOptions']);
-    Route::get('finca/cliente/{cliente}', [FincaController::class, 'getPerCliente']);
-    Route::get('finca/options', [FincaController::class, 'getOptions']);
-    Route::get('analitica/cliente/{cliente}', [AnaliticaController::class, 'getPerCliente']);
-    Route::get('analitica/report/{analitica}', [AnaliticaController::class, 'getReport']);
-
-    Route::get('ingreso/cliente/{cliente}', [IngresoController::class, 'getPerCliente']);
-
-
-    Route::apiResource('construction-classification', ConstructionClassificationsController::class);
-    Route::apiResource('tactic', TacticController::class);
-    Route::apiResource('technological-capability', TechnologicalCapabilityController::class);
-    Route::apiResource('segmentation', SegmentationController::class);
-    Route::apiResource('classification', ClassificationsController::class);
-    Route::apiResource('stateEntity', StateEntityController::class);
-    Route::apiResource('town', TownController::class);
-    Route::apiResource('kinship', KinshipController::class);
-    Route::apiResource('abastecimiento', AbastecimientoController::class);
-    Route::apiResource('condicion', CondicionController::class);
-    Route::apiResource('cultivo', CultivoController::class);
-    Route::apiResource('tipoCultivo', TipoCultivoController::class);
-    Route::apiResource('marca', MarcaController::class);
-    Route::apiResource('nuevaTecnologia', NuevaTecnologiaController::class);
-    Route::apiResource('riego', RiegoController::class);
-    Route::apiResource('tipoEquipo', TipoEquipoController::class);
-    Route::apiResource('clasEquipo', ClasEquipoController::class);
-    Route::apiResource('cliente', ClienteController::class);
-    Route::apiResource('referencia', ReferenciaController::class);
-    Route::apiResource('representante', RepresentanteController::class);
-    Route::apiResource('machine', MachineController::class);
-    Route::apiResource('clienteTechnology', ClienteTechnologyController::class);
-    Route::apiResource('distribucion', DistribucionController::class);
-    Route::apiResource('clienteCultivo', ClienteCultivoController::class);
-    Route::apiResource('clienteRiego', ClienteRiegoController::class);
-    Route::apiResource('clienteAbastecimiento', ClienteAbastecimientoController::class);
-    Route::apiResource('clientesDoc', ClientesDocController::class);
     Route::apiResource('sale', SaleController::class);
-    Route::apiResource('referenciaComercial', ReferenciaComercialController::class);
-    Route::apiResource('agricolaInversion', AgricolaInversionController::class);
-    Route::apiResource('ganado', GanadoController::class);
-    Route::apiResource('ganaderaInversion', GanaderaInversionController::class);
-    Route::apiResource('finca', FincaController::class);
-    Route::apiResource('analitica', AnaliticaController::class);
-    Route::apiResource('ingreso', IngresoController::class);
-    Route::apiResource('ingresoDoc', IngresoDocController::class);
 
-    Route::post('nt/clientes', [ClienteTechnologyController::class, 'getClientesNT']);
-    Route::post('nt/clientes/xls', [ClienteTechnologyController::class, 'getClientesNTxls']);
+    // 🔹 Segmentation
+    Route::apiResource('segmentation', SegmentationController::class);
+
+    // 🔹 State Entity
+    Route::apiResource('stateEntity', StateEntityController::class);
+
+    // 🔹 Tactic
+    Route::apiResource('tactic', TacticController::class);
+
+    // 🔹 Technological Capability
+    Route::apiResource('technological-capability', TechnologicalCapabilityController::class);
+
+    // 🔹 Tipo Cultivo
+    Route::apiResource('tipoCultivo', TipoCultivoController::class);
+
+    // 🔹 Tipo Equipo
+    Route::apiResource('tipoEquipo', TipoEquipoController::class);
+
+    // 🔹 Town
+    Route::get('town/state/{id}', [TownController::class, 'getPerState']);
+    Route::apiResource('town', TownController::class);
 });

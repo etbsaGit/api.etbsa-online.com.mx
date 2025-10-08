@@ -82,9 +82,9 @@ class IngresoController extends ApiController
         return $this->respondSuccess();
     }
 
-    public function getPerCliente(Cliente $cliente)
+    public function getPerCliente(Cliente $cliente, int $year)
     {
-        $ingresos = Ingreso::where('cliente_id', $cliente->id)->with('cliente','ingresoDocs')->get();
+        $ingresos = Ingreso::where('cliente_id', $cliente->id)->where('year', $year)->with('cliente', 'ingresoDocs')->get();
 
         return $this->respond($ingresos);
     }

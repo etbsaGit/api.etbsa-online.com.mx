@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Intranet\Ingreso;
+namespace App\Http\Requests\Intranet\InversionesAgricola;
 
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,11 +25,12 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "tipo" => ['required', 'string', 'max:191'],
-            'monto' => ['required', 'numeric', 'min:1'],
-            'cliente_id' => ['required', 'exists:clientes,id'],
-            'year' => ['required', 'integer', 'digits:4', 'min:1900', 'max:' . date('Y')],
-            'months' => ['required', 'integer', 'between:1,12'],
+            'year' => ['required', 'integer'],
+            'ciclo' => ['required', 'string'],
+            'hectareas' => ['required', 'integer'],
+            'costo' => ['required', 'integer'],
+            'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
+            'cultivo_id' => ['required', 'integer', 'exists:cultivos,id'],
         ];
     }
 

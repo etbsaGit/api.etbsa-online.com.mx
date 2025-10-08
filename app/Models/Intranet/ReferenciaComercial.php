@@ -13,6 +13,9 @@ class ReferenciaComercial extends Model
         'nombre',
         'telefono',
         'cliente_id',
+        'negocio',
+        'domicilio',
+        'empresa',
     ];
 
     public function cliente()

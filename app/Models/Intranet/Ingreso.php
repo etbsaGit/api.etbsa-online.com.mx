@@ -13,6 +13,8 @@ class Ingreso extends Model
     protected $fillable = [
         'monto',
         'tipo',
+        'year',
+        'months',
         'cliente_id'
     ];
 
@@ -29,6 +31,13 @@ class Ingreso extends Model
                 $doc->delete();
             });
         });
+    }
+
+    protected $appends = ['total'];
+
+    public function getTotalAttribute()
+    {
+        return $this->monto * $this->months;
     }
 
     public function cliente()
