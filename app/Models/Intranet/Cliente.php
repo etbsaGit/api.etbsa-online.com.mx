@@ -230,4 +230,9 @@ class Cliente extends Model
     {
         return $this->hasMany(InversionesAgricola::class, 'cliente_id');
     }
+
+    public function egresos()
+    {
+        return $this->hasMany(Egreso::class, 'cliente_id');
+    }
 }

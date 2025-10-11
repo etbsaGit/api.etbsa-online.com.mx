@@ -40,6 +40,7 @@ use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
+use App\Http\Controllers\Intranet\EgresoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +132,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // 🔹 Distribución
     Route::get('distribucion/cliente/{cliente}', [DistribucionController::class, 'getPerCliente']);
     Route::apiResource('distribucion', DistribucionController::class);
+
+    // 🔹 Egresos
+    Route::get('egreso/cliente/{cliente}/{year}', [EgresoController::class, 'getPerCliente']);
+    Route::apiResource('egreso', EgresoController::class);
 
     // 🔹 Finca
     Route::get('finca/cliente/{cliente}', [FincaController::class, 'getPerCliente']);

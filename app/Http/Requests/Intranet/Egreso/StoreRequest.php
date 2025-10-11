@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Intranet\Analitica;
+namespace App\Http\Requests\Intranet\Egreso;
 
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,16 +25,13 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "titulo" => ['required', 'string', 'max:191'],
-            'efectivo' => ['required', 'numeric', 'min:0'],
-            'caja' => ['required', 'numeric', 'min:0'],
-            'gastos' => ['nullable', 'numeric', 'min:0'],
-            'documentospc' => ['nullable', 'numeric', 'min:0'],
-            'mercancias' => ['nullable', 'numeric', 'min:0'],
-            'status' => ['nullable', 'boolean'],
-            'fecha' => ['required', 'date'],
-            "comentarios" => ['nullable', 'string', 'max:191'],
-            'cliente_id' => ['required', 'exists:clientes,id'],
+            'year' => ['required', 'integer'],
+            'pago' => ['required', 'numeric', 'min:0'],
+            'months' => ['required', 'integer', 'min:1'],
+            'entidad' => ['required', 'string', 'max:255'],
+            'concepto' => ['required', 'string', 'max:255'],
+            'descripcion' => ['nullable', 'string', 'max:1000'],
+            'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
         ];
     }
 
