@@ -28,6 +28,7 @@ class StoreRequest extends FormRequest
             'year' => ['required', 'integer'],
             'pago' => ['required', 'numeric', 'min:0'],
             'months' => ['required', 'integer', 'min:1'],
+            'type' => ['required', 'integer'],
             'entidad' => ['required', 'string', 'max:255'],
             'concepto' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],

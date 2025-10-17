@@ -66,7 +66,7 @@ class ProspectCultivoController extends ApiController
     public function getOptions()
     {
         $data = [
-            'cultivos' => Cultivo::all(),
+            'cultivos' => Cultivo::orderBy('name', 'asc')->get(),
             'tiposCultivo' => TipoCultivo::all(),
         ];
 

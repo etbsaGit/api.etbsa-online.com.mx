@@ -28,4 +28,9 @@ class Finca extends Model
     {
         return $this->belongsTo(Estatus::class, 'estatus_id');
     }
+
+    public function fincaDocs()
+    {
+        return $this->hasMany(FincaDoc::class, 'finca_id');
+    }
 }

@@ -13,6 +13,7 @@ class Egreso extends Model
         'year',
         'pago',
         'months',
+        'type',
         'entidad',
         'concepto',
         'descripcion',

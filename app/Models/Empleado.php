@@ -12,6 +12,7 @@ use App\Models\Departamento;
 use App\Models\TipoDeSangre;
 use App\Models\Intranet\Sale;
 use App\Traits\FilterableModel;
+use App\Models\Intranet\Cliente;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -518,6 +519,13 @@ class Empleado extends Model
     public function services()
     {
         return $this->hasMany(Service::class, 'empleado_id');
+    }
+
+    // ---------------------------------clientes---------------------------------------------------------
+
+    public function clientes()
+    {
+        return $this->belongsToMany(Cliente::class, 'p_cliente_empleado');
     }
 
 

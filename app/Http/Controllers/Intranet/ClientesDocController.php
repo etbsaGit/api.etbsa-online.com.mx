@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Intranet;
 
+use App\Models\Estatus;
 use Illuminate\Http\Request;
 use App\Traits\UploadableFile;
 use App\Models\Intranet\Cliente;
@@ -65,18 +66,84 @@ class ClientesDocController extends ApiController
      */
     public function destroy(ClientesDoc $clientesDoc)
     {
-        Storage::disk('s3')->delete($clientesDoc->path);
+        // Si existe un path válido, borrar del S3
+        if (!empty($clientesDoc->path)) {
+            Storage::disk('s3')->delete($clientesDoc->path);
+        }
+
+        // Borrar el registro de la base de datos
         $clientesDoc->delete();
+
         return $this->respondSuccess();
     }
 
+
     public function getPerCliente(Cliente $cliente)
     {
+        // 1. Definir los nombres de documentos requeridos si el cliente es FÍSICO
+        $nombresFisico = [
+            'ine',
+            'curp',
+            'comprobante de estado civil',
+            'comprobante de domicilio',
+            'estado de cuenta',
+            'comprobante de situacion fiscal',
+            'declaracion anual de hacienda',
+            'cotizacion'
+        ];
+
+        $nombresMoral = [
+            'acta constitutiva',
+            'ultima carta de modificacion',
+            'informacion financiera',
+            'declaracion anual de hacienda',
+            'estado de cuenta',
+            'comprobante de domicilio',
+            'comprobante de estado civil',
+            'relacion patrimonial',
+            'ine',
+            'curp',
+            'comprobante de situacion fiscal',
+            'organigrama',
+            'cotizacion'
+        ];
+
+        // 2. Obtener los estatus dependiendo del tipo de cliente
+        $estatusTypeDocsQuery = Estatus::where('tipo_estatus', 'TypeDocs');
+
+        if (strtolower($cliente->tipo) === 'fisica') {
+            // Solo los que coincidan con los nombres definidos
+            $estatusTypeDocsQuery->whereIn('nombre', $nombresFisico);
+        }
+
+        if (strtolower($cliente->tipo) === 'moral') {
+            // Solo los que coincidan con los nombres definidos
+            $estatusTypeDocsQuery->whereIn('nombre', $nombresMoral);
+        }
+
+        $estatusTypeDocs = $estatusTypeDocsQuery->get();
+
+        // 3. Crear los ClientesDoc faltantes
+        foreach ($estatusTypeDocs as $estatus) {
+            $existe = ClientesDoc::where('cliente_id', $cliente->id)
+                ->where('status_id', $estatus->id)
+                ->exists();
+
+            if (! $existe) {
+                ClientesDoc::create([
+                    'cliente_id' => $cliente->id,
+                    'status_id'  => $estatus->id,
+                ]);
+            }
+        }
+
+        // 4. Obtener todos los documentos del cliente con su relación `status`
         $docs = ClientesDoc::where('cliente_id', $cliente->id)
             ->with('status')
             ->orderBy('updated_at', 'desc')
             ->get();
 
+        // 5. Retornar la respuesta
         return $this->respond($docs);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Intranet\TownController;
 use App\Http\Controllers\Intranet\FincaController;
 use App\Http\Controllers\Intranet\MarcaController;
 use App\Http\Controllers\Intranet\RiegoController;
+use App\Http\Controllers\Intranet\EgresoController;
 use App\Http\Controllers\Intranet\GanadoController;
 use App\Http\Controllers\Intranet\TacticController;
 use App\Http\Controllers\Intranet\ClienteController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Intranet\CultivoController;
 use App\Http\Controllers\Intranet\IngresoController;
 use App\Http\Controllers\Intranet\KinshipController;
 use App\Http\Controllers\Intranet\MachineController;
+use App\Http\Controllers\Intranet\FincaDocController;
 use App\Http\Controllers\Intranet\AnaliticaController;
 use App\Http\Controllers\Intranet\CondicionController;
 use App\Http\Controllers\Intranet\ClasEquipoController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Intranet\ClienteCultivoController;
 use App\Http\Controllers\Intranet\ClassificationsController;
 use App\Http\Controllers\Intranet\NuevaTecnologiaController;
 use App\Http\Controllers\Intranet\AgricolaInversionController;
+use App\Http\Controllers\Intranet\AnaliticaDocController;
 use App\Http\Controllers\Intranet\ClienteTechnologyController;
 use App\Http\Controllers\Intranet\GanaderaInversionController;
 use App\Http\Controllers\Intranet\InversionesAgricolaController;
@@ -40,7 +43,6 @@ use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
-use App\Http\Controllers\Intranet\EgresoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +85,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('analitica/report/{analitica}', [AnaliticaController::class, 'getReport']);
     Route::apiResource('analitica', AnaliticaController::class);
 
+    // 🔹 AnaliticaDoc
+    Route::get('analiticaDoc/status/{analiticaDoc}/{status}', [AnaliticaDocController::class, 'changeEstatus']);
+    Route::apiResource('analiticaDoc', AnaliticaDocController::class);
+
     // 🔹 Classifications
     Route::apiResource('classification', ClassificationsController::class);
 
@@ -95,6 +101,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('cliente/add/capTech/{cliente}', [ClienteController::class, 'addCapTech']);
     Route::get('cliente/get/capTech/{cliente}', [ClienteController::class, 'getCapTech']);
     Route::get('cliente/options', [ClienteController::class, 'getOptions']);
+    Route::get('cliente/rfc/{rfc}', [ClienteController::class, 'findByRfc']);
+    Route::post('clientes/clientes', [ClienteController::class, 'getClientes']);
+    Route::post('clientes/empleados', [ClienteController::class, 'getEmpleados']);
+    Route::post('clientes/empleados/async', [ClienteController::class, 'syncEmpleadoClientes']);
     Route::apiResource('cliente', ClienteController::class);
 
     // 🔹 Cliente Abastecimiento
@@ -141,6 +151,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('finca/cliente/{cliente}', [FincaController::class, 'getPerCliente']);
     Route::get('finca/options', [FincaController::class, 'getOptions']);
     Route::apiResource('finca', FincaController::class);
+
+    // 🔹 FincaDoc
+    Route::apiResource('fincaDoc', FincaDocController::class);
 
     // 🔹 Ganado
     Route::apiResource('ganado', GanadoController::class);

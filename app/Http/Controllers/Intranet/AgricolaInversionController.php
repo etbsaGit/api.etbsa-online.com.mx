@@ -82,7 +82,7 @@ class AgricolaInversionController extends ApiController
     public function getOptions()
     {
         $data = [
-            'cultivos' => Cultivo::all(),
+            'cultivos' => Cultivo::orderBy('name', 'asc')->get(),
         ];
 
         return $this->respond($data);

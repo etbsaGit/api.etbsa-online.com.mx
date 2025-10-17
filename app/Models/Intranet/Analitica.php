@@ -26,4 +26,9 @@ class Analitica extends Model
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
     }
+
+    public function analiticaDocs()
+    {
+        return $this->hasMany(AnaliticaDoc::class, 'analitica_id');
+    }
 }

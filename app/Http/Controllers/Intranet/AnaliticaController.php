@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Intranet;
 
 use Illuminate\Http\Request;
+use App\Traits\UploadableFile;
 use App\Models\Intranet\Cliente;
 use App\Models\Intranet\Analitica;
+use App\Models\Intranet\AnaliticaDoc;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Analitica\StoreRequest;
 
 class AnaliticaController extends ApiController
 {
+    use UploadableFile;
+
     /**
      * Display a listing of the resource.
      */
@@ -24,6 +28,18 @@ class AnaliticaController extends ApiController
     public function store(StoreRequest $request)
     {
         $analitica = Analitica::create($request->validated());
+        $docs = $request->base64;
+
+        if (!empty($docs)) {
+            foreach ($docs as $doc) {
+                $sa = AnaliticaDoc::create([
+                    "name" => $doc['name'],
+                    "analitica_id" => $analitica->id
+                ]);
+                $relativePath  = $this->saveDoc($doc['base64'], $sa->default_path_folder);
+                $sa->update(['path' => $relativePath]);
+            }
+        }
         return $this->respondCreated($analitica);
     }
 
@@ -41,6 +57,18 @@ class AnaliticaController extends ApiController
     public function update(StoreRequest $request, Analitica $analitica)
     {
         $analitica->update($request->validated());
+        $docs = $request->base64;
+
+        if (!empty($docs)) {
+            foreach ($docs as $doc) {
+                $sa = AnaliticaDoc::create([
+                    "name" => $doc['name'],
+                    "analitica_id" => $analitica->id
+                ]);
+                $relativePath  = $this->saveDoc($doc['base64'], $sa->default_path_folder);
+                $sa->update(['path' => $relativePath]);
+            }
+        }
         return $this->respond($analitica);
     }
 
@@ -55,7 +83,7 @@ class AnaliticaController extends ApiController
 
     public function getPerCliente(Cliente $cliente)
     {
-        $analiticas = Analitica::where('cliente_id', $cliente->id)->with('cliente')->get();
+        $analiticas = Analitica::where('cliente_id', $cliente->id)->with('cliente','analiticaDocs')->get();
 
         $data = [
             'analiticas' => $analiticas,

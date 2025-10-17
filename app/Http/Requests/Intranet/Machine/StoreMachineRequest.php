@@ -25,7 +25,7 @@ class StoreMachineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "serie" => ['required', 'string', 'max:255'],
+            "serie" => ['nullable', 'string', 'max:255'],
             "modelo" => ['required', 'string', 'max:255'],
             "anio" => ['required', 'numeric', 'digits:4'],
             "valor" => ['required', 'numeric'],

@@ -2,10 +2,11 @@
 
 namespace App\Models\Intranet;
 
-use App\Models\Caja\CajaTransaccion;
-use App\Models\CreditoDeclaracion;
+use App\Models\Empleado;
 use App\Models\RentalPeriod;
 use App\Traits\FilterableModel;
+use App\Models\CreditoDeclaracion;
+use App\Models\Caja\CajaTransaccion;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -234,5 +235,10 @@ class Cliente extends Model
     public function egresos()
     {
         return $this->hasMany(Egreso::class, 'cliente_id');
+    }
+
+    public function empleados()
+    {
+        return $this->belongsToMany(Empleado::class, 'p_cliente_empleado');
     }
 }
