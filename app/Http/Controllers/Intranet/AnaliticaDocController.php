@@ -55,8 +55,21 @@ class AnaliticaDocController extends ApiController
      */
     public function update(Request $request, AnaliticaDoc $analiticaDoc)
     {
-        //
+        // 1️⃣ Validar los datos entrantes
+        $validatedData = $request->validate([
+            'comentarios' => 'required|string',
+        ]);
+
+        // 2️⃣ Actualizar el modelo con los datos validados
+        $analiticaDoc->update($validatedData);
+
+        // 3️⃣ Retornar respuesta (JSON o redirect según el caso)
+        return response()->json([
+            'message' => 'Analítica actualizada correctamente.',
+            'data' => $analiticaDoc
+        ]);
     }
+
 
     /**
      * Remove the specified resource from storage.

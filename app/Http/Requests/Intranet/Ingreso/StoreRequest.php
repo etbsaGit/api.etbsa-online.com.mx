@@ -27,6 +27,7 @@ class StoreRequest extends FormRequest
         return [
             "tipo" => ['required', 'string', 'max:191'],
             'monto' => ['required', 'numeric', 'min:1'],
+            'costos' => ['required', 'numeric', 'min:0'],
             'cliente_id' => ['required', 'exists:clientes,id'],
             'year' => ['required', 'integer', 'digits:4', 'min:1900', 'max:' . date('Y')],
             'months' => ['required', 'integer', 'between:1,12'],

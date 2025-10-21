@@ -12,6 +12,7 @@ class Ingreso extends Model
 
     protected $fillable = [
         'monto',
+        'costos',
         'tipo',
         'year',
         'months',
@@ -33,11 +34,16 @@ class Ingreso extends Model
         });
     }
 
-    protected $appends = ['total'];
+    protected $appends = ['total', 'neto'];
 
     public function getTotalAttribute()
     {
         return $this->monto * $this->months;
+    }
+
+    public function getNetoAttribute()
+    {
+        return $this->total - $this->costos;
     }
 
     public function cliente()

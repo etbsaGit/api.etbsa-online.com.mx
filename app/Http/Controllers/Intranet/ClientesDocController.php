@@ -89,7 +89,9 @@ class ClientesDocController extends ApiController
             'estado de cuenta',
             'comprobante de situacion fiscal',
             'declaracion anual de hacienda',
-            'cotizacion'
+            'cotizacion',
+            'Carta buro',
+            'Aviso de privacidad'
         ];
 
         $nombresMoral = [
@@ -105,7 +107,9 @@ class ClientesDocController extends ApiController
             'curp',
             'comprobante de situacion fiscal',
             'organigrama',
-            'cotizacion'
+            'cotizacion',
+            'Carta buro',
+            'Aviso de privacidad'
         ];
 
         // 2. Obtener los estatus dependiendo del tipo de cliente

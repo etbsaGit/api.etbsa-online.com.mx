@@ -63,7 +63,7 @@ class AnaliticaController extends ApiController
             foreach ($docs as $doc) {
                 $sa = AnaliticaDoc::create([
                     "name" => $doc['name'],
-                    "analitica_id" => $analitica->id
+                    "analitica_id" => $analitica->id,
                 ]);
                 $relativePath  = $this->saveDoc($doc['base64'], $sa->default_path_folder);
                 $sa->update(['path' => $relativePath]);

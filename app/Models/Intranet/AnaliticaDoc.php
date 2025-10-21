@@ -11,7 +11,7 @@ class AnaliticaDoc extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'path', 'analitica_id', 'status'];
+    protected $fillable = ['name', 'path', 'analitica_id', 'status', 'comentarios'];
 
     protected $appends = ['realpath'];
 
