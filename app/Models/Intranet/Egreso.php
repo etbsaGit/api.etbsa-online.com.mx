@@ -20,11 +20,25 @@ class Egreso extends Model
         'cliente_id',
     ];
 
-    protected $appends = ['total'];
+    protected $appends = ['total', 'pasivo_corto', 'pasivo_largo'];
 
     public function getTotalAttribute()
     {
         return $this->pago * $this->months;
+    }
+
+    public function getPasivoCortoAttribute()
+    {
+        $totalDeuda = $this->pago * $this->months;
+        return min($this->pago * $this->type, $totalDeuda);
+    }
+
+    // 🔹 Cálculo de pasivo largo plazo
+    public function getPasivoLargoAttribute()
+    {
+        $totalDeuda = $this->pago * $this->months;
+        $pasivoCorto = min($this->pago * $this->type, $totalDeuda);
+        return $totalDeuda - $pasivoCorto;
     }
 
     public function cliente()

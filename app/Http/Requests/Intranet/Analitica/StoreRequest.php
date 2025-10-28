@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Intranet\Analitica;
 
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
@@ -15,6 +16,21 @@ class StoreRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation()
+    {
+        $user = Auth::user();
+
+        // Solo modificar empleado_id si el usuario NO tiene el rol 'Credito'
+        if (! $user->hasRole('Credito')) {
+            $this->merge([
+                'empleado_id' => optional($user->empleado)->id,
+            ]);
+        }
     }
 
     /**
@@ -35,6 +51,8 @@ class StoreRequest extends FormRequest
             'fecha' => ['required', 'date'],
             "comentarios" => ['nullable', 'string', 'max:191'],
             'cliente_id' => ['required', 'exists:clientes,id'],
+            'empleado_id' => 'nullable|exists:empleados,id', // Puede ser null
+
         ];
     }
 

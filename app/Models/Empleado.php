@@ -9,6 +9,7 @@ use App\Models\Sucursal;
 use App\Models\Expediente;
 use App\Models\EstadoCivil;
 use App\Models\Departamento;
+use App\Models\Intranet\Analitica;
 use App\Models\TipoDeSangre;
 use App\Models\Intranet\Sale;
 use App\Traits\FilterableModel;
@@ -526,6 +527,12 @@ class Empleado extends Model
     public function clientes()
     {
         return $this->belongsToMany(Cliente::class, 'p_cliente_empleado');
+    }
+
+    // ---------------------------------Analitica---------------------------------------------------------
+    public function analiticas()
+    {
+        return $this->hasMany(Analitica::class, 'empleado_id');
     }
 
 
