@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Intranet\Finca;
 use App\Traits\UploadableFile;
 use App\Models\Intranet\Egreso;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\NuevaAnaliticaMail;
 use App\Models\Intranet\Cliente;
 use App\Models\Intranet\Ingreso;
@@ -133,6 +134,7 @@ class AnaliticaController extends ApiController
         // 🔹 Respuesta final
         // -------------------------------------------------------------------------
         $data = [
+            'analitica' => $analitica->titulo,
             'cliente' => $cliente,
             'activos_fijos' => $activosFijos,
             'activos_circulantes' => $activosCirculantes,
@@ -411,6 +413,36 @@ class AnaliticaController extends ApiController
             ],
             'total_otros_gastos' => $totalCostosFincas + $gastosAnalitica,
         ];
+    }
+
+    public function exportReportPdfBase64(Analitica $analitica)
+    {
+        // ✅ Reutilizamos la lógica de getReport()
+        $response = $this->getReport($analitica);
+
+        // Si $this->respond() devuelve un JsonResponse, extraemos los datos
+        $data = method_exists($response, 'getData') ? (array) $response->getData(true) : $response;
+
+        //return $this->respond($data);
+
+        // 🔹 Generamos el PDF desde la vista Blade
+        $pdf = Pdf::loadView('pdf.analitica.analitica', $data);
+
+        // Descargar el PDF generado comentar para produccion se utiliza para postman
+        // return $pdf->download('document.pdf');
+
+        // 🔹 Obtenemos el contenido binario del PDF
+        $pdfContent = $pdf->output();
+
+        // 🔹 Convertimos a base64
+        $pdfBase64 = base64_encode($pdfContent);
+
+        // 🔹 Retornamos la respuesta JSON
+        return  $this->respond([
+            'file_name' => 'reporte_analitica_' . $analitica->id . '.pdf',
+            'mime_type' => 'application/pdf',
+            'base64' => $pdfBase64,
+        ]);
     }
 
     private function sendAnaliticaNotification(Analitica $analitica, string $accion = 'creada')
