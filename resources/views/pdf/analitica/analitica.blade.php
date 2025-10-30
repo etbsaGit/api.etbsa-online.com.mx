@@ -150,109 +150,6 @@
 
     </div>
 
-    {{-- ================== ACTIVOS FIJOS (Máquinas + Fincas) ================== --}}
-    <h3>Activos Fijos</h3>
-
-    {{-- ---------- Tabla Máquinas ---------- --}}
-    <h4>Máquinas</h4>
-    <table>
-        <thead>
-            <tr>
-                <th>Condición</th>
-                <th>Clase Equipo</th>
-                <th>Tipo Equipo</th>
-                <th style="text-align:right">Valor</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $machines = $activos_fijos['machines']['items'] ?? [];
-            @endphp
-
-            @if (empty($machines))
-                <tr>
-                    <td colspan="4">No hay máquinas registradas.</td>
-                </tr>
-            @else
-                @foreach ($machines as $machine)
-                    <tr>
-                        <td>{{ $machine['condicion']['name'] ?? '-' }}</td>
-                        <td>{{ $machine['clas_equipo']['name'] ?? '-' }}</td>
-                        <td>{{ $machine['tipo_equipo']['name'] ?? '-' }}</td>
-                        <td style="text-align:right">
-                            ${{ number_format($machine['valor'] ?? 0, 2, '.', ',') }}
-                        </td>
-                    </tr>
-                @endforeach
-            @endif
-
-            {{-- Subtotal Máquinas (si existe en data, se respeta; si no, se calcula) --}}
-            @php
-                $subtotalMachines = $activos_fijos['machines']['totalMachines'] ?? collect($machines)->sum('valor');
-            @endphp
-            <tr class="total-row">
-                <th colspan="3" style="text-align:right">Subtotal Máquinas</th>
-                <th style="text-align:right">${{ number_format($subtotalMachines ?? 0, 2, '.', ',') }}</th>
-            </tr>
-        </tbody>
-    </table>
-
-    {{-- ---------- Tabla Fincas ---------- --}}
-    <h4>Fincas</h4>
-    <table>
-        <thead>
-            <tr>
-                <th>Finca</th>
-                <th style="text-align:right">Valor</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $fincas = $activos_fijos['fincas']['items'] ?? [];
-            @endphp
-
-            @if (empty($fincas))
-                <tr>
-                    <td colspan="2">No hay fincas registradas.</td>
-                </tr>
-            @else
-                @foreach ($fincas as $finca)
-                    <tr>
-                        <td>{{ $finca['nombre'] ?? '-' }}</td>
-                        <td style="text-align:right">
-                            ${{ number_format($finca['valor'] ?? 0, 2, '.', ',') }}
-                        </td>
-                    </tr>
-                @endforeach
-            @endif
-
-            {{-- Subtotal Fincas --}}
-            @php
-                $subtotalFincas = $activos_fijos['fincas']['totalFincas'] ?? collect($fincas)->sum('valor');
-            @endphp
-            <tr class="total-row">
-                <th style="text-align:right">Subtotal Fincas</th>
-                <th style="text-align:right">${{ number_format($subtotalFincas ?? 0, 2, '.', ',') }}</th>
-            </tr>
-        </tbody>
-    </table>
-
-    {{-- ---------- Total Activos Fijos (Máquinas + Fincas) ---------- --}}
-    @php
-        // Si viene totalActivosFijos en la data, respetarlo; si no, sumar los subtotales calculados.
-        $totalActivosFijos = $activos_fijos['totalActivosFijos'] ?? ($subtotalMachines ?? 0) + ($subtotalFincas ?? 0);
-    @endphp
-
-    <table>
-        <tbody>
-            <tr class="total-row">
-                <th style="text-align:right">Total Activos Fijos (Máquinas + Fincas)</th>
-                <th style="text-align:right">${{ number_format($totalActivosFijos ?? 0, 2, '.', ',') }}</th>
-            </tr>
-        </tbody>
-    </table>
-
-
     {{-- ================== ACTIVOS CIRCULANTES ================== --}}
     <h3>Activos Circulantes</h3>
 
@@ -382,6 +279,107 @@
         </tbody>
     </table>
 
+    {{-- ================== ACTIVOS FIJOS (Máquinas + Fincas) ================== --}}
+    <h3>Activos Fijos</h3>
+
+    {{-- ---------- Tabla Máquinas ---------- --}}
+    <h4>Máquinas</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Condición</th>
+                <th>Clase Equipo</th>
+                <th>Tipo Equipo</th>
+                <th style="text-align:right">Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $machines = $activos_fijos['machines']['items'] ?? [];
+            @endphp
+
+            @if (empty($machines))
+                <tr>
+                    <td colspan="4">No hay máquinas registradas.</td>
+                </tr>
+            @else
+                @foreach ($machines as $machine)
+                    <tr>
+                        <td>{{ $machine['condicion']['name'] ?? '-' }}</td>
+                        <td>{{ $machine['clas_equipo']['name'] ?? '-' }}</td>
+                        <td>{{ $machine['tipo_equipo']['name'] ?? '-' }}</td>
+                        <td style="text-align:right">
+                            ${{ number_format($machine['valor'] ?? 0, 2, '.', ',') }}
+                        </td>
+                    </tr>
+                @endforeach
+            @endif
+
+            {{-- Subtotal Máquinas (si existe en data, se respeta; si no, se calcula) --}}
+            @php
+                $subtotalMachines = $activos_fijos['machines']['totalMachines'] ?? collect($machines)->sum('valor');
+            @endphp
+            <tr class="total-row">
+                <th colspan="3" style="text-align:right">Subtotal Máquinas</th>
+                <th style="text-align:right">${{ number_format($subtotalMachines ?? 0, 2, '.', ',') }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+    {{-- ---------- Tabla Fincas ---------- --}}
+    <h4>Fincas</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Finca</th>
+                <th style="text-align:right">Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $fincas = $activos_fijos['fincas']['items'] ?? [];
+            @endphp
+
+            @if (empty($fincas))
+                <tr>
+                    <td colspan="2">No hay fincas registradas.</td>
+                </tr>
+            @else
+                @foreach ($fincas as $finca)
+                    <tr>
+                        <td>{{ $finca['nombre'] ?? '-' }}</td>
+                        <td style="text-align:right">
+                            ${{ number_format($finca['valor'] ?? 0, 2, '.', ',') }}
+                        </td>
+                    </tr>
+                @endforeach
+            @endif
+
+            {{-- Subtotal Fincas --}}
+            @php
+                $subtotalFincas = $activos_fijos['fincas']['totalFincas'] ?? collect($fincas)->sum('valor');
+            @endphp
+            <tr class="total-row">
+                <th style="text-align:right">Subtotal Fincas</th>
+                <th style="text-align:right">${{ number_format($subtotalFincas ?? 0, 2, '.', ',') }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+    {{-- ---------- Total Activos Fijos (Máquinas + Fincas) ---------- --}}
+    @php
+        // Si viene totalActivosFijos en la data, respetarlo; si no, sumar los subtotales calculados.
+        $totalActivosFijos = $activos_fijos['totalActivosFijos'] ?? ($subtotalMachines ?? 0) + ($subtotalFincas ?? 0);
+    @endphp
+
+    <table>
+        <tbody>
+            <tr class="total-row">
+                <th style="text-align:right">Total Activos Fijos (Máquinas + Fincas)</th>
+                <th style="text-align:right">${{ number_format($totalActivosFijos ?? 0, 2, '.', ',') }}</th>
+            </tr>
+        </tbody>
+    </table>
 
     {{-- ================== PASIVOS ================== --}}
     <h3>Pasivos</h3>
