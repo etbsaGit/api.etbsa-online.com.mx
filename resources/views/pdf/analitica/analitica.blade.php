@@ -146,6 +146,8 @@
         <p><strong>Periodo:</strong> {{ $analitica ?? 'Sin periodo establecido' }}</p>
         <p><strong>Cliente:</strong> {{ $cliente['nombre'] ?? 'N/A' }}</p>
         <p><strong>Estado:</strong> {{ $cliente['state_entity']['name'] ?? 'N/A' }}</p>
+        <p><strong>Ciudad:</strong> {{ $cliente['town']['name'] ?? 'N/A' }}</p>
+
     </div>
 
     {{-- ================== ACTIVOS FIJOS (Máquinas + Fincas) ================== --}}
@@ -383,26 +385,47 @@
 
     {{-- ================== PASIVOS ================== --}}
     <h3>Pasivos</h3>
+
+    @php
+        $itemsPasivos = $pasivos['items'] ?? [];
+        $totalPasivoCorto = collect($itemsPasivos)->sum('pasivo_corto');
+        $totalPasivoLargo = collect($itemsPasivos)->sum('pasivo_largo');
+        $totalPasivos = collect($itemsPasivos)->sum('total');
+    @endphp
+
     <table>
         <thead>
             <tr>
-                <th>Tipo</th>
-                <th>Total</th>
+                <th>A quien le debe</th>
+                <th>Detalle de la deuda</th>
+                <th style="text-align:right">Pasivo corto ($)</th>
+                <th style="text-align:right">Pasivo largo ($)</th>
+                <th style="text-align:right">Total ($)</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Corto Plazo</td>
-                <td>${{ number_format($pasivos['corto_plazo'] ?? 0, 2, '.', ',') }}</td>
-            </tr>
-            <tr>
-                <td>Largo Plazo</td>
-                <td>${{ number_format($pasivos['largo_plazo'] ?? 0, 2, '.', ',') }}</td>
-            </tr>
-            <tr class="total-row">
-                <th>Total Pasivos</th>
-                <th>${{ number_format($pasivos['total_pasivos'] ?? 0, 2, '.', ',') }}</th>
-            </tr>
+            @forelse ($itemsPasivos as $item)
+                <tr>
+                    <td>{{ $item['entidad'] ?? '-' }}</td>
+                    <td>{{ $item['concepto'] ?? '-' }}</td>
+                    <td style="text-align:right">${{ number_format($item['pasivo_corto'] ?? 0, 2, '.', ',') }}</td>
+                    <td style="text-align:right">${{ number_format($item['pasivo_largo'] ?? 0, 2, '.', ',') }}</td>
+                    <td style="text-align:right">${{ number_format($item['total'] ?? 0, 2, '.', ',') }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="5">No hay pasivos registrados.</td>
+                </tr>
+            @endforelse
+
+            @if (!empty($itemsPasivos))
+                <tr class="total-row">
+                    <th colspan="2" style="text-align:right">Totales</th>
+                    <th style="text-align:right">${{ number_format($totalPasivoCorto, 2, '.', ',') }}</th>
+                    <th style="text-align:right">${{ number_format($totalPasivoLargo, 2, '.', ',') }}</th>
+                    <th style="text-align:right">${{ number_format($totalPasivos, 2, '.', ',') }}</th>
+                </tr>
+            @endif
         </tbody>
     </table>
 
@@ -568,7 +591,7 @@
         </thead>
         <tbody>
             <tr>
-                <td>Costos de Fincas</td>
+                <td>Costos de renta</td>
                 <td>${{ number_format($otros_gastos['fincas']['total_costos_fincas'] ?? 0, 2, '.', ',') }}</td>
             </tr>
             <tr>
