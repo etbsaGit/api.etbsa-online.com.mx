@@ -4,6 +4,7 @@ namespace App\Models\Intranet;
 
 use App\Models\Empleado;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Analitica extends Model
@@ -23,6 +24,18 @@ class Analitica extends Model
         'cliente_id',
         'empleado_id'
     ];
+
+    protected static function booted()
+    {
+        static::deleting(function ($analitica) {
+            foreach ($analitica->analiticaDocs as $doc) {
+                if ($doc->ruta_archivo && Storage::disk('s3')->exists($doc->ruta_archivo)) {
+                    Storage::disk('s3')->delete($doc->ruta_archivo);
+                }
+                $doc->delete();
+            }
+        });
+    }
 
     public function cliente()
     {
