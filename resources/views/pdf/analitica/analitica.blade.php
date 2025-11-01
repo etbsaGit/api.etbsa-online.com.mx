@@ -193,6 +193,8 @@
             <tr>
                 <th>Cultivo</th>
                 <th>Año</th>
+                <th># de Hectareas</th>
+                <th>Costo por hectarea</th>
                 <th style="text-align:right">Total</th>
             </tr>
         </thead>
@@ -208,6 +210,8 @@
                 <tr>
                     <td>{{ $inv['cultivo']['name'] ?? 'Sin cultivo' }}</td>
                     <td>{{ $inv['year'] ?? '-' }}</td>
+                    <td>{{ $inv['hectareas'] ?? '-' }}</td>
+                    <td>${{ number_format($inv['costo'] ?? 0, 2, '.', ',') }}</td>
                     <td style="text-align:right">
                         ${{ number_format($inv['total'] ?? 0, 2, '.', ',') }}
                     </td>
@@ -219,7 +223,7 @@
             @endforelse
 
             <tr class="total-row">
-                <th colspan="2" style="text-align:right">Subtotal Inversiones Agrícolas</th>
+                <th colspan="4" style="text-align:right">Subtotal Inversiones Agrícolas</th>
                 <th style="text-align:right">${{ number_format($totalAgricolas ?? 0, 2, '.', ',') }}</th>
             </tr>
         </tbody>
@@ -232,6 +236,8 @@
             <tr>
                 <th>Ganado</th>
                 <th>Año</th>
+                <th>Cabezas</th>
+                <th>Costo por cabeza</th>
                 <th style="text-align:right">Total</th>
             </tr>
         </thead>
@@ -247,6 +253,10 @@
                 <tr>
                     <td>{{ $inv['ganado']['name'] ?? 'Sin ganado' }}</td>
                     <td>{{ $inv['year'] ?? '-' }}</td>
+                    <td>{{ $inv['unidades'] ?? '-' }}</td>
+                    <td>
+                        ${{ number_format($inv['costo'] ?? 0, 2, '.', ',') }}
+                    </td>
                     <td style="text-align:right">
                         ${{ number_format($inv['total'] ?? 0, 2, '.', ',') }}
                     </td>
@@ -258,7 +268,7 @@
             @endforelse
 
             <tr class="total-row">
-                <th colspan="2" style="text-align:right">Subtotal Inversiones Ganaderas</th>
+                <th colspan="4" style="text-align:right">Subtotal Inversiones Ganaderas</th>
                 <th style="text-align:right">${{ number_format($totalGanaderas ?? 0, 2, '.', ',') }}</th>
             </tr>
         </tbody>
@@ -332,6 +342,7 @@
         <thead>
             <tr>
                 <th>Finca</th>
+                <th>Superficie</th>
                 <th style="text-align:right">Valor</th>
             </tr>
         </thead>
@@ -348,6 +359,7 @@
                 @foreach ($fincas as $finca)
                     <tr>
                         <td>{{ $finca['nombre'] ?? '-' }}</td>
+                        <td>{{ $finca['descripcion'] ?? '-' }}</td>
                         <td style="text-align:right">
                             ${{ number_format($finca['valor'] ?? 0, 2, '.', ',') }}
                         </td>
@@ -360,7 +372,7 @@
                 $subtotalFincas = $activos_fijos['fincas']['totalFincas'] ?? collect($fincas)->sum('valor');
             @endphp
             <tr class="total-row">
-                <th style="text-align:right">Subtotal Fincas</th>
+                <th colspan="2" style="text-align:right">Subtotal Fincas</th>
                 <th style="text-align:right">${{ number_format($subtotalFincas ?? 0, 2, '.', ',') }}</th>
             </tr>
         </tbody>
@@ -580,6 +592,40 @@
 
     {{-- ================== OTROS GASTOS ================== --}}
     <h3>Otros Gastos</h3>
+
+    {{-- ======= FINCAS ======= --}}
+    <h4>Costos de renta (Fincas)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Superficie</th>
+                <th>Costo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!empty($otros_gastos['fincas']['items']))
+                @foreach ($otros_gastos['fincas']['items'] as $finca)
+                    <tr>
+                        <td>{{ $finca['nombre'] ?? '-' }}</td>
+                        <td>{{ $finca['descripcion'] ?? '-' }}</td>
+                        <td>${{ number_format($finca['costo'] ?? 0, 2, '.', ',') }}</td>
+                    </tr>
+                @endforeach
+            @else
+                <tr>
+                    <td colspan="3">No hay registros de fincas.</td>
+                </tr>
+            @endif
+            <tr class="total-row">
+                <th colspan="2">Total Costos Fincas</th>
+                <th>${{ number_format($otros_gastos['fincas']['total_costos_fincas'] ?? 0, 2, '.', ',') }}</th>
+            </tr>
+        </tbody>
+    </table>
+
+    {{-- ======= GASTOS FAMILIARES ======= --}}
+    <h4>Gastos familiares</h4>
     <table>
         <thead>
             <tr>
@@ -588,10 +634,6 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Costos de renta</td>
-                <td>${{ number_format($otros_gastos['fincas']['total_costos_fincas'] ?? 0, 2, '.', ',') }}</td>
-            </tr>
             <tr>
                 <td>Gastos familiares</td>
                 <td>${{ number_format($otros_gastos['analitica']['gastos'] ?? 0, 2, '.', ',') }}</td>
@@ -680,13 +722,6 @@
             </tr>
         </tbody>
     </table>
-
-    <footer>
-        Reporte generado automáticamente por el sistema <strong>Intranet ETBSA</strong> ©
-        {{ date('Y') }}
-    </footer>
-
-
 </body>
 
 </html>

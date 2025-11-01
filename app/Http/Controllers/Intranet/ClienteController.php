@@ -253,21 +253,20 @@ class ClienteController extends ApiController
 
     public function syncEmpleadoClientes(Request $request)
     {
-        $empleadoId = $request->input('selectedEmpleado.id');
-        $clienteIds = $request->input('selectedCustomers', []);
+        // Validar que exista el empleado y que clienteIds sea un array
+        $validated = $request->validate([
+            'selectedEmpleado.id' => 'required|exists:empleados,id',
+            'selectedCustomers' => 'array', // puede estar vacío
+            'selectedCustomers.*' => 'exists:clientes,id',
+        ]);
 
-        // Validar que existan
-        if (!$empleadoId || empty($clienteIds)) {
-            return response()->json(['message' => 'Datos incompletos'], 400);
-        }
+        $empleadoId = $validated['selectedEmpleado']['id'];
+        $clienteIds = $validated['selectedCustomers'] ?? [];
 
+        // Cargar empleado
         $empleado = Empleado::find($empleadoId);
 
-        if (!$empleado) {
-            return response()->json(['message' => 'Empleado no encontrado'], 404);
-        }
-
-        // Sincroniza la relación (actualiza la tabla pivote)
+        // Sincronizar la relación (actualiza la tabla pivote)
         $empleado->clientes()->sync($clienteIds);
 
         return response()->json([
