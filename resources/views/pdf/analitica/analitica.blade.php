@@ -589,6 +589,59 @@
         </div>
     @endforeach
 
+    {{-- ================== INGRESOS DIRECTOS ================== --}}
+    <h3>Otros ingresos</h3>
+
+    @php
+        // ✅ Datos del JSON
+        $anioDirecto = $ingresosDirectos['anio'] ?? null;
+        $itemsDirectos = $ingresosDirectos['items'] ?? [];
+        $totalesDirectos = $ingresosDirectos['totales'] ?? [];
+
+        // ✅ Cálculo de totales seguros
+        $totalDirectoBruto = $totalesDirectos['total'] ?? collect($itemsDirectos)->sum('total');
+        $totalDirectoCostos = $totalesDirectos['costos'] ?? collect($itemsDirectos)->sum('costos');
+        $totalDirectoNeto = $totalesDirectos['neto'] ?? collect($itemsDirectos)->sum('neto');
+    @endphp
+
+    @if (!empty($itemsDirectos))
+        <h5>Año {{ $anioDirecto ?? 'Sin año' }}</h5>
+        <div class="wide-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo de ingreso</th>
+                        <th>Monto mensual</th>
+                        <th>Meses</th>
+                        <th>Total bruto</th>
+                        <th>Costos</th>
+                        <th>Ingreso neto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($itemsDirectos as $item)
+                        <tr>
+                            <td>{{ $item['tipo'] ?? '-' }}</td>
+                            <td style="text-align:right">${{ number_format($item['monto'] ?? 0, 2, '.', ',') }}</td>
+                            <td style="text-align:right">{{ $item['months'] ?? '-' }}</td>
+                            <td style="text-align:right">${{ number_format($item['total'] ?? 0, 2, '.', ',') }}</td>
+                            <td style="text-align:right">${{ number_format($item['costos'] ?? 0, 2, '.', ',') }}</td>
+                            <td style="text-align:right">${{ number_format($item['neto'] ?? 0, 2, '.', ',') }}</td>
+                        </tr>
+                    @endforeach
+
+                    <tr class="total-row">
+                        <th colspan="3" style="text-align:right">Totales</th>
+                        <th style="text-align:right">${{ number_format($totalDirectoBruto, 2, '.', ',') }}</th>
+                        <th style="text-align:right">${{ number_format($totalDirectoCostos, 2, '.', ',') }}</th>
+                        <th style="text-align:right">${{ number_format($totalDirectoNeto, 2, '.', ',') }}</th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    @else
+        <p>No hay otros directos registrados.</p>
+    @endif
 
     {{-- ================== OTROS GASTOS ================== --}}
     <h3>Otros Gastos</h3>
@@ -647,7 +700,7 @@
 
     {{-- ================== RESUMEN FINAL ================== --}}
     @php
-        // Totales de ingresos y costos agrícolas
+        // === Totales de ingresos y costos agrícolas ===
         $totalCostoAgricola = 0;
         $totalIngresoAgricola = 0;
 
@@ -656,7 +709,7 @@
             $totalIngresoAgricola += collect($datos['items'] ?? [])->sum('ingreso');
         }
 
-        // Totales de ingresos y costos ganaderos
+        // === Totales de ingresos y costos ganaderos ===
         $totalCostoGanadero = 0;
         $totalIngresoGanadero = 0;
 
@@ -665,13 +718,23 @@
             $totalIngresoGanadero += collect($datos['items'] ?? [])->sum('ingreso');
         }
 
-        // Totales generales
-        $totalCostos = $totalCostoAgricola + $totalCostoGanadero;
-        $totalIngresos = $totalIngresoAgricola + $totalIngresoGanadero;
+        // === Ingresos directos (desde su estructura propia) ===
+        $itemsDirectos = $ingresosDirectos['items'] ?? [];
+        $totalesDirectos = $ingresosDirectos['totales'] ?? [];
+
+        // Si existen totales en el JSON los usa; si no, los calcula
+        $totalIngresoDirecto = $totalesDirectos['total'] ?? collect($itemsDirectos)->sum('total');
+        $totalCostoDirecto = $totalesDirectos['costos'] ?? collect($itemsDirectos)->sum('costos');
+        $totalUtilidadDirecta = $totalesDirectos['neto'] ?? collect($itemsDirectos)->sum('neto');
+
+        // === Totales generales ===
+        $totalCostos = $totalCostoAgricola + $totalCostoGanadero + $totalCostoDirecto;
+        $totalIngresos = $totalIngresoAgricola + $totalIngresoGanadero + $totalIngresoDirecto;
 
         $totalOtrosGastos = $otros_gastos['total_otros_gastos'] ?? 0;
 
-        // Resultado final
+        // === Resultado final ===
+        // Si prefieres mostrar utilidad neta real, podrías usar ($totalUtilidadDirecta + utilidades agrícolas + ganaderas)
         $resultadoNeto = $totalIngresos - ($totalCostos + $totalOtrosGastos);
     @endphp
 
@@ -692,6 +755,11 @@
                 <td><strong>Ingresos Ganaderos</strong></td>
                 <td style="text-align:right">${{ number_format($totalIngresoGanadero, 2, '.', ',') }}</td>
             </tr>
+            <tr>
+                <td><strong>Otros ingresos</strong></td>
+                <td style="text-align:right">${{ number_format($totalIngresoDirecto, 2, '.', ',') }}</td>
+            </tr>
+
             <tr class="total-row">
                 <th style="text-align:right">Total Ingresos</th>
                 <th style="text-align:right">${{ number_format($totalIngresos, 2, '.', ',') }}</th>
@@ -706,9 +774,14 @@
                 <td style="text-align:right">-${{ number_format($totalCostoGanadero, 2, '.', ',') }}</td>
             </tr>
             <tr>
+                <td>Costos Directos</td>
+                <td style="text-align:right">-${{ number_format($totalCostoDirecto, 2, '.', ',') }}</td>
+            </tr>
+            <tr>
                 <td>Otros Gastos</td>
                 <td style="text-align:right">-${{ number_format($totalOtrosGastos, 2, '.', ',') }}</td>
             </tr>
+
             <tr class="total-row">
                 <th style="text-align:right">Total gastos (Costos + Gastos)</th>
                 <th style="text-align:right">-${{ number_format($totalCostos + $totalOtrosGastos, 2, '.', ',') }}</th>
@@ -722,6 +795,7 @@
             </tr>
         </tbody>
     </table>
+
 </body>
 
 </html>
