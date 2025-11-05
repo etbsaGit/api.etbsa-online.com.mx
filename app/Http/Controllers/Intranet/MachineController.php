@@ -60,7 +60,7 @@ class MachineController extends ApiController
     public function getPerCliente(Cliente $cliente)
     {
         $machine = Machine::where('cliente_id', $cliente->id)
-            ->with('marca','condicion','clasEquipo','tipoEquipo')
+            ->with('marca', 'condicion', 'clasEquipo', 'tipoEquipo')
             ->get();
         return $this->respond($machine);
     }
@@ -68,10 +68,10 @@ class MachineController extends ApiController
     public function getOptions()
     {
         $data = [
-            'marcas' => Marca::all(),
+            'marcas' => Marca::orderBy('name', 'asc')->get(),
             'condiciones' => Condicion::all(),
             'clasEquipos' => ClasEquipo::all(),
-            'tiposEquipo' => TipoEquipo::all(),
+            'tiposEquipo' => TipoEquipo::orderBy('name', 'asc')->get(),
         ];
 
         return $this->respond($data);

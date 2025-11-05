@@ -53,13 +53,10 @@ class ClienteController extends ApiController
         // Crear el cliente con los datos validados
         $cliente = Cliente::create($request->validated());
 
-        // Validar roles del usuario
-        if (! $user->hasAnyRole(['Credito', 'Intranet.sales'])) {
-            // Si el usuario no tiene esos roles, agregamos la relación con su empleado
-            if ($user->empleado) {
-                // Asocia el empleado al cliente en la tabla pivote
-                $cliente->empleados()->attach($user->empleado->id);
-            }
+         // Validar roles del usuario
+        if (! $user->hasAnyRole(['Credito', 'Intranet.sales']) && $user->empleado) {
+            // Agrega la relación empleado-cliente si no existe, sin duplicar
+            $cliente->empleados()->syncWithoutDetaching($user->empleado->id);
         }
 
         return $this->respondCreated($cliente);
