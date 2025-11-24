@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Linea;
 use App\Models\Puesto;
@@ -9,11 +10,11 @@ use App\Models\Sucursal;
 use App\Models\Expediente;
 use App\Models\EstadoCivil;
 use App\Models\Departamento;
-use App\Models\Intranet\Analitica;
 use App\Models\TipoDeSangre;
 use App\Models\Intranet\Sale;
 use App\Traits\FilterableModel;
 use App\Models\Intranet\Cliente;
+use App\Models\Intranet\Analitica;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -81,7 +82,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones', 'prod', 'vacationPeriod'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones', 'prod', 'vacationPeriod', 'nuevoPermiso','hasEmpleados'];
 
     public function picture(): Attribute
     {
@@ -370,6 +371,11 @@ class Empleado extends Model
         return $this->hasMany(Empleado::class, 'jefe_directo_id');
     }
 
+    public function getHasEmpleadosAttribute()
+    {
+        return $this->empleado()->exists();
+    }
+
     public function career()
     {
         return $this->hasMany(Career::class, 'empleado_id');
@@ -535,6 +541,36 @@ class Empleado extends Model
         return $this->hasMany(Analitica::class, 'empleado_id');
     }
 
+    // ---------------------------------SalidaPermiso---------------------------------------------------------
+    public function permisos()
+    {
+        return $this->hasMany(SalidaPermiso::class, 'empleado_id');
+    }
+
+    public function getNuevoPermisoAttribute()
+    {
+        // Obtener el último permiso del empleado
+        $ultimoPermiso = $this->permisos()
+            ->where('status', 1)
+            ->orderByDesc('date')
+            ->first();
+
+        // Si nunca ha tenido permisos, puede pedir uno de inmediato
+        if (!$ultimoPermiso) {
+            return 0;
+        }
+
+        $ultimaFecha = Carbon::parse($ultimoPermiso->date);
+        $hoy = Carbon::now();
+
+        // Diferencia en días desde el último permiso
+        $diasDesdeUltimo = $ultimaFecha->diffInDays($hoy, false);
+
+        // Días restantes o excedidos respecto al límite de 60 días
+        $diferencia = $diasDesdeUltimo - 60;
+
+        return $diferencia;
+    }
 
     // ---------------------------------scope---------------------------------------------------------
 

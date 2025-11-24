@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Notificación de creación de solicitud de financiamiento</title>
+    <title>Notificación de actualización de cliente</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -20,12 +20,12 @@
             padding: 20px;
             max-width: 600px;
             margin: 30px auto;
-            border-top: 6px solid #367c2b;
-            /* verde John Deere */
+            border-top: 6px solid #367c2b; /* Verde John Deere */
         }
 
         h2 {
             color: #367c2b;
+            margin-bottom: 12px;
         }
 
         .data {
@@ -56,20 +56,21 @@
 
 <body>
     <div class="container">
-        <h2>📋 Solicitud de financiamiento {{ $accion === 'creada' ? 'creada' : 'actualizada' }}</h2>
 
-        <p>Se ha {{ $accion === 'creada' ? 'registrado una nueva' : 'actualizado una' }} solicitud de financiamiento en
-            el sistema de <span class="brand">Intranet ETBSA</span>.</p>
+        <h2>📋 Actualización de información del cliente</h2>
 
-        <div class="data">
-            <p><strong>Cliente:</strong> {{ $cliente->nombre ?? 'No especificado' }}</p>
-            <p><strong>Empleado:</strong> {{ $empleado->nombre_completo ?? 'No asignado' }}</p>
-            <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($analitica->fecha)->format('d/m/Y') }}</p>
-        </div>
+        <p>
+            La información del cliente
+            <strong>{{ $cliente->nombre }}</strong>
+            ha sido actualizada por
+            <strong>{{ $empleado->nombreCompleto }}</strong>.
+            <p><strong>Fecha:</strong> {{ now()->format('d/m/Y H:i') }}</p>
+        </p>
+
+
 
         <div class="footer">
-            <p>Este mensaje fue enviado automáticamente por personal autorizado de <span class="brand">John
-                    Deere</span>.</p>
+            <p>Este mensaje fue enviado automáticamente por el sistema <span class="brand">Intranet ETBSA</span>.</p>
             <p>Por favor, no responda a este correo.</p>
         </div>
     </div>

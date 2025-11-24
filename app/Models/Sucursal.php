@@ -131,4 +131,10 @@ class Sucursal extends Model
     {
         return $this->hasMany(RequisicionPersonal::class, 'sucursal_id');
     }
+
+    // ---------------------------------SalidaPermiso---------------------------------------------------------
+    public function permisos()
+    {
+        return $this->hasMany(SalidaPermiso::class, 'sucursal_id');
+    }
 }

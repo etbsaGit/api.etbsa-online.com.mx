@@ -297,7 +297,6 @@
     <table>
         <thead>
             <tr>
-                <th>Condición</th>
                 <th>Clase Equipo</th>
                 <th>Tipo Equipo</th>
                 <th style="text-align:right">Valor</th>
@@ -315,7 +314,6 @@
             @else
                 @foreach ($machines as $machine)
                     <tr>
-                        <td>{{ $machine['condicion']['name'] ?? '-' }}</td>
                         <td>{{ $machine['clas_equipo']['name'] ?? '-' }}</td>
                         <td>{{ $machine['tipo_equipo']['name'] ?? '-' }}</td>
                         <td style="text-align:right">
@@ -330,7 +328,7 @@
                 $subtotalMachines = $activos_fijos['machines']['totalMachines'] ?? collect($machines)->sum('valor');
             @endphp
             <tr class="total-row">
-                <th colspan="3" style="text-align:right">Subtotal Máquinas</th>
+                <th colspan="2" style="text-align:right">Subtotal Máquinas</th>
                 <th style="text-align:right">${{ number_format($subtotalMachines ?? 0, 2, '.', ',') }}</th>
             </tr>
         </tbody>

@@ -54,6 +54,7 @@ use App\Http\Controllers\Api\CandidatoNotaController;
 use App\Http\Controllers\Api\ProspectRiegoController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Api\RentalMachineController;
+use App\Http\Controllers\Api\SalidaPermisoController;
 use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Api\ServiceArchiveController;
 use App\Http\Controllers\Api\TechniciansLogController;
@@ -431,6 +432,16 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('creditoDeclaracion', CreditoDeclaracionController::class);
 
     Route::apiResource('creditoRelacion', CreditoRelacionController::class);
+
+    //--------------------salidaPermiso--------------------
+    Route::post('salidaPermisos', [SalidaPermisoController::class, 'index']);
+    Route::post('salidaPermisos/auth', [SalidaPermisoController::class, 'myIndex']);
+    Route::post('salidaPermisos/calendar', [SalidaPermisoController::class, 'getCalendar']);
+    Route::post('salidaPermisos/xls', [SalidaPermisoController::class, 'exportXls']);
+    Route::get('salidaPermiso/forms', [SalidaPermisoController::class, 'getforms']);
+    Route::get('salidaPermiso/status/{salidaPermiso}/{status}', [SalidaPermisoController::class, 'actualizarStatus']);
+
+    Route::apiResource('salidaPermiso', SalidaPermisoController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

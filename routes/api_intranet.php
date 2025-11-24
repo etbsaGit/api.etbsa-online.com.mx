@@ -102,6 +102,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('cliente/add/capTech/{cliente}', [ClienteController::class, 'addCapTech']);
     Route::get('cliente/get/capTech/{cliente}', [ClienteController::class, 'getCapTech']);
     Route::get('cliente/options', [ClienteController::class, 'getOptions']);
+    Route::get('cliente/mail/{cliente}', [ClienteController::class, 'enviarNotificacionActualizacion']);
     Route::get('cliente/rfc/{rfc}', [ClienteController::class, 'findByRfc']);
     Route::post('clientes/clientes', [ClienteController::class, 'getClientes']);
     Route::post('clientes/empleados', [ClienteController::class, 'getEmpleados']);

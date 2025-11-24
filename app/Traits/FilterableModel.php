@@ -48,6 +48,29 @@ trait FilterableModel
         return $query;
     }
 
+    public function scopeFilterSearchPermiso(Builder $query, array $filters, array $searchColumns = [])
+    {
+        foreach ($filters as $key => $value) {
+            if ($key !== 'page') {
+                if ($key === 'search' && !empty($searchColumns) && $value !== null) {
+                    $query->where(function ($query) use ($value, $searchColumns) {
+                        foreach ($searchColumns as $column) {
+                            $query->orWhere($column, 'LIKE', '%' . $value . '%');
+                        }
+                    });
+                } elseif ($key === 'status' && $value === null) {
+                    $query->whereNull('status');
+                } elseif ($key === 'month' && $value !== null) {
+                    // Filtra por mes de la columna 'date'
+                    $query->whereMonth('date', $value);
+                } elseif ($value !== null) {
+                    $query->where($key, $value);
+                }
+            }
+        }
+
+        return $query;
+    }
 
     public function scopeFilterPost(Builder $query, array $filters)
     {

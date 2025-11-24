@@ -43,7 +43,7 @@ class SaleController extends ApiController
 
         // Filtra las ventas
         $sales = Sale::filter($filters)
-            ->with('cliente', 'referencia', 'status','empleado','sucursal')
+            ->with('cliente', 'referencia', 'status', 'empleado', 'sucursal')
             ->orderBy('date', 'desc') // Ordenar por 'date' de forma descendente
             ->paginate(10);
 
@@ -56,7 +56,19 @@ class SaleController extends ApiController
      */
     public function store(StoreSaleRequest $request)
     {
-        $sale = Sale::create($request->validated());
+        $data = $request->validated();
+
+        $sale = Sale::create($data);
+
+        $empleadoId = $data['empleado_id'];
+        $clienteId  = $data['cliente_id'];
+
+        // Obtener instancias
+        $empleado = Empleado::findOrFail($empleadoId);
+
+        // asociar si no existe
+        $empleado->clientes()->syncWithoutDetaching([$clienteId]);
+
         return $this->respondCreated($sale);
     }
 
@@ -104,7 +116,7 @@ class SaleController extends ApiController
     {
         $sales = Sale::whereNull('validated')
             ->whereNotNull('invoice')
-            ->with('cliente', 'referencia', 'status','empleado','sucursal')
+            ->with('cliente', 'referencia', 'status', 'empleado', 'sucursal')
             ->orderBy('date', 'desc')
             ->get();
 

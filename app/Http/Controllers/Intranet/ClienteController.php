@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Intranet;
 
+use App\Models\User;
 use App\Models\Empleado;
 use Illuminate\Http\Request;
 use App\Imports\ClientesImport;
 use App\Models\Intranet\Tactic;
 use App\Models\Intranet\Cliente;
+use App\Mail\ClienteActualizadoMail;
 use App\Models\Intranet\StateEntity;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Intranet\Segmentation;
 use App\Http\Controllers\ApiController;
@@ -36,7 +39,7 @@ class ClienteController extends ApiController
                 });
             })
             ->filter($filters)
-            ->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification')
+            ->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification', 'empleados')
             ->paginate(10);
 
         return $this->respond($clientes);
@@ -53,7 +56,7 @@ class ClienteController extends ApiController
         // Crear el cliente con los datos validados
         $cliente = Cliente::create($request->validated());
 
-         // Validar roles del usuario
+        // Validar roles del usuario
         if (! $user->hasAnyRole(['Credito', 'Intranet.sales']) && $user->empleado) {
             // Agrega la relación empleado-cliente si no existe, sin duplicar
             $cliente->empleados()->syncWithoutDetaching($user->empleado->id);
@@ -270,5 +273,22 @@ class ClienteController extends ApiController
             'message' => 'Relación empleado-clientes actualizada correctamente',
             'empleado' => $empleado->load('clientes')
         ], 200);
+    }
+
+    public function enviarNotificacionActualizacion(Cliente $cliente)
+    {
+        // Obtener todos los usuarios con el rol 'Credito' usando Spatie
+        $usuariosCredito = User::role('Credito')->get();
+
+        // Enviar el correo a cada usuario individualmente
+        foreach ($usuariosCredito as $usuario) {
+            Mail::to($usuario->email)
+                ->send(new ClienteActualizadoMail($cliente, auth()->user()));
+        }
+
+        return response()->json([
+            'message' => 'Notificación enviada correctamente a todos los usuarios con rol Crédito.',
+            'cliente' => $cliente
+        ]);
     }
 }
