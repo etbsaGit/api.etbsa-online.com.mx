@@ -26,7 +26,7 @@ class StoreReferenciaRequest extends FormRequest
     {
         return [
             "nombre" => ['required', 'string', 'max:255'],
-            "telefono" => ['required', 'numeric', 'digits:10', 'unique:referencias,telefono'],
+            "telefono" => ['required', 'numeric', 'digits:10'],
             'kinship_id' => ['required', 'integer', 'exists:kinships,id'],
             'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
         ];

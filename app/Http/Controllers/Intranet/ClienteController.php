@@ -283,7 +283,7 @@ class ClienteController extends ApiController
         // Enviar el correo a cada usuario individualmente
         foreach ($usuariosCredito as $usuario) {
             Mail::to($usuario->email)
-                ->send(new ClienteActualizadoMail($cliente, auth()->user()));
+                ->send(new ClienteActualizadoMail($cliente, auth()->user()->empleado));
         }
 
         return response()->json([

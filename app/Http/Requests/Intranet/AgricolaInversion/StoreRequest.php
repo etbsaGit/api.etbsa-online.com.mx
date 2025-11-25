@@ -27,7 +27,7 @@ class StoreRequest extends FormRequest
         return [
             'year' => ['required', 'integer'],
             'ciclo' => ['required', 'string'],
-            'hectareas' => ['required', 'integer'],
+            'hectareas' => ['required', 'numeric'],
             'costo' => ['required', 'integer'],
             'toneladas' => ['required', 'integer'],
             'precio' => ['required', 'integer'],
