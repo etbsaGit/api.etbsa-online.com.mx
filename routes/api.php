@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\PlantillaController;
 use App\Http\Controllers\Api\PropuestaController;
 use App\Http\Controllers\Api\RequisitoController;
+use App\Http\Controllers\Api\SoftSkillController;
 use App\Http\Controllers\Api\WorkOrderController;
 use App\Http\Controllers\Api\AntiguedadController;
 use App\Http\Controllers\Api\ExpedienteController;
@@ -57,6 +58,7 @@ use App\Http\Controllers\Api\RentalMachineController;
 use App\Http\Controllers\Api\SalidaPermisoController;
 use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Api\ServiceArchiveController;
+use App\Http\Controllers\Api\SoftSkillNivelController;
 use App\Http\Controllers\Api\TechniciansLogController;
 use App\Http\Controllers\Ecommerce\CategoryController;
 use App\Http\Controllers\Ecommerce\FeaturesController;
@@ -442,6 +444,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('salidaPermiso/status/{salidaPermiso}/{status}', [SalidaPermisoController::class, 'actualizarStatus']);
 
     Route::apiResource('salidaPermiso', SalidaPermisoController::class);
+
+    //--------------------SoftSkill--------------------
+    Route::post('softSkills', [SoftSkillController::class, 'index']);
+    Route::apiResource('softSkill', SoftSkillController::class);
+    Route::apiResource('softSkillNivel', SoftSkillNivelController::class);
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
