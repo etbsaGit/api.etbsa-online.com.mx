@@ -381,14 +381,27 @@ class EmpleadoController extends ApiController
         $anio = $request->year;
         $mes = $request->month;
 
-        // Validación: Si se pasa un mes, el año debe ser obligatorio
         if ($mes && !$anio) {
             return response()->json(['error' => 'El año es obligatorio si se pasa un mes'], 400);
         }
 
-        $query = Empleado::with(['archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus', 'termination.estatus', 'termination.reason']); // Cargar las relaciones sucursal y termination
+        $query = Empleado::with([
+            'archivable',
+            'archivable.requisito',
+            'escolaridad',
+            'departamento',
+            'estado_civil',
+            'jefe_directo',
+            'linea',
+            'puesto',
+            'sucursal',
+            'tipo_de_sangre',
+            'user',
+            'estatus',
+            'termination.estatus',
+            'termination.reason'
+        ]);
 
-        // Agregar filtros para la fecha en la relación termination
         if (!is_null($anio)) {
             $query->whereHas('termination', function ($q) use ($anio) {
                 $q->whereYear('date', $anio);
@@ -401,15 +414,16 @@ class EmpleadoController extends ApiController
             });
         }
 
-        // Si tanto $anio como $mes son nulos, buscar empleados con estatus_id igual a 6
         if (is_null($anio) && is_null($mes)) {
             $query->where('estatus_id', 6);
         }
 
-        $employees = $query->get();
+        // 50 registros por página
+        $employees = $query->paginate(50);
 
         return response()->json($employees);
     }
+
 
 
     public function export(Request $request)
@@ -556,7 +570,7 @@ class EmpleadoController extends ApiController
         }
 
         // Ejecuta la consulta
-        $empleados = $query->get();
+        $empleados = $query->paginate(50);
 
         return response()->json($empleados);
     }

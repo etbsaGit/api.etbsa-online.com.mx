@@ -69,6 +69,7 @@ use App\Http\Controllers\Api\ProspectCultivoController;
 use App\Http\Controllers\Api\ProspectMaquinaController;
 use App\Http\Controllers\Api\EmpleadosContactController;
 use App\Http\Controllers\Api\ProspectServicioController;
+use App\Http\Controllers\Api\SoftSkillEmpleadoController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\CreditoDeclaracionController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
@@ -226,7 +227,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------SkillRating--------------------
     Route::get('skillratings/{empleado}', [SkillRaitngController::class, 'getPerEmpleado']);
-    Route::put('skillratings', [SkillRaitngController::class, 'saveSkillRating']);
+    Route::post('skillratings', [SkillRaitngController::class, 'saveSkillRating']);
     Route::apiResource('skillrating', SkillRaitngController::class);
 
     //--------------------Resource--------------------
@@ -447,8 +448,15 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------SoftSkill--------------------
     Route::post('softSkills', [SoftSkillController::class, 'index']);
+    Route::put('softSkillsEmpleado', [SoftSkillEmpleadoController::class, 'updateSkills']);
+    Route::get('softSkillEmpleado/forms', [SoftSkillEmpleadoController::class, 'getLevels']);
+    Route::get('softSkillEmpleado/{empleado}', [SoftSkillEmpleadoController::class, 'perEmployee']);
+
+
     Route::apiResource('softSkill', SoftSkillController::class);
     Route::apiResource('softSkillNivel', SoftSkillNivelController::class);
+    Route::apiResource('softSkillEmpleado', SoftSkillEmpleadoController::class);
+
 });
 //--------------------landingPage--------------------
 Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

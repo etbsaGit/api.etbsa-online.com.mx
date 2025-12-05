@@ -27,4 +27,10 @@ class SoftSkill extends Model
     {
         return $this->hasMany(SoftSkillNivel::class, 'soft_skill_id');
     }
+
+    // ---------------------------------SoftSkillEmpleado---------------------------------------------------------
+    public function softSkillEmpleado()
+    {
+        return $this->hasMany(SoftSkillEmpleado::class, 'soft_skill_id');
+    }
 }

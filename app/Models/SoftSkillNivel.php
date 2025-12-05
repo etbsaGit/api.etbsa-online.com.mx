@@ -9,7 +9,7 @@ class SoftSkillNivel extends Model
 {
     use HasFactory;
 
-     protected $table = 'soft_skill_niveles';
+    protected $table = 'soft_skill_niveles';
 
     protected $fillable = [
         'nombre',
@@ -22,5 +22,11 @@ class SoftSkillNivel extends Model
     public function softSkill()
     {
         return $this->belongsTo(SoftSkill::class, 'soft_skill_id');
+    }
+
+    // ---------------------------------SoftSkillEmpleado---------------------------------------------------------
+    public function softSkillEmpleado()
+    {
+        return $this->hasMany(SoftSkillEmpleado::class, 'soft_skill_nivel_id');
     }
 }

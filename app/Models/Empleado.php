@@ -82,7 +82,7 @@ class Empleado extends Model
         'technician_id'
     ];
 
-    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones', 'prod', 'vacationPeriod', 'nuevoPermiso','hasEmpleados'];
+    protected $appends = ['picture', 'nombreCompleto', 'desempenoManoObra', 'apellidoCompleto', 'aniosVacaciones', 'prod', 'vacationPeriod', 'nuevoPermiso', 'hasEmpleados'];
 
     public function picture(): Attribute
     {
@@ -539,6 +539,12 @@ class Empleado extends Model
     public function analiticas()
     {
         return $this->hasMany(Analitica::class, 'empleado_id');
+    }
+
+    // ---------------------------------SoftSkillEmpleado---------------------------------------------------------
+    public function softSkillEmpleado()
+    {
+        return $this->hasMany(SoftSkillEmpleado::class, 'empleado_id');
     }
 
     // ---------------------------------SalidaPermiso---------------------------------------------------------
