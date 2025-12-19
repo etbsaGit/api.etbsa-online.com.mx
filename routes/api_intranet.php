@@ -16,6 +16,8 @@ use App\Http\Controllers\Intranet\IngresoController;
 use App\Http\Controllers\Intranet\KinshipController;
 use App\Http\Controllers\Intranet\MachineController;
 use App\Http\Controllers\Intranet\FincaDocController;
+use App\Http\Controllers\Intranet\InvGroupController;
+use App\Http\Controllers\Intranet\InvModelController;
 use App\Http\Controllers\Intranet\AnaliticaController;
 use App\Http\Controllers\Intranet\CondicionController;
 use App\Http\Controllers\Intranet\ClasEquipoController;
@@ -23,8 +25,10 @@ use App\Http\Controllers\Intranet\IngresoDocController;
 use App\Http\Controllers\Intranet\ReferenciaController;
 use App\Http\Controllers\Intranet\TipoEquipoController;
 use App\Http\Controllers\Intranet\ClientesDocController;
+use App\Http\Controllers\Intranet\InvCategoryController;
 use App\Http\Controllers\Intranet\StateEntityController;
 use App\Http\Controllers\Intranet\TipoCultivoController;
+use App\Http\Controllers\Intranet\AnaliticaDocController;
 use App\Http\Controllers\Intranet\ClienteRiegoController;
 use App\Http\Controllers\Intranet\DistribucionController;
 use App\Http\Controllers\Intranet\SegmentationController;
@@ -33,8 +37,8 @@ use App\Http\Controllers\Intranet\AbastecimientoController;
 use App\Http\Controllers\Intranet\ClienteCultivoController;
 use App\Http\Controllers\Intranet\ClassificationsController;
 use App\Http\Controllers\Intranet\NuevaTecnologiaController;
+use App\Http\Controllers\Intranet\InvConfigurationController;
 use App\Http\Controllers\Intranet\AgricolaInversionController;
-use App\Http\Controllers\Intranet\AnaliticaDocController;
 use App\Http\Controllers\Intranet\ClienteTechnologyController;
 use App\Http\Controllers\Intranet\GanaderaInversionController;
 use App\Http\Controllers\Intranet\InversionesAgricolaController;
@@ -176,6 +180,26 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     // 🔹 IngresoDoc
     Route::apiResource('ingresoDoc', IngresoDocController::class);
+
+    // 🔹 InvGroup
+    Route::post('invGroups', [InvGroupController::class, 'index']);
+    Route::apiResource('invGroup', InvGroupController::class);
+
+    // 🔹 InvCategory
+    Route::post('invCategories', [InvCategoryController::class, 'index']);
+    Route::get('invCategory/forms', [InvCategoryController::class, 'getForms']);
+    Route::apiResource('invCategory', InvCategoryController::class);
+
+    // 🔹 InvConfiguration
+    Route::post('invConfigurations', [InvConfigurationController::class, 'index']);
+    Route::get('invConfiguration/forms', [InvConfigurationController::class, 'getForms']);
+    Route::apiResource('invConfiguration', InvConfigurationController::class);
+
+    // 🔹 InvModel
+    Route::post('invModels', [InvModelController::class, 'index']);
+    Route::get('invModel/category', [InvModelController::class, 'getForms']);
+    Route::get('invModel/configurations/{invCategory}', [InvModelController::class, 'perCategory']);
+    Route::apiResource('invModel', InvModelController::class);
 
     // 🔹 Kinship
     Route::apiResource('kinship', KinshipController::class);

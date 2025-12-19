@@ -82,6 +82,8 @@
                     Pendiente
                 @endif
             </p>
+            <p><strong>Autorizado por:</strong> {{ $user->empleado?->nombreCompleto ?? 'No asignada' }}</p>
+
         </div>
 
 

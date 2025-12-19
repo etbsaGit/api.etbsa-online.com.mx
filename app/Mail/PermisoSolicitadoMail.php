@@ -17,11 +17,13 @@ class PermisoSolicitadoMail extends Mailable
 
     public $permiso;
     public $empleado;
+    public $user;
 
-    public function __construct(SalidaPermiso $permiso, $empleado)
+    public function __construct(SalidaPermiso $permiso, $empleado, $user)
     {
         $this->permiso = $permiso;
         $this->empleado = $empleado;
+        $this->user = $user;
     }
 
     /**
@@ -45,6 +47,7 @@ class PermisoSolicitadoMail extends Mailable
             with: [
                 'permiso'  => $this->permiso,
                 'empleado' => $this->empleado,
+                'user' => $this->user,
             ],
         );
     }

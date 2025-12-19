@@ -30,7 +30,8 @@ class SalidaPermiso extends Model
         'description',
         'feedback',
         'empleado_id',
-        'sucursal_id'
+        'sucursal_id',
+        'validate_by',
     ];
 
     public function scopeFilter(Builder $query, array $filters)
@@ -46,5 +47,10 @@ class SalidaPermiso extends Model
     public function sucursal()
     {
         return $this->belongsTo(Sucursal::class, 'sucursal_id');
+    }
+
+    public function validateBy()
+    {
+        return $this->belongsTo(User::class, 'validate_by');
     }
 }

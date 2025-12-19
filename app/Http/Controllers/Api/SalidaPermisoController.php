@@ -166,8 +166,10 @@ class SalidaPermisoController extends ApiController
 
     public function actualizarStatus(SalidaPermiso $salidaPermiso, int $status)
     {
+        $user = Auth::user();
         // Cambiar el status
         $salidaPermiso->status = $status;
+        $salidaPermiso->validate_by = $user->id;
 
         // Guardar los cambios en la base de datos
         $salidaPermiso->save();
@@ -271,6 +273,8 @@ class SalidaPermisoController extends ApiController
         // Crear un arreglo con los destinatarios iniciales
         $destinatarios = [$empleado->correo_institucional];
 
+        $user = Auth::user();
+
         // Agregar jefe directo si existe
         if ($empleado->jefe_directo) {
             $destinatarios[] = $empleado->jefe_directo->correo_institucional;
@@ -288,7 +292,7 @@ class SalidaPermisoController extends ApiController
         // Enviar correos uno por uno
         foreach ($destinatarios as $correo) {
             Mail::to($correo)
-                ->send(new PermisoSolicitadoMail($salidaPermiso, $empleado));
+                ->send(new PermisoSolicitadoMail($salidaPermiso, $empleado, $user));
         }
     }
 }

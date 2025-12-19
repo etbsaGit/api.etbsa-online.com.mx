@@ -6,6 +6,7 @@ use App\Models\Intranet\Sale;
 use App\Models\Intranet\Finca;
 use App\Traits\FilterableModel;
 use App\Models\Intranet\ClientesDoc;
+use App\Models\Intranet\InvCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -111,6 +112,12 @@ class Estatus extends Model
     public function services()
     {
         return $this->hasMany(Service::class, 'estatus_id');
+    }
+
+    // ---------------------------------invCategories---------------------------------------------------------
+    public function invCategories()
+    {
+        return $this->hasMany(InvCategory::class, 'estatus_id');
     }
 
     // ---------------------------------Finca---------------------------------------------------------

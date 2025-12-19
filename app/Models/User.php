@@ -110,6 +110,11 @@ class User extends Authenticatable
         return $this->hasMany(VacationDay::class, 'validate_by');
     }
 
+    public function permisoValidate()
+    {
+        return $this->hasMany(SalidaPermiso::class, 'validate_by');
+    }
+
     public function cajaTransaccion()
     {
         return $this->hasMany(CajaTransaccion::class, 'user_id');
