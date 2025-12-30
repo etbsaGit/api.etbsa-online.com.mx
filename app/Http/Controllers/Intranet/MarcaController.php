@@ -6,25 +6,33 @@ use Illuminate\Http\Request;
 use App\Models\Intranet\Marca;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Intranet\Marca\StoreMarcaRequest;
+use App\Http\Requests\Intranet\Marca\MarcaRequest;
 
 class MarcaController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(Marca::get());
+        $filters = $request->all();
+
+        return $this->respond(
+            Marca::filter($filters)->paginate(10),
+            'Listado de marcas cargada correctamente'
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreMarcaRequest $request)
+    public function store(MarcaRequest $request)
     {
         $marca = Marca::create($request->validated());
-        return $this->respondCreated($marca);
+        return $this->respondCreated(
+            $marca,
+            'Marca registrada correctamente'
+        );
     }
 
     /**
@@ -32,16 +40,22 @@ class MarcaController extends ApiController
      */
     public function show(Marca $marca)
     {
-        return $this->respond($marca);
+        return $this->respond(
+            $marca,
+            'Detalle de la marca'
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreMarcaRequest $request, Marca $marca)
+    public function update(MarcaRequest $request, Marca $marca)
     {
         $marca->update($request->validated());
-        return $this->respond($marca);
+        return $this->respond(
+            $marca,
+            'Marca actualizada correctamente'
+        );
     }
 
     /**
@@ -50,6 +64,8 @@ class MarcaController extends ApiController
     public function destroy(Marca $marca)
     {
         $marca->delete();
-        return $this->respondSuccess();
+        return $this->respondSuccess(
+            'Marca eliminada correctamente'
+        );
     }
 }

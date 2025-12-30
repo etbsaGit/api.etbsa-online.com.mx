@@ -7,6 +7,7 @@ use App\Models\Intranet\Cliente;
 use App\Http\Controllers\ApiController;
 use App\Models\Intranet\ClienteAbastecimiento;
 use App\Http\Requests\Intranet\ClienteAbastecimiento\StoreClienteAbastecimientoRequest;
+use App\Models\Intranet\Abastecimiento;
 
 class ClienteAbastecimientoController extends ApiController
 {
@@ -59,5 +60,14 @@ class ClienteAbastecimientoController extends ApiController
             ->with('abastecimiento')
             ->get();
         return $this->respond($machine);
+    }
+
+    public function getOptions()
+    {
+        $data = [
+            'abastecimiento' => Abastecimiento::all()
+        ];
+
+        return $this->respond($data);
     }
 }

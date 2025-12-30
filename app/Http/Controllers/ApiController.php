@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Routing\Controller;
@@ -6,95 +7,65 @@ use Illuminate\Routing\Controller;
 class ApiController extends Controller
 {
     /**
-     * Return generic json response with the given data.
-     *
-     * @param $data
-     * @param int $statusCode
-     * @param array $headers
-     * @return \Illuminate\Http\JsonResponse
+     * Respuesta genérica OK
      */
-    protected function respond($data, $statusCode = 200, $headers = [])
+    protected function respond($data = null, string $message = '', int $statusCode = 200, array $headers = [])
     {
-        return response()->json($data, $statusCode, $headers);
+        return response()->json([
+            'success' => $statusCode < 400,
+            'message' => $message,
+            'data'    => $data
+        ], $statusCode, $headers);
     }
 
     /**
-     * Respond with success.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * 200 OK sin data
      */
-    protected function respondSuccess()
+    protected function respondSuccess(string $message = 'Operación realizada correctamente')
     {
-        return $this->respond(null);
+        return $this->respond(null, $message, 200);
     }
 
     /**
-     * Respond with created.
-     *
-     * @param $data
-     * @return \Illuminate\Http\JsonResponse
+     * 201 Created
      */
-    protected function respondCreated($data)
+    protected function respondCreated($data, string $message = 'Registro creado correctamente')
     {
-        return $this->respond($data, 201);
+        return $this->respond($data, $message, 201);
     }
 
     /**
-     * Respond with no content.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * Error genérico
      */
-    protected function respondNoContent()
+    protected function respondError(string $message, int $statusCode, array $errors = [])
     {
-        return $this->respond(null, 204);
-    }
-
-    /**
-     * Respond with error.
-     *
-     * @param $message
-     * @param $statusCode
-     * @return \Illuminate\Http\JsonResponse
-     */
-    protected function respondError($message, $statusCode)
-    {
-        return $this->respond([
-            'errors' => [
-                'message' => $message,
-                'status_code' => $statusCode
-            ]
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'errors'  => $errors
         ], $statusCode);
     }
 
     /**
-     * Respond with unauthorized.
-     *
-     * @param string $message
-     * @return \Illuminate\Http\JsonResponse
+     * 401
      */
-    protected function respondUnauthorized($message = 'Unauthorized')
+    protected function respondUnauthorized(string $message = 'No autorizado')
     {
         return $this->respondError($message, 401);
     }
 
     /**
-     * Respond with forbidden.
-     *
-     * @param string $message
-     * @return \Illuminate\Http\JsonResponse
+     * 403
      */
-    protected function respondForbidden($message = 'Forbidden')
+    protected function respondForbidden(string $message = 'Acceso denegado')
     {
         return $this->respondError($message, 403);
     }
 
     /**
-     * Respond with not found.
-     *
-     * @param string $message
-     * @return \Illuminate\Http\JsonResponse
+     * 404
      */
-    protected function respondNotFound($message = 'Not Found')
+    protected function respondNotFound(string $message = 'Recurso no encontrado')
     {
         return $this->respondError($message, 404);
     }

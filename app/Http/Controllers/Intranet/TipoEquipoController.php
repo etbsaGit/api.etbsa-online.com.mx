@@ -4,27 +4,35 @@ namespace App\Http\Controllers\Intranet;
 
 use Illuminate\Http\Request;
 use App\Models\Intranet\TipoEquipo;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Intranet\TipoEquipo\StoreTipoEquipoRequest;
+use App\Http\Requests\Intranet\TipoEquipo\TipoEquipoRequest;
 
 class TipoEquipoController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(TipoEquipo::get());
+        $filters = $request->all();
+
+        return $this->respond(
+            TipoEquipo::filter($filters)->paginate(10),
+            'Listado de tipos de equipo cargado correctamente'
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTipoEquipoRequest $request)
+    public function store(TipoEquipoRequest $request)
     {
         $tipoEquipo = TipoEquipo::create($request->validated());
-        return $this->respondCreated($tipoEquipo);
+
+        return $this->respondCreated(
+            $tipoEquipo,
+            'Tipo de equipo registrado correctamente'
+        );
     }
 
     /**
@@ -32,16 +40,23 @@ class TipoEquipoController extends ApiController
      */
     public function show(TipoEquipo $tipoEquipo)
     {
-        return $this->respond($tipoEquipo);
+        return $this->respond(
+            $tipoEquipo,
+            'Detalle del tipo de equipo'
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreTipoEquipoRequest $request, TipoEquipo $tipoEquipo)
+    public function update(TipoEquipoRequest $request, TipoEquipo $tipoEquipo)
     {
         $tipoEquipo->update($request->validated());
-        return $this->respond($tipoEquipo);
+
+        return $this->respond(
+            $tipoEquipo,
+            'Tipo de equipo actualizado correctamente'
+        );
     }
 
     /**
@@ -50,6 +65,9 @@ class TipoEquipoController extends ApiController
     public function destroy(TipoEquipo $tipoEquipo)
     {
         $tipoEquipo->delete();
-        return $this->respondSuccess();
+
+        return $this->respondSuccess(
+            'Tipo de equipo eliminado correctamente'
+        );
     }
 }

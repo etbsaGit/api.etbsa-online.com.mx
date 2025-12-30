@@ -47,6 +47,6 @@ class EstatusController extends ApiController
     {
         $statuses = Estatus::where('tipo_estatus', $type)->orderBy('nombre', 'asc')->get();
 
-        return response()->json($statuses);
+        return $this->respond($statuses);
     }
 }

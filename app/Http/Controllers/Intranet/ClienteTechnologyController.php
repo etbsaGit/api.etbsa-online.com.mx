@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\ApiController;
 use App\Models\Intranet\ClienteTechnology;
 use App\Http\Requests\Intranet\ClienteTechnology\StoreClienteTechnologyRequest;
+use App\Models\Intranet\NuevaTecnologia;
 
 class ClienteTechnologyController extends ApiController
 {
@@ -61,6 +62,15 @@ class ClienteTechnologyController extends ApiController
             ->with('nuevaTecnologia')
             ->get();
         return $this->respond($machine);
+    }
+
+    public function getOptions()
+    {
+        $data = [
+            'nt' => NuevaTecnologia::all()
+        ];
+
+        return $this->respond($data);
     }
 
     public function getClientesNT(Request $request)
