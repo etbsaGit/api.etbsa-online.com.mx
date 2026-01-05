@@ -5,25 +5,34 @@ namespace App\Http\Controllers\Intranet;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Models\Intranet\TechnologicalCapability;
-use App\Http\Requests\Intranet\TechnologicalCapability\StoreTechnologicalCapabilityRequest;
+use App\Http\Requests\Intranet\TechnologicalCapability\TechnologicalCapabilityRequest;
 
 class TechnologicalCapabilityController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(TechnologicalCapability::get());
+        $filters = $request->all();
+
+        return $this->respond(
+            TechnologicalCapability::filter($filters)->paginate(10),
+            'Listado cargado correctamente'
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTechnologicalCapabilityRequest $request)
+    public function store(TechnologicalCapabilityRequest $request)
     {
         $technologicalCapability = TechnologicalCapability::create($request->validated());
-        return $this->respondCreated($technologicalCapability);
+
+        return $this->respondCreated(
+            $technologicalCapability,
+            'Registrado correctamente'
+        );
     }
 
     /**
@@ -31,16 +40,23 @@ class TechnologicalCapabilityController extends ApiController
      */
     public function show(TechnologicalCapability $technologicalCapability)
     {
-        return $this->respond($technologicalCapability);
+        return $this->respond(
+            $technologicalCapability,
+            'Detalle'
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreTechnologicalCapabilityRequest $request, TechnologicalCapability $technologicalCapability)
+    public function update(TechnologicalCapabilityRequest $request, TechnologicalCapability $technologicalCapability)
     {
         $technologicalCapability->update($request->validated());
-        return $this->respond($technologicalCapability);
+
+        return $this->respond(
+            $technologicalCapability,
+            'Actualizado correctamente'
+        );
     }
 
     /**
@@ -49,6 +65,9 @@ class TechnologicalCapabilityController extends ApiController
     public function destroy(TechnologicalCapability $technologicalCapability)
     {
         $technologicalCapability->delete();
-        return $this->respondSuccess();
+
+        return $this->respondSuccess(
+            'Eliminado correctamente'
+        );
     }
 }

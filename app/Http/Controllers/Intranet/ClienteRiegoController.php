@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Intranet;
 
 use Illuminate\Http\Request;
+use App\Models\Intranet\Riego;
 use App\Models\Intranet\Cliente;
 use App\Models\Intranet\ClienteRiego;
 use App\Http\Controllers\ApiController;
@@ -59,5 +60,14 @@ class ClienteRiegoController extends ApiController
             ->with('riego')
             ->get();
         return $this->respond($clienteRiego);
+    }
+
+    public function getOptions()
+    {
+        $data = [
+            'riegos' => Riego::all()
+        ];
+
+        return $this->respond($data);
     }
 }

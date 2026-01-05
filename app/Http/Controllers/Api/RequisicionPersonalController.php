@@ -131,7 +131,7 @@ class RequisicionPersonalController extends ApiController
             'herramientas',
         ]);
 
-        return response()->json([
+        return $this->respond([
             'data' => $requisicionPersonal
         ]);
     }
@@ -169,14 +169,14 @@ class RequisicionPersonalController extends ApiController
 
             DB::commit();
 
-            return response()->json([
+            return $this->respond([
                 'message' => 'Requisición actualizada exitosamente.',
                 'data' => $requisicionPersonal->load(['competencias', 'herramientas']),
             ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            return response()->json([
+            return $this->respond([
                 'message' => 'Error al actualizar la requisición.',
                 'error' => $e->getMessage(),
             ], 500);
@@ -200,13 +200,13 @@ class RequisicionPersonalController extends ApiController
 
             DB::commit();
 
-            return response()->json([
+            return $this->respond([
                 'message' => 'Requisición eliminada exitosamente.'
             ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            return response()->json([
+            return $this->respond([
                 'message' => 'Error al eliminar la requisición.',
                 'error' => $e->getMessage()
             ], 500);

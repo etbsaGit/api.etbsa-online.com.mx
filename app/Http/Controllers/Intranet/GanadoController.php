@@ -5,50 +5,69 @@ namespace App\Http\Controllers\Intranet;
 use Illuminate\Http\Request;
 use App\Models\Intranet\Ganado;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Intranet\Ganado\StoreRequest;
+use App\Http\Requests\Intranet\Ganado\GanadoRequest;
 
 class GanadoController extends ApiController
 {
     /**
-     * Display a listing of the resource.
+     * Listado
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(Ganado::get());
+        $filters = $request->all();
+
+        return $this->respond(
+            Ganado::filter($filters)->paginate(10),
+            'Listado de ganado cargado correctamente'
+        );
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Crear
      */
-    public function store(StoreRequest $request)
+    public function store(GanadoRequest $request)
     {
         $ganado = Ganado::create($request->validated());
-        return $this->respondCreated($ganado);
+
+        return $this->respondCreated(
+            $ganado,
+            'Ganado registrado correctamente'
+        );
     }
 
     /**
-     * Display the specified resource.
+     * Mostrar
      */
     public function show(Ganado $ganado)
     {
-        return $this->respond($ganado);
+        return $this->respond(
+            $ganado,
+            'Detalle del ganado'
+        );
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualizar
      */
-    public function update(StoreRequest $request, Ganado $ganado)
+    public function update(GanadoRequest $request, Ganado $ganado)
     {
         $ganado->update($request->validated());
-        return $this->respond($ganado);
+
+        return $this->respond(
+            $ganado,
+            'Ganado actualizado correctamente'
+        );
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Eliminar
      */
     public function destroy(Ganado $ganado)
     {
         $ganado->delete();
-        return $this->respondSuccess();
+
+        return $this->respondSuccess(
+            'Ganado eliminado correctamente'
+        );
     }
 }

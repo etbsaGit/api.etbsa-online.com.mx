@@ -6,10 +6,11 @@ use App\Models\Career;
 use App\Models\Empleado;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Career\PutRequest;
 use App\Http\Requests\Career\StoreRequest;
 
-class CareerController extends Controller
+class CareerController extends ApiController
 {
     /**
      * Display a listing of the resource.
@@ -24,7 +25,7 @@ class CareerController extends Controller
      */
     public function store(StoreRequest $request)
     {
-        return response()->json(Career::create($request->validated()));
+        return $this->respond(Career::create($request->validated()));
     }
 
     public function storeNewCareer(Empleado $empleado)
@@ -33,7 +34,7 @@ class CareerController extends Controller
         if ($empleado->career()->exists()) {
             // Si el empleado tiene registros en la tabla careers, obtener todos los registros ordenados por fecha
             $careers = $empleado->career()->orderBy('date')->get();
-            return response()->json($careers);
+            return $this->respond($careers);
         } else {
             // Si el empleado no tiene registros en la tabla careers, crear el primer registro
             $fechaIngreso = $empleado->fecha_de_ingreso;
@@ -43,7 +44,7 @@ class CareerController extends Controller
             $nuevaCarrera->description = "Este día te uniste a la familia de ETBSA";
             $nuevaCarrera->empleado_id = $empleado->id;
             $nuevaCarrera->save();
-            return response()->json([$nuevaCarrera]);
+            return $this->respond([$nuevaCarrera]);
         }
     }
 
@@ -58,7 +59,7 @@ class CareerController extends Controller
     public function showPerEmpleado(Empleado $empleado)
     {
         $carreras = $empleado->career()->orderBy('date')->get();
-        return response()->json($carreras);
+        return $this->respond($carreras);
     }
 
     public function empleadosWithAndWithoutCareer()
@@ -82,7 +83,7 @@ class CareerController extends Controller
             'sin_carrera' => $empleadosSinCarrera
         ];
 
-        return response()->json($empleados);
+        return $this->respond($empleados);
     }
 
     /**
@@ -91,7 +92,7 @@ class CareerController extends Controller
     public function update(PutRequest $request, Career $career)
     {
         $career->update($request->validated());
-        return response()->json($career);
+        return $this->respond($career);
     }
 
     /**
@@ -100,6 +101,6 @@ class CareerController extends Controller
     public function destroy(Career $career)
     {
         $career->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 }

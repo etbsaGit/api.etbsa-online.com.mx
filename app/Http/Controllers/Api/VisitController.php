@@ -155,7 +155,7 @@ class VisitController extends ApiController
             $query->whereYear('dia', $year)->select('id', 'dia', 'ubicacion', 'comentarios', 'retroalimentacion', 'prospect_id', 'empleado_id');
         }])->get();
 
-        return response()->json($employees);
+        return $this->respond($employees);
     }
 
     public function getFormReport()
@@ -200,7 +200,7 @@ class VisitController extends ApiController
         }])->find($empleadoId);
 
         if (!$empleado) {
-            return response()->json(['message' => 'Empleado no encontrado'], 404);
+            return $this->respond(['message' => 'Empleado no encontrado'], 404);
         }
 
         return $this->respond($empleado);
@@ -237,7 +237,7 @@ class VisitController extends ApiController
         }])->find($empleadoId);
 
         if (!$empleado) {
-            return response()->json(['message' => 'Empleado no encontrado'], 404);
+            return $this->respond(['message' => 'Empleado no encontrado'], 404);
         }
 
         // Formatear los números de teléfono de los prospectos

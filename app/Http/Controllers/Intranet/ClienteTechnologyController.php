@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\ApiController;
 use App\Models\Intranet\ClienteTechnology;
 use App\Http\Requests\Intranet\ClienteTechnology\StoreClienteTechnologyRequest;
+use App\Models\Intranet\NuevaTecnologia;
 
 class ClienteTechnologyController extends ApiController
 {
@@ -63,6 +64,15 @@ class ClienteTechnologyController extends ApiController
         return $this->respond($machine);
     }
 
+    public function getOptions()
+    {
+        $data = [
+            'nt' => NuevaTecnologia::all()
+        ];
+
+        return $this->respond($data);
+    }
+
     public function getClientesNT(Request $request)
     {
         $filters = $request->all();
@@ -95,7 +105,7 @@ class ClienteTechnologyController extends ApiController
 
         // Verificar si no hay datos para exportar
         if ($data->isEmpty()) {
-            return response()->json(['error' => 'No hay datos para exportar.']);
+            return $this->respond(['error' => 'No hay datos para exportar.']);
         }
 
         $fileContent = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
@@ -103,7 +113,7 @@ class ClienteTechnologyController extends ApiController
         // Convertir el contenido del archivo a Base64
         $base64 = base64_encode($fileContent);
 
-        return response()->json([
+        return $this->respond([
             'file_name' => 'clientes_export.xlsx',
             'file_base64' => $base64,
         ]);

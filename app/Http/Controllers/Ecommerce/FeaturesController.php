@@ -15,7 +15,7 @@ class FeaturesController extends ApiController
      */
     public function index()
     {
-        return response()->json(Feature::all());
+        return $this->respond(Feature::all());
     }
 
     /**
@@ -23,7 +23,7 @@ class FeaturesController extends ApiController
      */
     public function store(StoreFeaturesRequest $request)
     {
-        return response()->json(Feature::create($request->validated()));
+        return $this->respond(Feature::create($request->validated()));
     }
 
     /**
@@ -40,7 +40,7 @@ class FeaturesController extends ApiController
     public function update(UpdateFeaturesRequest $request, Feature $feature)
     {
         $feature->update($request->validated());
-        return response()->json($feature);
+        return $this->respond($feature);
     }
 
     /**

@@ -192,26 +192,26 @@ class ClienteController extends ApiController
 
         // 1️⃣ Cliente no encontrado
         if (! $cliente) {
-            return response()->json([
+            return $this->respond([
                 'message' => 'Cliente no encontrado con el RFC proporcionado.',
             ], 404);
         }
 
         // 2️⃣ Si el usuario tiene el rol "Credito", puede acceder directamente
         if ($user->hasRole('Credito')) {
-            return response()->json(['cliente' => $cliente]);
+            return $this->respond(['cliente' => $cliente]);
         }
 
         // 3️⃣ Si no tiene el rol, validamos la relación empleado-cliente
         if (! $empleado) {
-            return response()->json([
+            return $this->respond([
                 'message' => 'El usuario no tiene un empleado asociado.',
             ], 403);
         }
 
         // 4️⃣ Si el cliente no tiene empleados asociados, puede verlo cualquiera
         if ($cliente->empleados->isEmpty()) {
-            return response()->json(['cliente' => $cliente]);
+            return $this->respond(['cliente' => $cliente]);
         }
 
         // 5️⃣ Si tiene empleados asociados, validar que el empleado autenticado esté relacionado
@@ -220,13 +220,13 @@ class ClienteController extends ApiController
             ->exists();
 
         if (! $isAsociado) {
-            return response()->json([
+            return $this->respond([
                 'message' => 'Cliente ya asociado a otro empleado.',
             ], 403);
         }
 
         // ✅ Todo correcto
-        return response()->json(['cliente' => $cliente]);
+        return $this->respond(['cliente' => $cliente]);
     }
 
     public function getEmpleados(Request $request)
@@ -269,7 +269,7 @@ class ClienteController extends ApiController
         // Sincronizar la relación (actualiza la tabla pivote)
         $empleado->clientes()->sync($clienteIds);
 
-        return response()->json([
+        return $this->respond([
             'message' => 'Relación empleado-clientes actualizada correctamente',
             'empleado' => $empleado->load('clientes')
         ], 200);
@@ -286,7 +286,7 @@ class ClienteController extends ApiController
                 ->send(new ClienteActualizadoMail($cliente, auth()->user()->empleado));
         }
 
-        return response()->json([
+        return $this->respond([
             'message' => 'Notificación enviada correctamente a todos los usuarios con rol Crédito.',
             'cliente' => $cliente
         ]);

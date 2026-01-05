@@ -119,7 +119,7 @@ class AnaliticaController extends ApiController
         // 🔹 Calcular secciones
         // -------------------------------------------------------------------------
         $activosFijos = $this->calcularActivosFijos($cliente);
-        $activosCirculantes = $this->calcularActivosCirculantes($analitica, $cliente, $anioAnalitica + 1); //quitar el +1 entrando enero
+        $activosCirculantes = $this->calcularActivosCirculantes($analitica, $cliente, $anioAnalitica);
         $pasivos = $this->calcularPasivos($cliente, $anioAnalitica);
         $ingresos = $this->obtenerIngresosAnuales($cliente, $anioAnalitica);
         $ingresosDirectos = $this->obtenerIngresosDirectos($cliente, $anioAnalitica);

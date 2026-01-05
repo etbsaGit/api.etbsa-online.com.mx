@@ -151,13 +151,13 @@ class CandidatoController extends ApiController
         $data = $export->collection();
 
         if ($data->isEmpty()) {
-            return response()->json(['error' => 'No hay datos para exportar.']);
+            return $this->respond(['error' => 'No hay datos para exportar.']);
         }
 
         $fileContent = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
         $base64 = base64_encode($fileContent);
 
-        return response()->json([
+        return $this->respond([
             'file_name' => 'candidatos.xlsx',
             'file_base64' => $base64,
         ]);

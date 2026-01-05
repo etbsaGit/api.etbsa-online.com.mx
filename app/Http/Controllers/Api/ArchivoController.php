@@ -13,28 +13,28 @@ class ArchivoController extends ApiController
 {
     public function index()
     {
-        return response()->json(Archivo::paginate(5));
+        return $this->respond(Archivo::paginate(5));
     }
 
     public function all()
     {
-        return response()->json(Archivo::with('asignable')->get());
+        return $this->respond(Archivo::with('asignable')->get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Archivo::create($request->validated()));
+        return $this->respond(Archivo::create($request->validated()));
     }
 
     public function show(Archivo $archivo)
     {
-        return response()->json($archivo->load('asignable'));
+        return $this->respond($archivo->load('asignable'));
     }
 
     public function update(PutRequest $request, Archivo $archivo)
     {
         $archivo->update($request->validated());
-        return response()->json($archivo);
+        return $this->respond($archivo);
     }
 
     public function destroy($archivoId)
@@ -42,13 +42,13 @@ class ArchivoController extends ApiController
         $archivo = Archivo::find($archivoId);
 
         if (!$archivo) {
-            return response()->json(['error' => 'Archivo no encontrado.'], 404);
+            return $this->respond(['error' => 'Archivo no encontrado.'], 404);
         }
 
         $documento = $archivo->asignable();
 
         if (!$documento) {
-            return response()->json(['error' => 'Documento no encontrado.'], 404);
+            return $this->respond(['error' => 'Documento no encontrado.'], 404);
         }
 
         if (Storage::disk('s3')->exists($archivo->path)) {
@@ -61,6 +61,6 @@ class ArchivoController extends ApiController
 
         $archivo->delete();
 
-        return response()->json('Archivo borrado exitosamente');
+        return $this->respond('Archivo borrado exitosamente');
     }
 }

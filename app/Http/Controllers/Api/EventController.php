@@ -83,7 +83,7 @@ class EventController extends ApiController
      */
     public function show(Event $event)
     {
-        return response()->json($event->load('activity', 'empleado', 'parentEvent', 'childEvents.empleado', 'travel', 'travel.startPointR', 'travel.endPointR'));
+        return $this->respond($event->load('activity', 'empleado', 'parentEvent', 'childEvents.empleado', 'travel', 'travel.startPointR', 'travel.endPointR'));
     }
 
     /**
@@ -171,14 +171,14 @@ class EventController extends ApiController
             'date' => $newDate,
         ]);
 
-        return response()->json($event);
+        return $this->respond($event);
     }
 
     public function changeCompleted(Activity $activity)
     {
         $activity->update(['completed' => !$activity->completed]);
 
-        return response()->json($activity);
+        return $this->respond($activity);
     }
 
     public function storeActivitiesEvent(Request $request, Event $event)
@@ -228,7 +228,7 @@ class EventController extends ApiController
         });
 
         // Devolver una respuesta con las actividades creadas
-        return response()->json($activities, 201);
+        return $this->respond($activities, 201);
     }
 
     // -------------------------------------------------------Kardex---------------------------------------------------------
@@ -237,7 +237,7 @@ class EventController extends ApiController
     {
         // Validar que el mes y el año sean válidos si se proporcionan
         if ($mes && $anio && !checkdate($mes, 1, $anio)) {
-            return response()->json(['error' => 'Fecha no válida'], 400);
+            return $this->respond(['error' => 'Fecha no válida'], 400);
         }
 
         // Variables para la consulta
@@ -306,7 +306,7 @@ class EventController extends ApiController
         });
 
 
-        return response()->json($result);
+        return $this->respond($result);
     }
 
     // ----------------------------------------------------------------------------------------------------------------

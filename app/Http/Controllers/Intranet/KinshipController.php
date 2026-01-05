@@ -5,25 +5,34 @@ namespace App\Http\Controllers\Intranet;
 use Illuminate\Http\Request;
 use App\Models\Intranet\Kinship;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Intranet\Kinship\StoreKinshipRequest;
+use App\Http\Requests\Intranet\Kinship\KinshipRequest;
 
 class KinshipController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(Kinship::get());
+        $filters = $request->all();
+
+        return $this->respond(
+            Kinship::filter($filters)->paginate(10),
+            'Listado de parentescos cargado correctamente'
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreKinshipRequest $request)
+    public function store(KinshipRequest $request)
     {
         $kinship = Kinship::create($request->validated());
-        return $this->respondCreated($kinship);
+
+        return $this->respondCreated(
+            $kinship,
+            'Parentesco registrado correctamente'
+        );
     }
 
     /**
@@ -31,16 +40,23 @@ class KinshipController extends ApiController
      */
     public function show(Kinship $kinship)
     {
-        return $this->respond($kinship);
+        return $this->respond(
+            $kinship,
+            'Detalle del parentesco'
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreKinshipRequest $request, Kinship $kinship)
+    public function update(KinshipRequest $request, Kinship $kinship)
     {
         $kinship->update($request->validated());
-        return $this->respond($kinship);
+
+        return $this->respond(
+            $kinship,
+            'Parentesco actualizado correctamente'
+        );
     }
 
     /**
@@ -49,6 +65,8 @@ class KinshipController extends ApiController
     public function destroy(Kinship $kinship)
     {
         $kinship->delete();
-        return $this->respondSuccess();
+        return $this->respondSuccess(
+            'Parentesco eliminado correctamente'
+        );
     }
 }

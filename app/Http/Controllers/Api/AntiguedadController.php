@@ -11,33 +11,33 @@ class AntiguedadController extends ApiController
 {
     public function index()
     {
-        return response()->json(Antiguedad::paginate(5));
+        return $this->respond(Antiguedad::paginate(5));
     }
 
     public function all()
     {
-        return response()->json(Antiguedad::get());
+        return $this->respond(Antiguedad::get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Antiguedad::create($request->validated()));
+        return $this->respond(Antiguedad::create($request->validated()));
     }
 
     public function show(Antiguedad $antiguedad)
     {
-        return response()->json($antiguedad);
+        return $this->respond($antiguedad);
     }
 
     public function update(PutRequest $request, Antiguedad $antiguedad)
     {
         $antiguedad->update($request->validated());
-        return response()->json($antiguedad);
+        return $this->respond($antiguedad);
     }
 
     public function destroy(Antiguedad $antiguedad)
     {
         $antiguedad->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 }

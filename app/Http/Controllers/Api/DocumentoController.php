@@ -17,34 +17,34 @@ class DocumentoController extends ApiController
     use UploadableFile;
     public function index()
     {
-        return response()->json(Documento::paginate(5));
+        return $this->respond(Documento::paginate(5));
     }
 
     public function all()
     {
-        return response()->json(Documento::with('asignable')->get());
+        return $this->respond(Documento::with('asignable')->get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Documento::create($request->validated()));
+        return $this->respond(Documento::create($request->validated()));
     }
 
     public function show(Documento $documento)
     {
-        return response()->json($documento->load('asignable'));
+        return $this->respond($documento->load('asignable'));
     }
 
     public function update(PutRequest $request, Documento $documento)
     {
         $documento->update($request->validated());
-        return response()->json($documento);
+        return $this->respond($documento);
     }
 
     public function destroy(Documento $documento)
     {
         $documento->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function uploadFile(ArchivoStoreRequest $request, Documento $documento)
@@ -56,7 +56,7 @@ class DocumentoController extends ApiController
             $path = $this->uploadOne($archivo, $documento->default_path_folder, 's3');
 
             if (!$path) {
-                return response()->json(['error' => 'Error al Guardar el Archivo.'], 404);
+                return $this->respond(['error' => 'Error al Guardar el Archivo.'], 404);
             }
 
 
@@ -71,9 +71,9 @@ class DocumentoController extends ApiController
             $estatus = Estatus::where('clave', 'pendiente')->first();
             $documento->estatus()->associate($estatus)->save();
 
-            return response()->json($archivoBD);
+            return $this->respond($archivoBD);
         } else {
-            return response()->json(['error' => 'No se ha enviado un archivo en la solicitud.'], 400);
+            return $this->respond(['error' => 'No se ha enviado un archivo en la solicitud.'], 400);
         }
     }
 }

@@ -72,6 +72,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
      */
 
     // 🔹 Abastecimiento
+    Route::post('abastecimientos', [AbastecimientoController::class, 'index']);
     Route::apiResource('abastecimiento', AbastecimientoController::class);
 
     // 🔹 Agricola ingresos
@@ -95,9 +96,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('analiticaDoc', AnaliticaDocController::class);
 
     // 🔹 Classifications
+    Route::post('classifications', [ClassificationsController::class, 'index']);
     Route::apiResource('classification', ClassificationsController::class);
 
     // 🔹 ClasEquipo
+    Route::post('clasEquipos', [ClasEquipoController::class, 'index']);
     Route::apiResource('clasEquipo', ClasEquipoController::class);
 
     // 🔹 Cliente
@@ -114,6 +117,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('cliente', ClienteController::class);
 
     // 🔹 Cliente Abastecimiento
+    Route::get('clienteAbastecimiento/cliente/form', [ClienteAbastecimientoController::class, 'getOptions']);
     Route::get('clienteAbastecimiento/cliente/{cliente}', [ClienteAbastecimientoController::class, 'getPerCliente']);
     Route::apiResource('clienteAbastecimiento', ClienteAbastecimientoController::class);
 
@@ -123,11 +127,13 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('clienteCultivo', ClienteCultivoController::class);
 
     // 🔹 Cliente Riego
+    Route::get('clienteRiego/cliente/form', [ClienteRiegoController::class, 'getOptions']);
     Route::get('clienteRiego/cliente/{cliente}', [ClienteRiegoController::class, 'getPerCliente']);
     Route::apiResource('clienteRiego', ClienteRiegoController::class);
 
     // 🔹 Cliente Technology
     Route::get('clienteTechnology/cliente/{cliente}', [ClienteTechnologyController::class, 'getPerCliente']);
+    Route::get('nt/cliente/form', [ClienteTechnologyController::class, 'getOptions']);
     Route::post('nt/clientes', [ClienteTechnologyController::class, 'getClientesNT']);
     Route::post('nt/clientes/xls', [ClienteTechnologyController::class, 'getClientesNTxls']);
     Route::apiResource('clienteTechnology', ClienteTechnologyController::class);
@@ -137,12 +143,15 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('clientesDoc', ClientesDocController::class);
 
     // 🔹 Condicion
+    Route::post('condiciones', [CondicionController::class, 'index']);
     Route::apiResource('condicion', CondicionController::class);
 
     // 🔹 Construction Classification
-    Route::apiResource('construction-classification', ConstructionClassificationsController::class);
+    Route::post('constructionClassifications', [ConstructionClassificationsController::class, 'index']);
+    Route::apiResource('constructionClassification', ConstructionClassificationsController::class);
 
     // 🔹 Cultivo
+    Route::post('cultivos', [CultivoController::class, 'index']);
     Route::apiResource('cultivo', CultivoController::class);
 
     // 🔹 Distribución
@@ -162,6 +171,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('fincaDoc', FincaDocController::class);
 
     // 🔹 Ganado
+    Route::post('ganados', [GanadoController::class, 'index']);
     Route::apiResource('ganado', GanadoController::class);
 
     // 🔹 Ganadera ingresos
@@ -202,9 +212,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('invModel', InvModelController::class);
 
     // 🔹 Kinship
+    Route::post('kinships', [KinshipController::class, 'index']);
     Route::apiResource('kinship', KinshipController::class);
 
     // 🔹 Marca
+    Route::post('marcas', [MarcaController::class, 'index']);
     Route::apiResource('marca', MarcaController::class);
 
     // 🔹 Machine
@@ -213,9 +225,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('machine', MachineController::class);
 
     // 🔹 Nueva Tecnología
-    Route::apiResource('nuevaTecnologia', NuevaTecnologiaController::class);
+    Route::post('nuevaTecnologiums', [NuevaTecnologiaController::class, 'index']);
+    Route::apiResource('nuevaTecnologium', NuevaTecnologiaController::class);
 
     // 🔹 Referencia
+    Route::get('referencia/cliente/form', [ReferenciaController::class, 'getOptions']);
     Route::get('referencia/cliente/{cliente}', [ReferenciaController::class, 'getPerCliente']);
     Route::put('referencia/{referencia}', [ReferenciaController::class, 'update']);
     Route::delete('referencia/{referencia}', [ReferenciaController::class, 'destroy']);
@@ -230,6 +244,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('representante', RepresentanteController::class);
 
     // 🔹 Riego
+    Route::post('riegos', [RiegoController::class, 'index']);
     Route::apiResource('riego', RiegoController::class);
 
     // 🔹 Sale
@@ -240,21 +255,26 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('sale', SaleController::class);
 
     // 🔹 Segmentation
+    Route::post('segmentations', [SegmentationController::class, 'index']);
     Route::apiResource('segmentation', SegmentationController::class);
 
     // 🔹 State Entity
     Route::apiResource('stateEntity', StateEntityController::class);
 
     // 🔹 Tactic
+    Route::post('tactics', [TacticController::class, 'index']);
     Route::apiResource('tactic', TacticController::class);
 
     // 🔹 Technological Capability
-    Route::apiResource('technological-capability', TechnologicalCapabilityController::class);
+    Route::post('technologicalCapabilities', [TechnologicalCapabilityController::class, 'index']);
+    Route::apiResource('technologicalCapability', TechnologicalCapabilityController::class);
 
     // 🔹 Tipo Cultivo
+    Route::post('tipoCultivos', [TipoCultivoController::class, 'index']);
     Route::apiResource('tipoCultivo', TipoCultivoController::class);
 
     // 🔹 Tipo Equipo
+    Route::post('tipoEquipos', [TipoEquipoController::class, 'index']);
     Route::apiResource('tipoEquipo', TipoEquipoController::class);
 
     // 🔹 Town

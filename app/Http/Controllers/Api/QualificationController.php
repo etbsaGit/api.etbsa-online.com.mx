@@ -10,18 +10,19 @@ use App\Models\Qualification;
 use App\Models\LineaTechnician;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Qualification\PutRequest;
 use App\Http\Requests\Qualification\ArrayRequest;
 use App\Http\Requests\Qualification\StoreRequest;
 
-class QualificationController extends Controller
+class QualificationController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return response()->json(Qualification::get());
+        return $this->respond(Qualification::get());
     }
 
     /**
@@ -37,7 +38,7 @@ class QualificationController extends Controller
             ->where('technician_id', $technician_id)
             ->value('id');
 
-        return response()->json(Qualification::create([
+        return $this->respond(Qualification::create([
             'name' => $name,
             'clave' => $clave,
             'linea_technician_id' => $linea_technician_id,
@@ -60,7 +61,7 @@ class QualificationController extends Controller
 
         $qualification->update($request->validated());
 
-        return response()->json($qualification);
+        return $this->respond($qualification);
     }
 
     /**
@@ -69,7 +70,7 @@ class QualificationController extends Controller
     public function destroy(Qualification $qualification)
     {
         $qualification->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function getEmployeeTechnician()
@@ -151,7 +152,7 @@ class QualificationController extends Controller
             }
         }
 
-        return response()->json([
+        return $this->respond([
             'agricola' => $tecnicosAgricola,
             'construccion' => $tecnicosConstruccion,
             'sinAsignar' => [
@@ -164,7 +165,7 @@ class QualificationController extends Controller
     public function getPerLine(Linea $linea)
     {
         if ($linea->nombre !== 'Agricola' && $linea->nombre !== 'Construccion') {
-            return response()->json(['message' => 'El nombre de la línea no es válido'], 400);
+            return $this->respond(['message' => 'El nombre de la línea no es válido'], 400);
         }
 
         $calificaciones = $linea->lineaTechnician()
@@ -175,7 +176,7 @@ class QualificationController extends Controller
             return $lineaTechnician->technician->level;
         })->values();
 
-        return response()->json($calificaciones);
+        return $this->respond($calificaciones);
     }
 
 
@@ -186,6 +187,6 @@ class QualificationController extends Controller
         // Realizar la sincronización de las calificaciones al empleado
         $empleado->qualification()->sync($qualificationIds);
 
-        return response()->json(['message' => 'Requisitos asignados correctamente al empleado']);
+        return $this->respond(['message' => 'Requisitos asignados correctamente al empleado']);
     }
 }

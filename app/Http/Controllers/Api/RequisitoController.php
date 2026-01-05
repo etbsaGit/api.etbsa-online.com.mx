@@ -25,23 +25,23 @@ class RequisitoController extends ApiController
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Requisito::create($request->validated()));
+        return $this->respond(Requisito::create($request->validated()));
     }
 
     public function show(Requisito $requisito)
     {
-        return response()->json($requisito->load('expediente'));
+        return $this->respond($requisito->load('expediente'));
     }
 
     public function update(PutRequest $request, Requisito $requisito)
     {
         $requisito->update($request->validated());
-        return response()->json($requisito);
+        return $this->respond($requisito);
     }
 
     public function destroy(Requisito $requisito)
     {
         $requisito->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 }

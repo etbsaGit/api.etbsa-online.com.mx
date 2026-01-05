@@ -3,56 +3,71 @@
 namespace App\Http\Controllers\Intranet;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Intranet\NuevaTecnologia\StoreNuevaTecnologiaRequest;
 use App\Models\Intranet\NuevaTecnologia;
+use App\Http\Requests\Intranet\NuevaTecnologia\NuevaTecnologiaRequest;
 
 class NuevaTecnologiaController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(NuevaTecnologia::get());
+        $filters = $request->all();
+
+        return $this->respond(
+            NuevaTecnologia::filter($filters)->paginate(10),
+            'Listado de nuevas tecnologias cargada correctamente'
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreNuevaTecnologiaRequest $request)
+    public function store(NuevaTecnologiaRequest $request)
     {
-        $nuevaTecnologia = NuevaTecnologia::create($request->validated());
-        return $this->respondCreated($nuevaTecnologia);
+        $nuevaTecnologium = NuevaTecnologia::create($request->validated());
+
+        return $this->respondCreated(
+            $nuevaTecnologium,
+            'Nueva tecnologia registrada correctamente'
+        );
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(NuevaTecnologia $nuevaTecnologium)
     {
-        $nuevaTecnologia = NuevaTecnologia::findOrFail($id);
-        return $this->respond($nuevaTecnologia);
+        return $this->respond(
+            $nuevaTecnologium,
+            'Detalle de la nueva tecnologia'
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreNuevaTecnologiaRequest $request, $id)
+    public function update(NuevaTecnologiaRequest $request, NuevaTecnologia $nuevaTecnologium)
     {
-        $nuevaTecnologia = NuevaTecnologia::findOrFail($id);
-        $nuevaTecnologia->update($request->validated());
-        return $this->respond($nuevaTecnologia);
+        $nuevaTecnologium->update($request->validated());
+
+        return $this->respond(
+            $nuevaTecnologium,
+            'Nueva tecnologia actualizada correctamente'
+        );
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(NuevaTecnologia $nuevaTecnologium)
     {
-        $nuevaTecnologia = NuevaTecnologia::findOrFail($id);
-        $nuevaTecnologia->delete();
-        return $this->respondSuccess();
+        $nuevaTecnologium->delete();
+
+        return $this->respondSuccess(
+            'Nueva tecnologia eliminada correctamente'
+        );
     }
 }

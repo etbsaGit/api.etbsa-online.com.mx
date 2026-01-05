@@ -5,25 +5,34 @@ namespace App\Http\Controllers\Intranet;
 use Illuminate\Http\Request;
 use App\Models\Intranet\Riego;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Intranet\Riego\StoreRiegoRequest;
+use App\Http\Requests\Intranet\Riego\RiegoRequest;
 
 class RiegoController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(Riego::get());
+        $filters = $request->all();
+
+        return $this->respond(
+            Riego::filter($filters)->paginate(10),
+            'Listado de riegos cargado correctamente'
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreRiegoRequest $request)
+    public function store(RiegoRequest $request)
     {
-        $abastecimiento = Riego::create($request->validated());
-        return $this->respondCreated($abastecimiento);
+        $riego = Riego::create($request->validated());
+
+        return $this->respondCreated(
+            $riego,
+            'Riego registrado correctamente'
+        );
     }
 
     /**
@@ -31,16 +40,23 @@ class RiegoController extends ApiController
      */
     public function show(Riego $riego)
     {
-        return $this->respond($riego);
+        return $this->respond(
+            $riego,
+            'Detalle del riego'
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreRiegoRequest $request, Riego $riego)
+    public function update(RiegoRequest $request, Riego $riego)
     {
         $riego->update($request->validated());
-        return $this->respond($riego);
+
+        return $this->respond(
+            $riego,
+            'Riego actualizado correctamente'
+        );
     }
 
     /**
@@ -49,6 +65,9 @@ class RiegoController extends ApiController
     public function destroy(Riego $riego)
     {
         $riego->delete();
-        return $this->respondSuccess();
+
+        return $this->respondSuccess(
+            'Riego eliminado correctamente'
+        );
     }
 }

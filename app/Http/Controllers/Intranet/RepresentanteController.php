@@ -66,7 +66,7 @@ class RepresentanteController extends ApiController
 
         // Verificar si se encontró el representante
         if (!$representante) {
-            return response()->json(['message' => 'Representante no encontrado para este cliente'], 404);
+            return $this->respond(['message' => 'Representante no encontrado para este cliente'], 404);
         }
 
         // Devolver los datos del representante con sus relaciones cargadas

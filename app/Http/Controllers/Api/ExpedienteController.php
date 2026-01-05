@@ -12,34 +12,34 @@ class ExpedienteController extends ApiController
 {
     public function index()
     {
-        return response()->json(Expediente::paginate(5));
+        return $this->respond(Expediente::paginate(5));
     }
 
     public function all()
     {
-        return response()->json(Expediente::with('archivable')->get());
+        return $this->respond(Expediente::with('archivable')->get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Expediente::create($request->validated()));
+        return $this->respond(Expediente::create($request->validated()));
     }
 
     public function show(Expediente $expediente)
     {
-        return response()->json($expediente);
+        return $this->respond($expediente);
     }
 
     public function update(PutRequest $request, Expediente $expediente)
     {
         $expediente->update($request->validated());
-        return response()->json($expediente);
+        return $this->respond($expediente);
     }
 
     public function destroy(Expediente $expediente)
     {
         $expediente->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function buscarExpedientePorArchivable($tipoModelo, $idModelo)
@@ -51,6 +51,6 @@ class ExpedienteController extends ApiController
             ->where('archivable_id', $idModelo);
     })->first();
 
-    return response()->json($expediente);
+    return $this->respond($expediente);
     }
 }

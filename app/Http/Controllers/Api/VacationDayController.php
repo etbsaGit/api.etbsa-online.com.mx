@@ -361,7 +361,7 @@ class VacationDayController extends ApiController
 
         // Validación: start no puede ser después de end
         if (Carbon::parse($start)->gt(Carbon::parse($end))) {
-            return response()->json([
+            return $this->respond([
                 'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
             ], 422);
         }
@@ -447,7 +447,7 @@ class VacationDayController extends ApiController
         $sucursal_id = $request->sucursal_id;
 
         if (Carbon::parse($start)->gt(Carbon::parse($end))) {
-            return response()->json([
+            return $this->respond([
                 'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
             ], 422);
         }
@@ -459,7 +459,7 @@ class VacationDayController extends ApiController
 
         // Verificar si no hay datos para exportar
         if ($data->isEmpty()) {
-            return response()->json(['error' => 'No hay datos para exportar.']);
+            return $this->respond(['error' => 'No hay datos para exportar.']);
         }
 
         // Exportar el archivo en formato XLSX con los filtros aplicados
@@ -469,7 +469,7 @@ class VacationDayController extends ApiController
         $base64 = base64_encode($fileContent);
 
         // Devolver la respuesta con el archivo en Base64
-        return response()->json([
+        return $this->respond([
             'file_name' => Sucursal::find($sucursal_id)->nombre,
             'file_base64' => $base64,
         ]);
@@ -482,7 +482,7 @@ class VacationDayController extends ApiController
         $empleado_id = $request->empleado_id;
 
         if ($start->gt($end)) {
-            return response()->json([
+            return $this->respond([
                 'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
             ], 422);
         }
@@ -519,7 +519,7 @@ class VacationDayController extends ApiController
             ->first();
 
         if (!$employee) {
-            return response()->json(['error' => 'Empleado no encontrado o sin vacaciones registradas en este periodo.'], 404);
+            return $this->respond(['error' => 'Empleado no encontrado o sin vacaciones registradas en este periodo.'], 404);
         }
 
         // Generar días de vacaciones válidos
@@ -564,7 +564,7 @@ class VacationDayController extends ApiController
 
         // Validación: start no puede ser después de end
         if (Carbon::parse($start)->gt(Carbon::parse($end))) {
-            return response()->json([
+            return $this->respond([
                 'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
             ], 422);
         }
@@ -601,7 +601,7 @@ class VacationDayController extends ApiController
             ->first();
 
         if (!$employee) {
-            return response()->json(['error' => 'Empleado no encontrado o sin vacaciones registradas en este periodo.'], 404);
+            return $this->respond(['error' => 'Empleado no encontrado o sin vacaciones registradas en este periodo.'], 404);
         }
 
         // Agregar vacationDetails con los días específicos

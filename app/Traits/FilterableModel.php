@@ -124,15 +124,35 @@ trait FilterableModel
     public function scopeFilterByTravelAdmin(Builder $query, array $filters)
     {
         foreach ($filters as $key => $value) {
-            if ($value !== null) { // Solo aplicar el filtro si el valor no es nulo
-                if ($key === 'start_point' || $key === 'end_point') {
-                    $query->whereHas('travel', function ($query) use ($key, $value) {
-                        $query->where($key, $value); // Filtrar por 'start_point' o 'end_point'
-                    });
-                } else {
-                    $query->where($key, $value); // Filtrar directamente para otros casos
-                }
+            if ($value === null) {
+                continue;
             }
+
+            // Filtros especiales sobre la relación travel
+            if ($key === 'start_point' || $key === 'end_point') {
+                $query->whereHas('travel', function ($q) use ($key, $value) {
+                    $q->where($key, $value);
+                });
+                continue;
+            }
+
+            // Filtros especiales sobre la fecha (columna date en events)
+            if ($key === 'month') {
+                $query->whereMonth('date', (int) $value);
+                continue;
+            }
+
+            if ($key === 'year') {
+                $query->whereYear('date', (int) $value);
+                continue;
+            }
+
+            // // Seguridad: solo aplicar where si la columna existe en events
+            // if (\Schema::hasColumn($query->getModel()->getTable(), $key)) {
+            //     $query->where($key, $value);
+            // }
         }
+
+        return $query;
     }
 }

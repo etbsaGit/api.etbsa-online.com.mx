@@ -4,27 +4,35 @@ namespace App\Http\Controllers\Intranet;
 
 use Illuminate\Http\Request;
 use App\Models\Intranet\ClasEquipo;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Intranet\ClasEquipo\StoreClasEquipoRequest;
+use App\Http\Requests\Intranet\ClasEquipo\ClasEquipoRequest;
 
 class ClasEquipoController extends ApiController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return $this->respond(ClasEquipo::get());
+        $filters = $request->all();
+
+        return $this->respond(
+            ClasEquipo::filter($filters)->paginate(10),
+            'Listado de clasificacion cargada correctamente'
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreClasEquipoRequest $request)
+    public function store(ClasEquipoRequest $request)
     {
         $clasEquipo = ClasEquipo::create($request->validated());
-        return $this->respondCreated($clasEquipo);
+
+        return $this->respondCreated(
+            $clasEquipo,
+            'Clasificacion registrada correctamente'
+        );
     }
 
     /**
@@ -32,16 +40,23 @@ class ClasEquipoController extends ApiController
      */
     public function show(ClasEquipo $clasEquipo)
     {
-        return $this->respond($clasEquipo);
+        return $this->respond(
+            $clasEquipo,
+            'Detalle de la clasificacion'
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreClasEquipoRequest $request, ClasEquipo $clasEquipo)
+    public function update(ClasEquipoRequest $request, ClasEquipo $clasEquipo)
     {
         $clasEquipo->update($request->validated());
-        return $this->respond($clasEquipo);
+
+        return $this->respond(
+            $clasEquipo,
+            'Clasificacion actualizada correctamente'
+        );
     }
 
     /**
@@ -50,6 +65,9 @@ class ClasEquipoController extends ApiController
     public function destroy(ClasEquipo $clasEquipo)
     {
         $clasEquipo->delete();
-        return $this->respondSuccess();
+
+        return $this->respondSuccess(
+            'Clasificacion eliminada correctamente'
+        );
     }
 }

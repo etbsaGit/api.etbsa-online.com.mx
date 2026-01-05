@@ -23,30 +23,30 @@ class EstatusController extends ApiController
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Estatus::create($request->validated()));
+        return $this->respond(Estatus::create($request->validated()));
     }
 
     public function show(Estatus $estatus)
     {
-        return response()->json($estatus);
+        return $this->respond($estatus);
     }
 
     public function update(PutRequest $request, Estatus $estatus)
     {
         $estatus->update($request->validated());
-        return response()->json($estatus);
+        return $this->respond($estatus);
     }
 
     public function destroy(Estatus $estatus)
     {
         $estatus->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function getPerType($type)
     {
         $statuses = Estatus::where('tipo_estatus', $type)->orderBy('nombre', 'asc')->get();
 
-        return response()->json($statuses);
+        return $this->respond($statuses);
     }
 }

@@ -8,6 +8,7 @@ use App\Models\Intranet\Referencia;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Referencia\PutReferenciaRequest;
 use App\Http\Requests\Intranet\Referencia\StoreReferenciaRequest;
+use App\Models\Intranet\Kinship;
 
 class ReferenciaController extends ApiController
 {
@@ -60,5 +61,14 @@ class ReferenciaController extends ApiController
             ->with('kinship')
             ->get();
         return $this->respond($referencias);
+    }
+
+    public function getOptions()
+    {
+        $data = [
+            'kinships' => Kinship::all()
+        ];
+
+        return $this->respond($data);
     }
 }

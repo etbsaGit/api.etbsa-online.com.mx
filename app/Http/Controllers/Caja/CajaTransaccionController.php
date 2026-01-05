@@ -88,7 +88,7 @@ class CajaTransaccionController extends ApiController
             return $this->respondCreated($cajaTransaccion);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e], 500);
+            return $this->respond(['error' => $e], 500);
         }
     }
 
@@ -231,7 +231,7 @@ class CajaTransaccionController extends ApiController
 
         // Verificar si no hay datos para exportar
         if ($data->isEmpty()) {
-            return response()->json(['error' => 'No hay datos para exportar.']);
+            return $this->respond(['error' => 'No hay datos para exportar.']);
         }
 
         // Exportar el archivo en formato XLSX con los filtros aplicados
@@ -240,7 +240,7 @@ class CajaTransaccionController extends ApiController
         // Convertir el contenido del archivo a Base64
         $base64 = base64_encode($fileContent);
 
-        return response()->json([
+        return $this->respond([
             'file_name' => $nombreArchivo,
             'file_base64' => $base64,
         ]);
@@ -251,7 +251,7 @@ class CajaTransaccionController extends ApiController
         // Validar que category_ids exista y no esté vacío
         $categoryIds = $request->input('category_ids', []);
         if (empty($categoryIds)) {
-            return response()->json([
+            return $this->respond([
                 'message' => 'Debe proporcionar al menos una categoría.'
             ], 422);
         }
@@ -286,7 +286,7 @@ class CajaTransaccionController extends ApiController
         // Validar que category_ids exista y no esté vacío
         $categoryIds = $request->input('category_ids', []);
         if (empty($categoryIds)) {
-            return response()->json([
+            return $this->respond([
                 'message' => 'Debe proporcionar al menos una categoría.'
             ], 422);
         }

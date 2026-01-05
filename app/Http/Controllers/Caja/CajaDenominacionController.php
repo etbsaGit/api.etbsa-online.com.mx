@@ -31,7 +31,7 @@ class CajaDenominacionController extends ApiController
             ->exists();
 
         if ($existe) {
-            return response()->json([
+            return $this->respond([
                 'message' => 'Ya existe una denominación con ese valor y tipo.'
             ], 422);
         }
@@ -62,7 +62,7 @@ class CajaDenominacionController extends ApiController
             ->exists();
 
         if ($existe) {
-            return response()->json([
+            return $this->respond([
                 'message' => 'Ya existe otra denominación con ese valor y tipo.'
             ], 422);
         }

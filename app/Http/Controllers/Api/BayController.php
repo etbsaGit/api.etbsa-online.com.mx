@@ -96,7 +96,7 @@ class BayController extends ApiController
         $construccionLinea = Linea::where('nombre', 'construccion')->first();
 
         if (!$construccionLinea) {
-            return response()->json(['error' => 'Línea construccion no encontrada'], 404);
+            return $this->respond(['error' => 'Línea construccion no encontrada'], 404);
         }
 
         $bays = Bay::where('sucursal_id', $sucursal->id)
@@ -148,7 +148,7 @@ class BayController extends ApiController
         $agricolaLinea = Linea::where('nombre', 'agricola')->first();
 
         if (!$agricolaLinea) {
-            return response()->json(['error' => 'Línea agrícola no encontrada'], 404);
+            return $this->respond(['error' => 'Línea agrícola no encontrada'], 404);
         }
 
         $bays = Bay::where('sucursal_id', $sucursal->id)
@@ -220,7 +220,7 @@ class BayController extends ApiController
             ]
         ];
 
-        return response()->json($data);
+        return $this->respond($data);
     }
 
 
@@ -230,7 +230,7 @@ class BayController extends ApiController
         $construccionLinea = Linea::where('nombre', 'construccion')->first();
 
         if (!$construccionLinea) {
-            return response()->json(['error' => 'Línea construcción no encontrada'], 404);
+            return $this->respond(['error' => 'Línea construcción no encontrada'], 404);
         }
 
         $bays = Bay::where('sucursal_id', $sucursal->id)
@@ -301,7 +301,7 @@ class BayController extends ApiController
             ]
         ];
 
-        return response()->json($data);
+        return $this->respond($data);
     }
 
     public function getDisponibility()

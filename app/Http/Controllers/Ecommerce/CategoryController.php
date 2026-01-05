@@ -18,7 +18,7 @@ class CategoryController extends ApiController
      */
     public function index()
     {
-        return response()->json(Category::whereNull('parent_id')->with('childrenRecursive')->get());
+        return $this->respond(Category::whereNull('parent_id')->with('childrenRecursive')->get());
     }
 
 
@@ -36,7 +36,7 @@ class CategoryController extends ApiController
             $updateData = ['logo' => $relativePath];
             $category->update($updateData);
         }
-        return response()->json($category);
+        return $this->respond($category);
     }
 
     /**
@@ -64,7 +64,7 @@ class CategoryController extends ApiController
             $category->update($updateData);
         }
 
-        return response()->json($category);
+        return $this->respond($category);
     }
 
     /**

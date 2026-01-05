@@ -241,7 +241,7 @@ class SalidaPermisoController extends ApiController
         $user = Auth::user();
 
         if (!$user->hasRole('RRHH')) {
-            return response()->json(['error' => 'No autorizado'], 403);
+            return $this->respond(['error' => 'No autorizado'], 403);
         }
 
         $filters = $request->all();
@@ -259,7 +259,7 @@ class SalidaPermisoController extends ApiController
         // Convertir a Base64
         $base64 = base64_encode($tempFile);
 
-        return response()->json([
+        return $this->respond([
             'file_name' => 'salidas_permiso.xlsx',
             'file_base64' => $base64
         ]);

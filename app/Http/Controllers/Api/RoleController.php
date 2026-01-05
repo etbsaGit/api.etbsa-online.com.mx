@@ -24,23 +24,23 @@ class RoleController extends ApiController
     public function store(StoreRequest $request)
     {
         $role = Role::create($request->validated());
-        return response()->json($role, 201);
+        return $this->respond($role, 201);
     }
 
     public function show(Role $role)
     {
-        return response()->json($role->load('permissions', 'users'));
+        return $this->respond($role->load('permissions', 'users'));
     }
 
     public function update(PutRequest $request, Role $role)
     {
         $role->update($request->validated());
-        return response()->json($role);
+        return $this->respond($role);
     }
 
     public function destroy(Role $role)
     {
         $role->delete();
-        return response()->json('ok');
+        return $this->respond('ok');
     }
 }
