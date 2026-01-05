@@ -29,7 +29,7 @@ class ProductController extends ApiController
      */
     public function getAll()
     {
-        return response()->json([
+        return $this->respond([
             "categories" => Category::whereNull('parent_id')->with('childrenRecursive')->get(),
             "features" => Feature::with('values')->get(),
             "brands" => Brand::all(),
@@ -39,12 +39,12 @@ class ProductController extends ApiController
     public function getProducts(Request $request)
     {
         $filters = $request->all();
-        return response()->json(Product::filter($filters)->with('brand', 'vendor', 'images', 'features', 'categories')->paginate(10));
+        return $this->respond(Product::filter($filters)->with('brand', 'vendor', 'images', 'features', 'categories')->paginate(10));
     }
 
     public function index()
     {
-        return response()->json(Product::with('brand', 'vendor', 'images', 'features', 'categories')->get());
+        return $this->respond(Product::with('brand', 'vendor', 'images', 'features', 'categories')->get());
     }
 
     /**
@@ -68,7 +68,7 @@ class ProductController extends ApiController
             }
         }
 
-        return response()->json($product->load('brand', 'vendor', 'images', 'features', 'categories'));
+        return $this->respond($product->load('brand', 'vendor', 'images', 'features', 'categories'));
     }
 
     /**
@@ -76,7 +76,7 @@ class ProductController extends ApiController
      */
     public function show(Product $product)
     {
-        return response()->json($product->load('brand', 'vendor', 'images', 'features', 'categories'));
+        return $this->respond($product->load('brand', 'vendor', 'images', 'features', 'categories'));
     }
 
     /**
@@ -110,7 +110,7 @@ class ProductController extends ApiController
             }
         }
 
-        return response()->json($product->load('brand', 'vendor', 'images', 'features', 'categories'));
+        return $this->respond($product->load('brand', 'vendor', 'images', 'features', 'categories'));
     }
 
     /**
@@ -143,7 +143,7 @@ class ProductController extends ApiController
 
         $product->save();
 
-        return response()->json(['mensaje' => 'Estado cambiado exitosamente']);
+        return $this->respond(['mensaje' => 'Estado cambiado exitosamente']);
     }
 
     public function changeFeatured(Product $product)
@@ -156,7 +156,7 @@ class ProductController extends ApiController
 
         $product->save();
 
-        return response()->json(['mensaje' => 'Estado cambiado exitosamente']);
+        return $this->respond(['mensaje' => 'Estado cambiado exitosamente']);
     }
 
     public function filterProduct(Request $request)
@@ -173,7 +173,7 @@ class ProductController extends ApiController
             ->orderByRaw('RAND()') // Dentro de cada grupo (featured verdadero y falso), ordena aleatoriamente
             ->paginate(10);
 
-        return response()->json($products);
+        return $this->respond($products);
     }
 
 
@@ -185,7 +185,7 @@ class ProductController extends ApiController
             ->limit($limit)
             ->get();
 
-        return response()->json($randomFeaturedProducts);
+        return $this->respond($randomFeaturedProducts);
     }
 
     public function deleteImg(ProductImage $productImage)

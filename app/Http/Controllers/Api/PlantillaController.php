@@ -11,12 +11,12 @@ class PlantillaController extends ApiController
 {
     public function index()
     {
-        return response()->json(Plantilla::paginate(5));
+        return $this->respond(Plantilla::paginate(5));
     }
 
     public function all()
     {
-        return response()->json(Plantilla::with(['requisito'])->get());
+        return $this->respond(Plantilla::with(['requisito'])->get());
     }
 
     public function store(StoreRequest $request)
@@ -29,12 +29,12 @@ class PlantillaController extends ApiController
             $request->get('requisito_id')
         );
 
-        return response()->json($plantilla);
+        return $this->respond($plantilla);
     }
 
     public function show(Plantilla $plantilla)
     {
-        return response()->json($plantilla);
+        return $this->respond($plantilla);
     }
 
     public function update(PutRequest $request, Plantilla $plantilla)
@@ -43,12 +43,12 @@ class PlantillaController extends ApiController
 
         $plantilla->requisito()->sync($request->get('requisito_id'));
 
-        return response()->json($plantilla);
+        return $this->respond($plantilla);
     }
 
     public function destroy(Plantilla $plantilla)
     {
         $plantilla->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 }

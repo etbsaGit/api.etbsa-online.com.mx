@@ -30,7 +30,7 @@ class SkillController extends ApiController
         $skill = Skill::create($request->only(['name']));
         $puestos = $request->puestos;
         $skill->puesto()->sync($puestos);
-        return response()->json($skill->load('puesto'));
+        return $this->respond($skill->load('puesto'));
     }
 
     /**
@@ -38,7 +38,7 @@ class SkillController extends ApiController
      */
     public function show(Skill $skill)
     {
-        return response()->json($skill->load('puesto'));
+        return $this->respond($skill->load('puesto'));
     }
 
     /**
@@ -49,7 +49,7 @@ class SkillController extends ApiController
         $skill->update($request->only(['name']));
         $puestos = $request->puestos;
         $skill->puesto()->sync($puestos);
-        return response()->json($skill->load('puesto'));
+        return $this->respond($skill->load('puesto'));
     }
 
     /**
@@ -58,13 +58,13 @@ class SkillController extends ApiController
     public function destroy(Skill $skill)
     {
         $skill->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function getPerPuesto(Puesto $puesto)
     {
         $skills = $puesto->skill()->get();
 
-        return response()->json($skills);
+        return $this->respond($skills);
     }
 }

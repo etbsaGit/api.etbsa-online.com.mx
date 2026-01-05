@@ -42,7 +42,7 @@ class SurveyController extends ApiController
             ->withCount('evaluee')
             ->get();
 
-        return response()->json($surveys);
+        return $this->respond($surveys);
     }
 
     public function getSurveyDataForSurvey(Survey $survey)
@@ -60,7 +60,7 @@ class SurveyController extends ApiController
             ];
         });
 
-        return response()->json($surveyData);
+        return $this->respond($surveyData);
     }
 
     private function getResponseCountForEvaluee($evaluee, $survey)
@@ -102,7 +102,7 @@ class SurveyController extends ApiController
             $this->createQuestion($question);
         }
 
-        return response()->json($survey);
+        return $this->respond($survey);
     }
 
     /**
@@ -110,7 +110,7 @@ class SurveyController extends ApiController
      */
     public function show(Survey $survey)
     {
-        return response()->json($survey->load(['puesto', 'question']));
+        return $this->respond($survey->load(['puesto', 'question']));
     }
 
     public function showPerEvaluee()
@@ -124,7 +124,7 @@ class SurveyController extends ApiController
             ->with(['question', 'question.answer'])
             ->get();
 
-        return response()->json($surveys);
+        return $this->respond($surveys);
     }
 
     public function showPerEvaluator()
@@ -133,7 +133,7 @@ class SurveyController extends ApiController
 
         $surveys = $user->survey()->where('evaluator_id', $user->id)->with(['puesto', 'question', 'evaluee', 'evaluee.empleado'])->withCount('evaluee')->get();
 
-        return response()->json($surveys);
+        return $this->respond($surveys);
     }
 
     /**
@@ -207,7 +207,7 @@ class SurveyController extends ApiController
             }
         }
 
-        return response()->json($survey->load('question'));
+        return $this->respond($survey->load('question'));
     }
 
     public function changeStatus(Survey $survey)
@@ -220,7 +220,7 @@ class SurveyController extends ApiController
 
         $survey->save();
 
-        return response()->json(['mensaje' => 'Estado cambiado exitosamente']);
+        return $this->respond(['mensaje' => 'Estado cambiado exitosamente']);
     }
 
     /**
@@ -309,20 +309,20 @@ class SurveyController extends ApiController
     {
         Storage::disk('s3')->delete($surveyQuestion->image);
         $surveyQuestion->update(['image' => null]);
-        return response()->json(['success' => true, 'message' => 'Imagen eliminada correctamente']);
+        return $this->respond(['success' => true, 'message' => 'Imagen eliminada correctamente']);
     }
 
     public function storeAnswer(StoreSurveyAnswerRequest $request)
     {
         $surveyAnswer = SurveyAnswer::create($request->validated());
-        return response()->json($surveyAnswer);
+        return $this->respond($surveyAnswer);
     }
 
 
     public function getAnswers()
     {
         $answers = SurveyAnswer::with('question')->get();
-        return response()->json($answers);
+        return $this->respond($answers);
     }
 
     public function getAnswerUserForSurvey($surveyId, $userId)
@@ -333,7 +333,7 @@ class SurveyController extends ApiController
             ->where('evaluee_id', $userId)
             ->get();
 
-        return response()->json($answers);
+        return $this->respond($answers);
     }
 
     function updateComment(SurveyAnswer $answer, Request $request)
@@ -343,7 +343,7 @@ class SurveyController extends ApiController
 
         $answer->save();
 
-        return response()->json($answer);
+        return $this->respond($answer);
     }
 
     public function storeEvaluees(Survey $survey, EvalueesSurveyRequest $request)
@@ -373,7 +373,7 @@ class SurveyController extends ApiController
             Mail::to($to_email)->send(new EvalueeMailable($correo));
         }
 
-        return response()->json(['message' => 'Empleados asignados correctamente a la encuesta']);
+        return $this->respond(['message' => 'Empleados asignados correctamente a la encuesta']);
     }
 
 
@@ -381,7 +381,7 @@ class SurveyController extends ApiController
     {
         $evaluees = $survey->evaluee()->with(['Empleado', 'Answer'])->get();
 
-        return response()->json($evaluees);
+        return $this->respond($evaluees);
     }
 
     public function storeGrade(GradeRequest $request)
@@ -412,7 +412,7 @@ class SurveyController extends ApiController
 
         Mail::to($to_email)->send(new GradeMailable($correo));
 
-        return response()->json($grade);
+        return $this->respond($grade);
     }
 
     public function getForGrade(User $evaluee, Survey $survey)
@@ -465,7 +465,7 @@ class SurveyController extends ApiController
         // Calcular el promedio de respuestas correctas
         $averageGrade = $totalQuestions > 0 ? ($correctResponses / $totalQuestions) * 100 : 0;
 
-        return response()->json([
+        return $this->respond([
             'total_questions' => $totalQuestions,
             'total_responses' => $totalResponses,
             'correct_responses' => $correctResponses,
@@ -489,7 +489,7 @@ class SurveyController extends ApiController
         $averageScore = $grades->isEmpty() ? 0 : $totalScores / $grades->count();
 
         // Devolver el promedio de los puntajes
-        return response()->json([
+        return $this->respond([
             'grades' => $grades,
             'average_score' => $averageScore
         ]);
@@ -525,7 +525,7 @@ class SurveyController extends ApiController
         $questions = $survey->question()->with('answer')->get();
         $answers = $questions->flatMap->answer;
 
-        return response()->json([
+        return $this->respond([
             'grades' => $grades,
             'users' => $users,
             'questions' => $questions,
@@ -563,7 +563,7 @@ class SurveyController extends ApiController
         ];
 
         // Devolver la respuesta en formato JSON
-        return response()->json($response);
+        return $this->respond($response);
     }
 
     public function getKardexPerEvaluator()
@@ -590,7 +590,7 @@ class SurveyController extends ApiController
             'surveys_without_puesto' => $surveysWithoutPuesto,
         ];
 
-        return response()->json($response);
+        return $this->respond($response);
     }
 
     public function getPDFAnswers(Survey $survey)
@@ -602,7 +602,7 @@ class SurveyController extends ApiController
 
         // Verificar si hay preguntas asociadas a la encuesta
         if ($questions->isEmpty()) {
-            return response()->json(['message' => 'No questions found for this survey.'], 404);
+            return $this->respond(['message' => 'No questions found for this survey.'], 404);
         }
 
         // Obtener las respuestas del usuario para esas preguntas
@@ -613,7 +613,7 @@ class SurveyController extends ApiController
 
         // Verificar si hay respuestas
         if ($answers->isEmpty()) {
-            return response()->json(['message' => 'No answers found for this survey.'], 404);
+            return $this->respond(['message' => 'No answers found for this survey.'], 404);
         }
 
         // Agrupar respuestas por pregunta y formatear

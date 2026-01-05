@@ -47,7 +47,7 @@ class CajaCorteController extends ApiController
             return $this->respondCreated($cajaCorte);
         } catch (\Throwable $th) {
             DB::rollBack();
-            return response()->json(['error' => $th], 500);
+            return $this->respond(['error' => $th], 500);
         }
 
 

@@ -20,7 +20,7 @@ class FestivoController extends ApiController
 
         // Validar que se reciba exactamente un year
         if (!is_numeric($year) || strlen($year) !== 4) {
-            return response()->json(['error' => 'Debes enviar un year válido en formato YYYY'], 400);
+            return $this->respond(['error' => 'Debes enviar un year válido en formato YYYY'], 400);
         }
 
         $festivos = Festivo::whereYear('fecha', $year)->get();

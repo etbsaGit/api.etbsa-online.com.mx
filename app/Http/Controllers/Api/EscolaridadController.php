@@ -11,33 +11,33 @@ class EscolaridadController extends ApiController
 {
     public function index()
     {
-        return response()->json(Escolaridad::paginate(5));
+        return $this->respond(Escolaridad::paginate(5));
     }
 
     public function all()
     {
-        return response()->json(Escolaridad::get());
+        return $this->respond(Escolaridad::get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Escolaridad::create($request->validated()));
+        return $this->respond(Escolaridad::create($request->validated()));
     }
 
     public function show(Escolaridad $escolaridad)
     {
-        return response()->json($escolaridad);
+        return $this->respond($escolaridad);
     }
 
     public function update(PutRequest $request, Escolaridad $escolaridad)
     {
         $escolaridad->update($request->validated());
-        return response()->json($escolaridad);
+        return $this->respond($escolaridad);
     }
 
     public function destroy(Escolaridad $escolaridad)
     {
         $escolaridad->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 }

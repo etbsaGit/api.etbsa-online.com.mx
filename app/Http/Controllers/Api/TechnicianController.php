@@ -11,10 +11,11 @@ use Illuminate\Http\Request;
 use App\Models\LineaTechnician;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\Technician\PutRequest;
 use App\Http\Requests\Technician\StoreRequest;
 
-class TechnicianController extends Controller
+class TechnicianController extends ApiController
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +28,7 @@ class TechnicianController extends Controller
 
         $lineas = Linea::whereIn('nombre', ['Agricola', 'Construccion'])->get();
 
-        return response()->json([
+        return $this->respond([
             'technicians' => $technicians,
             'lineas' => $lineas,
         ]);
@@ -49,7 +50,7 @@ class TechnicianController extends Controller
             ]);
         }
 
-        return response()->json($technician);
+        return $this->respond($technician);
     }
 
     /**
@@ -57,7 +58,7 @@ class TechnicianController extends Controller
      */
     public function show(Technician $technician)
     {
-        return response()->json($technician);
+        return $this->respond($technician);
     }
 
     /**
@@ -91,7 +92,7 @@ class TechnicianController extends Controller
 
         $technician->update($request->validated());
 
-        return response()->json($technician);
+        return $this->respond($technician);
     }
 
     /**
@@ -100,7 +101,7 @@ class TechnicianController extends Controller
     public function destroy(Technician $technician)
     {
         $technician->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function getAll()
@@ -124,7 +125,7 @@ class TechnicianController extends Controller
             return $lineaTechnician->technician->level;
         })->values();
 
-        return response()->json([
+        return $this->respond([
             'agricola' => $calificacionesAgricolas,
             'construccion' => $calificacionesConstruccion
         ]);
@@ -136,7 +137,7 @@ class TechnicianController extends Controller
             'technician_id' => $technician->id,
         ]);
 
-        return response()->json(['message' => 'Técnico actualizado con éxito']);
+        return $this->respond(['message' => 'Técnico actualizado con éxito']);
     }
 
     public function getTechnicianLine(Linea $linea)
@@ -150,7 +151,7 @@ class TechnicianController extends Controller
             return $lineaTechnician->technician;
         });
 
-        return response()->json($techniciansArray);
+        return $this->respond($techniciansArray);
     }
 
     public function setUserX(Empleado $empleado, Request $request)
@@ -161,7 +162,7 @@ class TechnicianController extends Controller
             'usuario_x' => $request->usuario_x
         ]);
 
-        return response()->json(['message' => 'Usuario X actualizado con éxito']);
+        return $this->respond(['message' => 'Usuario X actualizado con éxito']);
     }
 
     public function setProductivity(Empleado $empleado, Request $request)
@@ -172,7 +173,7 @@ class TechnicianController extends Controller
             'productividad' => $request->productividad
         ]);
 
-        return response()->json(['message' => 'Productividad actualizada con éxito']);
+        return $this->respond(['message' => 'Productividad actualizada con éxito']);
     }
 
     public function getConstruccionBySucursal(Sucursal $sucursal)
@@ -202,7 +203,7 @@ class TechnicianController extends Controller
             'post' => $post
         ];
 
-        return response()->json($data);
+        return $this->respond($data);
     }
 
 }

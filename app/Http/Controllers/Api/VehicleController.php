@@ -84,7 +84,7 @@ class VehicleController extends ApiController
         // Paso 2: Asociar los nuevos empleados al vehículo
         Empleado::whereIn('id', $newEmployeeIds)->update(['vehicle_id' => $vehicle->id]);
 
-        return response()->json(['message' => 'Vehicle employees synced successfully.']);
+        return $this->respond(['message' => 'Vehicle employees synced successfully.']);
     }
 
 }

@@ -64,7 +64,7 @@ class AnaliticaDocController extends ApiController
         $analiticaDoc->update($validatedData);
 
         // 3️⃣ Retornar respuesta (JSON o redirect según el caso)
-        return response()->json([
+        return $this->respond([
             'message' => 'Analítica actualizada correctamente.',
             'data' => $analiticaDoc
         ]);

@@ -2,32 +2,31 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exports\EmpleadosExport;
-use App\Exports\EmpleadosVacationsExport;
 use App\Models\User;
 use App\Models\Linea;
 use App\Models\Puesto;
 use App\Models\Estatus;
 use App\Models\Empleado;
 use App\Models\Sucursal;
+use App\Models\Candidato;
 use App\Models\Plantilla;
+use App\Models\Suggestion;
 use App\Models\Escolaridad;
 use App\Models\EstadoCivil;
+use App\Models\Termination;
 use App\Models\Departamento;
 use App\Models\TipoDeSangre;
 use Illuminate\Http\Request;
 use App\Traits\UploadableFile;
+use App\Exports\EmpleadosExport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\Empleado\PutRequest;
-use App\Http\Requests\Empleado\StoreRequest;
-use App\Models\Candidato;
-use App\Models\Suggestion;
-use App\Models\Termination;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmpleadosVacationsExport;
+use App\Http\Requests\Empleado\EmpleadoRequest;
 
 
 class EmpleadoController extends ApiController
@@ -52,7 +51,7 @@ class EmpleadoController extends ApiController
         return $this->respond($empleados);
     }
 
-    public function store(StoreRequest $request)
+    public function store(EmpleadoRequest $request)
     {
         $data = $request->validated();
 
@@ -140,10 +139,10 @@ class EmpleadoController extends ApiController
 
     public function show(Empleado $empleado)
     {
-        return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus'));
+        return $this->respond($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user', 'estatus'));
     }
 
-    public function update(PutRequest $request, Empleado $empleado)
+    public function update(EmpleadoRequest $request, Empleado $empleado)
     {
         $empleado->update($request->only([
             'nombre',
@@ -272,13 +271,13 @@ class EmpleadoController extends ApiController
             }
         }
 
-        return response()->json($empleado);
+        return $this->respond($empleado);
     }
 
     public function destroy(Empleado $empleado)
     {
         $empleado->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function destroyPic(Empleado $empleado)
@@ -288,7 +287,7 @@ class EmpleadoController extends ApiController
         }
         $updateData = ['fotografia' => null];
         $empleado->update($updateData);
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function findEmpleadoByRFCandINE($rfc, $ine)
@@ -298,9 +297,9 @@ class EmpleadoController extends ApiController
             ->first();
 
         if ($empleado) {
-            return response()->json($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
+            return $this->respond($empleado->load('archivable', 'archivable.requisito', 'escolaridad', 'departamento', 'estado_civil', 'jefe_directo', 'linea', 'puesto', 'sucursal', 'tipo_de_sangre', 'user'));
         } else {
-            return response()->json(['error' => 'No se encontro un empleado con esos datos.'], 400);
+            return $this->respond(['error' => 'No se encontro un empleado con esos datos.'], 400);
         }
     }
 
@@ -382,7 +381,7 @@ class EmpleadoController extends ApiController
         $mes = $request->month;
 
         if ($mes && !$anio) {
-            return response()->json(['error' => 'El año es obligatorio si se pasa un mes'], 400);
+            return $this->respond(['error' => 'El año es obligatorio si se pasa un mes'], 400);
         }
 
         $query = Empleado::with([
@@ -421,7 +420,7 @@ class EmpleadoController extends ApiController
         // 50 registros por página
         $employees = $query->paginate(50);
 
-        return response()->json($employees);
+        return $this->respond($employees);
     }
 
 
@@ -438,7 +437,7 @@ class EmpleadoController extends ApiController
 
         // Verificar si no hay datos para exportar
         if ($data->isEmpty()) {
-            return response()->json(['error' => 'No hay datos para exportar.']);
+            return $this->respond(['error' => 'No hay datos para exportar.']);
         }
 
         // Exportar el archivo en formato XLSX con los filtros aplicados
@@ -448,7 +447,7 @@ class EmpleadoController extends ApiController
         $base64 = base64_encode($fileContent);
 
         // Devolver la respuesta con el archivo en Base64
-        return response()->json([
+        return $this->respond([
             'file_name' => 'empleados.xlsx',
             'file_base64' => $base64,
         ]);
@@ -461,7 +460,7 @@ class EmpleadoController extends ApiController
 
         // Validar que 'from' y 'to' no estén vacíos
         if (empty($from) || empty($to)) {
-            return response()->json(['Fechas vacías' => 'Los campos "Del:" y "Al:" son obligatorios.'], 400);
+            return $this->respond(['Fechas vacías' => 'Los campos "Del:" y "Al:" son obligatorios.'], 400);
         }
 
         $export = new EmpleadosVacationsExport($from, $to);
@@ -471,7 +470,7 @@ class EmpleadoController extends ApiController
 
         // Verificar si no hay datos para exportar
         if ($data->isEmpty()) {
-            return response()->json(['error' => 'No hay datos para exportar.']);
+            return $this->respond(['error' => 'No hay datos para exportar.']);
         }
 
         // Exportar el archivo en formato XLSX con los filtros aplicados
@@ -481,7 +480,7 @@ class EmpleadoController extends ApiController
         $base64 = base64_encode($fileContent);
 
         // Devolver la respuesta con el archivo en Base64
-        return response()->json([
+        return $this->respond([
             'file_name' => 'empleados.xlsx',
             'file_base64' => $base64,
         ]);
@@ -526,7 +525,7 @@ class EmpleadoController extends ApiController
                 });
             })->paginate(10);
 
-        return response()->json($employees);
+        return $this->respond($employees);
     }
 
     public function getEmployeesNew(Request $request)
@@ -535,7 +534,7 @@ class EmpleadoController extends ApiController
         $mes = $request->month;
         // Validación de entrada
         if (!$anio && !$mes) {
-            return response()->json(['error' => 'El año o el mes es requerido'], 400);
+            return $this->respond(['error' => 'El año o el mes es requerido'], 400);
         }
 
         // Relaciones a cargar
@@ -572,7 +571,7 @@ class EmpleadoController extends ApiController
         // Ejecuta la consulta
         $empleados = $query->paginate(50);
 
-        return response()->json($empleados);
+        return $this->respond($empleados);
     }
 
     public function employeeForce(Request $request)
@@ -601,7 +600,7 @@ class EmpleadoController extends ApiController
 
         $candidatesCount = Candidato::where('status_1', 'Postulado desde la bolsa de trabajo')->count();
 
-        return response()->json([
+        return $this->respond([
             'pending_suggestions' => $suggestionsCount,
             'candidates' => $candidatesCount,
         ]);

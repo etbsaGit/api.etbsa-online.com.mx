@@ -18,7 +18,7 @@ class VendorController extends ApiController
      */
     public function index()
     {
-        return response()->json(Vendor::all());
+        return $this->respond(Vendor::all());
     }
 
     /**
@@ -35,7 +35,7 @@ class VendorController extends ApiController
             $updateData = ['logo' => $relativePath];
             $vendor->update($updateData);
         }
-        return response()->json($vendor);
+        return $this->respond($vendor);
     }
 
     /**
@@ -64,7 +64,7 @@ class VendorController extends ApiController
             $vendor->update($updateData);
         }
 
-        return response()->json($vendor);
+        return $this->respond($vendor);
     }
 
     /**

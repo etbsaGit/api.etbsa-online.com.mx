@@ -23,22 +23,22 @@ class PermissionController extends ApiController
     public function store(StoreRequest $request)
     {
         $permission = Permission::create($request->validated());
-        return response()->json($permission, 201);
+        return $this->respond($permission, 201);
     }
 
     public function show(Permission $permission)
     {
-        return response()->json($permission->load('roles'));
+        return $this->respond($permission->load('roles'));
     }
 
     public function update(PutRequest $request, Permission $permission)
     {
        $permission->update($request->validated());
-       return response()->json($permission);
+       return $this->respond($permission);
     }
 
     public function destroy(Permission $permission) {
         $permission->delete();
-        return response()->json('ok');
+        return $this->respond('ok');
     }
 }

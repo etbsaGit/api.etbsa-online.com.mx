@@ -19,28 +19,28 @@ class LineaController extends ApiController
 
     public function all()
     {
-        return response()->json(Linea::get());
+        return $this->respond(Linea::get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Linea::create($request->validated()));
+        return $this->respond(Linea::create($request->validated()));
     }
 
     public function show(Linea $linea)
     {
-        return response()->json($linea);
+        return $this->respond($linea);
     }
 
     public function update(PutRequest $request, Linea $linea)
     {
         $linea->update($request->validated());
-        return response()->json($linea);
+        return $this->respond($linea);
     }
 
     public function destroy(Linea $linea)
     {
         $linea->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 }

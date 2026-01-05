@@ -54,7 +54,7 @@ class UserController extends ApiController
                     'Permissions'
                 );
 
-                return response()->json([
+                return $this->respond([
                     'status' => true,
                     'message' => 'Login exitoso sin 2FA (email no verificado)',
                     'data' => $user,
@@ -71,7 +71,7 @@ class UserController extends ApiController
 
             Auth::logout(); // cerrar sesión hasta que verifique el código
 
-            return response()->json([
+            return $this->respond([
                 'status' => true,
                 'message' => 'Código de verificación enviado al correo',
                 'two_factor_required' => true,
@@ -79,7 +79,7 @@ class UserController extends ApiController
             ]);
         }
 
-        return response()->json("Usuario y/o contraseña inválido", 401);
+        return $this->respond("Usuario y/o contraseña inválido", 401);
     }
 
 
@@ -97,7 +97,7 @@ class UserController extends ApiController
             $user->two_factor_code !== $request->two_factor_code ||
             now()->gt($user->two_factor_expires_at)
         ) {
-            return response()->json([
+            return $this->respond([
                 'status' => false,
                 'message' => 'Código incorrecto o expirado'
             ], 401);
@@ -131,7 +131,7 @@ class UserController extends ApiController
             'Permissions'
         );
 
-        return response()->json([
+        return $this->respond([
             'status' => true,
             'message' => 'Verificación 2FA exitosa',
             'data' => $user,
@@ -146,8 +146,8 @@ class UserController extends ApiController
         $status = Password::sendResetLink($request->only('email'));
 
         return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => 'Correo enviado con el enlace para restablecer tu contraseña.'])
-            : response()->json(['message' => 'No se pudo enviar el correo.'], 400);
+            ? $this->respond(['message' => 'Correo enviado con el enlace para restablecer tu contraseña.'])
+            : $this->respond(['message' => 'No se pudo enviar el correo.'], 400);
     }
 
     public function reset(Request $request)
@@ -170,9 +170,9 @@ class UserController extends ApiController
         );
 
         if ($status == Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Contraseña restablecida con éxito.']);
+            return $this->respond(['message' => 'Contraseña restablecida con éxito.']);
         } else {
-            return response()->json(['message' => __($status)], 400);
+            return $this->respond(['message' => __($status)], 400);
         }
     }
 
@@ -181,7 +181,7 @@ class UserController extends ApiController
         $user = auth()->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Usuario no autenticado'], 401);
+            return $this->respond(['message' => 'Usuario no autenticado'], 401);
         }
 
         $user->email_verification_token = Str::random(60);
@@ -191,7 +191,7 @@ class UserController extends ApiController
 
         Mail::to($user->email)->send(new VerifyEmail($verificationUrl));
 
-        return response()->json(['message' => 'Correo de verificación enviado']);
+        return $this->respond(['message' => 'Correo de verificación enviado']);
     }
 
     public function verificarCorreo(Request $request)
@@ -199,13 +199,13 @@ class UserController extends ApiController
         $token = $request['token'];
 
         if (!$token) {
-            return response()->json(['message' => 'Token no proporcionado'], 400);
+            return $this->respond(['message' => 'Token no proporcionado'], 400);
         }
 
         $user = User::where('email_verification_token', $token)->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Token inválido'], 404);
+            return $this->respond(['message' => 'Token inválido'], 404);
         }
 
         $user->email_verified_at = Carbon::now();
@@ -213,19 +213,19 @@ class UserController extends ApiController
         $user->save();
 
         // Aquí podrías redirigir al front o devolver JSON según necesites
-        return response()->json(['message' => 'Correo verificado correctamente']);
+        return $this->respond(['message' => 'Correo verificado correctamente']);
     }
 
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
 
-        return response()->json('Logout exitoso');
+        return $this->respond('Logout exitoso');
     }
     // -----------------------------------------------------
     public function index()
     {
-        return response()->json(User::get());
+        return $this->respond(User::get());
     }
 
     public function all(Request $request)
@@ -250,12 +250,12 @@ class UserController extends ApiController
         if (!empty($permissions)) {
             $user->syncPermissions($permissions);
         }
-        return response()->json($user->load('roles', 'permissions'));
+        return $this->respond($user->load('roles', 'permissions'));
     }
 
     public function show(User $user)
     {
-        return response()->json($user->load('roles', 'empleado', 'permissions', 'evaluee'));
+        return $this->respond($user->load('roles', 'empleado', 'permissions', 'evaluee'));
     }
 
     public function update(PutRequest $request, User $user)
@@ -269,13 +269,13 @@ class UserController extends ApiController
         }
         $user->syncRoles($roles);
         $user->syncPermissions($permissions);
-        return response()->json($user->load('roles', 'permissions'));
+        return $this->respond($user->load('roles', 'permissions'));
     }
 
     public function destroy(User $user)
     {
         $user->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function getRolesPermissions()
@@ -292,8 +292,8 @@ class UserController extends ApiController
         $user = Auth::user();
         if (password_verify($request->old_password, $user->password)) {
             $user->update($request->only(['password']));
-            return response()->json('Contraseña cambiada con exito');
+            return $this->respond('Contraseña cambiada con exito');
         }
-        return response()->json('Contraseña actual no valida', 403);
+        return $this->respond('Contraseña actual no valida', 403);
     }
 }

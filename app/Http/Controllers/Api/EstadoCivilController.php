@@ -11,33 +11,33 @@ class EstadoCivilController extends ApiController
 {
     public function index()
     {
-        return response()->json(EstadoCivil::paginate(5));
+        return $this->respond(EstadoCivil::paginate(5));
     }
 
     public function all()
     {
-        return response()->json(EstadoCivil::get());
+        return $this->respond(EstadoCivil::get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(EstadoCivil::create($request->validated()));
+        return $this->respond(EstadoCivil::create($request->validated()));
     }
 
     public function show(EstadoCivil $estadoCivil)
     {
-        return response()->json($estadoCivil);
+        return $this->respond($estadoCivil);
     }
 
     public function update(PutRequest $request, EstadoCivil $estadoCivil)
     {
         $estadoCivil->update($request->validated());
-        return response()->json($estadoCivil);
+        return $this->respond($estadoCivil);
     }
 
     public function destroy(EstadoCivil $estadoCivil)
     {
         $estadoCivil->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 }

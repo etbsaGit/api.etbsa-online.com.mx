@@ -105,7 +105,7 @@ class ClienteTechnologyController extends ApiController
 
         // Verificar si no hay datos para exportar
         if ($data->isEmpty()) {
-            return response()->json(['error' => 'No hay datos para exportar.']);
+            return $this->respond(['error' => 'No hay datos para exportar.']);
         }
 
         $fileContent = Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
@@ -113,7 +113,7 @@ class ClienteTechnologyController extends ApiController
         // Convertir el contenido del archivo a Base64
         $base64 = base64_encode($fileContent);
 
-        return response()->json([
+        return $this->respond([
             'file_name' => 'clientes_export.xlsx',
             'file_base64' => $base64,
         ]);

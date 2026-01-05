@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Puesto;
+use App\Models\Empleado;
 use App\Models\SkillRating;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Http\Requests\SkillRating\PutRequest;
 use App\Http\Requests\SkillRating\StoreRequest;
-use App\Models\Empleado;
 
-class SkillRaitngController extends Controller
+class SkillRaitngController extends ApiController
 {
     /**
      * Display a listing of the resource.
@@ -36,7 +37,7 @@ class SkillRaitngController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Registro creado correctamente'], 201);
+        return $this->respond(['message' => 'Registro creado correctamente'], 201);
     }
 
     /**
@@ -53,7 +54,7 @@ class SkillRaitngController extends Controller
     public function update(PutRequest $request, SkillRating $skillRating)
     {
         $skillRating->update($request->validated());
-        return response()->json($skillRating);
+        return $this->respond($skillRating);
     }
 
     /**
@@ -80,7 +81,7 @@ class SkillRaitngController extends Controller
             }
         }
         $updatedSkillRating = $empleado->skillRating()->with('skill')->get();
-        return response()->json($updatedSkillRating);
+        return $this->respond($updatedSkillRating);
     }
 
     public function saveSkillRating(Request $request)
@@ -92,7 +93,7 @@ class SkillRaitngController extends Controller
             $this->putSkillRating($skillRatingData);
         }
 
-        return response()->json($data);
+        return $this->respond($data);
     }
 
     private function putSkillRating(array $skillRatingData)
@@ -106,6 +107,6 @@ class SkillRaitngController extends Controller
         // Validar y actualizar los datos del SkillRating
         $skillRating->update($skillRatingData);
 
-        return response()->json($skillRating);
+        return $this->respond($skillRating);
     }
 }

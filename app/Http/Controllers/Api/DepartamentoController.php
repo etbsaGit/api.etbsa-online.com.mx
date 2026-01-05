@@ -19,28 +19,28 @@ class DepartamentoController extends ApiController
 
     public function all()
     {
-        return response()->json(Departamento::get());
+        return $this->respond(Departamento::get());
     }
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Departamento::create($request->validated()));
+        return $this->respond(Departamento::create($request->validated()));
     }
 
     public function show(Departamento $departamento)
     {
-        return response()->json($departamento);
+        return $this->respond($departamento);
     }
 
     public function update(PutRequest $request, Departamento $departamento)
     {
         $departamento->update($request->validated());
-        return response()->json($departamento);
+        return $this->respond($departamento);
     }
 
     public function destroy(Departamento $departamento)
     {
         $departamento->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 }

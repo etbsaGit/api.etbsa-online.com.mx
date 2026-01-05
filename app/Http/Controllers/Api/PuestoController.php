@@ -26,24 +26,24 @@ class PuestoController extends ApiController
 
     public function store(StoreRequest $request)
     {
-        return response()->json(Puesto::create($request->validated()));
+        return $this->respond(Puesto::create($request->validated()));
     }
 
     public function show(Puesto $puesto)
     {
-        return response()->json($puesto);
+        return $this->respond($puesto);
     }
 
     public function update(PutRequest $request, Puesto $puesto)
     {
         $puesto->update($request->validated());
-        return response()->json($puesto);
+        return $this->respond($puesto);
     }
 
     public function destroy(Puesto $puesto)
     {
         $puesto->delete();
-        return response()->json("ok");
+        return $this->respond("ok");
     }
 
     public function export(Request $request)
@@ -58,7 +58,7 @@ class PuestoController extends ApiController
 
         // Verificar si no hay datos para exportar
         if ($data->isEmpty()) {
-            return response()->json(['error' => 'No hay datos para exportar.']);
+            return $this->respond(['error' => 'No hay datos para exportar.']);
         }
 
         // Exportar el archivo en formato XLSX con los filtros aplicados
@@ -68,7 +68,7 @@ class PuestoController extends ApiController
         $base64 = base64_encode($fileContent);
 
         // Devolver la respuesta con el archivo en Base64
-        return response()->json([
+        return $this->respond([
             'file_name' => 'puestos.xlsx',
             'file_base64' => $base64,
         ]);

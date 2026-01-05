@@ -17,7 +17,7 @@ class BrandController extends ApiController
      */
     public function index()
     {
-        return response()->json(Brand::all());
+        return $this->respond(Brand::all());
     }
 
     /**
@@ -33,7 +33,7 @@ class BrandController extends ApiController
             $updateData = ['logo' => $relativePath];
             $brand->update($updateData);
         }
-        return response()->json($brand);
+        return $this->respond($brand);
     }
 
     /**
@@ -61,7 +61,7 @@ class BrandController extends ApiController
             $brand->update($updateData);
         }
 
-        return response()->json($brand);
+        return $this->respond($brand);
     }
 
     /**

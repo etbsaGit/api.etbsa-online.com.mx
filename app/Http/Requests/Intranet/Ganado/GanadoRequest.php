@@ -36,7 +36,7 @@ class GanadoRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
-        throw new HttpResponseException(response()->json([
+        throw new HttpResponseException($this->respond([
             'success' => false,
             'message' => 'Errores de validación',
             'errors'  => $validator->errors()

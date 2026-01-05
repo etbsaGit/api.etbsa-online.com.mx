@@ -21,7 +21,7 @@ class ActivityController extends ApiController
     public function index()
     {
         $activities = Activity::with('event')->get();
-        return response()->json($activities);
+        return $this->respond($activities);
     }
 
     /**
@@ -30,7 +30,7 @@ class ActivityController extends ApiController
     public function store(StoreActivityRequest $request)
     {
         $activity = Activity::create($request->validated());
-        return response()->json($activity);
+        return $this->respond($activity);
     }
 
     /**
@@ -38,7 +38,7 @@ class ActivityController extends ApiController
      */
     public function show(Activity $activity)
     {
-        return response()->json($activity->load('event'));
+        return $this->respond($activity->load('event'));
     }
 
     /**
@@ -61,7 +61,7 @@ class ActivityController extends ApiController
 
             // Puedes agregar lógica adicional aquí después de enviar el correo si es necesario
         }
-        return response()->json($activity);
+        return $this->respond($activity);
     }
 
     /**
@@ -70,7 +70,7 @@ class ActivityController extends ApiController
     public function destroy(Activity $activity)
     {
         $activity->forceDelete();
-        return response()->json('ok');
+        return $this->respond('ok');
     }
 
     public function showPerEvent(Event $event)
@@ -95,7 +95,7 @@ class ActivityController extends ApiController
             'activities' => $activities
         ];
 
-        return response()->json($data);
+        return $this->respond($data);
     }
 
     public function getEmployees(Event $event)
