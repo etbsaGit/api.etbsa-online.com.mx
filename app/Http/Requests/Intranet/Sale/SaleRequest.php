@@ -2,88 +2,58 @@
 
 namespace App\Http\Requests\Intranet\Sale;
 
-use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
-class PutSaleRequest extends FormRequest
+class SaleRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
+        // Si es PUT/PATCH habrá route('sale'), si es POST normalmente no.
+        $sale = $this->route('sale');          // puede ser null
+        $saleId = $sale?->id;                  // null en POST, id en PUT/PATCH
+
+        // Helper para armar el unique con cancellation = 0 y con ignore sólo si hay id
+        $uniqueNotCancelled = function () use ($saleId) {
+            $rule = Rule::unique('sales')->where(fn ($query) => $query->where('cancellation', 0));
+
+            if ($saleId) {
+                $rule->ignore($saleId);
+            }
+
+            return $rule;
+        };
+
         return [
             "amount" => ['nullable', 'numeric'],
             "comments" => ['nullable', 'string', 'max:255'],
-            "serial" => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('sales')->where(function ($query) {
-                    return $query->where('cancellation', 0);
-                })->ignore($this->route("sale")->id)
-            ],
-            "invoice" => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('sales')->where(function ($query) {
-                    return $query->where('cancellation', 0);
-                })->ignore($this->route("sale")->id)
-            ],
-            "order" => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('sales')->where(function ($query) {
-                    return $query->where('cancellation', 0);
-                })->ignore($this->route("sale")->id)
-            ],
-            "folio" => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('sales')->where(function ($query) {
-                    return $query->where('cancellation', 0);
-                })->ignore($this->route("sale")->id)
-            ],
-            "economic" => [
-                'nullable',
-                'string',
-                Rule::unique('sales')->where(function ($query) {
-                    return $query->where('cancellation', 0);
-                })->ignore($this->route("sale")->id)
-            ],
+
+            "serial" => ['nullable', 'string', 'max:255', $uniqueNotCancelled()],
+            "invoice" => ['nullable', 'string', 'max:255', $uniqueNotCancelled()],
+            "order" => ['nullable', 'string', 'max:255', $uniqueNotCancelled()],
+            "folio" => ['nullable', 'string', 'max:255', $uniqueNotCancelled()],
+            "economic" => ['nullable', 'string', $uniqueNotCancelled()],
+
             'validated' => ['nullable', 'boolean'],
             "feedback" => ['nullable', 'string', 'max:255'],
             'date' => ['nullable', 'date'],
+
             'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
             'status_id' => ['required', 'integer', 'exists:estatus,id'],
             'referencia_id' => ['nullable', 'integer', 'exists:referencias,id'],
             'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
             'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
+
             'cancellation_date' => ['nullable', 'date'],
-            "cancellation_folio" => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('sales')->where(function ($query) {
-                    return $query->where('cancellation', 0);
-                })->ignore($this->route("sale")->id)
-            ],
+            "cancellation_folio" => ['nullable', 'string', 'max:255', $uniqueNotCancelled()],
+
             'cancellation' => ['required', 'boolean'],
         ];
     }
@@ -109,7 +79,7 @@ class PutSaleRequest extends FormRequest
             'empleado_id.required' => 'El campo empleado es obligatorio.',
             'empleado_id.exists' => 'El empleado seleccionado no es válido.',
             'sucursal_id.required' => 'El campo sucursal es obligatorio.',
-            'sucursal_id.exists' => 'La sucursal seleccionada no es válida.',
+            'sucursal_id.exists' => 'El campo sucursal seleccionado no es válido.',
             'cancellation_date.date' => 'El campo fecha de cancelación debe ser una fecha válida.',
             'cancellation_folio.unique' => 'El folio de cancelación ya está en uso.',
             'cancellation.required' => 'El campo cancelación es obligatorio.',
@@ -117,11 +87,12 @@ class PutSaleRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    protected function failedValidation(Validator $validator)
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }

@@ -79,7 +79,7 @@ class UserController extends ApiController
             ]);
         }
 
-        return $this->respond("Usuario y/o contraseña inválido", 401);
+        return $this->respondError("Usuario y/o contraseña inválido", 403);
     }
 
 
@@ -97,10 +97,10 @@ class UserController extends ApiController
             $user->two_factor_code !== $request->two_factor_code ||
             now()->gt($user->two_factor_expires_at)
         ) {
-            return $this->respond([
-                'status' => false,
-                'message' => 'Código incorrecto o expirado'
-            ], 401);
+            return $this->respondError(
+                'Código incorrecto o expirado',
+                403
+            );
         }
 
         // Limpiar el código 2FA

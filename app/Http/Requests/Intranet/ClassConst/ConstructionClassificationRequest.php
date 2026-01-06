@@ -44,7 +44,7 @@ class ConstructionClassificationRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
-        throw new HttpResponseException($this->respond([
+        throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Errores de validación',
             'errors'  => $validator->errors()

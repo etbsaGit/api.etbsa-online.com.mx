@@ -10,8 +10,7 @@ use App\Models\Intranet\Sale;
 use App\Models\Intranet\Cliente;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Intranet\Sale\PutSaleRequest;
-use App\Http\Requests\Intranet\Sale\StoreSaleRequest;
+use App\Http\Requests\Intranet\Sale\SaleRequest;
 use App\Http\Requests\Intranet\Sale\StoreValidatedSaleRequest;
 
 class SaleController extends ApiController
@@ -47,14 +46,14 @@ class SaleController extends ApiController
             ->orderBy('date', 'desc') // Ordenar por 'date' de forma descendente
             ->paginate(10);
 
-        return $this->respond($sales);
+        return $this->respond($sales, 'Listado de pedidos cargado correctamente');
     }
 
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSaleRequest $request)
+    public function store(SaleRequest $request)
     {
         $data = $request->validated();
 
@@ -69,7 +68,7 @@ class SaleController extends ApiController
         // asociar si no existe
         $empleado->clientes()->syncWithoutDetaching([$clienteId]);
 
-        return $this->respondCreated($sale);
+        return $this->respondCreated($sale, 'Pedido registrado correctamente');
     }
 
     /**
@@ -77,16 +76,16 @@ class SaleController extends ApiController
      */
     public function show(Sale $sale)
     {
-        return $this->respond($sale);
+        return $this->respond($sale, 'Detalle del pedido');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(PutSaleRequest $request, Sale $sale)
+    public function update(SaleRequest $request, Sale $sale)
     {
         $sale->update($request->validated());
-        return $this->respond($sale);
+        return $this->respond($sale, 'Pedido actualizado correctamente');
     }
 
     /**
@@ -95,7 +94,9 @@ class SaleController extends ApiController
     public function destroy(Sale $sale)
     {
         $sale->delete();
-        return $this->respondSuccess();
+        return $this->respondSuccess(
+            'Pedido eliminado correctamente'
+        );
     }
 
     public function getOptions()
@@ -120,7 +121,7 @@ class SaleController extends ApiController
             ->orderBy('date', 'desc')
             ->get();
 
-        return $this->respond($sales);
+        return $this->respond($sales, 'Listado de pedidos sin validar cargados correctamente');
     }
 
     public function postValidate(StoreValidatedSaleRequest $request)
@@ -142,6 +143,6 @@ class SaleController extends ApiController
             }
         }
 
-        return $this->respondSuccess();
+        return $this->respondSuccess('Pedidos validados correctamente');
     }
 }
