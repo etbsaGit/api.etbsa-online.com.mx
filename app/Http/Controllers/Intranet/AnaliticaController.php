@@ -423,10 +423,10 @@ class AnaliticaController extends ApiController
         // Si $this->respond() devuelve un JsonResponse, extraemos los datos
         $data = method_exists($response, 'getData') ? (array) $response->getData(true) : $response;
 
-        //return $this->respond($data);
+        //return $this->respond($data['data']);
 
         // 🔹 Generamos el PDF desde la vista Blade
-        $pdf = Pdf::loadView('pdf.analitica.analitica', $data);
+        $pdf = Pdf::loadView('pdf.analitica.analitica', $data['data']);
 
         // Descargar el PDF generado comentar para produccion se utiliza para postman
         // return $pdf->download('document.pdf');
