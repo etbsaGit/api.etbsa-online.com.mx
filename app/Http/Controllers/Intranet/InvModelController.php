@@ -105,7 +105,7 @@ class InvModelController extends ApiController
     public function getForms()
     {
         $data = [
-            'invCategories' => InvCategory::with('invGroup', 'status')
+            'invCategories' => InvCategory::with('invGroup')
                 ->orderBy('name')
                 ->get(),
         ];

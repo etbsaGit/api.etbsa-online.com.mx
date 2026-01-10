@@ -114,12 +114,6 @@ class Estatus extends Model
         return $this->hasMany(Service::class, 'estatus_id');
     }
 
-    // ---------------------------------invCategories---------------------------------------------------------
-    public function invCategories()
-    {
-        return $this->hasMany(InvCategory::class, 'estatus_id');
-    }
-
     // ---------------------------------Finca---------------------------------------------------------
     public function fincas()
     {

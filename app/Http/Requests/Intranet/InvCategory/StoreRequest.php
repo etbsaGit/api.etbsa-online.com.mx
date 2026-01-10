@@ -31,11 +31,9 @@ class StoreRequest extends FormRequest
                 'string',
                 'max:191',
                 Rule::unique('inv_categories')
-                    ->where('status_id', $this->status_id)
                     ->where('inv_group_id', $this->inv_group_id),
             ],
             'description' => ['nullable', 'string', 'max:191'],
-            'status_id' => ['required', 'integer', 'exists:estatus,id'],
             'inv_group_id' => ['required', 'integer', 'exists:inv_groups,id'],
         ];
     }

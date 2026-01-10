@@ -18,7 +18,7 @@ class InvCategoryController extends ApiController
     public function index(Request $request)
     {
         $filters = $request->all();
-        $invCategories = InvCategory::filter($filters)->with('status','invGroup')->paginate(10);
+        $invCategories = InvCategory::filter($filters)->with('invGroup')->paginate(10);
         return $this->respond($invCategories);
     }
 
@@ -61,9 +61,6 @@ public function getForms()
 {
     $data = [
         'invGroups' => InvGroup::orderBy('name')->get(),
-        'estatus' => Estatus::where('tipo_estatus', 'inv_category')
-            ->orderBy('nombre')
-            ->get(),
     ];
 
     return $this->respond($data);
