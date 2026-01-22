@@ -39,4 +39,9 @@ class TipoEquipo extends Model
     {
         return $this->hasMany(Used::class, 'tipo_equipo_id');
     }
+
+    public function invItems()
+    {
+        return $this->hasMany(InvItem::class, 'tipo_equipo_id');
+    }
 }

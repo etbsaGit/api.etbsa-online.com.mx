@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Intranet;
 
 use Illuminate\Http\Request;
 use App\Traits\UploadableFile;
+use App\Models\Intranet\InvGroup;
 use App\Models\Intranet\InvModel;
 use App\Http\Controllers\Controller;
 use App\Models\Intranet\InvCategory;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\Intranet\InvModel\StoreRequest;
 use App\Models\Intranet\InvConfiguration;
+use App\Exports\ModelsGroupedReportExport;
+use App\Http\Requests\Intranet\InvModel\StoreRequest;
 
 class InvModelController extends ApiController
 {
@@ -128,5 +131,20 @@ class InvModelController extends ApiController
         ];
 
         return $this->respond($data);
+    }
+
+    public function getAllExport()
+    {
+        // Genera el archivo en memoria (string binario)
+        $excelBinary = Excel::raw(new ModelsGroupedReportExport(), \Maatwebsite\Excel\Excel::XLSX);
+
+        // Convertir a base64
+        $base64 = base64_encode($excelBinary);
+
+        return $this->respond([
+            'file_name' => 'reporte_modelos.xlsx',
+            'file_type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'file_base64' => $base64,
+        ]);
     }
 }

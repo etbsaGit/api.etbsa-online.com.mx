@@ -13,6 +13,7 @@ use App\Http\Controllers\Intranet\TacticController;
 use App\Http\Controllers\Intranet\ClienteController;
 use App\Http\Controllers\Intranet\CultivoController;
 use App\Http\Controllers\Intranet\IngresoController;
+use App\Http\Controllers\Intranet\InvItemController;
 use App\Http\Controllers\Intranet\KinshipController;
 use App\Http\Controllers\Intranet\MachineController;
 use App\Http\Controllers\Intranet\FincaDocController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\Intranet\AnaliticaController;
 use App\Http\Controllers\Intranet\CondicionController;
 use App\Http\Controllers\Intranet\ClasEquipoController;
 use App\Http\Controllers\Intranet\IngresoDocController;
+use App\Http\Controllers\Intranet\InvFactoryController;
+use App\Http\Controllers\Intranet\InvItemDocController;
 use App\Http\Controllers\Intranet\ReferenciaController;
 use App\Http\Controllers\Intranet\TipoEquipoController;
 use App\Http\Controllers\Intranet\ClientesDocController;
@@ -192,6 +195,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('ingresoDoc', IngresoDocController::class);
 
     // 🔹 InvGroup
+    Route::post('invFactories', [InvFactoryController::class, 'index']);
+    Route::apiResource('invFactory', InvFactoryController::class);
+
+    // 🔹 InvGroup
     Route::post('invGroups', [InvGroupController::class, 'index']);
     Route::apiResource('invGroup', InvGroupController::class);
 
@@ -205,9 +212,19 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('invConfiguration/forms', [InvConfigurationController::class, 'getForms']);
     Route::apiResource('invConfiguration', InvConfigurationController::class);
 
+    // 🔹 InvItem
+    Route::post('invItems', [InvItemController::class, 'index']);
+    Route::get('invItem/invModel/{invModel}', [InvItemController::class, 'getModels']);
+    Route::get('invItem/forms', [InvItemController::class, 'getForms']);
+    Route::apiResource('invItem', InvItemController::class);
+
+    // 🔹 InvItemDoc
+    Route::apiResource('invItemDoc', InvItemDocController::class);
+
     // 🔹 InvModel
     Route::post('invModels', [InvModelController::class, 'index']);
     Route::get('invModel/category', [InvModelController::class, 'getForms']);
+    Route::get('invModel/report', [InvModelController::class, 'getAllExport']);
     Route::get('invModel/configurations/{invCategory}', [InvModelController::class, 'perCategory']);
     Route::apiResource('invModel', InvModelController::class);
 

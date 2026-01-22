@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Intranet\Cliente;
 
-use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreClienteRequest extends FormRequest
 {
@@ -47,11 +47,12 @@ class StoreClienteRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    protected function failedValidation(Validator $validator)
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }

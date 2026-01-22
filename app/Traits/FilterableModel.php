@@ -155,4 +155,25 @@ trait FilterableModel
 
         return $query;
     }
+
+    public function scopeFilterSearchItem(Builder $query, array $filters, array $searchColumns = [])
+    {
+        foreach ($filters as $key => $value) {
+            if ($key !== 'page') {
+                if ($key === 'search' && !empty($searchColumns) && $value !== null) {
+                    $query->where(function ($query) use ($value, $searchColumns) {
+                        foreach ($searchColumns as $column) {
+                            $query->orWhere($column, 'LIKE', '%' . $value . '%');
+                        }
+                    });
+                } elseif ($key === 'shipping_status' && $value === null) {
+                    $query->whereNull('shipping_status');
+                } elseif ($value !== null) {
+                    $query->where($key, $value);
+                }
+            }
+        }
+
+        return $query;
+    }
 }

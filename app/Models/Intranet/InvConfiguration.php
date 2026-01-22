@@ -34,4 +34,9 @@ class InvConfiguration extends Model
     {
         return $this->belongsToMany(InvModel::class);
     }
+
+    public function invItems()
+    {
+        return $this->belongsToMany(InvItem::class);
+    }
 }
