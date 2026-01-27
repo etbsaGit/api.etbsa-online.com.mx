@@ -18,8 +18,7 @@ use App\Http\Controllers\ApiController;
 use App\Models\Intranet\Classification;
 use App\Models\Intranet\TechnologicalCapability;
 use App\Models\Intranet\ConstructionClassification;
-use App\Http\Requests\Intranet\Cliente\PutClienteRequest;
-use App\Http\Requests\Intranet\Cliente\StoreClienteRequest;
+use App\Http\Requests\Intranet\Cliente\ClienteRequest;
 
 class ClienteController extends ApiController
 {
@@ -42,14 +41,17 @@ class ClienteController extends ApiController
             ->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification', 'empleados')
             ->paginate(10);
 
-        return $this->respond($clientes);
+        return $this->respond(
+            $clientes,
+            'Clientes cargados con exito'
+        );
     }
 
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreClienteRequest $request)
+    public function store(ClienteRequest $request)
     {
         $user = auth()->user();
 
@@ -62,7 +64,10 @@ class ClienteController extends ApiController
             $cliente->empleados()->syncWithoutDetaching($user->empleado->id);
         }
 
-        return $this->respondCreated($cliente);
+        return $this->respondCreated(
+            $cliente,
+            'Cliente registrado con exito'
+        );
     }
 
     /**
@@ -70,13 +75,13 @@ class ClienteController extends ApiController
      */
     public function show(Cliente $cliente)
     {
-        return $this->respond($cliente);
+        return $this->respond($cliente, 'Detalle del cliente');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(PutClienteRequest $request, Cliente $cliente)
+    public function update(ClienteRequest $request, Cliente $cliente)
     {
         $user = auth()->user();
 
@@ -89,7 +94,10 @@ class ClienteController extends ApiController
             $cliente->empleados()->syncWithoutDetaching($user->empleado->id);
         }
 
-        return $this->respond($cliente);
+        return $this->respond(
+            $cliente,
+            'Cliente Actualizado con exito'
+        );
     }
 
 
@@ -99,7 +107,7 @@ class ClienteController extends ApiController
     public function destroy(Cliente $cliente)
     {
         $cliente->delete();
-        return $this->respondSuccess();
+        return $this->respondSuccess('Cliente eliminado con exito');
     }
 
     public function getOptions()
@@ -128,7 +136,7 @@ class ClienteController extends ApiController
         // Importar el archivo .xlsx usando el importador
         Excel::import(new ClientesImport, $file);
 
-        return $this->respond("Clientes importados con exito");
+        return $this->respondSuccess("Clientes importados con exito");
     }
 
     // ClienteController.php

@@ -17,6 +17,16 @@ class InvItemRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $value = preg_replace('/[^\d.]/', '', $this->purchase_cost);
+
+        $this->merge([
+            'purchase_cost' => $value,
+        ]);
+    }
+
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -34,7 +44,7 @@ class InvItemRequest extends FormRequest
             's_n' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 's_n')->ignore($item?->id),],
             's_n_m' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 's_n_m')->ignore($item?->id),],
             'e_n' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 'e_n')->ignore($item?->id),],
-            'financing' => ['nullable', 'string', 'max:255'],
+            'financing' => ['nullable', 'integer'],
             'invoice_date' => ['nullable', 'date'],
             'purchase_cost' => ['nullable', 'numeric', 'min:0'],
             'is_paid' => ['nullable', 'boolean'],
