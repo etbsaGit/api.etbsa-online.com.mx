@@ -41,7 +41,7 @@ class InvItemRequest extends FormRequest
             'gps' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
             'inv_model_id' => ['nullable', 'integer', 'exists:inv_models,id',],
-            'tipo_equipo_id' => ['nullable', 'integer', 'exists:tipos_equipo,id',],
+            'sucursal_id' => ['required', 'integer', 'exists:sucursales,id',],
             'inv_configurations' => ['present', 'array'],
             'inv_configurations.*' => ['integer', 'exists:inv_configurations,id'],
         ];
@@ -75,7 +75,9 @@ class InvItemRequest extends FormRequest
             'gps.boolean' => 'El campo GPS debe ser verdadero o falso.',
 
             'inv_model_id.exists' => 'El modelo seleccionado no existe.',
-            'tipo_equipo_id.exists' => 'El tipo de equipo seleccionado no existe.',
+            'sucursal_id.exists' => 'La sucursal seleccionada no existe.',
+            'sucursal_id.required' => 'La sucursal es obligatoria.',
+
         ];
     }
 

@@ -18,7 +18,9 @@ class InvModel extends Model
         'name',
         'description',
         'price',
-        'path'
+        'path',
+        'tipo_equipo_id',
+        'clas_equipo_id',
     ];
 
     protected $appends = ['realpath'];
@@ -40,6 +42,16 @@ class InvModel extends Model
     public function scopeFilter(Builder $query, array $filters)
     {
         return $this->scopeFilterSearch($query, $filters, ['code', 'name', 'description', 'price',]);
+    }
+
+    public function tipoEquipo()
+    {
+        return $this->belongsTo(TipoEquipo::class, 'tipo_equipo_id');
+    }
+
+    public function clasEquipo()
+    {
+        return $this->belongsTo(ClasEquipo::class, 'clas_equipo_id');
     }
 
     public function invConfigurations()

@@ -40,8 +40,8 @@ class TipoEquipo extends Model
         return $this->hasMany(Used::class, 'tipo_equipo_id');
     }
 
-    public function invItems()
+    public function invModels()
     {
-        return $this->hasMany(InvItem::class, 'tipo_equipo_id');
+        return $this->hasMany(InvModel::class, 'tipo_equipo_id');
     }
 }

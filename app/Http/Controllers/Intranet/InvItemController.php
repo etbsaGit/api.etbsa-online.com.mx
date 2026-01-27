@@ -12,6 +12,7 @@ use App\Models\Intranet\TipoEquipo;
 use App\Models\Intranet\InvCategory;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\InvItem\InvItemRequest;
+use App\Models\Sucursal;
 
 class InvItemController extends ApiController
 {
@@ -23,7 +24,7 @@ class InvItemController extends ApiController
     public function index(Request $request)
     {
         $filters = $request->all();
-        $invItems = InvItem::filter($filters)->with('invModel', 'tipoEquipo', 'invConfigurations', 'invItemDocs')->paginate(10);
+        $invItems = InvItem::filter($filters)->with('invModel', 'invConfigurations', 'invItemDocs')->paginate(10);
         return $this->respond(
             $invItems,
             'Inventario cargado correctamente'
@@ -120,12 +121,12 @@ class InvItemController extends ApiController
 
     public function getForms()
     {
-        $tiposEquipo = TipoEquipo::all();
         $invModels = InvModel::all();
         $invFactories = InvFactory::all();
+        $sucursales = Sucursal::all();
 
         return $this->respond([
-            'tiposEquipo' => $tiposEquipo,
+            'sucursales' => $sucursales,
             'invModels' => $invModels,
             'invFactories' => $invFactories,
         ]);
@@ -133,13 +134,23 @@ class InvItemController extends ApiController
 
     public function getModels(InvModel $invModel)
     {
-
-        $invCategories = InvCategory::with(['invConfigurations' => function ($q) use ($invModel) {
-            $q->whereRelation('invModels', 'inv_models.id', $invModel->id);
-        }])
+        $invCategories = InvCategory::query()
+            ->with([
+                'invConfigurations' => function ($q) use ($invModel) {
+                    $q->whereRelation('invModels', 'inv_models.id', $invModel->id)
+                        ->orderBy('code', 'asc'); // (1) configs ordenadas
+                }
+            ])
             ->whereHas('invConfigurations.invModels', function ($q) use ($invModel) {
                 $q->where('inv_models.id', $invModel->id);
             })
+            ->withMin(
+                ['invConfigurations as min_code' => function ($q) use ($invModel) {
+                    $q->whereRelation('invModels', 'inv_models.id', $invModel->id);
+                }],
+                'code'
+            ) // (2) calcula el mínimo code por categoría, filtrado por modelo
+            ->orderBy('min_code', 'asc') // (3) ordena categorías por ese mínimo
             ->get();
 
         return $this->respond([

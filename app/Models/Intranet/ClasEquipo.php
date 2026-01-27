@@ -33,4 +33,9 @@ class ClasEquipo extends Model
     {
         return $this->hasMany(ProspectMaquina::class, 'clas_equipo_id');
     }
+
+    public function invModels()
+    {
+        return $this->hasMany(InvModel::class, 'clas_equipo_id');
+    }
 }

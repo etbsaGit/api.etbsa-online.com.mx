@@ -2,6 +2,7 @@
 
 namespace App\Models\Intranet;
 
+use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -28,7 +29,7 @@ class InvItem extends Model
         'gps',
         'notes',
         'inv_model_id',
-        'tipo_equipo_id',
+        'sucursal_id',
     ];
 
     protected static function boot()
@@ -61,9 +62,9 @@ class InvItem extends Model
         return $this->belongsTo(InvModel::class, 'inv_model_id');
     }
 
-    public function tipoEquipo()
+    public function sucursal()
     {
-        return $this->belongsTo(TipoEquipo::class, 'tipo_equipo_id');
+        return $this->belongsTo(Sucursal::class, 'sucursal_id');
     }
 
     public function invConfigurations()
@@ -71,7 +72,7 @@ class InvItem extends Model
         return $this->belongsToMany(InvConfiguration::class);
     }
 
-        public function invItemDocs()
+    public function invItemDocs()
     {
         return $this->hasMany(InvItemDoc::class, 'inv_item_id');
     }

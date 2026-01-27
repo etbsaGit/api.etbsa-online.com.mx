@@ -7,6 +7,7 @@ use App\Models\Caja\CajaPago;
 use App\Models\Intranet\Sale;
 use App\Models\Caja\CajaCorte;
 use App\Models\Caja\CajaCuenta;
+use App\Models\Intranet\InvItem;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -136,5 +137,11 @@ class Sucursal extends Model
     public function permisos()
     {
         return $this->hasMany(SalidaPermiso::class, 'sucursal_id');
+    }
+
+    // ---------------------------------invItems---------------------------------------------------------
+    public function invItems()
+    {
+        return $this->hasMany(InvItem::class, 'sucursal_id');
     }
 }

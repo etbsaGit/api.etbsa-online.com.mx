@@ -13,7 +13,9 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Intranet\InvConfiguration;
 use App\Exports\ModelsGroupedReportExport;
-use App\Http\Requests\Intranet\InvModel\StoreRequest;
+use App\Http\Requests\Intranet\InvModel\InvModelRequest;
+use App\Models\Intranet\ClasEquipo;
+use App\Models\Intranet\TipoEquipo;
 
 class InvModelController extends ApiController
 {
@@ -24,14 +26,14 @@ class InvModelController extends ApiController
     public function index(Request $request)
     {
         $filters = $request->all();
-        $invModels = InvModel::filter($filters)->with('invConfigurations.invCategory')->paginate(10);
+        $invModels = InvModel::filter($filters)->with('invConfigurations.invCategory', 'tipoEquipo', 'clasEquipo')->paginate(10);
         return $this->respond($invModels);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreRequest $request)
+    public function store(InvModelRequest $request)
     {
         $data = $request->validated();
 
@@ -62,7 +64,7 @@ class InvModelController extends ApiController
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreRequest $request, InvModel $invModel)
+    public function update(InvModelRequest $request, InvModel $invModel)
     {
         $data = $request->validated();
 
@@ -108,6 +110,8 @@ class InvModelController extends ApiController
     public function getForms()
     {
         $data = [
+            'tiposEquipo' => TipoEquipo::all(),
+            'clasEquipos' => ClasEquipo::all(),
             'invCategories' => InvCategory::with('invGroup')
                 ->orderBy('name')
                 ->get(),
