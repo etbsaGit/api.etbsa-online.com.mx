@@ -19,13 +19,21 @@ class InvItemRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        $value = preg_replace('/[^\d.]/', '', $this->purchase_cost);
+        $raw = $this->purchase_cost;
+
+        if (is_null($raw) || trim($raw) === '') {
+            $this->merge([
+                'purchase_cost' => null,
+            ]);
+            return;
+        }
+
+        $value = preg_replace('/[^\d.]/', '', $raw);
 
         $this->merge([
             'purchase_cost' => $value,
         ]);
     }
-
 
     /**
      * Get the validation rules that apply to the request.
@@ -48,6 +56,7 @@ class InvItemRequest extends FormRequest
             'invoice_date' => ['nullable', 'date'],
             'purchase_cost' => ['nullable', 'numeric', 'min:0'],
             'is_paid' => ['nullable', 'boolean'],
+            'paid_date' => ['nullable', 'date'],
             'gps' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
             'inv_model_id' => ['nullable', 'integer', 'exists:inv_models,id',],

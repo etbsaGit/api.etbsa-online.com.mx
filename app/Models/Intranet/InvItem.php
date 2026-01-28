@@ -26,6 +26,7 @@ class InvItem extends Model
         'invoice_date',
         'purchase_cost',
         'is_paid',
+        'paid_date',
         'gps',
         'notes',
         'inv_model_id',

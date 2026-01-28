@@ -24,7 +24,7 @@ class InvItemController extends ApiController
     public function index(Request $request)
     {
         $filters = $request->all();
-        $invItems = InvItem::filter($filters)->with('invModel', 'invConfigurations', 'invItemDocs')->paginate(10);
+        $invItems = InvItem::filter($filters)->with('invModel', 'invConfigurations', 'invItemDocs', 'sucursal')->paginate(10);
         return $this->respond(
             $invItems,
             'Inventario cargado correctamente'
