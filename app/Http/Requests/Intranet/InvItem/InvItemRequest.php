@@ -48,7 +48,7 @@ class InvItemRequest extends FormRequest
             'rd' => ['required', 'string', 'max:255', Rule::unique('inv_items', 'rd')->ignore($item?->id)],
             'shipping_date' => ['required', 'date'],
             'shipping_status' => ['nullable', 'boolean'],
-            'invoice' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 'invoice')->ignore($item?->id)],
+            'invoice' => ['nullable', 'string', 'max:255'],
             's_n' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 's_n')->ignore($item?->id),],
             's_n_m' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 's_n_m')->ignore($item?->id),],
             'e_n' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 'e_n')->ignore($item?->id),],
@@ -69,6 +69,7 @@ class InvItemRequest extends FormRequest
     public function messages(): array
     {
         return [
+
             'inv_factory_id.exists' => 'El proveedor seleccionado no existe.',
 
             'rd.required' => 'El RD es obligatorio.',
