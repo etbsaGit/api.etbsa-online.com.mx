@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Activity\PutActivityRequest;
 use App\Http\Requests\Activity\StoreActivityRequest;
-
+#comentario prueba
 class ActivityController extends ApiController
 {
     /**
