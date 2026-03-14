@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('comments')->nullable();
             $table->decimal('pago_periodo',10,2)->nullable();
             $table->date('fecha_primer_pago')->nullable();
-            $table->string('status')->nullable();
+            $table->unsignedBigInteger('estatus_id')->nullable();
+            $table->foreign('estatus_id')->references('id')->on('estatus')->onDelete('restrict');
             $table->timestamps();
         });
     }

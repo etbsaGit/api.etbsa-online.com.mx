@@ -19,9 +19,10 @@ return new class extends Migration
             $table->decimal('monto_pago', 10, 2);
             $table->date('fecha_pago')->nullable();
             $table->string('comments')->nullable();
-            $table->string('status')->nullable();
             $table->unsignedBigInteger('metodo_pago_id');
             $table->foreign('metodo_pago_id')->references('id')->on('caja_tipos_pagos')->onDelete('restrict');
+            $table->unsignedBigInteger('estatus_id')->nullable();
+            $table->foreign('estatus_id')->references('id')->on('estatus')->onDelete('restrict');
 
             $table->timestamps();
         });

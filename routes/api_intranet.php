@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Intranet\SaleController;
+use App\Http\Controllers\Intranet\SaleTractorController;
 use App\Http\Controllers\Intranet\TownController;
 use App\Http\Controllers\Intranet\FincaController;
 use App\Http\Controllers\Intranet\MarcaController;
@@ -270,6 +271,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('sale/validated', [SaleController::class, 'getForValidate']);
     Route::post('sale/post/validated', [SaleController::class, 'postValidate']);
     Route::apiResource('sale', SaleController::class);
+
+    // 🔹 Sale Tractor
+    Route::get('sales-tractors', [SaleTractorController::class, 'index']);
+    Route::apiResource('sales-tractors', SaleTractorController::class);
 
     // 🔹 Segmentation
     Route::post('segmentations', [SegmentationController::class, 'index']);

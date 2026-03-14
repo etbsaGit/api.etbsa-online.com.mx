@@ -24,9 +24,12 @@ return new class extends Migration
             $table->foreign('inv_model_id')->references('id')->on('inv_models')->onDelete('restrict');
             $table->date('fecha');
             $table->decimal('total', 15, 2);
-            $table->string('condicion_pago');
+            $table->unsignedBigInteger('condicion_pago_id');
+            $table->foreign('condicion_pago_id')->references('id')->on('estatus');
             $table->unsignedBigInteger('referencia_cliente_id')->nullable();
             $table->foreign('referencia_cliente_id')->references('id')->on('referencias')->onDelete('set null');
+            $table->unsignedBigInteger('estatus_id')->nullable();
+            $table->foreign('estatus_id')->references('id')->on('estatus')->onDelete('restrict');
             $table->string('comments')->nullable();
 
             $table->timestamps();
