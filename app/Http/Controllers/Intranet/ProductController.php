@@ -6,6 +6,12 @@ use App\Http\Controllers\ApiController;
 use App\Models\intranet\Product;
 use Illuminate\Http\Request;
 use App\Http\Requests\Intranet\Products\ProductRequest;
+use App\Models\Intranet\Currency;
+use App\Models\Intranet\ProductBrand;
+use App\Models\Intranet\ProductCategory;
+use App\Models\Intranet\ProductSubCategory;
+use App\Models\Intranet\ProductSupplier;
+use App\Models\Sucursal;
 
 class ProductController extends ApiController
 {
@@ -58,7 +64,8 @@ class ProductController extends ApiController
             'subcategory',
             'currency',
             'agency',
-            'supplier'
+            'supplier',
+            'currency'
         ]);
 
         return $this->respond(
@@ -89,5 +96,17 @@ class ProductController extends ApiController
         return $this->respondSuccess(
             'Producto eliminado correctamente'
         );
+    }
+
+    // getOptions
+    public function getOptions(){
+        $data = [
+            'proveedores' => ProductSupplier::all(),
+            'sucursales' => Sucursal::all(),
+            'categorias' => ProductCategory::all(),
+            'subcategorias' => ProductSubCategory::all(),
+            'marcas' => ProductBrand::all(),
+        ];
+        return $this->respond($data);
     }
 }

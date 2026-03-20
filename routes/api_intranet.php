@@ -266,6 +266,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('product-brand', ProductBrandController::class);
     // Products
     Route::post('products',[ProductController::class,'index']);
+    Route::get('product/options',[ProductController::class,'getOptions']);
     Route::apiResource('product',ProductController::class);
 
     // 🔹 Referencia

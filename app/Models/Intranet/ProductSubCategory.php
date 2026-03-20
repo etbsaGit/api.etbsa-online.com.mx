@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductSubCategory extends Model
 {
@@ -31,15 +32,8 @@ class ProductSubCategory extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function scopeFilter($query, $filters)
+    public function scopeFilter(Builder $query, array $filters)
     {
-        if (isset($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
-        }
-        if(isset($filters['category'])){
-            $query->whereHas('category',function($q) use ($filters){
-                $q->where('name','like','%' . $filters['category']. '%');
-            });
-        }
+        return $this->scopeFilterSearch($query, $filters, ['name', 'category_id']);
     }
 }

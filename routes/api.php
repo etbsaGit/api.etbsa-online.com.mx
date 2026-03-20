@@ -56,7 +56,7 @@ use App\Http\Controllers\Api\ProspectRiegoController;
 use App\Http\Controllers\Api\QualificationController;
 use App\Http\Controllers\Api\RentalMachineController;
 use App\Http\Controllers\Api\SalidaPermisoController;
-use App\Http\Controllers\Ecommerce\ProductController;
+
 use App\Http\Controllers\Api\ServiceArchiveController;
 use App\Http\Controllers\Api\SoftSkillNivelController;
 use App\Http\Controllers\Api\TechniciansLogController;
@@ -251,18 +251,18 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('enviar-correo-verificacion', [UserController::class, 'enviarCorreoVerificacion']);
     Route::post('verificar-correo', [UserController::class, 'verificarCorreo']);
 
-    //--------------------landingPage/admin--------------------
-    Route::get('formProduct', [ProductController::class, 'formProduct']);
-    Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
-    Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
-    Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
-    Route::put('categorie/{category}', [CategoryController::class, 'update']);
-    Route::delete('categorie/{category}', [CategoryController::class, 'destroy']);
-    Route::apiResource('brand', BrandController::class);
-    Route::apiResource('vendor', VendorController::class);
-    Route::apiResource('categorie', CategoryController::class);
-    Route::apiResource('feature', FeaturesController::class);
-    Route::apiResource('product', ProductController::class);
+    // //--------------------landingPage/admin--------------------
+    // Route::get('formProduct', [ProductController::class, 'formProduct']);
+    // Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
+    // Route::put('product/featured/{product}', [ProductController::class, 'changeFeatured']);
+    // Route::delete('product/image/{productImage}', [ProductController::class, 'deleteImg']);
+    // Route::put('categorie/{category}', [CategoryController::class, 'update']);
+    // Route::delete('categorie/{category}', [CategoryController::class, 'destroy']);
+    // Route::apiResource('brand', BrandController::class);
+    // Route::apiResource('vendor', VendorController::class);
+    // Route::apiResource('categorie', CategoryController::class);
+    // Route::apiResource('feature', FeaturesController::class);
+    // Route::apiResource('product', ProductController::class);
 
     //--------------------Calendar--------------------
     Route::get('event/{day}', [EventController::class, 'getPerDay']);
@@ -458,16 +458,16 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('softSkillEmpleado', SoftSkillEmpleadoController::class);
 
 });
-//--------------------landingPage--------------------
-Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
-Route::get('page/product/all', [ProductController::class, 'getAll']);
-Route::post('page/product/get', [ProductController::class, 'getProducts']);
-Route::get('page/product/random/{limit}', [ProductController::class, 'getRandomFeaturedProducts']);
-Route::apiResource('page/brands', BrandController::class);
-Route::apiResource('page/vendors', VendorController::class);
-Route::apiResource('page/categories', CategoryController::class);
-Route::apiResource('page/features', FeaturesController::class);
-Route::apiResource('page/products', ProductController::class);
+// //--------------------landingPage--------------------
+// Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
+// Route::get('page/product/all', [ProductController::class, 'getAll']);
+// Route::post('page/product/get', [ProductController::class, 'getProducts']);
+// Route::get('page/product/random/{limit}', [ProductController::class, 'getRandomFeaturedProducts']);
+// Route::apiResource('page/brands', BrandController::class);
+// Route::apiResource('page/vendors', VendorController::class);
+// Route::apiResource('page/categories', CategoryController::class);
+// Route::apiResource('page/features', FeaturesController::class);
+// Route::apiResource('page/products', ProductController::class);
 
 //--------------------Sin inicio de sesion--------------------
 Route::post('documento/uploadFile/{documento}', [DocumentoController::class, 'uploadFile']);
