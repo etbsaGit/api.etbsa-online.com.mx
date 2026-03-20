@@ -37,10 +37,10 @@ class ProductCategoryController extends ApiController
     /**
      * Display the specified resource.
      */
-    public function show(ProductCategory $productCategoria)
+    public function show(ProductCategory $productCategorium)
     {
         return $this->respond(
-            $productCategoria,
+            $productCategorium,
             'Detalle de la categoría'
         );
     }
@@ -48,23 +48,23 @@ class ProductCategoryController extends ApiController
      /**
      * Update the specified resource in storage.
      */
-    public function update(ProductCategoryRequest $request, ProductCategory $productCategoria)
+    public function update(ProductCategoryRequest $request, ProductCategory $productCategorium)
     {
-        $productCategoria->update($request->validated());
+        $productCategorium->update($request->validated());
         return $this->respond(
-            $productCategoria,
-            'Proveedor actualizado correctamente'
+            $productCategorium,
+            'Categoría actualizado correctamente'
         );
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductCategory $productCategoria)
+    public function destroy(ProductCategory $productCategorium)
     {
-        $productCategoria->delete();
+        $productCategorium->delete();
         return $this->respondSuccess(
-            'Proveedor eliminado correctamente'
+            'Categoróa eliminado correctamente'
         );
     }
 }

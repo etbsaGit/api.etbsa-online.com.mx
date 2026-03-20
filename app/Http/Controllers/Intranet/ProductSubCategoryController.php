@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Models\Intranet\ProductSubCategory;
 use App\Http\Requests\Intranet\Products\ProductSubCategoryRequest;
+use App\Models\Intranet\ProductCategory;
 
 class ProductSubCategoryController extends ApiController
 {
@@ -17,7 +18,7 @@ class ProductSubCategoryController extends ApiController
         $filters = $request->all();
 
         return $this->respond(
-            ProductSubCategory::filter($filters)->paginate(10),
+            ProductSubCategory::filter($filters)->with('categoria')->paginate(10),
             'Lista de subgategorías cargada correctamente'
         );
     }
@@ -27,35 +28,43 @@ class ProductSubCategoryController extends ApiController
      */
     public function store(ProductSubCategoryRequest $request)
     {
-        $productSubcategoria = ProductSubCategory::create($request->validated());
+        $productSubcategorium = ProductSubCategory::create($request->validated());
         return $this->respondCreated(
-            $productSubcategoria,
+            $productSubcategorium,
             'Subcategoría registrada correctamente'
         );
     }
     /**
      * Display the specified resource.
      */
-    public function show(ProductSubCategory $productSubcategoria)
+    public function show(ProductSubCategory $productSubcategorium)
     {
         return $this->respond(
-            $productSubcategoria,
+            $productSubcategorium,
             'Detalle de la subcategoría'
         );
     }
     /**
      * Update the specified resource in storage.
      */
-    public function update(ProductSubCategoryRequest $request, ProductSubCategory $productSubcategoria)
+    public function update(ProductSubCategoryRequest $request, ProductSubCategory $productSubcategorium)
     {
-        $productSubcategoria->update($request->validated());
-        return $this->respond($productSubcategoria, 'Subcategoría actualizada correctamente');
+        $productSubcategorium->update($request->validated());
+        return $this->respond($productSubcategorium, 'Subcategoría actualizada correctamente');
     }
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductSubCategory $productSubcategoria){
-        $productSubcategoria->delete();
+    public function destroy(ProductSubCategory $productSubcategorium){
+        $productSubcategorium->delete();
         return $this->respondSuccess('Subcategoría eliminada correctamente');
+    }
+
+    // getOptions
+    public function getOptions(){
+        $data = [
+            'categorias' => ProductCategory::all(),
+        ];
+        return $this->respond($data);
     }
 }

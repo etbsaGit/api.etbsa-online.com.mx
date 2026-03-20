@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Intranet\Product;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 
 
 class ProductCategory extends Model
@@ -25,12 +26,13 @@ class ProductCategory extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function scopeFilter($query, $filters)
-    {
-        if (isset($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
-        }
+    public function subcategorias(){
+        return $this->hasMany(ProductSubCategory::class);
+    }
 
-        return $query;
+    //filtros
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        return $this->scopeFilterSearch($query,$filters,['name']);
     }
 }

@@ -255,11 +255,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('product-suppliers', [ProductSupplierController::class, 'index']);
     Route::apiResource('product-supplier', ProductSupplierController::class);
     //ProductCategory
-    Route::post('product-categorias', [ProductCategoryController::class, 'index']);
-    Route::apiResource('product-categoria', ProductCategoryController::class);
+    Route::post('product-categoriums', [ProductCategoryController::class, 'index']);
+    Route::apiResource('product-categorium', ProductCategoryController::class);
     //ProductSubCategory
-    Route::post('product-subcategorias', [ProductSubCategoryController::class, 'index']);
-    Route::apiResource('product-subcategoria', ProductSubCategoryController::class);
+    Route::post('product-subcategoriums', [ProductSubCategoryController::class, 'index']);
+    Route::get('product-subcategorium/options',[ProductSubCategoryController::class,'getOptions']);
+    Route::apiResource('product-subcategorium', ProductSubCategoryController::class);
     //ProductBrand
     Route::post('product-brands', [ProductBrandController::class, 'index']);
     Route::apiResource('product-brand', ProductBrandController::class);

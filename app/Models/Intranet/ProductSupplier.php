@@ -6,6 +6,7 @@ use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 
 class ProductSupplier extends Model
@@ -26,11 +27,8 @@ class ProductSupplier extends Model
     }
 
     //filtros
-    public function scopeFilter($query, $filters)
+    public function scopeFilter(Builder $query, array $filters)
     {
-        if (isset($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
-        }
-        return $query;
+        return $this->scopeFilterSearch($query,$filters,['name']);
     }
 }
