@@ -66,3 +66,34 @@ Route::get('/config-clear', function () {
     $exitCode = Artisan::call('config:clear');
     return '<h1>config:clear</h1>' . $exitCode;
 })->name('config-clear');
+
+// ejecutar migraciones
+Route::get('/exec-migrations',function(){
+    $exitCode = Artisan::call('migrate',[
+        '--force' => true
+    ]);
+})->name('migrate');
+// roolback de migración
+Route::get('/exec-rollback', function () {
+    $exitCode = Artisan::call('migrate:rollback', [
+        '--force' => true
+    ]);
+
+    return response()->json([
+        'message' => 'Rollback ejecutado correctamente',
+        'exit_code' => $exitCode
+    ]);
+})->name('rollback');
+// migrate:status
+Route::get('/exec-migrate-status', function () {
+    Artisan::call('migrate:status', [
+        '--no-interaction' => true
+    ]);
+
+    $output = Artisan::output();
+
+    return response()->json([
+        'message' => 'Estado de migraciones',
+        'data' => $output
+    ]);
+})->name('migrate.status');
