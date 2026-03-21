@@ -179,6 +179,23 @@ class VacationDayController extends ApiController
     {
         $vacationDay = VacationDay::find($vacationDayId);
 
+        $date_start = Carbon::parse($vacationDay->fecha_inicio);
+        $last_month = $date_start->copy()->subMonth(); //fecha_inicio - un mes
+        $next_month = $date_start->copy()->addMonth(); //fehca_inicio + un mes
+
+        //vacaciones pasadas(fecha_inicio - un mes)
+        $vacaciones_pasadas = VacationDay::where('empleado_id', $vacationDay->empleado_id)
+            ->where('fecha_inicio', '>=', $last_month)
+            ->where('fecha_inicio', '<', $date_start)
+            ->where('id', '!=', $vacationDay->id)
+            ->get();
+        //vacaciones futuras(fecha_inicio + un mes)
+        $vacaciones_futuras = VacationDay::where('empleado_id', $vacationDay->empleado_id)
+            ->where('fecha_inicio', '>', $date_start)
+            ->where('fecha_inicio', '<=', $next_month)
+            ->where('id', '!=', $vacationDay->id)
+            ->get();
+
         $rh = Empleado::where('puesto_id', Puesto::where('nombre', 'Gerente corporativo')->value('id'))
             ->where('departamento_id', Departamento::where('nombre', 'Recursos Humanos')->value('id'))
             ->first();
@@ -191,24 +208,30 @@ class VacationDayController extends ApiController
         $not = $vacationDay->empleado->notificar;
         $cubre_rel = $vacationDay->cubre_rel;
 
+        $correo_pruebas = 'munozchristian@etbsa.com.mx';
         $correos = [
-            'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
-            'solicitante' => $solicitante->correo_institucional,
-            'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
-            'notificar' => $not ? $not->correo_institucional : null,
-            'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
+            // 'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
+            // 'solicitante' => $solicitante->correo_institucional,
+            // 'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
+            // 'notificar' => $not ? $not->correo_institucional : null,
+            // 'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
+            $correo_pruebas
         ];
 
         // Si el jefe es DG, agregar también DA, y viceversa
-        if ($jefe && $jefe->id === $dg?->id) {
-            $correos['da'] = $da?->correo_institucional;
-        } elseif ($jefe && $jefe->id === $da?->id) {
-            $correos['dg'] = $dg?->correo_institucional;
-        }
+        // if ($jefe && $jefe->id === $dg?->id) {
+        //     $correos['da'] = $da?->correo_institucional;
+        // } elseif ($jefe && $jefe->id === $da?->id) {
+        //     $correos['dg'] = $dg?->correo_institucional;
+        // }
 
         foreach ($correos as $to_email) {
             if ($to_email) {
-                Mail::to($to_email)->send(new VacationStoreMailable($vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel')));
+                Mail::to($to_email)->send(new VacationStoreMailable([
+                    'vacation' => $vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel'),
+                    'pasadas' => $vacaciones_pasadas,
+                    'futuras' => $vacaciones_futuras,
+                ]));
             }
         }
     }

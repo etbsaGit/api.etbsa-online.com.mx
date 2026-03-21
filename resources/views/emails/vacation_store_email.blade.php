@@ -110,45 +110,70 @@
         </div>
         <div class="content">
             <h3>Estimado/a:</h3>
-            <p>Le informamos que <strong>{{ $data['empleado']['nombreCompleto'] }}</strong> hizo una solicitud de
+            <p>Le informamos que <strong>{{ $data['vacation']['empleado']['nombreCompleto'] }}</strong> hizo una
+                solicitud de
                 vacaciones, favor de
                 dar seguimiento a la solicitud</p>
         </div>
 
         <div class="content">
             <h2>Detalles de la solicitud de vacaciones</h2>
-            <p><strong>ID Solicitud:</strong> {{ $data['id'] }}</p>
-            <p><strong>Empleado:</strong> {{ $data['empleado']['nombreCompleto'] }}</p>
-            <p><strong>Puesto:</strong> {{ $data['puesto']['nombre'] }}</p>
-            <p><strong>Sucursal:</strong> {{ $data['sucursal']['nombre'] }}</p>
-            <p><strong>Vehículo Utilitario:</strong> {{ $data['vehiculo_utilitario'] }}</p>
-            <p><strong>Periodo Correspondiente:</strong> {{ $data['periodo_correspondiente'] }}</p>
-            <p><strong>Años Cumplidos:</strong> {{ $data['anios_cumplidos'] }}</p>
-            <p><strong>Días del Periodo:</strong> {{ $data['dias_periodo'] }}</p>
-            <p><strong>Subtotal Días:</strong> {{ $data['subtotal_dias'] }}</p>
-            <p><strong>Días a Disfrutar:</strong> {{ $data['dias_disfrute'] }}</p>
-            <p><strong>Días Pendientes:</strong> {{ $data['dias_pendientes'] }}</p>
-            <p><strong>Fecha de Inicio:</strong> {{ \Carbon\Carbon::parse($data['fecha_inicio'])->format('d/m/Y') }}
+            <p><strong>ID Solicitud:</strong> {{ $data['vacation']['id'] }}</p>
+            <p><strong>Empleado:</strong> {{ $data['vacation']['empleado']['nombreCompleto'] }}</p>
+            <p><strong>Puesto:</strong> {{ $data['vacation']['puesto']['nombre'] }}</p>
+            <p><strong>Sucursal:</strong> {{ $data['vacation']['sucursal']['nombre'] }}</p>
+            <p><strong>Vehículo Utilitario:</strong> {{ $data['vacation']['vehiculo_utilitario'] }}</p>
+            <p><strong>Periodo Correspondiente:</strong> {{ $data['vacation']['periodo_correspondiente'] }}</p>
+            <p><strong>Años Cumplidos:</strong> {{ $data['vacation']['anios_cumplidos'] }}</p>
+            <p><strong>Días del Periodo:</strong> {{ $data['vacation']['dias_periodo'] }}</p>
+            <p><strong>Subtotal Días:</strong> {{ $data['vacation']['subtotal_dias'] }}</p>
+            <p><strong>Días a Disfrutar:</strong> {{ $data['vacation']['dias_disfrute'] }}</p>
+            <p><strong>Días Pendientes:</strong> {{ $data['vacation']['dias_pendientes'] }}</p>
+            <p><strong>Fecha de Inicio:</strong>
+                {{ \Carbon\Carbon::parse($data['vacation']['fecha_inicio'])->format('d/m/Y') }}
             </p>
-            <p><strong>Fecha de Término:</strong> {{ \Carbon\Carbon::parse($data['fecha_termino'])->format('d/m/Y') }}
+            <p><strong>Fecha de Término:</strong>
+                {{ \Carbon\Carbon::parse($data['vacation']['fecha_termino'])->format('d/m/Y') }}
             </p>
-            <p><strong>Fecha de Regreso:</strong> {{ \Carbon\Carbon::parse($data['fecha_regreso'])->format('d/m/Y') }}
+            <p><strong>Fecha de Regreso:</strong>
+                {{ \Carbon\Carbon::parse($data['vacation']['fecha_regreso'])->format('d/m/Y') }}
             </p>
-            <p><strong>Comentarios:</strong> {{ $data['comentarios'] }}</p>
+            <p><strong>Comentarios:</strong> {{ $data['vacation']['comentarios'] }}</p>
 
             <h3>Detalles del Empleado</h3>
-            <img src="{{ $data['empleado']['picture'] }}" alt="Foto de {{ $data['empleado']['nombreCompleto'] }}"
-                style="max-width: 100px;">
-            <p><strong>Nombre:</strong> {{ $data['empleado']['nombreCompleto'] }}</p>
-            <p><strong>Correo Institucional:</strong> {{ $data['empleado']['correo_institucional'] }}</p>
-            <p><strong>Fecha de Ingreso:</strong> {{ \Carbon\Carbon::parse($data['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
+            <img src="{{ $data['vacation']['empleado']['picture'] }}"
+                alt="Foto de {{ $data['vacation']['empleado']['nombreCompleto'] }}" style="max-width: 100px;">
+            <p><strong>Nombre:</strong> {{ $data['vacation']['empleado']['nombreCompleto'] }}</p>
+            <p><strong>Correo Institucional:</strong> {{ $data['vacation']['empleado']['correo_institucional'] }}</p>
+            <p><strong>Fecha de Ingreso:</strong>
+                {{ \Carbon\Carbon::parse($data['vacation']['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
 
             <h3>Quien cubre</h3>
-            <p>{{ $data['cubre_rel']['nombreCompleto'] }}</p>
+            <p>{{ $data['vacation']['cubre_rel']['nombreCompleto'] }}</p>
+
+            {{--  --}}
+            <h3>Vacaciones del último mes</h3>
+            <ul>
+                @foreach ($data['pasadas'] as $vac)
+                    <li>{{ \Carbon\Carbon::parse($vac->fecha_inicio)->format('d/m/Y') }} -
+                        {{ \Carbon\Carbon::parse($vac->fecha_termino)->format('d/m/Y') }}</li>
+                @endforeach
+            </ul>
+
+            <h3>Vacaciones del próximo mes</h3>
+            <ul>
+                @foreach ($data['futuras'] as $vac)
+                    <li>{{ \Carbon\Carbon::parse($vac->fecha_inicio)->format('d/m/Y') }} -
+                        {{ \Carbon\Carbon::parse($vac->fecha_termino)->format('d/m/Y') }}</li>
+                @endforeach
+            </ul>
+            {{--  --}}
 
             <h3>Información Adicional</h3>
-            <p><strong>Creado el:</strong> {{ \Carbon\Carbon::parse($data['created_at'])->format('d/m/Y') }}</p>
-            <p><strong>Actualizado el:</strong> {{ \Carbon\Carbon::parse($data['updated_at'])->format('d/m/Y') }}</p>
+            <p><strong>Creado el:</strong>
+                {{ \Carbon\Carbon::parse($data['vacation']['created_at'])->format('d/m/Y') }}</p>
+            <p><strong>Actualizado el:</strong>
+                {{ \Carbon\Carbon::parse($data['vacation']['updated_at'])->format('d/m/Y') }}</p>
         </div>
 
         <div class="footer">
