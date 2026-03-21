@@ -189,6 +189,7 @@ class VacationDayController extends ApiController
             ->where('fecha_inicio', '<', $date_start)
             ->where('id', '!=', $vacationDay->id)
             ->get();
+
         //vacaciones futuras(fecha_inicio + un mes)
         $vacaciones_futuras = VacationDay::where('empleado_id', $vacationDay->empleado_id)
             ->where('fecha_inicio', '>', $date_start)

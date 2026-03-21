@@ -6,7 +6,6 @@ use App\Http\Controllers\ApiController;
 use App\Models\intranet\Product;
 use Illuminate\Http\Request;
 use App\Http\Requests\Intranet\Products\ProductRequest;
-use App\Models\Intranet\Currency;
 use App\Models\Intranet\ProductBrand;
 use App\Models\Intranet\ProductCategory;
 use App\Models\Intranet\ProductSubCategory;
