@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Intranet;
 
 use App\Http\Controllers\ApiController;
-use App\Models\intranet\Product;
+use App\Models\Intranet\Product;
 use Illuminate\Http\Request;
 use App\Http\Requests\Intranet\Products\ProductRequest;
 use App\Models\Intranet\ProductBrand;
