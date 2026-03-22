@@ -280,7 +280,6 @@ class VacationDayController extends ApiController
                 Mail::to($to_email)->send(new VacationOnMailable($vacationDay->load('empleado', 'puesto', 'sucursal', 'validateBy.empleado')));
             }
         }
-
         return $this->respondSuccess();
     }
 
