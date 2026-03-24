@@ -312,6 +312,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('vacationDay/employeeReport', [VacationDayController::class, 'getEmployeeReport']);
     Route::post('vacationDay/employeeReportPdf', [VacationDayController::class, 'getEmployeeReportPdf']);
     Route::post('vacationDay/reportPDF', [VacationDayController::class, 'exportReport']);
+
+    Route::post('vacationDay/reportXls',[VacationDayController::class,'getEmployeeReportXls']);
     Route::apiResource('vacationDay', VacationDayController::class);
 
     //--------------------Incapacity--------------------

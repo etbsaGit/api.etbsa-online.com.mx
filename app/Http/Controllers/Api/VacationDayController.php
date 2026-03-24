@@ -20,6 +20,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\EmployeeVacationExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\VacationDay\VacationDayRequest;
+use App\Exports\EmployeeVacationExportXls;
 
 class VacationDayController extends ApiController
 {
@@ -209,12 +210,14 @@ class VacationDayController extends ApiController
         $not = $vacationDay->empleado->notificar;
         $cubre_rel = $vacationDay->cubre_rel;
 
+        // $correo_pruebas = 'munozchristian@etbsa.com.mx';
         $correos = [
             'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
             'solicitante' => $solicitante->correo_institucional,
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
             'notificar' => $not ? $not->correo_institucional : null,
             'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
+            // $correo_pruebas
         ];
 
         // Si el jefe es DG, agregar también DA, y viceversa
@@ -671,5 +674,106 @@ class VacationDayController extends ApiController
 
         // Retornar el PDF en Base64
         return $this->respond($pdfBase64);
+    }
+
+    public function getEmployeeReportXls(Request $request)
+    {
+        $start = $request->start;
+        $end = $request->end;
+        $empleado_id = $request->empleado_id;
+
+        // Validación: start no puede ser después de end
+        if (Carbon::parse($start)->gt(Carbon::parse($end))) {
+            return $this->respond([
+                'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
+            ], 422);
+        }
+
+        // Obtener festivos como array asegurando formato DATE
+        $festivos = Festivo::pluck('fecha')->map(fn($date) => Carbon::parse($date)->toDateString())->toArray();
+
+        // Obtener el empleado
+        $employee = Empleado::with([
+            'vacationDays' => function ($query) use ($start, $end) {
+                $query->where('validated', 1)
+                    ->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('fecha_inicio', [$start, $end])
+                            ->orWhereBetween('fecha_termino', [$start, $end])
+                            ->orWhere(function ($q) use ($start, $end) {
+                                $q->where('fecha_inicio', '<=', $start)
+                                    ->where('fecha_termino', '>=', $end);
+                            });
+                    })->orderBy('created_at', 'asc');
+            }
+        ])->with('sucursal')->find($request->empleado_id);
+
+        if (!$employee) {
+            return $this->respond(['error' => 'Empleado no encontrado'], 404);
+        }
+
+        // Agregar vacationDetails con los días específicos
+        $vacationDays = [];
+        foreach ($employee->vacationDays as $vacation) {
+            $periodStart = Carbon::parse($vacation->fecha_inicio);
+            $periodEnd = Carbon::parse($vacation->fecha_termino);
+
+            if ($periodEnd->lt($start) || $periodStart->gt($end)) {
+                continue; // Si las vacaciones están fuera del rango, omitirlas
+            }
+
+            // Limitar los días generados al rango solicitado
+            $currentDate = $periodStart->copy();
+            $finalDate = $periodEnd->copy();
+
+            while ($currentDate->lte($finalDate)) {
+
+                if (
+                    $currentDate->gte($start) &&
+                    $currentDate->lte($end) &&
+                    !in_array($currentDate->toDateString(), $festivos) && //  festivos
+                    $currentDate->dayOfWeek !== Carbon::SUNDAY //  domingos
+                ) {
+                    $vacationDays[] = $currentDate->toDateString();
+                }
+
+                $currentDate->addDay();
+            }
+        }
+
+        // Quitar duplicados y ordenar fechas
+        $vacationDays = collect($vacationDays)
+            ->unique()
+            ->sort()
+            ->values();
+
+        // Armar respuesta
+        $data = [
+            'empleado' => [
+                'id' => $employee->id,
+                'nombre' => $employee->nombreCompleto,
+                'sucursal' => $employee->sucursal->nombre ?? null,
+                'fecha_ingreso' => $employee->fecha_de_ingreso,
+            ],
+            'vacaciones' => $employee->vacationDays->map(function ($vacation) {
+                return [
+                    'fecha_inicio' => $vacation->fecha_inicio,
+                    'fecha_termino' => $vacation->fecha_termino,
+                    'fecha_regreso' => $vacation->fecha_regreso,
+                    'periodo' => $vacation->periodo_correspondiente,
+                    'anios_cumplidos' => $vacation->anios_cumplidos,
+                    'dias_periodo' => $vacation->dias_periodo,
+                    'subtotal' => $vacation->subtotal_dias,
+                    'disfrutados' => $vacation->dias_disfrute,
+                    'pendientes' => $vacation->dias_pendientes,
+                    'created_at' => $vacation->created_at,
+                ];
+            }),
+            'dias_individuales' => $vacationDays
+        ];
+
+        return Excel::download(
+            new EmployeeVacationExportXls($data),
+            'reporte_vacaciones.xlsx'
+        );
     }
 }
