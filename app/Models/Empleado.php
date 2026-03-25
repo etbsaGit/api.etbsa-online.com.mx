@@ -149,7 +149,8 @@ class Empleado extends Model
         $vacationDaysCount = VacationDay::where('empleado_id', $this->id)
             ->where('anios_cumplidos', $aniosCumplidos)
             ->where('validated', 1)
-            ->whereBetween('fecha_inicio', [$inicioPeriodo, $finPeriodo])
+            ->whereDate('fecha_inicio', '>=', $inicioPeriodo)
+            ->whereDate('fecha_inicio', '<=', $finPeriodo)
             ->sum('dias_disfrute');
 
         return [
@@ -162,7 +163,6 @@ class Empleado extends Model
             ],
         ];
     }
-
 
     public function getProdAttribute()
     {
