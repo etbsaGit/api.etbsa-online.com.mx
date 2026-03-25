@@ -50,6 +50,11 @@ use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
+use App\Http\Controllers\Intranet\ProductBrandController;
+use App\Http\Controllers\Intranet\ProductSupplierController;
+use App\Http\Controllers\Intranet\ProductCategoryController;
+use App\Http\Controllers\Intranet\ProductSubCategoryController;
+use App\Http\Controllers\Intranet\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -244,6 +249,25 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // 🔹 Nueva Tecnología
     Route::post('nuevaTecnologiums', [NuevaTecnologiaController::class, 'index']);
     Route::apiResource('nuevaTecnologium', NuevaTecnologiaController::class);
+
+    // 🔹 Productos
+    // ProductSupplier
+    Route::post('product-suppliers', [ProductSupplierController::class, 'index']);
+    Route::apiResource('product-supplier', ProductSupplierController::class);
+    //ProductCategory
+    Route::post('product-categoriums', [ProductCategoryController::class, 'index']);
+    Route::apiResource('product-categorium', ProductCategoryController::class);
+    //ProductSubCategory
+    Route::post('product-subcategoriums', [ProductSubCategoryController::class, 'index']);
+    Route::get('product-subcategorium/options',[ProductSubCategoryController::class,'getOptions']);
+    Route::apiResource('product-subcategorium', ProductSubCategoryController::class);
+    //ProductBrand
+    Route::post('product-brands', [ProductBrandController::class, 'index']);
+    Route::apiResource('product-brand', ProductBrandController::class);
+    // Products
+    Route::post('products',[ProductController::class,'index']);
+    Route::get('product/options',[ProductController::class,'getOptions']);
+    Route::apiResource('product',ProductController::class);
 
     // 🔹 Referencia
     Route::get('referencia/cliente/form', [ReferenciaController::class, 'getOptions']);

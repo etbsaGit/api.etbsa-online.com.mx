@@ -66,3 +66,63 @@ Route::get('/config-clear', function () {
     $exitCode = Artisan::call('config:clear');
     return '<h1>config:clear</h1>' . $exitCode;
 })->name('config-clear');
+
+// ejecutar migraciones
+Route::get('/exec-migrations',function(){
+    $exitCode = Artisan::call('migrate',[
+        '--force' => true
+    ]);
+})->name('migrate');
+
+// roolback de migración
+Route::get('/exec-rollback', function () {
+    $exitCode = Artisan::call('migrate:rollback', [
+        '--force' => true
+    ]);
+
+    return response()->json([
+        'message' => 'Rollback ejecutado correctamente',
+        'exit_code' => $exitCode
+    ]);
+})->name('rollback');
+
+// migrate:status
+Route::get('/exec-migrate-status', function () {
+    Artisan::call('migrate:status', [
+        '--no-interaction' => true
+    ]);
+
+    $output = Artisan::output();
+
+    return response()->json([
+        'message' => 'Estado de migraciones',
+        'data' => $output
+    ]);
+})->name('migrate.status');
+
+// deploy automático
+Route::get('/deploy-develop/{key}', function ($key) {
+
+    if ($key !== env('DEPLOY_KEY')) {
+        abort(403, 'No autorizado');
+    }
+
+    // 1. Limpiar caches
+    Artisan::call('cache:clear');
+    Artisan::call('config:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+
+    // 2. Optimizar
+    Artisan::call('optimize');
+
+    // 3. Volver a cachear
+    Artisan::call('config:cache');
+    Artisan::call('route:cache');
+    Artisan::call('view:cache');
+
+    return response()->json([
+        'message' => 'Deploy ejecutado correctamente (sin migraciones)',
+    ]);
+
+})->name('deploy.develop');

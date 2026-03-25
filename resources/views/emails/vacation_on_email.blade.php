@@ -110,7 +110,8 @@
         </div>
         <div class="content">
             <h3>Estimado/a:</h3>
-            <p>Le informamos que la solicitud de  <strong>{{ $data['empleado']['nombreCompleto'] }}</strong> ha sido aceptada</p>
+            <p>Le informamos que la solicitud de <strong>{{ $data['empleado']['nombreCompleto'] }}</strong> ha sido
+                aceptada</p>
         </div>
 
         <div class="content">
@@ -139,7 +140,9 @@
                 style="max-width: 100px;">
             <p><strong>Nombre:</strong> {{ $data['empleado']['nombreCompleto'] }}</p>
             <p><strong>Correo Institucional:</strong> {{ $data['empleado']['correo_institucional'] }}</p>
-            <p><strong>Fecha de Ingreso:</strong> {{ \Carbon\Carbon::parse($data['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
+            <p><strong>Fecha de Ingreso:</strong>
+                {{ \Carbon\Carbon::parse($data['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
+
 
             <h3>Información Adicional</h3>
             <p><strong>Creado el:</strong> {{ \Carbon\Carbon::parse($data['created_at'])->format('d/m/Y') }}</p>
