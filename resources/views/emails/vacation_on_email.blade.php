@@ -143,23 +143,6 @@
             <p><strong>Fecha de Ingreso:</strong>
                 {{ \Carbon\Carbon::parse($data['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
 
-            {{--  --}}
-            <h3>Vacaciones del último mes</h3>
-            <ul>
-                @foreach ($data['pasadas'] as $vac)
-                    <li>{{ \Carbon\Carbon::parse($vac->fecha_inicio)->format('d/m/Y') }} -
-                        {{ \Carbon\Carbon::parse($vac->fecha_termino)->format('d/m/Y') }}</li>
-                @endforeach
-            </ul>
-
-            <h3>Vacaciones del próximo mes</h3>
-            <ul>
-                @foreach ($data['futuras'] as $vac)
-                    <li>{{ \Carbon\Carbon::parse($vac->fecha_inicio)->format('d/m/Y') }} -
-                        {{ \Carbon\Carbon::parse($vac->fecha_termino)->format('d/m/Y') }}</li>
-                @endforeach
-            </ul>
-            {{--  --}}
 
             <h3>Información Adicional</h3>
             <p><strong>Creado el:</strong> {{ \Carbon\Carbon::parse($data['created_at'])->format('d/m/Y') }}</p>
