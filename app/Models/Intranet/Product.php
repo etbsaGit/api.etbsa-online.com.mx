@@ -66,6 +66,13 @@ class Product extends Model
     {
         return $this->belongsTo(ProductSupplier::class, 'vendor_id');
     }
+    // public function precios(){
+    //     return $this->hasMany(ProductoPrecio::class,'producto_id');
+    // }
+
+    public function precios(){
+        return $this->hasMany(ProductoPrecio::class,'producto_id');
+    }
 
     public function scopeFilter(Builder $query, array $filters)
     {

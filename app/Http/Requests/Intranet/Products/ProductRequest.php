@@ -33,20 +33,25 @@ class ProductRequest extends FormRequest
             'is_dollar'      => ['required', 'boolean'],
 
             // precios
-            'price_1'  => ['nullable', 'numeric'],
-            'price_2'  => ['nullable', 'numeric'],
-            'price_3'  => ['nullable', 'numeric'],
-            'price_4'  => ['nullable', 'numeric'],
-            'price_5'  => ['nullable', 'numeric'],
-            'price_6'  => ['nullable', 'numeric'],
-            'price_7'  => ['nullable', 'numeric'],
-            'price_8'  => ['nullable', 'numeric'],
-            'price_9'  => ['nullable', 'numeric'],
-            'price_10' => ['nullable', 'numeric'],
-            'price_11' => ['nullable', 'numeric'],
-            'price_12' => ['nullable', 'numeric'],
-            'price_13' => ['nullable', 'numeric'],
-            'price_14' => ['nullable', 'numeric'],
+            // 'price_1'  => ['nullable', 'numeric'],
+            // 'price_2'  => ['nullable', 'numeric'],
+            // 'price_3'  => ['nullable', 'numeric'],
+            // 'price_4'  => ['nullable', 'numeric'],
+            // 'price_5'  => ['nullable', 'numeric'],
+            // 'price_6'  => ['nullable', 'numeric'],
+            // 'price_7'  => ['nullable', 'numeric'],
+            // 'price_8'  => ['nullable', 'numeric'],
+            // 'price_9'  => ['nullable', 'numeric'],
+            // 'price_10' => ['nullable', 'numeric'],
+            // 'price_11' => ['nullable', 'numeric'],
+            // 'price_12' => ['nullable', 'numeric'],
+            // 'price_13' => ['nullable', 'numeric'],
+            // 'price_14' => ['nullable', 'numeric'],
+
+            'precios' => ['nullable', 'array'],
+            'precios.*.id' => ['nullable', 'exists:precio_producto,id'],
+            'precios.*.condicion_pago_id' => ['required', 'exists:products_condicion_pago,id'],
+
         ];
     }
 
@@ -66,5 +71,14 @@ class ProductRequest extends FormRequest
             'active.required' => 'El estado es obligatorio',
             'active.boolean' => 'El estado debe ser verdadero o falso',
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }

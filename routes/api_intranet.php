@@ -53,6 +53,7 @@ use App\Http\Controllers\Intranet\ConstructionClassificationsController;
 use App\Http\Controllers\Intranet\ProductBrandController;
 use App\Http\Controllers\Intranet\ProductSupplierController;
 use App\Http\Controllers\Intranet\ProductCategoryController;
+use App\Http\Controllers\Intranet\ProductCondicionPagoController;
 use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
 
@@ -259,15 +260,20 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('product-categorium', ProductCategoryController::class);
     //ProductSubCategory
     Route::post('product-subcategoriums', [ProductSubCategoryController::class, 'index']);
-    Route::get('product-subcategorium/options',[ProductSubCategoryController::class,'getOptions']);
+    Route::get('product-subcategorium/options', [ProductSubCategoryController::class, 'getOptions']);
     Route::apiResource('product-subcategorium', ProductSubCategoryController::class);
     //ProductBrand
     Route::post('product-brands', [ProductBrandController::class, 'index']);
     Route::apiResource('product-brand', ProductBrandController::class);
+    //ProductCondicionPago
+    Route::post('product-condicion-pagos', [ProductCondicionPagoController::class, 'index']);
+    Route::get('product-condicion-pago/options', [ProductCondicionPagoController::class, 'getOptions']);
+    Route::apiResource('product-condicion-pago', ProductCondicionPagoController::class);
+
     // Products
-    Route::post('products',[ProductController::class,'index']);
-    Route::get('product/options',[ProductController::class,'getOptions']);
-    Route::apiResource('product',ProductController::class);
+    Route::post('products', [ProductController::class, 'index']);
+    Route::get('product/options', [ProductController::class, 'getOptions']);
+    Route::apiResource('product', ProductController::class);
 
     // 🔹 Referencia
     Route::get('referencia/cliente/form', [ReferenciaController::class, 'getOptions']);
