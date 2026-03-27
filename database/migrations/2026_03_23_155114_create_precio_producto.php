@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('producto_id');
             $table->unsignedBigInteger('condicion_pago_id');
+            $table->decimal('precio', 12, 2)->nullable();
             $table->unsignedBigInteger('currency_id');
             $table->foreign('producto_id')->references('id')->on('products')->onDelete('restrict');
             $table->foreign('condicion_pago_id')->references('id')->on('products_condicion_pago')->onDelete('restrict');

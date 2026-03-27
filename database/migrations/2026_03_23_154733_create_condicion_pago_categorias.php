@@ -6,24 +6,30 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('condicion_pago_categorias', function (Blueprint $table) {
-            $table->id();
             $table->unsignedBigInteger('condicion_id');
             $table->unsignedBigInteger('categoria_id');
-            $table->foreign('condicion_id')->references('id')->on('products_condicion_pago')->onDelete('restrict');
-            $table->foreign('categoria_id')->references('id')->on('categories')->onDelete('restrict');
+
             $table->timestamps();
+
+            //  clave primaria compuesta
+            $table->primary(['condicion_id', 'categoria_id']);
+
+            //  llaves foráneas
+            $table->foreign('condicion_id')
+                ->references('id')
+                ->on('products_condicion_pago')
+                ->onDelete('cascade');
+
+            $table->foreign('categoria_id')
+                ->references('id')
+                ->on('categories')
+                ->onDelete('restrict');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('condicion_pago_categorias');

@@ -23,7 +23,7 @@ class ProductSubCategoryRequest extends FormRequest{
      */
     public function rules(): array
     {
-        $item = $this->route('product_subcategoria');
+        $item = $this->route('product_subcategorium');
         return [
             'name' => ['required', 'string', 'max:191', Rule::unique('product_subcategory', 'name')->ignore($item?->id)],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
