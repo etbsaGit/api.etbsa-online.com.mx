@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Intranet;
 
 use App\Http\Controllers\ApiController;
+use Illuminate\Support\Facades\DB;
 use App\Models\Intranet\Product;
 use Illuminate\Http\Request;
 use App\Http\Requests\Intranet\Products\ProductRequest;
@@ -23,11 +24,12 @@ class ProductController extends ApiController
 
         $products = Product::with([
             'brand',
-            'category',
+            'category.condicionesPago',
             'subcategory',
             'currency',
             'agency',
-            'supplier'
+            'supplier',
+            'precios.condicionPago'
         ])
             ->filter($filters)
             ->paginate(10);
@@ -44,12 +46,32 @@ class ProductController extends ApiController
      */
     public function store(ProductRequest $request)
     {
-        $product = Product::create($request->validated());
+        DB::beginTransaction();
+        try {
+            // crear producto
+            $product = Product::create($request->validated());
+            // guardar precios
+            if ($request->has('precios')) {
+                $precios = collect($request->precios)->map(function ($p) use ($product) {
+                    return [
+                        'condicion_pago_id' => $p['condicion_pago_id'],
+                        'precio' => $p['precio'],
+                        'currency_id' => $product->currency_id
+                    ];
+                });
+                $product->precios()->createMany($precios);
+            }
 
-        return $this->respondCreated(
-            $product,
-            'Producto creado correctamente'
-        );
+            DB::commit();
+
+            return $this->respondCreated(
+                $product->load('precios'),
+                'Producto creado correctamente'
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -78,31 +100,67 @@ class ProductController extends ApiController
      */
     public function update(ProductRequest $request, Product $product)
     {
-        $product->update($request->validated());
+        DB::beginTransaction();
+        try {
+            // actualizar producto
+            $product->update($request->validated());
 
-        return $this->respond(
-            $product,
-            'Producto actualizado correctamente'
-        );
+            // reemplazar precios
+            if ($request->has('precios')) {
+                // eliminar los precios actuales
+                $product->precios()->delete();
+                // insertar los nuevos
+                $precios = collect($request->precios)->map(function ($p) use ($product) {
+                    return [
+                        'condicion_pago_id' => $p['condicion_pago_id'],
+                        'precio' => $p['precio'],
+                        'currency_id' => $product->currency_id
+                    ];
+                });
+                $product->precios()->createMany($precios);
+            }
+            DB::commit();
+            return $this->respond(
+                $product->load('precios'),
+                'Producto actualziado correctamente'
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Product $product)
     {
-        $product->delete();
+        DB::beginTransaction();
 
-        return $this->respondSuccess(
-            'Producto eliminado correctamente'
-        );
+        try {
+            // 1. borrar precios
+            $product->precios()->delete();
+
+            // 2. borrar producto
+            $product->delete();
+
+            DB::commit();
+
+            return $this->respondSuccess(
+                'Producto eliminado correctamente'
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     // getOptions
-    public function getOptions(){
+    public function getOptions()
+    {
         $data = [
             'proveedores' => ProductSupplier::all(),
             'sucursales' => Sucursal::all(),
-            'categorias' => ProductCategory::all(),
+            'categorias' => ProductCategory::with('condicionesPago')->get(),
             'subcategorias' => ProductSubCategory::all(),
             'marcas' => ProductBrand::all(),
         ];
