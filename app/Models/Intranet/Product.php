@@ -74,6 +74,10 @@ class Product extends Model
         return $this->hasMany(ProductoPrecio::class,'producto_id');
     }
 
+    public function trackingProduct(){
+        return $this->hasMany(TrackingDetalle::class,'product_id');
+    }
+
     public function scopeFilter(Builder $query, array $filters)
     {
         if (!empty($filters['search'])) {

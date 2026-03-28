@@ -1,0 +1,36 @@
+<?php
+namespace App\Models\Intranet;
+
+use App\Models\Empleado;
+use App\Models\Intranet\Product;
+use App\Models\Sucursal;
+use App\Traits\FilterableModel;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class TrackingDetalle extends Model{
+    use HasFactory;
+    use FilterableModel;
+    protected $table = 'tracking_detalle';
+    protected $fillable = [
+        'tracking_id',
+        'product_id',
+        'cantidad',
+        'subtotal',
+        'precio_unidad',
+        'subtotal'
+    ];
+
+    public function tracking(){
+        return $this->belongsTo(Tracking::class,'tracking_id');
+    }
+    public function productos(){
+        return $this->belongsTo(Product::class,'product_id');
+    }
+
+    public function scopeFilter(Builder $query,$filters){
+        return $this->scopeFilterSearch($query,$filters,['tracking_id']);
+    }
+
+}

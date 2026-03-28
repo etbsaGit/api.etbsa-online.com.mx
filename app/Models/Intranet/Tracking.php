@@ -66,6 +66,9 @@ class Tracking extends Model{
     public function activities(){
         return $this->hasMany(TrackingActivity::class,'tracking_id');
     }
+    public function details(){
+        return $this->hasMany(TrackingDetalle::class,'tracking_id');
+    }
 
     public function scopeFilter(Builder $query,$filters){
         return $this->scopeFilterSearch($query,$filters,['title'],['folio']);
