@@ -2,6 +2,7 @@
 namespace App\Models\Intranet;
 
 use App\Models\Empleado;
+use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -45,6 +46,28 @@ class Tracking extends Model{
         return $this->belongsTo(TrackingOrigen::class,'origen_track_id');
     }
     public function vendedor(){
-        return $this->belongsTo(Empleado::class,'vendedor_id')
+        return $this->belongsTo(Empleado::class,'vendedor_id');
+    }
+    public function sucursal(){
+        return $this->belongsTo(Sucursal::class,'sucursal_id');
+    }
+    public function certeza(){
+        return $this->belongsTo(TrackingCerteza::class,'certeza_id');
+    }
+    public function categoria(){
+        return $this->belongsTo(ProductCategory::class,'category_id');
+    }
+    public function condicionPago(){
+        return $this->belongsTo(ProductCondicionPago::class,'condicion_pago_id');
+    }
+    public function currency(){
+        return $this->belongsTo(Currency::class,'currency_id');
+    }
+    public function activities(){
+        return $this->hasMany(TrackingActivity::class,'tracking_id');
+    }
+
+    public function scopeFilter(Builder $query,$filters){
+        return $this->scopeFilterSearch($query,$filters,['title'],['folio']);
     }
 }

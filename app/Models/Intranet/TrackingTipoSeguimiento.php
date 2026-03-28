@@ -17,7 +17,7 @@ class TrackingTipoSeguimiento extends Model{
     ];
 
     public function activities(){
-        return $this->hasMany(TrackingActivity::class);
+        return $this->hasMany(TrackingActivity::class,'tipo_seguimiento_id');
     }
 
 

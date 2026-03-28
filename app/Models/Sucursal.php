@@ -8,6 +8,7 @@ use App\Models\Intranet\Sale;
 use App\Models\Caja\CajaCorte;
 use App\Models\Caja\CajaCuenta;
 use App\Models\Intranet\InvItem;
+use App\Models\Intranet\Tracking;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -143,5 +144,9 @@ class Sucursal extends Model
     public function invItems()
     {
         return $this->hasMany(InvItem::class, 'sucursal_id');
+    }
+
+    public function tracking(){
+        return $this->hasMany(Tracking::class,'sucursal_id')
     }
 }

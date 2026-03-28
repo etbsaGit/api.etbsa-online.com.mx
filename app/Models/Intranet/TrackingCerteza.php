@@ -23,8 +23,8 @@ class TrackingCerteza extends Model
         return $this->hasMany(Tracking::class,'certeza_id');
     }
 
-    public function acttivities(){
-        return $this->hasMany(TrackingActivity::class);
+    public function activities(){
+        return $this->hasMany(TrackingActivity::class,'certeza_id');
     }
 
 }
