@@ -1,9 +1,7 @@
 <?php
 namespace App\Models\Intranet;
 
-use App\Models\Empleado;
 use App\Models\Intranet\Product;
-use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +17,6 @@ class TrackingDetalle extends Model{
         'cantidad',
         'subtotal',
         'precio_unidad',
-        'subtotal'
     ];
 
     public function tracking(){
