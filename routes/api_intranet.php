@@ -56,6 +56,7 @@ use App\Http\Controllers\Intranet\ProductCategoryController;
 use App\Http\Controllers\Intranet\ProductCondicionPagoController;
 use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
+use App\Http\Controllers\Intranet\TrackingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -327,4 +328,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // 🔹 Town
     Route::get('town/state/{id}', [TownController::class, 'getPerState']);
     Route::apiResource('town', TownController::class);
+
+    // 🔹 Tracking
+    Route::get('tracking/options', [TrackingController::class, 'getOptions']);
+    Route::apiResource('tracking',TrackingController::class);
 });

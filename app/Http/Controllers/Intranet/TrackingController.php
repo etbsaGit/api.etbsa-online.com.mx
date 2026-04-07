@@ -7,6 +7,7 @@ use App\Http\Requests\Intranet\Tracking\TrackingRequest;
 use App\Models\Empleado;
 use App\Models\Intranet\Cliente;
 use App\Models\Intranet\Currency;
+use App\Models\Intranet\Product;
 use App\Models\Intranet\ProductCategory;
 use App\Models\Intranet\ProductCondicionPago;
 use App\Models\Intranet\Tracking;
@@ -131,9 +132,10 @@ class TrackingController extends ApiController
             'sucursales' => Sucursal::all(),
             'deptos' => TrackingDepto::all(),
             'certezas' => TrackingCerteza::all(),
-            'categorias' => ProductCategory::all(),
+            'categorias' => ProductCategory::with('condicionesPago')->get(),
             'condiciones_pago' => ProductCondicionPago::all(),
             'monedas' => Currency::all(),
+            'productos' => Product::with('precios')->get(),
         ];
         return $this->respond($data);
     }

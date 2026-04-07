@@ -147,6 +147,6 @@ class Sucursal extends Model
     }
 
     public function tracking(){
-        return $this->hasMany(Tracking::class,'sucursal_id')
+        return $this->hasMany(Tracking::class,'sucursal_id');
     }
 }
