@@ -68,7 +68,7 @@ class Product extends Model
     }
 
     public function precios(){
-        return $this->hasMany(ProductoPrecio::class,'producto_id');
+        return $this->hasMany(ProductoPrecio::class,'producto_id')->with('currency');
     }
 
     public function trackingProduct(){
