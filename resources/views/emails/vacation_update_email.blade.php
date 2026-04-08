@@ -110,11 +110,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Solicitud de vacaciones</h1>
+            <h1>Actualización en Solicitud de Vacaciones</h1>
         </div>
         <div class="content">
             <h3>Estimado/a:</h3>
-            <p>Le informamos que <strong>{{ $data['empleado']['nombreCompleto'] }}</strong> hizo una solicitud de
+            <p>Le informamos que <strong>{{ $data['empleado']['nombreCompleto'] }}</strong> hizo una actualización en su
+                solicitud de
                 vacaciones, favor de
                 dar seguimiento a la solicitud</p>
         </div>
