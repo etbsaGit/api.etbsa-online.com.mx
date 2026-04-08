@@ -15,6 +15,7 @@ use App\Models\Intranet\TrackingCerteza;
 use App\Models\Intranet\TrackingDepto;
 use App\Models\Intranet\TrackingOrigen;
 use App\Models\Sucursal;
+use App\Models\Intranet\ExchangeRate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
@@ -136,6 +137,7 @@ class TrackingController extends ApiController
             'condiciones_pago' => ProductCondicionPago::all(),
             'monedas' => Currency::all(),
             'productos' => Product::with('precios')->get(),
+            'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
         ];
         return $this->respond($data);
     }
