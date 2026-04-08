@@ -141,7 +141,8 @@
                 style="max-width: 100px;">
             <p><strong>Nombre:</strong> {{ $data['empleado']['nombreCompleto'] }}</p>
             <p><strong>Correo Institucional:</strong> {{ $data['empleado']['correo_institucional'] }}</p>
-            <p><strong>Fecha de Ingreso:</strong> {{ \Carbon\Carbon::parse($data['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
+            <p><strong>Fecha de Ingreso:</strong>
+                {{ \Carbon\Carbon::parse($data['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
 
             <h3>Quien cubre</h3>
             <p>{{ $data['cubre_rel']['nombreCompleto'] }}</p>
@@ -149,6 +150,62 @@
             <h3>Información Adicional</h3>
             <p><strong>Creado el:</strong> {{ \Carbon\Carbon::parse($data['created_at'])->format('d/m/Y') }}</p>
             <p><strong>Actualizado el:</strong> {{ \Carbon\Carbon::parse($data['updated_at'])->format('d/m/Y') }}</p>
+
+            <h3>Vacaciones cercanas:</h3>
+
+            {{-- Vacaciones pasadas --}}
+            <h4>Vacaciones en el último mes:</h4>
+            @if ($vacaciones_pasadas->isEmpty())
+                <p>No hay vacaciones en el último mes.</p>
+            @else
+                <table class="table">
+                    <thead>
+                        <tr>
+                            {{-- <th>ID</th> --}}
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Término</th>
+                            <th>Días</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($vacaciones_pasadas as $v)
+                            <tr>
+                                {{-- <td>{{ $v->id }}</td> --}}
+                                <td>{{ \Carbon\Carbon::parse($v->fecha_inicio)->format('d/m/Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($v->fecha_termino)->format('d/m/Y') }}</td>
+                                <td>{{ $v->dias_disfrute }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            {{-- Vacaciones futuras --}}
+            <h4>Vacaciones en el siguiente mes:</h4>
+            @if ($vacaciones_futuras->isEmpty())
+                <p>No hay vacaciones en el siguiente mes.</p>
+            @else
+                <table class="table">
+                    <thead>
+                        <tr>
+                            {{-- <th>ID</th> --}}
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Término</th>
+                            <th>Días</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($vacaciones_futuras as $v)
+                            <tr>
+                                {{-- <td>{{ $v->id }}</td> --}}
+                                <td>{{ \Carbon\Carbon::parse($v->fecha_inicio)->format('d/m/Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($v->fecha_termino)->format('d/m/Y') }}</td>
+                                <td>{{ $v->dias_disfrute }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         </div>
 
         <div class="footer">

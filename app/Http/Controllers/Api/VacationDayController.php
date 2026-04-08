@@ -210,26 +210,30 @@ class VacationDayController extends ApiController
         $not = $vacationDay->empleado->notificar;
         $cubre_rel = $vacationDay->cubre_rel;
 
-        // $correo_pruebas = 'munozchristian@etbsa.com.mx';
+        $correo_pruebas = 'munozchristian@etbsa.com.mx';
         $correos = [
-            'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
-            'solicitante' => $solicitante->correo_institucional,
-            'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
-            'notificar' => $not ? $not->correo_institucional : null,
-            'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
-
+            // 'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
+            // 'solicitante' => $solicitante->correo_institucional,
+            // 'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
+            // 'notificar' => $not ? $not->correo_institucional : null,
+            // 'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
+            $correo_pruebas
         ];
 
         // Si el jefe es DG, agregar también DA, y viceversa
-        if ($jefe && $jefe->id === $dg?->id) {
-            $correos['da'] = $da?->correo_institucional;
-        } elseif ($jefe && $jefe->id === $da?->id) {
-            $correos['dg'] = $dg?->correo_institucional;
-        }
+        // if ($jefe && $jefe->id === $dg?->id) {
+        //     $correos['da'] = $da?->correo_institucional;
+        // } elseif ($jefe && $jefe->id === $da?->id) {
+        //     $correos['dg'] = $dg?->correo_institucional;
+        // }
 
         foreach ($correos as $to_email) {
             if ($to_email) {
-                Mail::to($to_email)->send(new VacationStoreMailable($vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel')));
+                Mail::to($to_email)->send(new VacationStoreMailable(
+                    $vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel'),
+                    $vacaciones_pasadas,
+                    $vacaciones_futuras
+                    ));
             }
         }
     }
@@ -254,27 +258,28 @@ class VacationDayController extends ApiController
         $qc = $vacationDay->cubre_rel;
         $cc = Empleado::where('puesto_id', Puesto::where('nombre', 'Coordinador de compras')->value('id'))->first();
 
-        // $correo_pruebas = 'munozchristian@etbsa.com.mx';
+        $correo_pruebas = 'munozchristian@etbsa.com.mx';
         $correos = [
-            'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
-            'solicitante' => $solicitante->correo_institucional,
-            'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
-            'notificar' => $not ? $not->correo_institucional : null,
-            'qc' => $qc
-                ? $qc->correo_institucional
-                : null,
+            // 'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
+            // 'solicitante' => $solicitante->correo_institucional,
+            // 'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
+            // 'notificar' => $not ? $not->correo_institucional : null,
+            // 'qc' => $qc
+            //     ? $qc->correo_institucional
+            //     : null,
+            $correo_pruebas,
 
         ];
 
-        if ($vacationDay->vehiculo_utilitario) {
-            $correos['cc'] = $cc?->correo_institucional; // Agregar correo si $cc no es null
-        }
+        // if ($vacationDay->vehiculo_utilitario) {
+        //     $correos['cc'] = $cc?->correo_institucional; // Agregar correo si $cc no es null
+        // }
 
-        if ($jefe && $jefe->id === $dg?->id) {
-            $correos['da'] = $da?->correo_institucional;
-        } elseif ($jefe && $jefe->id === $da?->id) {
-            $correos['dg'] = $dg?->correo_institucional;
-        }
+        // if ($jefe && $jefe->id === $dg?->id) {
+        //     $correos['da'] = $da?->correo_institucional;
+        // } elseif ($jefe && $jefe->id === $da?->id) {
+        //     $correos['dg'] = $dg?->correo_institucional;
+        // }
 
         foreach ($correos as $to_email) {
             if ($to_email) {
