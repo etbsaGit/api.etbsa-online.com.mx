@@ -28,7 +28,8 @@ class Tracking extends Model{
         'condicion_pago_id',
         'currency_id',
         'subtotal',
-        'iva',
+        'iva_monto',
+        'incluye_iva',
         'tarifa_cambio',
         'descuento',
         'total',
@@ -36,7 +37,8 @@ class Tracking extends Model{
         'date_lost_sale',
         'date_won_sale',
         'date_factura',
-        'date_delivery'
+        'date_delivery',
+        'notas'
     ];
 
     public function cliente(){
@@ -66,7 +68,7 @@ class Tracking extends Model{
     public function activities(){
         return $this->hasMany(TrackingActivity::class,'tracking_id');
     }
-    public function details(){
+    public function detalles(){
         return $this->hasMany(TrackingDetalle::class,'tracking_id');
     }
 

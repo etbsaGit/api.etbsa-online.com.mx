@@ -24,7 +24,7 @@ return new class extends Migration
             $table->unsignedBigInteger('currency_id');
                 $table->foreign('currency_id')->references('id')->on('currency');
             $table->string('notas')->nullable();
-            $table->date('date_next_traking');
+            $table->date('date_next_tracking');
 
             $table->timestamps();
         });

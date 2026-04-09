@@ -42,6 +42,7 @@ return new class extends Migration
             $table->decimal('descuento',10,2)->nullable();
             $table->decimal('total',10,2);
             $table->string('factura')->nullable();
+            $table->string('notas')->nullable();
             $table->date('date_next_tracking')->nullable();
             $table->date('date_lost_sale')->nullable();
             $table->date('date_won_sale')->nullable();
