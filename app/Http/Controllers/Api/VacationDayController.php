@@ -212,22 +212,22 @@ class VacationDayController extends ApiController
         $not = $vacationDay->empleado->notificar;
         $cubre_rel = $vacationDay->cubre_rel;
 
-        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+        // $correo_pruebas = 'munozchristian@etbsa.com.mx';
         $correos = [
-            // 'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
-            // 'solicitante' => $solicitante->correo_institucional,
-            // 'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
-            // 'notificar' => $not ? $not->correo_institucional : null,
-            // 'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
-            $correo_pruebas
+            'rh' => $rh?->correo_institucional, // Usa null safe operator si $rh puede ser null
+            'solicitante' => $solicitante->correo_institucional,
+            'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
+            'notificar' => $not ? $not->correo_institucional : null,
+            'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
+
         ];
 
-        // Si el jefe es DG, agregar también DA, y viceversa
-        // if ($jefe && $jefe->id === $dg?->id) {
-        //     $correos['da'] = $da?->correo_institucional;
-        // } elseif ($jefe && $jefe->id === $da?->id) {
-        //     $correos['dg'] = $dg?->correo_institucional;
-        // }
+        //Si el jefe es DG, agregar también DA, y viceversa
+        if ($jefe && $jefe->id === $dg?->id) {
+            $correos['da'] = $da?->correo_institucional;
+        } elseif ($jefe && $jefe->id === $da?->id) {
+            $correos['dg'] = $dg?->correo_institucional;
+        }
 
         if ($method == 'post') {
             foreach ($correos as $to_email) {
