@@ -16,6 +16,7 @@ use App\Models\Intranet\TrackingDepto;
 use App\Models\Intranet\TrackingOrigen;
 use App\Models\Sucursal;
 use App\Models\Intranet\ExchangeRate;
+use App\Models\Intranet\TrackingTipoSeguimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
