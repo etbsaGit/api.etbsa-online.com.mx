@@ -39,7 +39,9 @@ class TrackingController extends ApiController
             'condicionPago',
             'currency',
             'activities',
-            'details'
+            'detalles',
+            'estatus',
+            'depto',
         ])->filter($filters)->paginate(10);
 
         return $this->respond(

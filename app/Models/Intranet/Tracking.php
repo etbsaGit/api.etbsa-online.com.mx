@@ -2,6 +2,7 @@
 namespace App\Models\Intranet;
 
 use App\Models\Empleado;
+use App\Models\Estatus;
 use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
@@ -70,6 +71,12 @@ class Tracking extends Model{
     }
     public function detalles(){
         return $this->hasMany(TrackingDetalle::class,'tracking_id');
+    }
+    public function estatus(){
+        return $this->belongsTo(Estatus::class,'estatus_id');
+    }
+    public function depto(){
+        return $this->belongsTo(TrackingDepto::class,'depto_id');
     }
 
     public function scopeFilter(Builder $query,$filters){

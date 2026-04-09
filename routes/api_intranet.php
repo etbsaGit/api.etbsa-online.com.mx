@@ -330,6 +330,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('town', TownController::class);
 
     // 🔹 Tracking
+    Route::post('trackings', [TrackingController::class, 'index']);
     Route::get('tracking/options', [TrackingController::class, 'getOptions']);
     Route::apiResource('tracking',TrackingController::class);
 });
