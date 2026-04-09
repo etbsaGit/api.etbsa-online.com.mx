@@ -30,22 +30,29 @@ class TrackingRequest extends FormRequest
             'condicion_pago_id' => ['required', 'exists:products_condicion_pago,id'],
             'currency_id' => ['required', 'exists:currency,id'],
             'subtotal' => ['required', 'numeric'],
-            'iva' => ['required', 'numeric'],
+            'iva_monto' => ['required', 'numeric'],
+            'incluye_iva' => ['required', 'numeric'],
             'tarifa_cambio' => ['required', 'numeric'],
             'descuento' => ['required', 'numeric'],
             'total' => ['required', 'numeric'],
-            'factura' => ['required', 'string'],
-            'date_lost_sale' => ['required', 'date'],
-            'date_won_sale' => ['required', 'date'],
-            'date_factura' => ['required', 'date'],
-            'date_delivery' => ['required', 'date'],
+            'factura' => ['nullable', 'string'],
+            'date_lost_sale' => ['nullable', 'date'],
+            'date_won_sale' => ['nullable', 'date'],
+            'date_factura' => ['nullable', 'date'],
+            'date_delivery' => ['nullable', 'date'],
+            'notas' => ['nullable','string'],
 
-            //details
-            'details' => ['nullable', 'array'],
-            'details.*.product_id' => ['required', 'exists:products,id'],
-            'details.*.cantidad' => ['required', 'numeric'],
-            'details.*.precio_unidad' => ['required', 'numeric'],
-            'details.*.subtotal' => ['required', 'numeric'],
+            //detalles
+            'detalles' => ['nullable', 'array'],
+            'detalles.*.product_id' => ['required', 'exists:products,id'],
+            'detalles.*.cantidad' => ['required', 'numeric'],
+            'detalles.*.precio_unidad' => ['required', 'numeric'],
+            'detalles.*.subtotal' => ['required', 'numeric'],
+
+            'activity' => ['required','array'],
+            'activity.*.certeza_id' => ['required','exists:tracking_certeza,id'],
+            'activity.*.currency_id' => ['required', 'exists:currency,id'],
+            'activity.*.tarifa_cambio' => ['required', 'numeric'],
         ];
     }
 
@@ -82,6 +89,12 @@ class TrackingRequest extends FormRequest
             'detalles.*.precio_unidad.numeric' => 'El precio por unidad debe ser un número.',
             'detalles.*.subtotal.required' => 'El subtotal es obligatorio.',
             'detalles.*.subtotal.numeric' => 'El subtotal debe ser un número.',
+
+            'activity.array' => 'El formato de actividad debe ser un array',
+            'activity.*.certeza_id.required' => 'El campo actividad certeza es obligatorio.',
+            'activity.*.certeza_id.exists' => 'La actividad certeza seleccionada no existe.',
+            'activity.*.currency_id.required' => 'El campo moneda es obligatorio.',
+            'activity.*.currency_id.exists' => 'La moneda seleccionada no existe.',
         ];
     }
 

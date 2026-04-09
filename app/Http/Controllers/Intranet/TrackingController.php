@@ -139,6 +139,7 @@ class TrackingController extends ApiController
             'monedas' => Currency::all(),
             'productos' => Product::with('precios')->get(),
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
+            'tipos_seguimiento' => TrackingTipoSeguimiento::all()
         ];
         return $this->respond($data);
     }

@@ -36,7 +36,8 @@ return new class extends Migration
             $table->unsignedBigInteger('currency_id');
                 $table->foreign('currency_id')->references('id')->on('currency')->onDelete('restrict');
             $table->decimal('subtotal',12,2);
-            $table->tinyInteger('iva');
+            $table->unsignedBigInteger('iva_monto');
+            $table->tinyInteger('incluye_iva');
             $table->decimal('tarifa_cambio',10,2);
             $table->decimal('descuento',10,2)->nullable();
             $table->decimal('total',10,2);
