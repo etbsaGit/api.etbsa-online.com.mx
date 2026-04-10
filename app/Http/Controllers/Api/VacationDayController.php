@@ -83,9 +83,10 @@ class VacationDayController extends ApiController
     public function store(VacationDayRequest $request)
     {
         $vacation = VacationDay::create($request->validated());
-
-        $this->sendNotify($vacation->id, 'post');
-
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacation->id, 'post');
+        }
         return $this->respondCreated($vacation);
     }
 
@@ -110,7 +111,11 @@ class VacationDayController extends ApiController
     public function update(VacationDayRequest $request, VacationDay $vacationDay)
     {
         $vacationDay->update($request->validated());
-        $this->sendNotify($vacationDay->id, 'put');
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacationDay->id, 'put');
+        }
+
         return $this->respond($vacationDay);
     }
 
@@ -119,7 +124,10 @@ class VacationDayController extends ApiController
      */
     public function destroy(VacationDay $vacationDay)
     {
-        $this->sendNotify($vacationDay->id, 'delete');
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacationDay->id, 'delete');
+        }
         $vacationDay->delete();
         return $this->respondSuccess();
     }
@@ -219,10 +227,9 @@ class VacationDayController extends ApiController
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
             'notificar' => $not ? $not->correo_institucional : null,
             'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
-
         ];
 
-        //Si el jefe es DG, agregar también DA, y viceversa
+        // Si el jefe es DG, agregar también DA, y viceversa
         if ($jefe && $jefe->id === $dg?->id) {
             $correos['da'] = $da?->correo_institucional;
         } elseif ($jefe && $jefe->id === $da?->id) {
