@@ -332,5 +332,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // 🔹 Tracking
     Route::post('trackings', [TrackingController::class, 'index']);
     Route::get('tracking/options', [TrackingController::class, 'getOptions']);
+    Route::get('tracking/activity/options',[TrackingController::class,'getOptionsActivity']);
     Route::apiResource('tracking',TrackingController::class);
 });

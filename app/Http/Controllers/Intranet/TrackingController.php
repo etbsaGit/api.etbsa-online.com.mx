@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Intranet;
 
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Intranet\Tracking\TrackingActivityRequest;
 use App\Http\Requests\Intranet\Tracking\TrackingRequest;
 use App\Models\Empleado;
 use App\Models\Estatus;
@@ -212,5 +213,37 @@ class TrackingController extends ApiController
             'tipos_seguimiento' => TrackingTipoSeguimiento::all()
         ];
         return $this->respond($data);
+    }
+
+    public function getOptionsActivity()
+    {
+        $data = [
+            'certezas' => TrackingCerteza::all(),
+            'monedas' => Currency::all(),
+            'tipos_seguimiento' => TrackingTipoSeguimiento::all()
+        ];
+        return $this->respond($data);
+    }
+
+    public function storeActivity(TrackingActivityRequest $request, $trackingId)
+    {
+        try {
+            $tracking = Tracking::findOrFail($trackingId);
+            $data = $request->validated();
+            $data['tracking_id'] = $tracking->id;
+
+            $activity = TrackingActivity::create($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Actividad de seguimiento creada correctamente',
+                ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar actividad de seguimiento',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
