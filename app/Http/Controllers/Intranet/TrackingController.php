@@ -34,7 +34,6 @@ class TrackingController extends ApiController
             'origen',
             'vendedor',
             'sucursal',
-            'certeza',
             'categoria',
             'condicionPago',
             'currency',
@@ -65,8 +64,8 @@ class TrackingController extends ApiController
             }
 
             // meter estatus predeterminado como ACTIVO
-            $estatus_activo = Estatus::where('nombre','activo')
-                ->where('clave','tracking')
+            $estatus_activo = Estatus::where('nombre', 'activo')
+                ->where('clave', 'tracking')
                 ->first();
             $trackingData['estatus_id'] = $estatus_activo->id;
 
@@ -122,7 +121,8 @@ class TrackingController extends ApiController
             'condicionPago',
             'currency',
             'activities',
-            'details'
+            'detalles.producto.currency',
+
         ]);
         return $this->respond(
             $tracking,
@@ -130,38 +130,51 @@ class TrackingController extends ApiController
         );
     }
 
-    public function update(TrackingRequest $request, Tracking $tracking)
+    public function update(TrackingRequest $request, $id)
     {
-        DB::transaction(function () use ($request, $tracking) {
-            // se actualzia cabecera
-            $tracking->update(
-                $request->excelpt('details')
-            );
+        DB::beginTransaction();
 
-            $detailsRequest = collect($request->details);
-            // id que vienen del frontend
-            $idsRequest = $detailsRequest
-                ->pluck('id')
-                ->filter()
-                ->values();
+        try {
+            $tracking = Tracking::findOrFail($id);
+            $data = $request->validated();
+            unset($data['activity']);
 
-            // eliminar los que ya no  vienen
-            $tracking->details()
-                ->whereNotIn('id', $idsRequest)
-                ->delete();
+            // actualizar tracking
+            $tracking->update($data);
 
-            // insertar o actualizar
-            $tracking->details()->upsert(
-                $request->details,
-                ['id'],
-                ['product_id', 'cantidad', 'precion_unidad', 'subtotal']
-            );
+            // actualizar detalles
+            if (isset($data['detalles'])) {
+                //borrar los actuales
+                TrackingDetalle::where('tracking_id', $tracking->id)->delete();
 
+                // insertar nuevos
+                $detalles = collect($data['detalles'])->map(function ($item) use ($tracking) {
+                    return [
+                        'tracking_id' => $tracking->id,
+                        'product_id' => $item['producto_id'],
+                        'cantidad' => $item['cantidad'],
+                        'precio_unidad' => $item['precio_unidad'],
+                        'subtotal' => $item['subtotal'],
+                        'created_at' => now(),
+                    ];
+                });
+                TrackingDetalle::insert($detalles->toArray());
+            }
+            DB::commit();
             return response()->json([
                 'success' => true,
-                'message' => 'Seguimiento actualizado correctamente'
+                'message' => 'Tracking actualizado correctamente',
+                'data' => $tracking->load(['detalles'])
             ]);
-        });
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar tracking',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(Tracking $tracking)

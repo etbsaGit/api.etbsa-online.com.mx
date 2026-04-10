@@ -24,7 +24,6 @@ class Tracking extends Model{
         'sucursal_id',
         'depto_id',
         'estatus_id',
-        'certeza_id',
         'category_id',
         'condicion_pago_id',
         'currency_id',
@@ -53,9 +52,6 @@ class Tracking extends Model{
     }
     public function sucursal(){
         return $this->belongsTo(Sucursal::class,'sucursal_id');
-    }
-    public function certeza(){
-        return $this->belongsTo(TrackingCerteza::class,'certeza_id');
     }
     public function categoria(){
         return $this->belongsTo(ProductCategory::class,'category_id');

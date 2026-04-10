@@ -23,6 +23,41 @@ class TrackingRequest extends FormRequest
 
     public function rules(): array
     {
+        if ($this->isMethod('put') || $this->isMethod('patch')) {
+            return [
+                'title' => ['required'],
+                'folio' => ['nullable'],
+                'cliente_id' => ['required', 'exists:clientes,id'],
+                'origen_track_id' => ['required', 'exists:tracking_origen,id'],
+                'vendedor_id' => ['required', 'exists:empleados,id'],
+                'sucursal_id' => ['required', 'exists:sucursales,id'],
+                'depto_id' => ['required', 'exists:tracking_depto,id'],
+
+                'category_id' => ['required', 'exists:categories,id'],
+                'condicion_pago_id' => ['required', 'exists:products_condicion_pago,id'],
+                'currency_id' => ['required', 'exists:currency,id'],
+                'subtotal' => ['required', 'numeric'],
+                'iva_monto' => ['required', 'numeric'],
+                'incluye_iva' => ['required', 'boolean'],
+                'tarifa_cambio' => ['required', 'numeric'],
+                'descuento' => ['required', 'numeric'],
+                'total' => ['required', 'numeric'],
+                'factura' => ['nullable', 'string'],
+                'date_lost_sale' => ['nullable', 'date'],
+                'date_won_sale' => ['nullable', 'date'],
+                'date_factura' => ['nullable', 'date'],
+                'date_delivery' => ['nullable', 'date'],
+                'notas' => ['nullable', 'string'],
+
+                //detalles
+                'detalles' => ['nullable', 'array'],
+                'detalles.*.producto_id' => ['required', 'exists:products,id'],
+                'detalles.*.cantidad' => ['required', 'numeric'],
+                'detalles.*.precio_unidad' => ['required', 'numeric'],
+                'detalles.*.subtotal' => ['required', 'numeric'],
+
+            ];
+        }
         return [
             'title' => ['required'],
             'folio' => ['nullable'],
@@ -31,8 +66,7 @@ class TrackingRequest extends FormRequest
             'vendedor_id' => ['required', 'exists:empleados,id'],
             'sucursal_id' => ['required', 'exists:sucursales,id'],
             'depto_id' => ['required', 'exists:tracking_depto,id'],
-            // 'estatus_id' => ['required', 'exists:estatus,id'],
-            'certeza_id' => ['required', 'exists:tracking_certeza,id'],
+
             'category_id' => ['required', 'exists:categories,id'],
             'condicion_pago_id' => ['required', 'exists:products_condicion_pago,id'],
             'currency_id' => ['required', 'exists:currency,id'],
@@ -81,10 +115,6 @@ class TrackingRequest extends FormRequest
             'sucursal_id.exists' => 'La sucursal seleccionada no existe.',
             'depto_id.required' => 'El campo departamento es obligatorio.',
             'depto_id.exists' => 'El departamento seleccionado no existe.',
-            // 'estatus_id.required' => 'El campo estatus es obligatorio.',
-            // 'estatus_id.exists' => 'El estatus seleccionado no existe.',
-            'certeza_id.required' => 'El campo certeza es obligatorio.',
-            'certeza_id.exists' => 'La certeza seleccionada no existe.',
             'category_id.required' => 'El campo categoría es obligatorio.',
             'category_id.exists' => 'La categoría seleccionada no existe.',
             'condicion_pago_id.required' => 'El campo condición de pago es obligatorio.',
