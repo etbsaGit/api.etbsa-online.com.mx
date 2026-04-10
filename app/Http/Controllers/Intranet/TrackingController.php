@@ -37,10 +37,13 @@ class TrackingController extends ApiController
             'categoria',
             'condicionPago',
             'currency',
-            'activities',
+            'activities.certeza',
+            'activities.tipoSeguimiento',
+            'activities.currency',
             'detalles',
             'estatus',
             'depto',
+            'ultimaActividad.certeza'
         ])->filter($filters)->paginate(10);
 
         return $this->respond(
@@ -122,7 +125,6 @@ class TrackingController extends ApiController
             'currency',
             'activities',
             'detalles.producto.currency',
-
         ]);
         return $this->respond(
             $tracking,

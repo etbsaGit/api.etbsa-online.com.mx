@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\Intranet;
 
 use App\Models\Empleado;
@@ -9,7 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Tracking extends Model{
+class Tracking extends Model
+{
     use HasFactory;
     use FilterableModel;
 
@@ -41,41 +43,56 @@ class Tracking extends Model{
         'notas'
     ];
 
-    public function cliente(){
-        return $this->belongsTo(Cliente::class,'cliente_id');
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_id');
     }
-    public function origen(){
-        return $this->belongsTo(TrackingOrigen::class,'origen_track_id');
+    public function origen()
+    {
+        return $this->belongsTo(TrackingOrigen::class, 'origen_track_id');
     }
-    public function vendedor(){
-        return $this->belongsTo(Empleado::class,'vendedor_id');
+    public function vendedor()
+    {
+        return $this->belongsTo(Empleado::class, 'vendedor_id');
     }
-    public function sucursal(){
-        return $this->belongsTo(Sucursal::class,'sucursal_id');
+    public function sucursal()
+    {
+        return $this->belongsTo(Sucursal::class, 'sucursal_id');
     }
-    public function categoria(){
-        return $this->belongsTo(ProductCategory::class,'category_id');
+    public function categoria()
+    {
+        return $this->belongsTo(ProductCategory::class, 'category_id');
     }
-    public function condicionPago(){
-        return $this->belongsTo(ProductCondicionPago::class,'condicion_pago_id');
+    public function condicionPago()
+    {
+        return $this->belongsTo(ProductCondicionPago::class, 'condicion_pago_id');
     }
-    public function currency(){
-        return $this->belongsTo(Currency::class,'currency_id');
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'currency_id');
     }
-    public function activities(){
-        return $this->hasMany(TrackingActivity::class,'tracking_id');
+    public function activities()
+    {
+        return $this->hasMany(TrackingActivity::class, 'tracking_id');
     }
-    public function detalles(){
-        return $this->hasMany(TrackingDetalle::class,'tracking_id');
+    public function detalles()
+    {
+        return $this->hasMany(TrackingDetalle::class, 'tracking_id');
     }
-    public function estatus(){
-        return $this->belongsTo(Estatus::class,'estatus_id');
+    public function estatus()
+    {
+        return $this->belongsTo(Estatus::class, 'estatus_id');
     }
-    public function depto(){
-        return $this->belongsTo(TrackingDepto::class,'depto_id');
+    public function depto()
+    {
+        return $this->belongsTo(TrackingDepto::class, 'depto_id');
     }
-
-    public function scopeFilter(Builder $query,$filters){
-        return $this->scopeFilterSearch($query,$filters,['title'],['folio']);
+    public function ultimaActividad()
+    {
+        return $this->hasOne(TrackingActivity::class)->latestOfMany();
+    }
+    public function scopeFilter(Builder $query, $filters)
+    {
+        return $this->scopeFilterSearch($query, $filters, ['title'], ['folio']);
     }
 }

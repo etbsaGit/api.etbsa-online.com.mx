@@ -9,5 +9,9 @@
         "axios": "^1.6.1",
         "laravel-vite-plugin": "^0.8.0",
         "vite": "^4.0.0"
+    },
+    "dependencies": {
+        "react-native-pager-view": "^8.0.0",
+        "react-native-tab-view": "^4.3.0"
     }
 }
