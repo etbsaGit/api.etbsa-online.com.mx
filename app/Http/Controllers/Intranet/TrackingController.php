@@ -220,7 +220,8 @@ class TrackingController extends ApiController
         $data = [
             'certezas' => TrackingCerteza::all(),
             'monedas' => Currency::all(),
-            'tipos_seguimiento' => TrackingTipoSeguimiento::all()
+            'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
+            'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
         ];
         return $this->respond($data);
     }
@@ -235,7 +236,7 @@ class TrackingController extends ApiController
 
             $activity = TrackingActivity::create($data);
 
-            // 🔥 cargar relaciones para frontend
+            // cargar relaciones para frontend
             $activity->load([
                 'certeza',
                 'tipoSeguimiento',

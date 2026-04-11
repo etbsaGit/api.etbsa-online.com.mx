@@ -17,9 +17,9 @@ class TrackingActivityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tracking_id' => ['required', 'exists:tracking,id'],
-            'tipo_seguimiento_id' => ['required', 'exists:tracking_tipo_seguimientoc'],
-            'certeza_id' => ['required', 'exists:tracking_certeza'],
+            // 'tracking_id' => ['required', 'exists:tracking,id'],
+            'tipo_seguimiento_id' => ['required', 'exists:tracking_tipo_seguimiento,id'],
+            'certeza_id' => ['required', 'exists:tracking_certeza,id'],
             'ultimo_precio_tratar' => ['required', 'numeric'],
             'tarifa_cambio' => ['required', 'numeric'],
             'currency_id' => ['required', 'exists:currency,id'],
