@@ -266,6 +266,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //ProductBrand
     Route::post('product-brands', [ProductBrandController::class, 'index']);
     Route::apiResource('product-brand', ProductBrandController::class);
+
     //ProductCondicionPago
     Route::post('product-condicion-pagos', [ProductCondicionPagoController::class, 'index']);
     Route::get('product-condicion-pago/options', [ProductCondicionPagoController::class, 'getOptions']);
@@ -325,11 +326,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('tipoEquipos', [TipoEquipoController::class, 'index']);
     Route::apiResource('tipoEquipo', TipoEquipoController::class);
 
-    // 🔹 Town
+    //  Town
     Route::get('town/state/{id}', [TownController::class, 'getPerState']);
     Route::apiResource('town', TownController::class);
 
-    // 🔹 Tracking
+    //  Tracking
     Route::post('trackings', [TrackingController::class, 'index']);
     Route::get('tracking/options', [TrackingController::class, 'getOptions']);
     Route::get('tracking/activity/options',[TrackingController::class,'getOptionsActivity']);

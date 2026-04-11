@@ -24,7 +24,7 @@ class TrackingActivityRequest extends FormRequest
             'tarifa_cambio' => ['required', 'numeric'],
             'currency_id' => ['required', 'exists:currency,id'],
             'notas' => ['nullable'],
-            'date_next_tracking' => ['nullable', 'date']
+            'date_next_tracking' => ['nullable', 'date'],
         ];
     }
 
