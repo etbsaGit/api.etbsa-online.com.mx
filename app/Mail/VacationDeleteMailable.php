@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class VacationStoreMailable extends Mailable
+class VacationDeleteMailable extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -35,7 +35,7 @@ class VacationStoreMailable extends Mailable
     {
         return new Envelope(
             from: new Address(config('mail.from.address'), config('mail.from.name')),
-            subject: 'Solicitud de vacaciones',
+            subject: 'Solicitud de Vacaciones Eliminada',
         );
     }
 
@@ -45,7 +45,7 @@ class VacationStoreMailable extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.vacation_store_email',
+            view: 'emails.vacation_delete_email',
         );
     }
 
