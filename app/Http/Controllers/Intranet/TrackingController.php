@@ -229,15 +229,24 @@ class TrackingController extends ApiController
     {
         try {
             $tracking = Tracking::findOrFail($trackingId);
+
             $data = $request->validated();
             $data['tracking_id'] = $tracking->id;
 
             $activity = TrackingActivity::create($data);
 
+            // 🔥 cargar relaciones para frontend
+            $activity->load([
+                'certeza',
+                'tipoSeguimiento',
+                'currency'
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Actividad de seguimiento creada correctamente',
-                ]);
+                'data' => $activity
+            ], 201);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
