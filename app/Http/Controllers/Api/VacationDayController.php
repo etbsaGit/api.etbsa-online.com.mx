@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use App\Mail\VacationOnMailable;
 use App\Mail\VacationOffMailable;
 use App\Mail\VacationStoreMailable;
+use App\Mail\VacationUpdateMailable;
+use App\Mail\VacationDeleteMailable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
@@ -81,9 +83,10 @@ class VacationDayController extends ApiController
     public function store(VacationDayRequest $request)
     {
         $vacation = VacationDay::create($request->validated());
-
-        $this->sendNotify($vacation->id);
-
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacation->id, 'post');
+        }
         return $this->respondCreated($vacation);
     }
 
@@ -108,6 +111,10 @@ class VacationDayController extends ApiController
     public function update(VacationDayRequest $request, VacationDay $vacationDay)
     {
         $vacationDay->update($request->validated());
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacationDay->id, 'put');
+        }
 
         return $this->respond($vacationDay);
     }
@@ -117,8 +124,11 @@ class VacationDayController extends ApiController
      */
     public function destroy(VacationDay $vacationDay)
     {
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacationDay->id, 'delete');
+        }
         $vacationDay->delete();
-
         return $this->respondSuccess();
     }
 
@@ -176,7 +186,7 @@ class VacationDayController extends ApiController
         return $allSubordinates;
     }
 
-    private function sendNotify($vacationDayId)
+    private function sendNotify($vacationDayId, $method)
     {
         $vacationDay = VacationDay::find($vacationDayId);
 
@@ -217,7 +227,6 @@ class VacationDayController extends ApiController
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
             'notificar' => $not ? $not->correo_institucional : null,
             'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
-
         ];
 
         // Si el jefe es DG, agregar también DA, y viceversa
@@ -227,9 +236,35 @@ class VacationDayController extends ApiController
             $correos['dg'] = $dg?->correo_institucional;
         }
 
-        foreach ($correos as $to_email) {
-            if ($to_email) {
-                Mail::to($to_email)->send(new VacationStoreMailable($vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel')));
+        if ($method == 'post') {
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(new VacationStoreMailable(
+                        $vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel'),
+                        $vacaciones_pasadas,
+                        $vacaciones_futuras
+                    ));
+                }
+            }
+        } else if ($method == 'put') {
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(new VacationUpdateMailable(
+                        $vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel'),
+                        $vacaciones_pasadas,
+                        $vacaciones_futuras
+                    ));
+                }
+            }
+        } else if ($method == 'delete') {
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(new VacationDeleteMailable(
+                        $vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel'),
+                        $vacaciones_pasadas,
+                        $vacaciones_futuras
+                    ));
+                }
             }
         }
     }
