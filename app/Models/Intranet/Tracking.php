@@ -18,7 +18,6 @@ class Tracking extends Model
     protected $table = 'tracking';
 
     protected $fillable = [
-        'title',
         'folio',
         'cliente_id',
         'origen_track_id',
@@ -93,6 +92,6 @@ class Tracking extends Model
     }
     public function scopeFilter(Builder $query, $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['title'], ['folio']);
+        return $this->scopeFilterSearch($query, $filters, ['folio']);
     }
 }

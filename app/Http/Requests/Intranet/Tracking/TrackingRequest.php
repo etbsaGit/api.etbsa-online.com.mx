@@ -25,7 +25,6 @@ class TrackingRequest extends FormRequest
     {
         if ($this->isMethod('put') || $this->isMethod('patch')) {
             return [
-                'title' => ['required'],
                 'folio' => ['nullable'],
                 'cliente_id' => ['required', 'exists:clientes,id'],
                 'origen_track_id' => ['required', 'exists:tracking_origen,id'],
@@ -68,7 +67,6 @@ class TrackingRequest extends FormRequest
             ];
         }
         return [
-            'title' => ['required'],
             'folio' => ['nullable'],
             'cliente_id' => ['required', 'exists:clientes,id'],
             'origen_track_id' => ['required', 'exists:tracking_origen,id'],
@@ -114,7 +112,6 @@ class TrackingRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'El campo título es obligatorio.',
             'cliente_id.required' => 'El campo cliente es obligatorio.',
             'cliente_id.exists' => 'El cliente seleccionado no existe.',
             'origen_track_id.required' => 'El campo origen de seguimiento es obligatorio.',

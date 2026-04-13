@@ -23,6 +23,7 @@ use App\Models\Intranet\TrackingDetalle;
 use App\Models\Intranet\TrackingTipoSeguimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TrackingController extends ApiController
 {
@@ -38,14 +39,55 @@ class TrackingController extends ApiController
             'categoria',
             'condicionPago',
             'currency',
+            'activities' => function ($query) {
+                $query->orderBy('created_at', 'desc');
+            },
             'activities.certeza',
             'activities.tipoSeguimiento',
             'activities.currency',
-            'detalles',
+            'detalles.productos',
             'estatus',
             'depto',
             'ultimaActividad.certeza'
-        ])->filter($filters)->paginate(10);
+        ])->filter($filters)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return $this->respond(
+            $trackings,
+            'Lista de seguimientos cargada correctamente'
+        );
+    }
+
+    public function myIndex(Request $request)
+    {
+
+        $user = Auth::user();
+
+        $filters['vendedor_id'] = $user->id;
+
+        $trackings = Tracking::with([
+            'cliente',
+            'origen',
+            'vendedor',
+            'sucursal',
+            'categoria',
+            'condicionPago',
+            'currency',
+            'activities' => function ($query) {
+                $query->orderBy('created_at', 'desc');
+            },
+            'activities.certeza',
+            'activities.tipoSeguimiento',
+            'activities.currency',
+            'detalles.productos',
+            'estatus',
+            'depto',
+            'ultimaActividad.certeza'
+        ])->filter($filters)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
 
         return $this->respond(
             $trackings,
