@@ -56,6 +56,15 @@ class TrackingRequest extends FormRequest
                 'detalles.*.precio_unidad' => ['required', 'numeric'],
                 'detalles.*.subtotal' => ['required', 'numeric'],
 
+                'activity' => ['nullable', 'array'],
+                'activity.certeza_id' => ['required_with:activity', 'exists:tracking_certeza,id'],
+                'activity.tipo_seguimiento_id' => ['required_with:activity', 'exists:tracking_tipo_seguimiento,id'],
+                'activity.currency_id' => ['required_with:activity', 'exists:currency,id'],
+                'activity.tarifa_cambio' => ['required_with:activity', 'numeric'],
+                'activity.ultimo_precio_tratar' => ['nullable', 'numeric'],
+                'activity.notas' => ['nullable', 'string'],
+                'activity.date_next_tracking' => ['nullable', 'date'],
+
             ];
         }
         return [
@@ -90,11 +99,12 @@ class TrackingRequest extends FormRequest
             'detalles.*.precio_unidad' => ['required', 'numeric'],
             'detalles.*.subtotal' => ['required', 'numeric'],
 
-            'activity' => ['required', 'array'],
-            'activity.certeza_id' => ['required', 'exists:tracking_certeza,id'],
-            'activity.tipo_seguimiento_id' => ['required', 'exists:tracking_tipo_seguimiento,id'],
-            'activity.currency_id' => ['required', 'exists:currency,id'],
-            'activity.tarifa_cambio' => ['required', 'numeric'],
+
+            'activity' => ['nullable', 'array'],
+            'activity.certeza_id' => ['required_with:activity', 'exists:tracking_certeza,id'],
+            'activity.tipo_seguimiento_id' => ['required_with:activity', 'exists:tracking_tipo_seguimiento,id'],
+            'activity.currency_id' => ['required_with:activity', 'exists:currency,id'],
+            'activity.tarifa_cambio' => ['required_with:activity', 'numeric'],
             'activity.ultimo_precio_tratar' => ['nullable', 'numeric'],
             'activity.notas' => ['nullable', 'string'],
             'activity.date_next_tracking' => ['nullable', 'date'],
@@ -132,11 +142,11 @@ class TrackingRequest extends FormRequest
             'detalles.*.subtotal.numeric' => 'El subtotal debe ser un número.',
 
             'activity.array' => 'El formato de actividad debe ser un array',
-            'activity.*.certeza_id.required' => 'El campo actividad certeza es obligatorio.',
-            'activity.*.certeza_id.exists' => 'La actividad certeza seleccionada no existe.',
-            'activity.*.currency_id.required' => 'El campo moneda es obligatorio.',
-            'activity.*.tipo_seguimiento_id' => 'El campo de tipo de seguimiento es obligatorio',
-            'activity.*.currency_id.exists' => 'La moneda seleccionada no existe.',
+            'activity.certeza_id.required' => 'El campo actividad certeza es obligatorio.',
+            'activity.certeza_id.exists' => 'La actividad certeza seleccionada no existe.',
+            'activity.currency_id.required' => 'El campo moneda es obligatorio.',
+            'activity.tipo_seguimiento_id' => 'El campo de tipo de seguimiento es obligatorio',
+            'activity.currency_id.exists' => 'La moneda seleccionada no existe.',
         ];
     }
 

@@ -140,10 +140,11 @@ class TrackingController extends ApiController
         try {
             $tracking = Tracking::findOrFail($id);
             $data = $request->validated();
-            unset($data['activity']);
 
             // actualizar tracking
-            $tracking->update($data);
+            $tracking->update(
+                collect($data)->except(['detalles', 'activity'])->toArray()
+            );
 
             // actualizar detalles
             if (isset($data['detalles'])) {
@@ -163,11 +164,20 @@ class TrackingController extends ApiController
                 });
                 TrackingDetalle::insert($detalles->toArray());
             }
+
+            // activity
+            if (isset($data['activity'])) {
+                TrackingActivity::create([
+                    ...$data['activity'],
+                    'tracking_id' => $tracking->id,
+                ]);
+            }
+
             DB::commit();
             return response()->json([
                 'success' => true,
                 'message' => 'Tracking actualizado correctamente',
-                'data' => $tracking->load(['detalles'])
+                'data' => $tracking->load(['detalles', 'activities'])
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
