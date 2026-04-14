@@ -20,6 +20,7 @@ use App\Models\Sucursal;
 use App\Models\Intranet\ExchangeRate;
 use App\Models\Intranet\TrackingActivity;
 use App\Models\Intranet\TrackingDetalle;
+use App\Models\Intranet\TrackingProspecto;
 use App\Models\Intranet\TrackingTipoSeguimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -262,7 +263,8 @@ class TrackingController extends ApiController
             'monedas' => Currency::all(),
             'productos' => Product::with('precios')->get(),
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
-            'tipos_seguimiento' => TrackingTipoSeguimiento::all()
+            'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
+            'prospectos' => TrackingProspecto::all(),
         ];
         return $this->respond($data);
     }

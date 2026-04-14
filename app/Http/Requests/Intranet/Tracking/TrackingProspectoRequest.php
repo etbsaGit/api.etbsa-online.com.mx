@@ -19,8 +19,13 @@ class TrackingProspectoRequest extends FormRequest
         return [
             'nombre' => ['required'],
             'email' => ['nullable'],
-            'telefono' => ['required','numeric', Rule::unique('tracking_prospectos')],
-            'telefono_casa' => ['nullable','numeric'],
+            'telefono' => [
+                'required',
+                'numeric',
+                Rule::unique('tracking_prospectos', 'telefono')
+    ->ignore($this->tracking_prospect)
+            ],
+            'telefono_casa' => ['nullable', 'numeric'],
             'ubicacion' => ['required']
         ];
     }

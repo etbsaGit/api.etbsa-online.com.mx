@@ -341,6 +341,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('tracking', TrackingController::class);
 
     //TrackingProspecto
-    Route::post('tracking-prospect', [TrackingProspectoController::class, 'index']);
+    Route::post('tracking-prospects', [TrackingProspectoController::class, 'index']);
     Route::apiResource('tracking-prospect', TrackingProspectoController::class);
 });

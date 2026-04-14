@@ -23,7 +23,7 @@ class TrackingProspecto extends Model {
 
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['name']);
+        return $this->scopeFilterSearch($query, $filters, ['nombre']);
     }
 
 }

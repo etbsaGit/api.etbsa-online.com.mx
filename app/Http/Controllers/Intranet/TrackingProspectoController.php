@@ -25,8 +25,7 @@ class TrackingProspectoController extends ApiController
     {
         $filters = $request->all();
 
-        $products = Prospect::with([
-        ])
+        $products = TrackingProspecto::with([])
             ->filter($filters)
             ->paginate(10);
 
@@ -49,11 +48,11 @@ class TrackingProspectoController extends ApiController
     /**
      * Update the specified resource in storage.
      */
-    public function update(TrackingProspectoRequest $request, TrackingProspecto $prospect)
+    public function update(TrackingProspectoRequest $request, TrackingProspecto $tracking_prospect)
     {
-        $prospect->update($request->validated());
+        $tracking_prospect->update($request->validated());
 
-        return $this->respond($prospect);
+        return $this->respond($tracking_prospect);
     }
     /**
      * Remove the specified resource from storage.
