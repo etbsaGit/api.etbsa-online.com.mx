@@ -64,7 +64,7 @@ class TrackingController extends ApiController
 
         $user = Auth::user();
 
-        $filters['vendedor_id'] = $user->id;
+        $filters['vendedor_id'] = $user->empleado->id;
 
         $trackings = Tracking::with([
             'cliente',

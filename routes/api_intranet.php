@@ -57,6 +57,8 @@ use App\Http\Controllers\Intranet\ProductCondicionPagoController;
 use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
 use App\Http\Controllers\Intranet\TrackingController;
+use App\Http\Controllers\Intranet\TrackingProspectoController;
+use App\Models\Intranet\TrackingProspecto;
 
 /*
 |--------------------------------------------------------------------------
@@ -332,9 +334,13 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //  Tracking
     Route::post('trackings', [TrackingController::class, 'index']);
-    Route::post('trackings/auth',[TrackingController::class, 'myIndex']);
+    Route::post('trackings/auth', [TrackingController::class, 'myIndex']);
     Route::get('tracking/options', [TrackingController::class, 'getOptions']);
-    Route::get('tracking/activity/options',[TrackingController::class,'getOptionsActivity']);
+    Route::get('tracking/activity/options', [TrackingController::class, 'getOptionsActivity']);
     Route::post('/tracking/{tracking}/activity', [TrackingController::class, 'storeActivity']);
-    Route::apiResource('tracking',TrackingController::class);
+    Route::apiResource('tracking', TrackingController::class);
+
+    //TrackingProspecto
+    Route::post('tracking-prospect', [TrackingProspectoController::class, 'index']);
+    Route::apiResource('tracking-prospect', TrackingProspectoController::class);
 });
