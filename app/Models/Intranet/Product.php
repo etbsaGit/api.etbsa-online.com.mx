@@ -75,6 +75,10 @@ class Product extends Model
         return $this->hasMany(TrackingDetalle::class,'product_id');
     }
 
+    public function getExtrasAttribute(){
+        return $this->subcategory ? $this->subcategory->extras : collect();
+    }
+
     public function scopeFilter(Builder $query, array $filters)
     {
         if (!empty($filters['search'])) {
