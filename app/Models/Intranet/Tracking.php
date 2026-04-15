@@ -20,6 +20,7 @@ class Tracking extends Model
     protected $fillable = [
         'folio',
         'cliente_id',
+        'prospecto_id',
         'origen_track_id',
         'vendedor_id',
         'sucursal_id',
@@ -45,6 +46,10 @@ class Tracking extends Model
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
+    }
+    public function prospecto()
+    {
+        return $this->belongsTo(TrackingProspecto::class, 'prospecto_id');
     }
     public function origen()
     {
@@ -77,6 +82,10 @@ class Tracking extends Model
     public function detalles()
     {
         return $this->hasMany(TrackingDetalle::class, 'tracking_id');
+    }
+    public function extras()
+    {
+        return $this->hasMany(TrackingDetalleExtras::class, 'tracking_id');
     }
     public function estatus()
     {

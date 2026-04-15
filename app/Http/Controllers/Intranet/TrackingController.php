@@ -20,6 +20,7 @@ use App\Models\Sucursal;
 use App\Models\Intranet\ExchangeRate;
 use App\Models\Intranet\TrackingActivity;
 use App\Models\Intranet\TrackingDetalle;
+use App\Models\Intranet\TrackingDetalleExtras;
 use App\Models\Intranet\TrackingProspecto;
 use App\Models\Intranet\TrackingTipoSeguimiento;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,7 @@ class TrackingController extends ApiController
 
         $trackings = Tracking::with([
             'cliente',
+            'prospecto',
             'origen',
             'vendedor',
             'sucursal',
@@ -49,7 +51,8 @@ class TrackingController extends ApiController
             'detalles.productos',
             'estatus',
             'depto',
-            'ultimaActividad.certeza'
+            'ultimaActividad.certeza',
+            'extras',
         ])->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -69,6 +72,7 @@ class TrackingController extends ApiController
 
         $trackings = Tracking::with([
             'cliente',
+            'prospecto',
             'origen',
             'vendedor',
             'sucursal',
@@ -84,6 +88,7 @@ class TrackingController extends ApiController
             'detalles.productos',
             'estatus',
             'depto',
+            'extras',
             'ultimaActividad.certeza'
         ])->filter($filters)
             ->orderBy('created_at', 'desc')
@@ -107,7 +112,7 @@ class TrackingController extends ApiController
 
             // crear tracking
             if (empty($trackingdata['folio'])) {
-                $trackingData['folio'] = 'TRK-' . str_pad(Tracking::max('id') + 1, 6, '0', STR_PAD_LEFT);
+                $trackingData['folio'] = str_pad(Tracking::max('id') + 1, 6, '0', STR_PAD_LEFT);
             }
 
             // meter estatus predeterminado como ACTIVO
@@ -133,6 +138,21 @@ class TrackingController extends ApiController
                 TrackingDetalle::insert($detalles->toArray());
             }
 
+            // extras
+            if(!empty($data['extras'])){
+                $extras = collect($data['extras'])->map(function ($item) use ($tracking) {
+                    return [
+                        'tracking_id' => $tracking->id,
+                        'extra_id' => $item['extra_id'],
+                        'cantidad' => $item['cantidad'],
+                        'precio_unidad' => $item['precio_unidad'],
+                        'subtotal' => $item['subtotal'],
+                        'created_at' => now(),
+                    ];
+                });
+                TrackingDetalleExtras::insert($extras->toArray());
+            }
+
             // activity
             $activityData = $data['activity'];
             $activityData['tracking_id'] = $tracking->id;
@@ -143,7 +163,7 @@ class TrackingController extends ApiController
             return response()->json([
                 'success' => true,
                 'message' => 'Tracking creado correctamente',
-                'data' => $tracking->load(['detalles', 'activities'])
+                'data' => $tracking->load(['detalles', 'activities','extras'])
             ], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -206,6 +226,23 @@ class TrackingController extends ApiController
                     ];
                 });
                 TrackingDetalle::insert($detalles->toArray());
+            }
+
+            // extras
+            if(!empty($data['extras'])){
+                //borrar los actuales
+                TrackingDetalleExtras::where('tracking_id', $tracking->id)->delete();
+                $extras = collect($data['extras'])->map(function ($item) use ($tracking) {
+                    return [
+                        'tracking_id' => $tracking->id,
+                        'extra_id' => $item['extra_id'],
+                        'cantidad' => $item['cantidad'],
+                        'precio_unidad' => $item['precio_unidad'],
+                        'subtotal' => $item['subtotal'],
+                        'created_at' => now(),
+                    ];
+                });
+                TrackingDetalleExtras::insert($extras->toArray());
             }
 
             // activity

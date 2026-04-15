@@ -26,7 +26,8 @@ class TrackingRequest extends FormRequest
         if ($this->isMethod('put') || $this->isMethod('patch')) {
             return [
                 'folio' => ['nullable'],
-                'cliente_id' => ['required', 'exists:clientes,id'],
+                'cliente_id' => ['nullable', 'exists:clientes,id'],
+                'prospecto_id' => ['nullable', 'exists:tracking_prospectos,id'],
                 'origen_track_id' => ['required', 'exists:tracking_origen,id'],
                 'vendedor_id' => ['required', 'exists:empleados,id'],
                 'sucursal_id' => ['required', 'exists:sucursales,id'],
@@ -55,6 +56,13 @@ class TrackingRequest extends FormRequest
                 'detalles.*.precio_unidad' => ['required', 'numeric'],
                 'detalles.*.subtotal' => ['required', 'numeric'],
 
+                // extras
+                'extras' => ['nullable', 'array'],
+                'extras.*.extra_id' => ['required', 'exists:product_extras,id'],
+                'extras.*.cantidad' => ['required', 'numeric'],
+                'extras.*.precio_unidad' => ['required', 'numeric'],
+                'extras.*.subtotal' => ['required', 'numeric'],
+
                 'activity' => ['nullable', 'array'],
                 'activity.certeza_id' => ['required_with:activity', 'exists:tracking_certeza,id'],
                 'activity.tipo_seguimiento_id' => ['required_with:activity', 'exists:tracking_tipo_seguimiento,id'],
@@ -68,7 +76,8 @@ class TrackingRequest extends FormRequest
         }
         return [
             'folio' => ['nullable'],
-            'cliente_id' => ['required', 'exists:clientes,id'],
+            'cliente_id' => ['nullable', 'exists:clientes,id'],
+            'prospecto_id' => ['nullable', 'exists:tracking_prospectos,id'],
             'origen_track_id' => ['required', 'exists:tracking_origen,id'],
             'vendedor_id' => ['required', 'exists:empleados,id'],
             'sucursal_id' => ['required', 'exists:sucursales,id'],
@@ -97,6 +106,12 @@ class TrackingRequest extends FormRequest
             'detalles.*.precio_unidad' => ['required', 'numeric'],
             'detalles.*.subtotal' => ['required', 'numeric'],
 
+            // extras
+            'extras' => ['nullable', 'array'],
+            'extras.*.extra_id' => ['required', 'exists:product_extras,id'],
+            'extras.*.cantidad' => ['required', 'numeric'],
+            'extras.*.precio_unidad' => ['required', 'numeric'],
+            'extras.*.subtotal' => ['required', 'numeric'],
 
             'activity' => ['nullable', 'array'],
             'activity.certeza_id' => ['required_with:activity', 'exists:tracking_certeza,id'],
@@ -112,8 +127,8 @@ class TrackingRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'cliente_id.required' => 'El campo cliente es obligatorio.',
             'cliente_id.exists' => 'El cliente seleccionado no existe.',
+            'prospecto_id.exists' => 'El prospecto seleccionado no existe.',
             'origen_track_id.required' => 'El campo origen de seguimiento es obligatorio.',
             'origen_track_id.exists' => 'El origen de seguimiento seleccionado no existe.',
             'vendedor_id.required' => 'El campo vendedor es obligatorio.',
