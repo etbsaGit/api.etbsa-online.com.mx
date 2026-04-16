@@ -703,8 +703,8 @@ class VacationDayController extends ApiController
 
             // Generar PDF
             // imagenes
-            $logo1 = base64_encode(file_get_contents(public_path('storage/images/logo40.png')));
-            $logo2 = base64_encode(file_get_contents(public_path('storage/images/logo.png')));
+            $logo1 = base64_encode(public_path('/images/logo40.png'));
+            $logo2 = base64_encode(public_path('/images/logo.png'));
             $pdf = pdf::loadView('pdf.vacations.reportVacationsEmployee', [
                 'empleado' => $employee,
                 'start' => $start->format('d-m-Y'),

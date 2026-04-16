@@ -23,9 +23,9 @@
         }
 
         .header-container {
-            display: flex;
+            /* display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: center; */
             border-bottom: 3px solid #447c1f;
             padding-bottom: 10px;
             margin-bottom: 20px;
@@ -112,11 +112,21 @@
 
 <body>
     <div class="container">
-        <div class="header-container">
-            <img src="data:image/png;base64,{{ $logo1 }}" class="avatar">
-            <img src="data:image/png;base64,{{ $logo2 }}" class="avatar2">
-            <div class="header">Reporte de Vacaciones</div>
-        </div>
+        <table width="100%" style="border-bottom: 3px solid #447c1f; margin-bottom: 20px;">
+            <tr>
+                <td width="20%">
+                    <img src="data:image/png;base64,{{ $logo1 }}" style="width:100px; height:60px;">
+                </td>
+
+                <td width="60%" style="text-align:center; font-size:24px; font-weight:bold; color:#447c1f;">
+                    Reporte de Vacaciones
+                </td>
+
+                <td width="20%" style="text-align:right;">
+                    <img src="data:image/png;base64,{{ $logo2 }}" style="width:120px; height:60px;">
+                </td>
+            </tr>
+        </table>
         <p><strong>Empleado:</strong> {{ $empleado->nombreCompleto }}</p>
         <p><strong>Sucursal:</strong> {{ $empleado->sucursal->nombre }}</p>
         <p><strong>Del: </strong> {{ $start }}</p>
