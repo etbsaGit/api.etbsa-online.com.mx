@@ -22,7 +22,7 @@ class TrackingDetalleExtras extends Model{
     public function tracking(){
         return $this->belongsTo(Tracking::class,'tracking_id');
     }
-    public function extras(){
+    public function item(){
         return $this->belongsTo(ProductExtras::class,'extra_id');
     }
 

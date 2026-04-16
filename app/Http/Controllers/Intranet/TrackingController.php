@@ -52,7 +52,7 @@ class TrackingController extends ApiController
             'estatus',
             'depto',
             'ultimaActividad.certeza',
-            'extras',
+            'extras.item',
         ])->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -88,7 +88,7 @@ class TrackingController extends ApiController
             'detalles.productos',
             'estatus',
             'depto',
-            'extras',
+            'extras.item',
             'ultimaActividad.certeza'
         ])->filter($filters)
             ->orderBy('created_at', 'desc')
