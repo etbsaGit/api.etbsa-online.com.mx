@@ -113,8 +113,8 @@
 <body>
     <div class="container">
         <div class="header-container">
-            <img src="storage/images/logo40.png" alt="Avatar" class="avatar">
-            <img src="storage/images/logo.png" alt="Avatar" class="avatar2">
+            <img src="data:image/png;base64,{{ $logo1 }}" class="avatar">
+            <img src="data:image/png;base64,{{ $logo2 }}" class="avatar2">
             <div class="header">Reporte de Vacaciones</div>
         </div>
         <p><strong>Empleado:</strong> {{ $empleado->nombreCompleto }}</p>
