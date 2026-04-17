@@ -400,4 +400,18 @@ class TrackingController extends ApiController
             'data' => $tracking
         ]);
     }
+
+    public function updateACliente($id,$cliente_id){
+        $tracking = Tracking::findOrFail($id);
+
+        $tracking->update([
+            'cliente_id' => $cliente_id,
+            'prospecto_id' => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Estatus actualizado correctamente',
+            'data' => $tracking
+        ]);
+    }
 }
