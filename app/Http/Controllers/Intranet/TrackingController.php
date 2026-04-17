@@ -50,6 +50,7 @@ class TrackingController extends ApiController
             'activities.currency',
             'detalles.productos',
             'estatus',
+            'situacion',
             'depto',
             'ultimaActividad.certeza',
             'extras.item',
@@ -87,6 +88,7 @@ class TrackingController extends ApiController
             'activities.currency',
             'detalles.productos',
             'estatus',
+            'situacion',
             'depto',
             'extras.item',
             'ultimaActividad.certeza'
@@ -115,11 +117,17 @@ class TrackingController extends ApiController
                 $trackingData['folio'] = str_pad(Tracking::max('id') + 1, 6, '0', STR_PAD_LEFT);
             }
 
-            // meter estatus predeterminado como ACTIVO
+            // meter estatus_id predeterminado como ACTIVO
             $estatus_activo = Estatus::where('nombre', 'activo')
-                ->where('clave', 'tracking')
+                ->where('tipo_estatus', 'tracking')
                 ->first();
             $trackingData['estatus_id'] = $estatus_activo->id;
+
+            // meter situacion_id como formalizado
+            $situacion_formalizado = Estatus::where('nombre', 'formalizado')
+                ->where('tipo_estatus', 'tracking-situacion')
+                ->first();
+            $trackingData['situacion_id'] = $situacion_formalizado->id;
 
             $tracking = Tracking::create($trackingData);
 
@@ -369,8 +377,27 @@ class TrackingController extends ApiController
     public function getEstatus()
     {
         $data = [
-            'estatus' => Estatus::where('tipo_estatus','tracking')->get(),
+            'estatus' => Estatus::where('tipo_estatus', 'tracking')->get(),
         ];
         return $this->respond($data);
+    }
+
+    public function updateSituacion($id, $situacion)
+    {
+        $situacion_id = Estatus::where('tipo_estatus', 'tracking-situacion')
+            ->where('nombre', $situacion)
+            ->firstOrFail()
+            ->id;
+
+        $tracking = Tracking::findOrFail($id);
+
+        $tracking->update([
+            'situacion_id' => $situacion_id,
+        ]);
+
+        return response()->json([
+            'message' => 'Estatus actualizado correctamente',
+            'data' => $tracking
+        ]);
     }
 }

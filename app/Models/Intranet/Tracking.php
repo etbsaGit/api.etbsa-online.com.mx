@@ -26,6 +26,7 @@ class Tracking extends Model
         'sucursal_id',
         'depto_id',
         'estatus_id',
+        'situacion_id',
         'category_id',
         'condicion_pago_id',
         'currency_id',
@@ -90,6 +91,10 @@ class Tracking extends Model
     public function estatus()
     {
         return $this->belongsTo(Estatus::class, 'estatus_id');
+    }
+    public function situacion()
+    {
+        return $this->belongsTo(Estatus::class, 'situacion_id');
     }
     public function depto()
     {
