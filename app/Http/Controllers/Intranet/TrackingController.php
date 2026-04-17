@@ -139,7 +139,7 @@ class TrackingController extends ApiController
             }
 
             // extras
-            if(!empty($data['extras'])){
+            if (!empty($data['extras'])) {
                 $extras = collect($data['extras'])->map(function ($item) use ($tracking) {
                     return [
                         'tracking_id' => $tracking->id,
@@ -163,7 +163,7 @@ class TrackingController extends ApiController
             return response()->json([
                 'success' => true,
                 'message' => 'Tracking creado correctamente',
-                'data' => $tracking->load(['detalles', 'activities','extras'])
+                'data' => $tracking->load(['detalles', 'activities', 'extras'])
             ], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -229,7 +229,7 @@ class TrackingController extends ApiController
             }
 
             // extras
-            if(!empty($data['extras'])){
+            if (!empty($data['extras'])) {
                 //borrar los actuales
                 TrackingDetalleExtras::where('tracking_id', $tracking->id)->delete();
                 $extras = collect($data['extras'])->map(function ($item) use ($tracking) {
@@ -298,7 +298,7 @@ class TrackingController extends ApiController
             'categorias' => ProductCategory::with('condicionesPago')->get(),
             'condiciones_pago' => ProductCondicionPago::all(),
             'monedas' => Currency::all(),
-            'productos' => Product::with('precios','subcategory.extras')->get(),
+            'productos' => Product::with('precios', 'subcategory.extras')->get(),
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
@@ -346,5 +346,31 @@ class TrackingController extends ApiController
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function updateEstatus(Request $request, $id)
+    {
+        $request->validate([
+            'estatus_id' => 'required|integer|exists:estatus,id'
+        ]);
+
+        $tracking = Tracking::findOrFail($id);
+
+        $tracking->update([
+            'estatus_id' => $request->estatus_id
+        ]);
+
+        return response()->json([
+            'message' => 'Estatus actualizado correctamente',
+            'data' => $tracking
+        ]);
+    }
+
+    public function getEstatus()
+    {
+        $data = [
+            'estatus' => Estatus::where('tipo_estatus','tracking')->get(),
+        ];
+        return $this->respond($data);
     }
 }

@@ -338,6 +338,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('tracking/options', [TrackingController::class, 'getOptions']);
     Route::get('tracking/activity/options', [TrackingController::class, 'getOptionsActivity']);
     Route::post('/tracking/{tracking}/activity', [TrackingController::class, 'storeActivity']);
+    Route::get('/tracking/estatus', [TrackingController::class,'getEstatus']);
+    Route::patch('tracking/{tracking}/estatus', [TrackingController::class,'updateEstatus']);
     Route::apiResource('tracking', TrackingController::class);
 
     //TrackingProspecto
