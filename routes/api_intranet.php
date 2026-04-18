@@ -125,6 +125,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('cliente/rfc/{rfc}', [ClienteController::class, 'findByRfc']);
     Route::post('clientes/clientes', [ClienteController::class, 'getClientes']);
     Route::post('clientes/empleados', [ClienteController::class, 'getEmpleados']);
+    Route::get('clientes/empleados/rfc/{rfc}', [ClienteController::class, 'getEmpleadosAsignados']);
     Route::post('clientes/empleados/async', [ClienteController::class, 'syncEmpleadoClientes']);
     Route::apiResource('cliente', ClienteController::class);
 

@@ -299,4 +299,55 @@ class ClienteController extends ApiController
             'cliente' => $cliente
         ]);
     }
+
+    public function getEmpleadosAsignados($rfc)
+    {
+        $user = auth()->user();
+        $empleado = $user->empleado;
+
+        // Validar empleado asociado al usuario
+        if (!$empleado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El usuario autenticado no tiene empleado asociado.',
+                'data' => null
+            ], 403);
+        }
+
+        // Buscar cliente con empleados asignados
+        $cliente = Cliente::with('empleados:id')
+            ->where('rfc', $rfc)
+            ->first();
+
+        // Cliente no encontrado
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cliente no registrado, completa la información del cliente.',
+                'data' => null
+            ], 404);
+        }
+
+        // Verificar si el empleado pertenece al cliente
+        $asignado = $cliente->empleados->contains('id', $empleado->id);
+
+        if (!$asignado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes acceso a este cliente.',
+                'data' => null
+            ], 403);
+        }
+
+        // Correcto
+        return response()->json([
+            'success' => true,
+            'message' => 'Cliente asignado correctamente.',
+            'data' => [
+                'cliente_id' => $cliente->id,
+                'cliente' => $cliente->razon_social ?? null,
+                'rfc' => $cliente->rfc
+            ]
+        ], 200);
+    }
 }
