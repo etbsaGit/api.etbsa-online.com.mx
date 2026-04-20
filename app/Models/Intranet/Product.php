@@ -75,6 +75,11 @@ class Product extends Model
         return $this->hasMany(TrackingDetalle::class,'product_id');
     }
 
+    public function contrapesos()
+    {
+        return $this->belongsToMany(Contrapesos::class, 'tractor_contrapesos', 'tractor_id', 'contrapeso_id');
+    }
+
     public function getExtrasAttribute(){
         return $this->subcategory ? $this->subcategory->extras : collect();
     }
