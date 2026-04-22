@@ -19,8 +19,9 @@ class TractorContrapesoRequest extends FormRequest
 
     public function rules(): array
     {
+        $id = $this->route('tractor_contrapeso');
         return [
-            'nro_parte' => ['required', 'string', Rule::unique('contrapesos', 'nro_parte')],
+            'nro_parte' => ['required', 'string', Rule::unique('contrapesos', 'nro_parte')->ignore($id)],
             'descripcion' => ['required'],
             'trasero_delantero' => ['required'],
             'costo' => ['required', 'numeric'],
@@ -34,9 +35,10 @@ class TractorContrapesoRequest extends FormRequest
     public function messages()
     {
         return [
+            'nro_parte.unique' => 'El número de parte ya está registrado',
             'nro_parte.required' => 'El número de parte es obligatorio',
             'descripcion.required' => 'La descripción del contrapeso es obligatorio',
-            'trasero_delatero.required' => 'Especifica si el contrapeso es delantero o trasero',
+            'trasero_delantero.required' => 'Especifica si el contrapeso es delantero o trasero',
             'costo.required' => 'El costo es requerido',
             'precio.required' => 'El precio es requerido',
             'tractores.*.id.exists' => 'El tractor no existe',

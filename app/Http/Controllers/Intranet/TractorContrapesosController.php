@@ -49,26 +49,51 @@ class TractorContrapesosController extends ApiController
         }
     }
 
-    public function update(TractorContrapesoRequest $request, Contrapesos $tractor_contrapesos)
-    {
-        $tractor_contrapesos->update($request->validated());
+    public function update(
+        TractorContrapesoRequest $request,
+        Contrapesos $tractor_contrapeso
+    ) {
+        DB::beginTransaction();
 
-        if ($request->has('tractores')) {
-            $tractor_contrapesos->tractorContrapesos()->sync(collect($request->tractores)->pluck('id'));
+        try {
+            $data = $request->safe()->except('tractores');
+
+            $tractor_contrapeso->update($data);
+
+            $ids = collect($request->tractores ?? [])
+                ->pluck('id')
+                ->toArray();
+
+            $tractor_contrapeso->tractorContrapesos()->sync($ids);
+
+            DB::commit();
+
+            return $this->respond(
+                $tractor_contrapeso->load('tractorContrapesos'),
+                'Contrapeso actualizado'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        return $this->respond(
-            $tractor_contrapesos->load('tractorContrapesos'),
-            'Contrapeso actualizado'
-        );
     }
 
-    public function destroy(Contrapesos $tractor_contrapesos)
+    public function destroy(Contrapesos $tractor_contrapeso)
     {
-        $tractor_contrapesos->delete();
-        return $this->respondSuccess(
-            'Contrapeso eliminado correctamente'
-        );
+        DB::beginTransaction();
+        try {
+            $tractor_contrapeso->tractorContrapesos()->detach();
+            $tractor_contrapeso->delete();
+            DB::commit();
+            return $this->respondSuccess(
+                'Contrapeso eliminado correctamente'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+        }
     }
 
     public function getTractores()
