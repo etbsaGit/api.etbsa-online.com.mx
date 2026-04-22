@@ -77,7 +77,7 @@ class Product extends Model
 
     public function contrapesos()
     {
-        return $this->belongsToMany(Contrapesos::class, 'tractor_contrapesos', 'tractor_id', 'contrapeso_id');
+        return $this->belongsToMany(Contrapesos::class, 'tractor_contrapesos', 'product_id', 'contrapeso_id');
     }
 
     public function getExtrasAttribute(){

@@ -18,7 +18,7 @@ class ExchangeRateController extends ApiController
         return $this->respond($tarifa);
     }
 
-    public function newValue(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'value' => 'required|numeric',

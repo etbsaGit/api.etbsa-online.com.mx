@@ -306,7 +306,7 @@ class TrackingController extends ApiController
             'categorias' => ProductCategory::with('condicionesPago')->get(),
             'condiciones_pago' => ProductCondicionPago::all(),
             'monedas' => Currency::all(),
-            'productos' => Product::with('precios', 'subcategory.extras')->get(),
+            'productos' => Product::with('precios','contrapesos')->get(),
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
