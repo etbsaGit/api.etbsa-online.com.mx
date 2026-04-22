@@ -50,6 +50,7 @@ use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
+use App\Http\Controllers\Intranet\ExchangeRateController;
 use App\Http\Controllers\Intranet\ProductBrandController;
 use App\Http\Controllers\Intranet\ProductSupplierController;
 use App\Http\Controllers\Intranet\ProductCategoryController;
@@ -58,6 +59,8 @@ use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
 use App\Http\Controllers\Intranet\TrackingController;
 use App\Http\Controllers\Intranet\TrackingProspectoController;
+use App\Http\Controllers\Intranet\TractorContrapesosController;
+use App\Models\Intranet\ExchangeRate;
 use App\Models\Intranet\TrackingProspecto;
 
 /*
@@ -174,6 +177,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // 🔹 Egresos
     Route::get('egreso/cliente/{cliente}/{year}', [EgresoController::class, 'getPerCliente']);
     Route::apiResource('egreso', EgresoController::class);
+
+    //ExchangeRate TarifaCambio
+    Route::post('exchangeRates', [ExchangeRateController::class, 'index']);
+    Route::apiResource('exchangeRate', ExchangeRateController::class);
 
     // 🔹 Finca
     Route::get('finca/cliente/{cliente}', [FincaController::class, 'getPerCliente']);
@@ -348,4 +355,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //TrackingProspecto
     Route::post('tracking-prospects', [TrackingProspectoController::class, 'index']);
     Route::apiResource('tracking-prospect', TrackingProspectoController::class);
+
+    //TactorContrapesos
+    Route::post('tractor-contrapesos',[TractorContrapesosController::class,'index']);
+    Route::get('tractor-contrapesos/options',[TractorContrapesosController::class,'getTractores']);
+    Route::apiResource('tractor-contrapeso',TractorContrapesosController::class);
 });

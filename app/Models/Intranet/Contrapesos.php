@@ -23,7 +23,7 @@ class Contrapesos extends Model
 
     public function tractorContrapesos()
     {
-        return $this->belongsToMany(Product::class, 'tractor_contrapesos', 'contrapeso_id', 'tractor_id');
+        return $this->belongsToMany(Product::class, 'tractor_contrapesos', 'contrapeso_id', 'product_id');
     }
 
     public function scopeFilter(Builder $query, array $filters)
