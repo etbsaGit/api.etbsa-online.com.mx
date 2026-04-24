@@ -34,8 +34,6 @@ class TrackingProspectoController extends ApiController
             'Lista de prospectos cargada correctamente'
         );
     }
-
-
     /**
      * Store a newly created resource in storage.
      */
