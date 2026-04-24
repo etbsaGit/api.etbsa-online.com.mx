@@ -26,6 +26,7 @@ use App\Models\Intranet\TrackingTipoSeguimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TrackingController extends ApiController
 {
@@ -173,6 +174,7 @@ class TrackingController extends ApiController
                 'message' => 'Tracking creado correctamente',
                 'data' => $tracking->load(['detalles', 'activities', 'extras'])
             ], 201);
+
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -306,7 +308,7 @@ class TrackingController extends ApiController
             'categorias' => ProductCategory::with('condicionesPago')->get(),
             'condiciones_pago' => ProductCondicionPago::all(),
             'monedas' => Currency::all(),
-            'productos' => Product::with('precios','contrapesos')->get(),
+            'productos' => Product::with('precios', 'contrapesos')->get(),
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
@@ -401,7 +403,8 @@ class TrackingController extends ApiController
         ]);
     }
 
-    public function updateACliente($id,$cliente_id){
+    public function updateACliente($id, $cliente_id)
+    {
         $tracking = Tracking::findOrFail($id);
 
         $tracking->update([
@@ -413,5 +416,30 @@ class TrackingController extends ApiController
             'message' => 'Estatus actualizado correctamente',
             'data' => $tracking
         ]);
+    }
+
+    public function printQuote($id)
+    {
+        $tracking = Tracking::findOrFail($id);
+        $tracking->load(
+            'cliente',
+            'prospecto',
+            'vendedor',
+            'sucursal',
+            'condicionPago',
+            'currency',
+            'detalles.productos',
+            'extras.item',
+            'currency',
+        );
+        // $pdf = \PDF::loadView('pdf.tracking_quote', compact('data'));
+        // return $this->sendResponse($data, 'SHOW PDF');
+        // $pdf = App::make('dompdf.wrapper');
+        // $pdf->getDomPDF()->set_option("enable_php", true);
+        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+            'quote' => $tracking
+        ]);
+
+        return $pdf->download('cotizacion.pdf');
     }
 }

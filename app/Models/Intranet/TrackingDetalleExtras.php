@@ -23,7 +23,7 @@ class TrackingDetalleExtras extends Model{
         return $this->belongsTo(Tracking::class,'tracking_id');
     }
     public function item(){
-        return $this->belongsTo(ProductExtras::class,'extra_id');
+        return $this->belongsTo(Contrapesos::class,'extra_id');
     }
 
     public function scopeFilter(Builder $query,$filters){
