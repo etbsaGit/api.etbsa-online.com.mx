@@ -87,4 +87,27 @@ class VehicleController extends ApiController
         return $this->respond(['message' => 'Vehicle employees synced successfully.']);
     }
 
+    public function baja(Request $request, Vehicle $vehicle){
+        $request->validate([
+            'motivo_baja' => 'required|string|max:255',
+        ]);
+
+        $vehicle->update([
+            'activo' => false,
+            'motivo_baja' => $request->input('motivo_baja'),
+        ]);
+        return $this->respond(['message' => 'Vehicle dado de baja con éxito']);
+    }
+
+    public function activar(Request $request, Vehicle $vehicle){
+
+        $vehicle->update([
+            'activo' => true,
+            'motivo_baja' => null,
+        ]);
+        return $this->respond(['message' => 'Vehicle activado con éxito']);
+    }
+
+
+
 }

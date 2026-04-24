@@ -384,6 +384,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('vehicles', [VehicleController::class, 'index']);
     Route::post('vehicle/asign/{vehicle}', [VehicleController::class, 'asignEmployees']);
     Route::get('vehicle/forms', [VehicleController::class, 'getforms']);
+    Route::put('vehicle/baja/{vehicle}', [VehicleController::class, 'baja']);
+    Route::put('vehicle/activar/{vehicle}', [VehicleController::class, 'activar']);
     Route::apiResource('vehicle', VehicleController::class);
 
     //--------------------EmpleadosContact--------------------

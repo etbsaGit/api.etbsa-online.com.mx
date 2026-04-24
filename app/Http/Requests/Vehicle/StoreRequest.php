@@ -30,6 +30,8 @@ class StoreRequest extends FormRequest
             'linea_id' => ['required', 'integer', 'exists:lineas,id'],
             'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
             'estatus_id' => ['required', 'integer', 'exists:estatus,id'],
+            'activo' => ['nullable', 'boolean'],
+            'motivo_baja' => ['nullable', 'string'],
         ];
     }
 
