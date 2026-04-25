@@ -124,8 +124,8 @@ class TrackingController extends ApiController
                 ->first();
             $trackingData['estatus_id'] = $estatus_activo->id;
 
-            // meter situacion_id como formalizado
-            $situacion_formalizado = Estatus::where('nombre', 'formalizado')
+            // meter situacion_id como sin formalizar
+            $situacion_formalizado = Estatus::where('nombre', 'sin formalizar')
                 ->where('tipo_estatus', 'tracking-situacion')
                 ->first();
             $trackingData['situacion_id'] = $situacion_formalizado->id;

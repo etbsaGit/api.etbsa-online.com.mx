@@ -288,8 +288,8 @@
                 <td style="text-align: right; width: 200px; line-height: 1rem;">
                     <b>Cotizacion: </b># {{ str_pad($quote->folio, 5, '100', STR_PAD_LEFT) }}<br />
                     {{-- LEAD: # {{ str_pad($data->tracking->id, 4, '0', STR_PAD_LEFT) }}<br /> --}}
-                    Creacion: {{ $quote->updated_at }}<br />
-                    {{-- Vencimiento: {{ $data->date_due }} --}}
+                    Creacion: {{ $quote->updated_at->format('d/m/Y') }}<br />
+                    Vencimiento: {{ $quote->updated_at->copy()->addDays(30)->format('d/m/Y') }}
                 </td>
             </tr>
         </table>
@@ -308,7 +308,7 @@
                                 </td>
                                 <td style="text-align: left;">
                                     {{ $quote->vendedor->nombreCompleto }} <br>
-                                    {{ $quote->vendedor->email }}
+                                    {{ $quote->vendedor->correo_institucional }}
                                 </td>
                             </tr>
 
@@ -371,12 +371,29 @@
                             </div>
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ '$ ' . number_format($detalle->precio_unidad, 2, '.', ',') }}
+                            {{ '$ ' .
+                                number_format(
+                                    convertExchange($detalle->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
+                                    2,
+                                    '.',
+                                    ',',
+                                ) }}
 
                             {{ $quote->currency->name }}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ '$ ' . number_format($detalle->cantidad * $detalle->precio_unidad, 2, '.', ',') }}
+                            {{ '$ ' .
+                                number_format(
+                                    convertExchange(
+                                        $detalle->cantidad * $detalle->precio_unidad,
+                                        $quote->currency->name,
+                                        'MXN',
+                                        $quote->tarifa_cambio,
+                                    ),
+                                    2,
+                                    '.',
+                                    ',',
+                                ) }}
                             {{ $quote->currency->name }}</td>
                     </tr>
                 @endforeach
@@ -398,12 +415,24 @@
                             </div> --}}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ '$ ' . number_format($extra->precio_unidad, 2, '.', ',') }}
+                            {{ '$ ' .
+                                number_format(
+                                    convertExchange($extra->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
+                                    2,
+                                    '.',
+                                    ',',
+                                ) }}
 
                             {{ $quote->currency->name }}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ '$ ' . number_format($extra->cantidad * $extra->precio_unidad, 2, '.', ',') }}
+                            {{ '$ ' .
+                                number_format(
+                                    convertExchange($extra->cantidad * $extra->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
+                                    2,
+                                    '.',
+                                    ',',
+                                ) }}
                             {{ $quote->currency->name }}</td>
                     </tr>
                 @endforeach
