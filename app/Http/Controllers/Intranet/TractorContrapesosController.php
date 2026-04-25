@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Products\TractorContrapesoRequest;
 use App\Models\Intranet\Contrapesos;
+use App\Models\Intranet\Currency;
 use App\Models\Intranet\Product;
 use Illuminate\Support\Facades\DB;
 
@@ -15,7 +16,9 @@ class TractorContrapesosController extends ApiController
     {
         $filters = $request->all();
 
-        $contra_pesos = Contrapesos::with(['tractorContrapesos'])
+        $contra_pesos = Contrapesos::with([
+            'tractorContrapesos',
+            'currency'])
             ->filter($filters)
             ->paginate(10);
 
@@ -98,10 +101,13 @@ class TractorContrapesosController extends ApiController
 
     public function getTractores()
     {
-        $tractores = Product::with('category')
+        $data = [
+            'tractores' => Product::with('category')
             ->whereHas('category', function ($query) {
                 $query->where('name', 'Tractores');
-            })->get();
-        return $this->respond($tractores, 'Lista de tractores cargada correctamente');
+            })->get(),
+            'monedas' => Currency::all(),
+        ];
+        return $this->respond($data, 'Lista de tractores cargada correctamente');
     }
 }

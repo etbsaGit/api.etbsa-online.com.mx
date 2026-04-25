@@ -18,12 +18,16 @@ class Contrapesos extends Model
         'descripcion',
         'trasero_delantero',
         'costo',
+        'currency_id',
         'precio',
     ];
 
     public function tractorContrapesos()
     {
         return $this->belongsToMany(Product::class, 'tractor_contrapesos', 'contrapeso_id', 'product_id');
+    }
+    public function currency(){
+        return $this->belongsTo(Currency::class,'currency_id');
     }
 
     public function scopeFilter(Builder $query, array $filters)

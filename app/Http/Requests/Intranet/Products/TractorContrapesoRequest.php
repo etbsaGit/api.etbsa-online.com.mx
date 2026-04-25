@@ -26,6 +26,7 @@ class TractorContrapesoRequest extends FormRequest
             'trasero_delantero' => ['required'],
             'costo' => ['required', 'numeric'],
             'precio' => ['required', 'numeric'],
+            'currency_id' => ['required','exists:currency,id'],
 
             'tractores' => ['array', 'nullable'],
             'tractores.*.id' => ['exists:products,id'],
@@ -40,6 +41,7 @@ class TractorContrapesoRequest extends FormRequest
             'descripcion.required' => 'La descripción del contrapeso es obligatorio',
             'trasero_delantero.required' => 'Especifica si el contrapeso es delantero o trasero',
             'costo.required' => 'El costo es requerido',
+            'currency_id.required' => 'La moneda es obligatoria',
             'precio.required' => 'El precio es requerido',
             'tractores.*.id.exists' => 'El tractor no existe',
         ];
