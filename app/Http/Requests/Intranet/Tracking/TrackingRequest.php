@@ -55,6 +55,7 @@ class TrackingRequest extends FormRequest
                 'detalles.*.cantidad' => ['required', 'numeric'],
                 'detalles.*.precio_unidad' => ['required', 'numeric'],
                 'detalles.*.subtotal' => ['required', 'numeric'],
+                'detalles.*.currency_id' => ['required', 'exists:currency,id'],
 
                 // extras
                 'extras' => ['nullable', 'array'],
@@ -62,6 +63,7 @@ class TrackingRequest extends FormRequest
                 'extras.*.cantidad' => ['required', 'numeric'],
                 'extras.*.precio_unidad' => ['required', 'numeric'],
                 'extras.*.subtotal' => ['required', 'numeric'],
+                'extras.*.currency_id' => ['required', 'exists:currency,id'],
 
                 'activity' => ['nullable', 'array'],
                 'activity.certeza_id' => ['required_with:activity', 'exists:tracking_certeza,id'],
@@ -105,6 +107,7 @@ class TrackingRequest extends FormRequest
             'detalles.*.cantidad' => ['required', 'numeric'],
             'detalles.*.precio_unidad' => ['required', 'numeric'],
             'detalles.*.subtotal' => ['required', 'numeric'],
+            'detalles.*.currency_id' => ['required', 'exists:currency,id'],
 
             // extras
             'extras' => ['nullable', 'array'],
@@ -112,6 +115,7 @@ class TrackingRequest extends FormRequest
             'extras.*.cantidad' => ['required', 'numeric'],
             'extras.*.precio_unidad' => ['required', 'numeric'],
             'extras.*.subtotal' => ['required', 'numeric'],
+            'extras.*.currency_id' => ['required', 'exists:currency,id'],
 
             'activity' => ['nullable', 'array'],
             'activity.certeza_id' => ['required_with:activity', 'exists:tracking_certeza,id'],

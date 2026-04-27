@@ -47,6 +47,29 @@ class ClienteController extends ApiController
         );
     }
 
+    // index sin paginación
+    public function myIndex(Request $request)
+    {
+        $filters = $request->all();
+        $user = Auth::user(); // Usuario autenticado
+
+        $clientes = Cliente::query()
+            ->when(!$user->hasRole('Credito'), function ($query) use ($user) {
+                // Si NO tiene rol "credito", filtra solo los clientes relacionados con su empleado
+                $query->whereHas('empleados', function ($q) use ($user) {
+                    $q->where('empleados.id', $user->empleado->id);
+                });
+            })
+            ->filter($filters)
+            ->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification', 'empleados')
+            ;
+
+        return $this->respond(
+            $clientes,
+            'Clientes cargados con exito'
+        );
+    }
+
 
     /**
      * Store a newly created resource in storage.

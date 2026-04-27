@@ -17,6 +17,7 @@ class TrackingDetalleExtras extends Model{
         'cantidad',
         'subtotal',
         'precio_unidad',
+        'currency_id'
     ];
 
     public function tracking(){
@@ -24,6 +25,9 @@ class TrackingDetalleExtras extends Model{
     }
     public function item(){
         return $this->belongsTo(Contrapesos::class,'extra_id');
+    }
+    public function currency(){
+        return $this->belongsTo(Currency::class,'currency_id');
     }
 
     public function scopeFilter(Builder $query,$filters){

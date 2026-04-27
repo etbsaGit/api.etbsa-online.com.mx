@@ -141,6 +141,7 @@ class TrackingController extends ApiController
                         'cantidad' => $item['cantidad'],
                         'precio_unidad' => $item['precio_unidad'],
                         'subtotal' => $item['subtotal'],
+                        'currency_id' => $item['currency_id'],
                         'created_at' => now(),
                     ];
                 });
@@ -156,6 +157,7 @@ class TrackingController extends ApiController
                         'cantidad' => $item['cantidad'],
                         'precio_unidad' => $item['precio_unidad'],
                         'subtotal' => $item['subtotal'],
+                        'currency_id' => $item['currency_id'],
                         'created_at' => now(),
                     ];
                 });
@@ -298,8 +300,11 @@ class TrackingController extends ApiController
 
     public function getOptions()
     {
+        $user = auth()->user();
+        $empleado = $user->empleado;
+
         $data = [
-            'clientes' => Cliente::all(),
+            // 'clientes' => Cliente::all(),
             'origenes' => TrackingOrigen::all(),
             'vendedores' => Empleado::all(),
             'sucursales' => Sucursal::all(),

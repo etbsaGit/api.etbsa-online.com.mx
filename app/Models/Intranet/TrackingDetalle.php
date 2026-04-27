@@ -6,6 +6,7 @@ use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use PhpOffice\PhpSpreadsheet\Calculation\DateTimeExcel\Current;
 
 class TrackingDetalle extends Model{
     use HasFactory;
@@ -17,6 +18,7 @@ class TrackingDetalle extends Model{
         'cantidad',
         'subtotal',
         'precio_unidad',
+        'currency_id'
     ];
 
     public function tracking(){
@@ -24,6 +26,9 @@ class TrackingDetalle extends Model{
     }
     public function productos(){
         return $this->belongsTo(Product::class,'product_id');
+    }
+    public function currency(){
+        return $this->belongsTo(Currency::class,'currency_id');
     }
 
     public function scopeFilter(Builder $query,$filters){
