@@ -304,7 +304,7 @@ class TrackingController extends ApiController
         $empleado = $user->empleado;
 
         $data = [
-            // 'clientes' => Cliente::all(),
+            'clientes' => Cliente::all(),
             'origenes' => TrackingOrigen::all(),
             'vendedores' => Empleado::all(),
             'sucursales' => Sucursal::all(),
