@@ -354,10 +354,11 @@ class ClienteController extends ApiController
 
         if (!$asignado) {
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => 'No tienes acceso a este cliente.',
-                'data' => null
-            ], 403);
+                'data' => $cliente
+            ], 203);
+
         }
 
         // Correcto

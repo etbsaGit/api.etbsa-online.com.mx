@@ -351,6 +351,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::patch('tracking/{tracking}/situacion/{situacion}', [TrackingController::class,'updateSituacion']);
     Route::patch('tracking/{trackig}/cliente/{cliente_id}',[TrackingController::class,'updateACliente']);
     Route::get('tracking/print-quote/{id}',[TrackingController::class, 'printQuote']);
+    Route::post('tracking/customer_assigment/{trackingId}/{clienteId}',[TrackingController::class,'customerAssigmentRequest']);
     Route::apiResource('tracking', TrackingController::class);
 
     //TrackingProspecto

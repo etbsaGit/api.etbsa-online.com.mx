@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Intranet;
 
+use App\Mail\CustomerAssignmentRequest;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Tracking\TrackingActivityRequest;
 use App\Http\Requests\Intranet\Tracking\TrackingRequest;
@@ -15,7 +16,6 @@ use App\Models\Intranet\ProductCategory;
 use App\Models\Intranet\ProductCondicionPago;
 use App\Models\Intranet\Tracking;
 use App\Models\Intranet\TrackingCerteza;
-use App\Models\Intranet\TrackingDepto;
 use App\Models\Intranet\TrackingOrigen;
 use App\Models\Sucursal;
 use App\Models\Intranet\ExchangeRate;
@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
 
 class TrackingController extends ApiController
 {
@@ -178,7 +179,6 @@ class TrackingController extends ApiController
                 'message' => 'Tracking creado correctamente',
                 'data' => $tracking->load(['detalles', 'activities', 'extras'])
             ], 201);
-
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -307,12 +307,12 @@ class TrackingController extends ApiController
 
         $data = [
             'clientes' => Cliente::query()
-            ->when(!$user->hasRole('Credito'), function ($query) use ($user) {
-                // Si NO tiene rol "credito", filtra solo los clientes relacionados con su empleado
-                $query->whereHas('empleados', function ($q) use ($user) {
-                    $q->where('empleados.id', $user->empleado->id);
-                });
-            })->filter($filters)->get(),
+                ->when(!$user->hasRole('Credito'), function ($query) use ($user) {
+                    // Si NO tiene rol "credito", filtra solo los clientes relacionados con su empleado
+                    $query->whereHas('empleados', function ($q) use ($user) {
+                        $q->where('empleados.id', $user->empleado->id);
+                    });
+                })->filter($filters)->get(),
             'origenes' => TrackingOrigen::all(),
             'vendedores' => Empleado::with('departamento')->get(),
             'sucursales' => Sucursal::all(),
@@ -326,7 +326,7 @@ class TrackingController extends ApiController
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
             'gerentes' => Empleado::whereHas('puesto', function ($query) {
-                $query->where('nombre','Gerente Territorial');
+                $query->where('nombre', 'Gerente Territorial');
             })->with('sucursal')->get(),
         ];
         return $this->respond($data);
@@ -457,5 +457,62 @@ class TrackingController extends ApiController
         ]);
 
         return $pdf->stream('cotizacion.pdf');
+    }
+
+    public function customerAssigmentRequest($trackingId, $clienteId)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+
+        $tracking->load(
+            'cliente',
+            'prospecto',
+            'vendedor',
+            'sucursal',
+            'condicionPago',
+            'currency',
+            'detalles.productos',
+            'extras.item'
+        );
+
+        $cliente = Cliente::findOrFail($clienteId);
+
+        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+            'quote' => $tracking
+        ]);
+
+        // Obtener binario PDF
+        $pdfContent = $pdf->output();
+
+        $gerente_corp = Empleado::where('puesto_id', Puesto::where('nombre', 'Gerente corporativo')->value('id'))
+            ->where('departamento_id', Departamento::where('nombre', 'Corporativo')->value('id'))
+            ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
+            ->first();
+
+        $aux_jdf = Empleado::where('puesto_id', Puesto::where('nombre', 'Auxiliar John Deere Financial')->value('id'))
+            ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
+            ->first();
+
+        $solicitante = $tracking->empleado;
+        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+
+        $correos = [
+            // 'gerente_corp' => $gerente_corp->correo_institucional,
+            // 'aux_jdf' => $aux_jdf->correo_institucional,
+            // 'solicitante' => $solicitante->correo_institucional,
+            $correo_pruebas
+        ];
+
+        foreach ($correos as $to_email) {
+            if ($to_email) {
+                Mail::to($to_email)->send(
+                    new CustomerAssignmentRequest($tracking, $cliente, $pdfContent)
+                );
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Correo enviado correctamente'
+        ]);
     }
 }
