@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Intranet;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Tracking\TrackingActivityRequest;
 use App\Http\Requests\Intranet\Tracking\TrackingRequest;
+use App\Models\Departamento;
 use App\Models\Empleado;
 use App\Models\Estatus;
 use App\Models\Intranet\Cliente;
@@ -23,6 +24,7 @@ use App\Models\Intranet\TrackingDetalle;
 use App\Models\Intranet\TrackingDetalleExtras;
 use App\Models\Intranet\TrackingProspecto;
 use App\Models\Intranet\TrackingTipoSeguimiento;
+use App\Models\Puesto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -298,17 +300,23 @@ class TrackingController extends ApiController
         ]);
     }
 
-    public function getOptions()
+    public function getOptions(Request $request)
     {
-        $user = auth()->user();
-        $empleado = $user->empleado;
+        $user = Auth::user();
+        $filters = $request->all();
 
         $data = [
-            'clientes' => Cliente::all(),
+            'clientes' => Cliente::query()
+            ->when(!$user->hasRole('Credito'), function ($query) use ($user) {
+                // Si NO tiene rol "credito", filtra solo los clientes relacionados con su empleado
+                $query->whereHas('empleados', function ($q) use ($user) {
+                    $q->where('empleados.id', $user->empleado->id);
+                });
+            })->filter($filters)->get(),
             'origenes' => TrackingOrigen::all(),
-            'vendedores' => Empleado::all(),
+            'vendedores' => Empleado::with('departamento')->get(),
             'sucursales' => Sucursal::all(),
-            'deptos' => TrackingDepto::all(),
+            'deptos' => Departamento::all(),
             'certezas' => TrackingCerteza::all(),
             'categorias' => ProductCategory::with('condicionesPago')->get(),
             'condiciones_pago' => ProductCondicionPago::all(),
@@ -317,6 +325,9 @@ class TrackingController extends ApiController
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
+            'gerentes' => Empleado::whereHas('puesto', function ($query) {
+                $query->where('nombre','Gerente Territorial');
+            })->with('sucursal')->get(),
         ];
         return $this->respond($data);
     }
@@ -445,6 +456,6 @@ class TrackingController extends ApiController
             'quote' => $tracking
         ]);
 
-        return $pdf->download('cotizacion.pdf');
+        return $pdf->stream('cotizacion.pdf');
     }
 }

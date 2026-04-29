@@ -362,3 +362,5 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('tractor-contrapesos/options',[TractorContrapesosController::class,'getTractores']);
     Route::apiResource('tractor-contrapeso',TractorContrapesosController::class);
 });
+
+

@@ -60,9 +60,7 @@ class ClienteController extends ApiController
                     $q->where('empleados.id', $user->empleado->id);
                 });
             })
-            ->filter($filters)
-            ->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification', 'empleados')
-            ;
+            ->filter($filters)->get();
 
         return $this->respond(
             $clientes,

@@ -2,6 +2,7 @@
 
 namespace App\Models\Intranet;
 
+use App\Models\Departamento;
 use App\Models\Empleado;
 use App\Models\Estatus;
 use App\Models\Sucursal;
@@ -24,7 +25,8 @@ class Tracking extends Model
         'origen_track_id',
         'vendedor_id',
         'sucursal_id',
-        'depto_id',
+        'departamento_id',
+        'notificar_a',
         'estatus_id',
         'situacion_id',
         'category_id',
@@ -98,7 +100,10 @@ class Tracking extends Model
     }
     public function depto()
     {
-        return $this->belongsTo(TrackingDepto::class, 'depto_id');
+        return $this->belongsTo(Departamento::class, 'departamento_id');
+    }
+    public function notificado(){
+        return $this->belongsTo(Empleado::class,'notificar_a');
     }
     public function ultimaActividad()
     {
