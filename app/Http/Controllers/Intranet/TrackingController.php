@@ -179,6 +179,7 @@ class TrackingController extends ApiController
                 'message' => 'Tracking creado correctamente',
                 'data' => $tracking->load(['detalles', 'activities', 'extras'])
             ], 201);
+
         } catch (\Throwable $e) {
             DB::rollBack();
 

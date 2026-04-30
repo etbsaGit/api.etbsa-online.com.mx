@@ -60,7 +60,7 @@ class TrackingRequest extends FormRequest
 
                 // extras
                 'extras' => ['nullable', 'array'],
-                'extras.*.extra_id' => ['required', 'exists:product_extras,id'],
+                'extras.*.extra_id' => ['required', 'exists:contrapesos,id'],
                 'extras.*.cantidad' => ['required', 'numeric'],
                 'extras.*.precio_unidad' => ['required', 'numeric'],
                 'extras.*.subtotal' => ['required', 'numeric'],
@@ -113,7 +113,7 @@ class TrackingRequest extends FormRequest
 
             // extras
             'extras' => ['nullable', 'array'],
-            'extras.*.extra_id' => ['required', 'exists:product_extras,id'],
+            'extras.*.extra_id' => ['required', 'exists:contrapesos,id'],
             'extras.*.cantidad' => ['required', 'numeric'],
             'extras.*.precio_unidad' => ['required', 'numeric'],
             'extras.*.subtotal' => ['required', 'numeric'],
