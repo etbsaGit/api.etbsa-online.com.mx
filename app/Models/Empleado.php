@@ -15,6 +15,7 @@ use App\Models\Intranet\Sale;
 use App\Traits\FilterableModel;
 use App\Models\Intranet\Cliente;
 use App\Models\Intranet\Analitica;
+use App\Models\Intranet\Tracking;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -576,6 +577,10 @@ class Empleado extends Model
         $diferencia = $diasDesdeUltimo - 60;
 
         return $diferencia;
+    }
+
+    public function tracking(){
+        return $this->hasMany(Tracking::class,'vendedor_id');
     }
 
     // ---------------------------------scope---------------------------------------------------------

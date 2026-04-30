@@ -66,12 +66,22 @@ class Product extends Model
     {
         return $this->belongsTo(ProductSupplier::class, 'vendor_id');
     }
-    // public function precios(){
-    //     return $this->hasMany(ProductoPrecio::class,'producto_id');
-    // }
 
     public function precios(){
-        return $this->hasMany(ProductoPrecio::class,'producto_id');
+        return $this->hasMany(ProductoPrecio::class,'producto_id')->with('currency');
+    }
+
+    public function trackingProduct(){
+        return $this->hasMany(TrackingDetalle::class,'product_id');
+    }
+
+    public function contrapesos()
+    {
+        return $this->belongsToMany(Contrapesos::class, 'tractor_contrapesos', 'product_id', 'contrapeso_id');
+    }
+
+    public function getExtrasAttribute(){
+        return $this->subcategory ? $this->subcategory->extras : collect();
     }
 
     public function scopeFilter(Builder $query, array $filters)

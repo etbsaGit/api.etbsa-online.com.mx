@@ -241,4 +241,8 @@ class Cliente extends Model
     {
         return $this->belongsToMany(Empleado::class, 'p_cliente_empleado');
     }
+
+    public function trackings(){
+        return $this->hasMany(Tracking::class,'cliente_id');
+    }
 }

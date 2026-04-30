@@ -2,7 +2,7 @@
 
 namespace App\Models\Intranet;
 
-use App\Models\Ecommerce\Product;
+use App\Models\Intranet\Product;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,6 +30,15 @@ class ProductSubCategory extends Model
     public function products()
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function extras(){
+        return $this->belongsToMany(
+            ProductExtras::class,
+            'product_extras_subcat',
+            'subcategory_id',
+            'extra_id'
+        );
     }
 
     public function scopeFilter(Builder $query, array $filters)

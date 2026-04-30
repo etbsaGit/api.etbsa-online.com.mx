@@ -50,12 +50,18 @@ use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
+use App\Http\Controllers\Intranet\ExchangeRateController;
 use App\Http\Controllers\Intranet\ProductBrandController;
 use App\Http\Controllers\Intranet\ProductSupplierController;
 use App\Http\Controllers\Intranet\ProductCategoryController;
 use App\Http\Controllers\Intranet\ProductCondicionPagoController;
 use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
+use App\Http\Controllers\Intranet\TrackingController;
+use App\Http\Controllers\Intranet\TrackingProspectoController;
+use App\Http\Controllers\Intranet\TractorContrapesosController;
+use App\Models\Intranet\ExchangeRate;
+use App\Models\Intranet\TrackingProspecto;
 
 /*
 |--------------------------------------------------------------------------
@@ -122,6 +128,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('cliente/rfc/{rfc}', [ClienteController::class, 'findByRfc']);
     Route::post('clientes/clientes', [ClienteController::class, 'getClientes']);
     Route::post('clientes/empleados', [ClienteController::class, 'getEmpleados']);
+    Route::get('clientes/empleados/rfc/{rfc}', [ClienteController::class, 'getEmpleadosAsignados']);
     Route::post('clientes/empleados/async', [ClienteController::class, 'syncEmpleadoClientes']);
     Route::apiResource('cliente', ClienteController::class);
 
@@ -170,6 +177,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // 🔹 Egresos
     Route::get('egreso/cliente/{cliente}/{year}', [EgresoController::class, 'getPerCliente']);
     Route::apiResource('egreso', EgresoController::class);
+
+    //ExchangeRate TarifaCambio
+    Route::post('exchangeRates', [ExchangeRateController::class, 'index']);
+    Route::apiResource('exchangeRate', ExchangeRateController::class);
 
     // 🔹 Finca
     Route::get('finca/cliente/{cliente}', [FincaController::class, 'getPerCliente']);
@@ -265,6 +276,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //ProductBrand
     Route::post('product-brands', [ProductBrandController::class, 'index']);
     Route::apiResource('product-brand', ProductBrandController::class);
+
     //ProductCondicionPago
     Route::post('product-condicion-pagos', [ProductCondicionPagoController::class, 'index']);
     Route::get('product-condicion-pago/options', [ProductCondicionPagoController::class, 'getOptions']);
@@ -324,7 +336,32 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('tipoEquipos', [TipoEquipoController::class, 'index']);
     Route::apiResource('tipoEquipo', TipoEquipoController::class);
 
-    // 🔹 Town
+    //  Town
     Route::get('town/state/{id}', [TownController::class, 'getPerState']);
     Route::apiResource('town', TownController::class);
+
+    //  Tracking
+    Route::post('trackings', [TrackingController::class, 'index']);
+    Route::post('trackings/auth', [TrackingController::class, 'myIndex']);
+    Route::get('tracking/options', [TrackingController::class, 'getOptions']);
+    Route::get('tracking/activity/options', [TrackingController::class, 'getOptionsActivity']);
+    Route::post('/tracking/{tracking}/activity', [TrackingController::class, 'storeActivity']);
+    Route::get('/tracking/estatus', [TrackingController::class,'getEstatus']);
+    Route::patch('tracking/{tracking}/estatus', [TrackingController::class,'updateEstatus']);
+    Route::patch('tracking/{tracking}/situacion/{situacion}', [TrackingController::class,'updateSituacion']);
+    Route::patch('tracking/{trackig}/cliente/{cliente_id}',[TrackingController::class,'updateACliente']);
+    Route::get('tracking/print-quote/{id}',[TrackingController::class, 'printQuote']);
+    Route::post('tracking/customer_assigment/{trackingId}/{clienteId}',[TrackingController::class,'customerAssigmentRequest']);
+    Route::apiResource('tracking', TrackingController::class);
+
+    //TrackingProspecto
+    Route::post('tracking-prospects', [TrackingProspectoController::class, 'index']);
+    Route::apiResource('tracking-prospect', TrackingProspectoController::class);
+
+    //TactorContrapesos
+    Route::post('tractor-contrapesos',[TractorContrapesosController::class,'index']);
+    Route::get('tractor-contrapesos/options',[TractorContrapesosController::class,'getTractores']);
+    Route::apiResource('tractor-contrapeso',TractorContrapesosController::class);
 });
+
+

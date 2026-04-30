@@ -107,7 +107,4 @@ class VehicleController extends ApiController
         ]);
         return $this->respond(['message' => 'Vehicle activado con éxito']);
     }
-
-
-
 }

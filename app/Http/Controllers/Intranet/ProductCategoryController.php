@@ -74,7 +74,7 @@ class ProductCategoryController extends ApiController
     {
         $productCategorium->delete();
         return $this->respondSuccess(
-            'Categoróa eliminado correctamente'
+            'Categoría eliminada correctamente'
         );
     }
 }

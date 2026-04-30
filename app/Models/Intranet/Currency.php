@@ -17,5 +17,11 @@ class Currency extends Model
     public function products(){
         return $this->hasMany(Product::class);
     }
+    public function tracking(){
+        return $this->hasMany(Tracking::class,'currency_id');
+    }
+    public function activities(){
+        return $this->hasMany(TrackingActivity::class,'currency_id');
+    }
 
 }
