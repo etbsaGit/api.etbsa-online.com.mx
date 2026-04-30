@@ -30,6 +30,15 @@ class ProductCategory extends Model
         return $this->hasMany(ProductSubCategory::class);
     }
 
+    public function condicionesPago(){
+        return $this->belongsToMany(
+            ProductCondicionPago::class,
+            'condicion_pago_categorias',
+            'categoria_id',
+            'condicion_id'
+        );
+    }
+
     //filtros
     public function scopeFilter(Builder $query, array $filters)
     {

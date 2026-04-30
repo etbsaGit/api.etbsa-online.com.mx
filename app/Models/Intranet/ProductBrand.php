@@ -2,7 +2,7 @@
 
 namespace App\Models\Intranet;
 
-use App\Models\Ecommerce\Product;
+use App\Models\Intranet\Product;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

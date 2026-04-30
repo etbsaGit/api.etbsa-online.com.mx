@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\AbsenceReason;
+use App\Http\Controllers\Intranet\TrackingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -126,3 +127,5 @@ Route::get('/deploy-develop/{key}', function ($key) {
     ]);
 
 })->name('deploy.develop');
+
+

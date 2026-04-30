@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use App\Mail\VacationOnMailable;
 use App\Mail\VacationOffMailable;
 use App\Mail\VacationStoreMailable;
+use App\Mail\VacationUpdateMailable;
+use App\Mail\VacationDeleteMailable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
@@ -81,9 +83,10 @@ class VacationDayController extends ApiController
     public function store(VacationDayRequest $request)
     {
         $vacation = VacationDay::create($request->validated());
-
-        $this->sendNotify($vacation->id);
-
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacation->id, 'post');
+        }
         return $this->respondCreated($vacation);
     }
 
@@ -108,6 +111,10 @@ class VacationDayController extends ApiController
     public function update(VacationDayRequest $request, VacationDay $vacationDay)
     {
         $vacationDay->update($request->validated());
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacationDay->id, 'put');
+        }
 
         return $this->respond($vacationDay);
     }
@@ -117,8 +124,11 @@ class VacationDayController extends ApiController
      */
     public function destroy(VacationDay $vacationDay)
     {
+        $user = Auth::user();
+        if (!$user->hasRole('Admin')) {
+            $this->sendNotify($vacationDay->id, 'delete');
+        }
         $vacationDay->delete();
-
         return $this->respondSuccess();
     }
 
@@ -176,7 +186,7 @@ class VacationDayController extends ApiController
         return $allSubordinates;
     }
 
-    private function sendNotify($vacationDayId)
+    private function sendNotify($vacationDayId, $method)
     {
         $vacationDay = VacationDay::find($vacationDayId);
 
@@ -217,7 +227,6 @@ class VacationDayController extends ApiController
             'jefe' => $jefe ? $jefe->correo_institucional : null, // Verifica si $jefe es null
             'notificar' => $not ? $not->correo_institucional : null,
             'cubre_rel' => $cubre_rel ? $cubre_rel->correo_institucional : null,
-
         ];
 
         // Si el jefe es DG, agregar también DA, y viceversa
@@ -227,9 +236,35 @@ class VacationDayController extends ApiController
             $correos['dg'] = $dg?->correo_institucional;
         }
 
-        foreach ($correos as $to_email) {
-            if ($to_email) {
-                Mail::to($to_email)->send(new VacationStoreMailable($vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel')));
+        if ($method == 'post') {
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(new VacationStoreMailable(
+                        $vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel'),
+                        $vacaciones_pasadas,
+                        $vacaciones_futuras
+                    ));
+                }
+            }
+        } else if ($method == 'put') {
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(new VacationUpdateMailable(
+                        $vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel'),
+                        $vacaciones_pasadas,
+                        $vacaciones_futuras
+                    ));
+                }
+            }
+        } else if ($method == 'delete') {
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(new VacationDeleteMailable(
+                        $vacationDay->load('empleado', 'puesto', 'sucursal', 'cubre_rel'),
+                        $vacaciones_pasadas,
+                        $vacaciones_futuras
+                    ));
+                }
             }
         }
     }
@@ -579,101 +614,119 @@ class VacationDayController extends ApiController
         return $this->respond($employee);
     }
 
-
     public function getEmployeeReportPdf(Request $request)
     {
-        $start = $request->start;
-        $end = $request->end;
-        $empleado_id = $request->empleado_id;
+        try {
+            $start = Carbon::parse($request->start);
+            $end = Carbon::parse($request->end);
+            $empleado_id = $request->empleado_id;
 
-        // Validación: start no puede ser después de end
-        if (Carbon::parse($start)->gt(Carbon::parse($end))) {
-            return $this->respond([
-                'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
-            ], 422);
-        }
-
-        // Obtener festivos como array asegurando formato DATE
-        $festivos = Festivo::pluck('fecha')->map(fn($date) => Carbon::parse($date)->toDateString())->toArray();
-
-        // Obtener el empleado con vacaciones validadas dentro del periodo
-        $employee = Empleado::where('id', $empleado_id)
-            ->whereHas('vacationDays', function ($query) use ($start, $end) {
-                $query->where('validated', 1)
-                    ->where(function ($q) use ($start, $end) {
-                        $q->whereBetween('fecha_inicio', [$start, $end])
-                            ->orWhereBetween('fecha_termino', [$start, $end])
-                            ->orWhere(function ($q) use ($start, $end) {
-                                $q->where('fecha_inicio', '<=', $start)
-                                    ->where('fecha_termino', '>=', $end);
-                            });
-                    });
-            })
-            ->with(['vacationDays' => function ($query) use ($start, $end) {
-                $query->where('validated', 1)
-                    ->where(function ($q) use ($start, $end) {
-                        $q->whereBetween('fecha_inicio', [$start, $end])
-                            ->orWhereBetween('fecha_termino', [$start, $end])
-                            ->orWhere(function ($q) use ($start, $end) {
-                                $q->where('fecha_inicio', '<=', $start)
-                                    ->where('fecha_termino', '>=', $end);
-                            });
-                    })
-                    ->select('empleado_id', 'fecha_inicio', 'fecha_termino');
-            }])
-            ->with('sucursal')
-            ->first();
-
-        if (!$employee) {
-            return $this->respond(['error' => 'Empleado no encontrado o sin vacaciones registradas en este periodo.'], 404);
-        }
-
-        // Agregar vacationDetails con los días específicos
-        $vacationDays = [];
-        foreach ($employee->vacationDays as $vacation) {
-            $periodStart = Carbon::parse($vacation->fecha_inicio);
-            $periodEnd = Carbon::parse($vacation->fecha_termino);
-
-            if ($periodEnd->lt($start) || $periodStart->gt($end)) {
-                continue; // Si las vacaciones están fuera del rango, omitirlas
+            // Validación: start no puede ser después de end
+            if ($start->gt($end)) {
+                return response()->json([
+                    'error' => 'La fecha de inicio no puede ser posterior a la fecha de término.'
+                ], 422);
             }
 
-            // Limitar los días generados al rango solicitado
-            $currentDate = $periodStart->copy();
-            $finalDate = $periodEnd->copy();
+            // Obtener festivos como array asegurando formato DATE
+            $festivos = Festivo::pluck('fecha')
+                ->map(fn($date) => Carbon::parse($date)->toDateString())
+                ->toArray();
 
-            while ($currentDate->lte($finalDate)) {
-                // Excluir domingos y festivos
-                if (
-                    $currentDate->gte($start) && $currentDate->lte($end) &&
-                    !in_array($currentDate->toDateString(), $festivos) &&
-                    $currentDate->dayOfWeek !== Carbon::SUNDAY
-                ) {
-                    $vacationDays[] = $currentDate->toDateString();
+            // Obtener empleado con vacaciones
+            $employee = Empleado::where('id', $empleado_id)
+                ->whereHas('vacationDays', function ($query) use ($start, $end) {
+                    $query->where('validated', 1)
+                        ->where(function ($q) use ($start, $end) {
+                            $q->whereBetween('fecha_inicio', [$start, $end])
+                                ->orWhereBetween('fecha_termino', [$start, $end])
+                                ->orWhere(function ($q) use ($start, $end) {
+                                    $q->where('fecha_inicio', '<=', $start)
+                                        ->where('fecha_termino', '>=', $end);
+                                });
+                        });
+                })
+                ->with(['vacationDays' => function ($query) use ($start, $end) {
+                    $query->where('validated', 1)
+                        ->where(function ($q) use ($start, $end) {
+                            $q->whereBetween('fecha_inicio', [$start, $end])
+                                ->orWhereBetween('fecha_termino', [$start, $end])
+                                ->orWhere(function ($q) use ($start, $end) {
+                                    $q->where('fecha_inicio', '<=', $start)
+                                        ->where('fecha_termino', '>=', $end);
+                                });
+                        })
+                        ->select('empleado_id', 'fecha_inicio', 'fecha_termino');
+                }])
+                ->with('sucursal')
+                ->first();
+
+            if (!$employee) {
+                return response()->json([
+                    'error' => 'Empleado no encontrado o sin vacaciones registradas en este periodo.'
+                ], 404);
+            }
+
+            // Generar días individuales de vacaciones
+            $vacationDays = [];
+
+            foreach ($employee->vacationDays as $vacation) {
+                $periodStart = Carbon::parse($vacation->fecha_inicio);
+                $periodEnd = Carbon::parse($vacation->fecha_termino);
+
+                if ($periodEnd->lt($start) || $periodStart->gt($end)) {
+                    continue;
                 }
-                $currentDate->addDay();
+
+                $currentDate = $periodStart->copy();
+                $finalDate = $periodEnd->copy();
+
+                while ($currentDate->lte($finalDate)) {
+                    if (
+                        $currentDate->gte($start) &&
+                        $currentDate->lte($end) &&
+                        !in_array($currentDate->toDateString(), $festivos) &&
+                        $currentDate->dayOfWeek !== Carbon::SUNDAY
+                    ) {
+                        $vacationDays[] = $currentDate->toDateString();
+                    }
+                    $currentDate->addDay();
+                }
             }
+
+            $employee->vacationDetails = array_values(array_unique($vacationDays));
+
+            // Seguridad extra por si viene null
+            if (!$employee->sucursal) {
+                $employee->sucursal = (object)['nombre' => 'Sin sucursal'];
+            }
+
+            // Generar PDF
+            // imagenes
+            $logo1 = base64_encode(public_path('/images/logo40.png'));
+            $logo2 = base64_encode(public_path('/images/logo.png'));
+            $pdf = pdf::loadView('pdf.vacations.reportVacationsEmployee', [
+                'empleado' => $employee,
+                'start' => $start->format('d-m-Y'),
+                'end' => $end->format('d-m-Y'),
+                'logo1' => $logo1,
+                'logo2' => $logo2
+            ])->setOptions([
+                'isRemoteEnabled' => true,
+                'isHtml5ParserEnabled' => true
+            ]);
+
+            // Retornar PDF directo
+            return response($pdf->output(), 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="reporte_vacaciones.pdf"');
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
         }
-
-        $employee->vacationDetails = array_values(array_unique($vacationDays)); // Evita duplicados
-
-        // Generar PDF en horizontal
-        $pdf = Pdf::loadView('pdf.vacations.reportVacationsEmployee', [
-            'empleado' => $employee,
-            'start' => Carbon::parse($start)->format('d-m-Y'),
-            'end' => Carbon::parse($end)->format('d-m-Y')
-        ]);
-        // Descargar el PDF para pruebas en postman
-        // return $pdf->download('reporte_empleado_' . $employee->id . '.pdf');
-
-        // Obtener el contenido del PDF como cadena binaria
-        $pdfContent = $pdf->output();
-
-        // Convertir el contenido a Base64
-        $pdfBase64 = base64_encode($pdfContent);
-
-        // Retornar el PDF en Base64
-        return $this->respond($pdfBase64);
     }
 
     public function getEmployeeReportXls(Request $request)

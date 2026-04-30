@@ -16,7 +16,9 @@ class Vehicle extends Model
         'departamento_id',
         'linea_id',
         'sucursal_id',
-        'estatus_id'
+        'estatus_id',
+        'activo',
+        'motivo_baja',
     ];
 
     // -Scope-

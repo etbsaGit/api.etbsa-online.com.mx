@@ -47,6 +47,27 @@ class ClienteController extends ApiController
         );
     }
 
+    // index sin paginación
+    public function myIndex(Request $request)
+    {
+        $filters = $request->all();
+        $user = Auth::user(); // Usuario autenticado
+
+        $clientes = Cliente::query()
+            ->when(!$user->hasRole('Credito'), function ($query) use ($user) {
+                // Si NO tiene rol "credito", filtra solo los clientes relacionados con su empleado
+                $query->whereHas('empleados', function ($q) use ($user) {
+                    $q->where('empleados.id', $user->empleado->id);
+                });
+            })
+            ->filter($filters)->get();
+
+        return $this->respond(
+            $clientes,
+            'Clientes cargados con exito'
+        );
+    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -298,5 +319,57 @@ class ClienteController extends ApiController
             'message' => 'Notificación enviada correctamente a todos los usuarios con rol Crédito.',
             'cliente' => $cliente
         ]);
+    }
+
+    public function getEmpleadosAsignados($rfc)
+    {
+        $user = auth()->user();
+        $empleado = $user->empleado;
+
+        // Validar empleado asociado al usuario
+        if (!$empleado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El usuario autenticado no tiene empleado asociado.',
+                'data' => null
+            ], 403);
+        }
+
+        // Buscar cliente con empleados asignados
+        $cliente = Cliente::with('empleados:id')
+            ->where('rfc', $rfc)
+            ->first();
+
+        // Cliente no encontrado
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cliente no registrado, completa la información del cliente.',
+                'data' => null
+            ], 404);
+        }
+
+        // Verificar si el empleado pertenece al cliente
+        $asignado = $cliente->empleados->contains('id', $empleado->id);
+
+        if (!$asignado) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No tienes acceso a este cliente.',
+                'data' => $cliente
+            ], 203);
+
+        }
+
+        // Correcto
+        return response()->json([
+            'success' => true,
+            'message' => 'Cliente asignado correctamente.',
+            'data' => [
+                'cliente_id' => $cliente->id,
+                'cliente' => $cliente->razon_social ?? null,
+                'rfc' => $cliente->rfc
+            ]
+        ], 200);
     }
 }

@@ -17,22 +17,24 @@ class ProductCategoryController extends ApiController
     {
         $filters = $request->all();
 
+        $categorias = ProductCategory::with(['condicionesPago'])
+            ->filter($filters)
+            ->paginate(10);
+
         return $this->respond(
-            ProductCategory::filter($filters)->paginate(10),
+            $categorias,
             'Lista de categorías cargada correctamente'
         );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(ProductCategoryRequest $request)
-    {
-        $productCategory = ProductCategory::create($request->validated());
-        return $this->respondCreated(
-            $productCategory,
-            'Categoría registrada correctamente'
-        );
+    public function store(ProductCategoryRequest $request){
+        $productCategory = ProductCategory::create(['name' => $request->name]);
+
+        if($request->filled('condicion_ids')){
+            $productCategory->condicionesPago()->sync($request->condicion_ids);
+        }
+
+        return $this->respondCreated($productCategory->load('condicionesPago'),'Categoria Creada');
     }
     /**
      * Display the specified resource.
@@ -45,15 +47,23 @@ class ProductCategoryController extends ApiController
         );
     }
 
-     /**
+    /**
      * Update the specified resource in storage.
      */
-    public function update(ProductCategoryRequest $request, ProductCategory $productCategorium)
+    public function update(ProductCategoryRequest $request, ProductCategory $product_categorium)
     {
-        $productCategorium->update($request->validated());
+
+        $product_categorium->update([
+            'name' => $request->name
+        ]);
+
+        if($request->has('condicion_ids')){
+            $product_categorium->condicionesPago()->sync($request->condicion_ids);
+        }
+
         return $this->respond(
-            $productCategorium,
-            'Categoría actualizado correctamente'
+            $product_categorium->load('condicionesPago'),
+            'Categoría actualizada correctamente'
         );
     }
 
@@ -64,7 +74,7 @@ class ProductCategoryController extends ApiController
     {
         $productCategorium->delete();
         return $this->respondSuccess(
-            'Categoróa eliminado correctamente'
+            'Categoría eliminada correctamente'
         );
     }
 }

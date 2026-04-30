@@ -7,7 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class ProductCategoryRequest extends FormRequest{
+class ProductCategoryRequest extends FormRequest
+{
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -23,9 +24,17 @@ class ProductCategoryRequest extends FormRequest{
      */
     public function rules(): array
     {
-        $item = $this->route('product_categoria');
+        $item = $this->route('product_categorium');
+        $itemId = $item?->id;
         return [
-            'name' => ['required', 'string', 'max:191', Rule::unique('categories', 'name')->ignore($item?->id)],
+            'name' => [
+                'required',
+                'string',
+                'max:191',
+                Rule::unique('categories', 'name')->ignore($itemId)
+            ],
+            'condicion_ids' => ['nullable', 'array'],
+            'condicion_ids.*' => ['exists:products_condicion_pago,id']
         ];
     }
 
@@ -33,8 +42,10 @@ class ProductCategoryRequest extends FormRequest{
     {
         return [
             'name.required' => 'El nombre es obligatorio',
-            'name.unique'   => 'Ya existe un proveedor con este nombre',
+            'name.unique'   => 'Ya existe una categoría con este nombre',
             'name.max'      => 'El nombre no puede exceder 191 caracteres',
+            'condicion_ids.array' => 'Las condiciones deben ser un arreglo',
+            'condicion_ids.*.exists' => 'Una condición no existe'
         ];
     }
 
@@ -46,6 +57,4 @@ class ProductCategoryRequest extends FormRequest{
             'errors'  => $validator->errors()
         ], 422));
     }
-
-
 }
