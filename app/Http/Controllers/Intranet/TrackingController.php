@@ -326,7 +326,11 @@ class TrackingController extends ApiController
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
             'gerentes' => Empleado::whereHas('puesto', function ($query) {
-                $query->where('nombre', 'Gerente Territorial');
+                $query->whereIn('nombre', [
+                    'Gerente Territorial',
+                    'Director General',
+                    'Dirección Comercial',
+                ])->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'));
             })->with('sucursal')->get(),
         ];
         return $this->respond($data);

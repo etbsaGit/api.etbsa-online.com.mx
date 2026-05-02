@@ -32,7 +32,7 @@ class TrackingRequest extends FormRequest
                 'vendedor_id' => ['required', 'exists:empleados,id'],
                 'sucursal_id' => ['required', 'exists:sucursales,id'],
                 'departamento_id' => ['required', 'exists:departamentos,id'],
-                'notificar_a' => ['required','exists:empleados,id'],
+                'notificar_a' => ['required', 'exists:empleados,id'],
 
                 'category_id' => ['required', 'exists:categories,id'],
                 'condicion_pago_id' => ['required', 'exists:products_condicion_pago,id'],
@@ -43,6 +43,8 @@ class TrackingRequest extends FormRequest
                 'tarifa_cambio' => ['required', 'numeric'],
                 'descuento' => ['required', 'numeric'],
                 'total' => ['required', 'numeric'],
+                'incluye_anticipo' => ['required', 'boolean'],
+                'anticipo_monto' => ['nullable', 'numeric'],
                 'factura' => ['nullable', 'string'],
                 'date_lost_sale' => ['nullable', 'date'],
                 'date_won_sale' => ['nullable', 'date'],
@@ -85,7 +87,7 @@ class TrackingRequest extends FormRequest
             'vendedor_id' => ['required', 'exists:empleados,id'],
             'sucursal_id' => ['required', 'exists:sucursales,id'],
             'departamento_id' => ['required', 'exists:departamentos,id'],
-            'notificar_a' => ['required','exists:empleados,id'],
+            'notificar_a' => ['required', 'exists:empleados,id'],
 
             'category_id' => ['required', 'exists:categories,id'],
             'condicion_pago_id' => ['required', 'exists:products_condicion_pago,id'],
@@ -96,6 +98,8 @@ class TrackingRequest extends FormRequest
             'tarifa_cambio' => ['required', 'numeric'],
             'descuento' => ['required', 'numeric'],
             'total' => ['required', 'numeric'],
+            'incluye_anticipo' => ['required', 'boolean'],
+            'anticipo_monto' => ['nullable', 'numeric'],
             'factura' => ['nullable', 'string'],
             'date_lost_sale' => ['nullable', 'date'],
             'date_won_sale' => ['nullable', 'date'],
@@ -161,11 +165,11 @@ class TrackingRequest extends FormRequest
             'detalles.*.subtotal.numeric' => 'El subtotal debe ser un número.',
 
             'activity.array' => 'El formato de actividad debe ser un array',
-            'activity.certeza_id.required' => 'El campo actividad certeza es obligatorio.',
-            'activity.certeza_id.exists' => 'La actividad certeza seleccionada no existe.',
-            'activity.currency_id.required' => 'El campo moneda es obligatorio.',
+            'activity.certeza_id' => 'El campo actividad certeza es obligatorio.',
+            // 'activity.certeza_id.exists' => 'La actividad certeza seleccionada no existe.',
+            'activity.currency_id' => 'El campo moneda es obligatorio.',
             'activity.tipo_seguimiento_id' => 'El campo de tipo de seguimiento es obligatorio',
-            'activity.currency_id.exists' => 'La moneda seleccionada no existe.',
+            // 'activity.currency_id.exists' => 'La moneda seleccionada no existe.',
         ];
     }
 

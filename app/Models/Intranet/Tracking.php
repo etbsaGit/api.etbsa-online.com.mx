@@ -38,6 +38,8 @@ class Tracking extends Model
         'tarifa_cambio',
         'descuento',
         'total',
+        'incluye_anticipo',
+        'anticipo_monto',
         'factura',
         'date_lost_sale',
         'date_won_sale',
