@@ -51,6 +51,23 @@
             font-weight: bold;
             color: #367c2b;
         }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table td,
+        table th {
+            border: 1px solid #ccc;
+            padding: 6px;
+        }
+
+        table .heading td {
+            background-color: #e9eef5;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -76,11 +93,11 @@
 
             <h3>Detalles del pedido</h3>
             <p><strong>Folio:</strong> #{{ $tracking->folio }}</p>
-            <p><strong>Vendedor:</strong> #{{ $tracking->folio }}</p>
-            <p><strong>Departamento:</strong> #{{ $tracking->folio }}</p>
-            <p><strong>Sucursal:</strong> #{{ $tracking->folio }}</p>
-            <p><strong>Categoria:</strong> #{{ $tracking->folio }}</p>
-            <p><strong>Condición de Pago:</strong> #{{ $tracking->folio }}</p>
+            <p><strong>Vendedor:</strong> {{ $tracking->vendedor->nombreCompleto }}</p>
+            <p><strong>Departamento:</strong> {{ $tracking->vendedor->departamento->nombre }}</p>
+            <p><strong>Sucursal:</strong> {{ $tracking->vendedor->sucursal->nombre }}</p>
+            <p><strong>Categoria:</strong> {{ $tracking->categoria->name }}</p>
+            <p><strong>Condición de Pago:</strong> {{ $tracking->condicionPago->name }}</p>
 
             {{-- producto y extra --}}
             <table>
@@ -107,11 +124,11 @@
                             </div>
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{$detalle->precio_unidad}}
+                            {{ $detalle->precio_unidad }}
                             {{ $tracking->currency->name }}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{$detalle->subtotal}}
+                            {{ $detalle->subtotal }}
                             {{ $tracking->currency->name }}</td>
                     </tr>
                 @endforeach
@@ -133,11 +150,11 @@
                             </div> --}}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{$extra->precio_unidad}}
+                            {{ $extra->precio_unidad }}
                             {{ $tracking->currency->name }}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{$extra->subtotal}}
+                            {{ $extra->subtotal }}
                             {{ $tracking->currency->name }}</td>
                     </tr>
                 @endforeach
@@ -146,9 +163,9 @@
             <p><strong>Subtotal:</strong> ${{ $tracking->subtotal }}</p>
             <p><strong>IVA:</strong> ${{ $tracking->iva_monto }}</p>
             <p><strong>Tipo de Cambio:</strong> ${{ $tracking->tarifa_cambio }}</p>
-            <p><strong>Descuento:</strong> #{{ $tracking->descuento ?? 0 }}</p>
+            <p><strong>Descuento:</strong> ${{ $tracking->descuento ?? 0 }}</p>
             <p><strong>Total:</strong> ${{ $tracking->total }}</p>
-            <p><strong>Anticipo:</strong> ${{ $tracking->anticipo_monto }}</p>
+            <p><strong>Anticipo:</strong> ${{ $tracking->anticipo_monto ?? 0.00 }}</p>
 
             <h5>Notas del Vendedor:</h5>
             <p>{{ $tracking->notas }}</p>

@@ -69,6 +69,7 @@ class TrackingController extends ApiController
         );
     }
 
+
     public function myIndex(Request $request)
     {
 
@@ -407,21 +408,39 @@ class TrackingController extends ApiController
 
     public function updateSituacion($id, $situacion)
     {
-        $situacion_id = Estatus::where('tipo_estatus', 'tracking-situacion')
-            ->where('nombre', $situacion)
-            ->firstOrFail()
-            ->id;
+        try {
+            DB::beginTransaction();
 
-        $tracking = Tracking::findOrFail($id);
+            $situacion_id = Estatus::where('tipo_estatus', 'tracking-situacion')
+                ->where('nombre', $situacion)
+                ->firstOrFail()
+                ->id;
 
-        $tracking->update([
-            'situacion_id' => $situacion_id,
-        ]);
+            $tracking = Tracking::findOrFail($id);
 
-        return response()->json([
-            'message' => 'Estatus actualizado correctamente',
-            'data' => $tracking
-        ]);
+            $tracking->update([
+                'situacion_id' => $situacion_id,
+            ]);
+
+            DB::commit();
+
+            if ($situacion === "Formalizado") {
+                $this->sendFormalizarRequest($id);
+            }
+
+            return response()->json([
+                'message' => 'Estatus actualizado correctamente',
+                'data' => $tracking
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar estatus',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function updateACliente($id, $cliente_id)
