@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Solicitud de permiso</title>
+    <title>Solicitud de Asignación de Cliente</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -81,7 +81,7 @@
 
             <p>
                 Se adjunta la cotización correspondiente con folio
-                <strong>#{{ $tracking->id }}</strong>
+                <strong>#{{ $tracking->folio }}</strong>
                 para su revisión y evaluación.
             </p>
 

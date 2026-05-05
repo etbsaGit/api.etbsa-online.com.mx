@@ -6,6 +6,7 @@ use App\Mail\CustomerAssignmentRequest;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Tracking\TrackingActivityRequest;
 use App\Http\Requests\Intranet\Tracking\TrackingRequest;
+use App\Mail\SendFormalizarRequest;
 use App\Models\Departamento;
 use App\Models\Empleado;
 use App\Models\Estatus;
@@ -67,6 +68,7 @@ class TrackingController extends ApiController
             'Lista de seguimientos cargada correctamente'
         );
     }
+
 
     public function myIndex(Request $request)
     {
@@ -406,21 +408,39 @@ class TrackingController extends ApiController
 
     public function updateSituacion($id, $situacion)
     {
-        $situacion_id = Estatus::where('tipo_estatus', 'tracking-situacion')
-            ->where('nombre', $situacion)
-            ->firstOrFail()
-            ->id;
+        try {
+            DB::beginTransaction();
 
-        $tracking = Tracking::findOrFail($id);
+            $situacion_id = Estatus::where('tipo_estatus', 'tracking-situacion')
+                ->where('nombre', $situacion)
+                ->firstOrFail()
+                ->id;
 
-        $tracking->update([
-            'situacion_id' => $situacion_id,
-        ]);
+            $tracking = Tracking::findOrFail($id);
 
-        return response()->json([
-            'message' => 'Estatus actualizado correctamente',
-            'data' => $tracking
-        ]);
+            $tracking->update([
+                'situacion_id' => $situacion_id,
+            ]);
+
+            DB::commit();
+
+            if ($situacion === "Formalizado") {
+                $this->sendFormalizarRequest($id);
+            }
+
+            return response()->json([
+                'message' => 'Estatus actualizado correctamente',
+                'data' => $tracking
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar estatus',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function updateACliente($id, $cliente_id)
@@ -463,6 +483,54 @@ class TrackingController extends ApiController
         return $pdf->stream('cotizacion.pdf');
     }
 
+    public function sendFormalizarRequest($trackingId)
+    {
+
+        $tracking = Tracking::findOrFail($trackingId);
+
+        $tracking->load(
+            'cliente',
+            'prospecto',
+            'vendedor',
+            'sucursal',
+            'condicionPago',
+            'currency',
+            'detalles.productos',
+            'extras.item'
+        );
+
+        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+            'quote' => $tracking
+        ]);
+
+        // Obtener binario PDF
+        $pdfContent = $pdf->output();
+
+        $gerente_suc = $tracking->notificar_a;
+        $solicitante = $tracking->empleado;
+
+        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+
+        $correos = [
+            // 'gerente_suc' => $gerente_suc->correo_institucional,
+            // 'solicitante' => $solicitante->correo_institucional,
+            $correo_pruebas
+        ];
+
+        foreach ($correos as $to_email) {
+            if ($to_email) {
+                Mail::to($to_email)->send(
+                    new SendFormalizarRequest($tracking, $pdfContent)
+                );
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Correo enviado correctamente'
+        ]);
+    }
+
     public function customerAssigmentRequest($trackingId, $clienteId)
     {
         $tracking = Tracking::findOrFail($trackingId);
@@ -487,8 +555,8 @@ class TrackingController extends ApiController
         // Obtener binario PDF
         $pdfContent = $pdf->output();
 
-        $gerente_corp = Empleado::where('puesto_id', Puesto::where('nombre', 'Gerente corporativo')->value('id'))
-            ->where('departamento_id', Departamento::where('nombre', 'Corporativo')->value('id'))
+        $gerente_corp = Empleado::where('puesto_id', Puesto::where('nombre', 'Dirección Comercial')->value('id'))
+            ->where('departamento_id', Departamento::where('nombre', 'Administracion')->value('id'))
             ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
             ->first();
 
@@ -518,5 +586,73 @@ class TrackingController extends ApiController
             'success' => true,
             'message' => 'Correo enviado correctamente'
         ]);
+    }
+
+    public function getEmpleadosAsignados($rfc)
+    {
+        $user = auth()->user();
+        $empleado = $user->empleado;
+
+        $empleado_actual = Empleado::with('sucursal', 'departamento')->findOrFail($empleado->id);
+
+        // Validar empleado asociado al usuario
+        if (!$empleado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El usuario autenticado no tiene empleado asociado.',
+                'data' => null
+            ], 403);
+        }
+
+        // Buscar cliente con empleados asignados
+        $cliente = Cliente::with('empleados.sucursal', 'empleados.departamento')
+            ->where('rfc', $rfc)
+            ->first();
+
+        // Cliente no encontrado
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cliente no registrado, completa la información del cliente.',
+                'data' => null
+            ], 404);
+        }
+
+        // obtener empleado asignado
+        $empleadosAsignados = $cliente->empleados;
+
+        if ($empleadosAsignados->isNotEmpty()) {
+
+            $coincide = $empleadosAsignados->contains(function ($emp) use ($empleado_actual) {
+                return $emp->sucursal->id == $empleado_actual->sucursal->id
+                    && $emp->departamento->id == $empleado_actual->departamento->id;
+            });
+
+            if (!$coincide) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cliente no asignado pero puedes seguir con el proceso.',
+                    'cliente' => $cliente,
+                    'empleados_asignados' => $empleadosAsignados,
+                    'empleado_actual' => $empleado_actual
+                ], 203);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No tienes acceso a este cliente.',
+                    'cliente' => $cliente,
+                    'empleados_asignados' => $empleadosAsignados,
+                    'empleado_actual' => $empleado_actual
+                ], 202);
+            }
+        } else {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cliente ya registrado.',
+                'cliente' => $cliente,
+                'empleados_asignados' => $empleadosAsignados,
+                'empleado_actual' => $empleado
+            ], 200);
+        }
     }
 }

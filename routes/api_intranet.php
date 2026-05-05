@@ -128,7 +128,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('cliente/rfc/{rfc}', [ClienteController::class, 'findByRfc']);
     Route::post('clientes/clientes', [ClienteController::class, 'getClientes']);
     Route::post('clientes/empleados', [ClienteController::class, 'getEmpleados']);
-    Route::get('clientes/empleados/rfc/{rfc}', [ClienteController::class, 'getEmpleadosAsignados']);
     Route::post('clientes/empleados/async', [ClienteController::class, 'syncEmpleadoClientes']);
     Route::apiResource('cliente', ClienteController::class);
 
@@ -351,7 +350,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::patch('tracking/{tracking}/situacion/{situacion}', [TrackingController::class,'updateSituacion']);
     Route::patch('tracking/{trackig}/cliente/{cliente_id}',[TrackingController::class,'updateACliente']);
     Route::get('tracking/print-quote/{id}',[TrackingController::class, 'printQuote']);
+    Route::get('tracking/sendFormalizarRequest/{id}',[TrackingController::class, 'sendFormalizarRequest']);
     Route::post('tracking/customer_assigment/{trackingId}/{clienteId}',[TrackingController::class,'customerAssigmentRequest']);
+    Route::get('tracking/empleados/rfc/{rfc}', [TrackingController::class, 'getEmpleadosAsignados']);
     Route::apiResource('tracking', TrackingController::class);
 
     //TrackingProspecto
