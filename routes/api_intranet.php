@@ -57,6 +57,7 @@ use App\Http\Controllers\Intranet\ProductCategoryController;
 use App\Http\Controllers\Intranet\ProductCondicionPagoController;
 use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
+use App\Http\Controllers\Intranet\TrackingAutorizacionController;
 use App\Http\Controllers\Intranet\TrackingController;
 use App\Http\Controllers\Intranet\TrackingProspectoController;
 use App\Http\Controllers\Intranet\TractorContrapesosController;
@@ -354,6 +355,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('tracking/customer_assigment/{trackingId}/{clienteId}',[TrackingController::class,'customerAssigmentRequest']);
     Route::get('tracking/empleados/rfc/{rfc}', [TrackingController::class, 'getEmpleadosAsignados']);
     Route::apiResource('tracking', TrackingController::class);
+
+    // TrackingAutorizacion
+    Route::post('trackingAutorizaciones',[TrackingAutorizacionController::class,'index']);
+    Route::apiResource('trackingAutorizacion',TrackingAutorizacionController::class);
 
     //TrackingProspecto
     Route::post('tracking-prospects', [TrackingProspectoController::class, 'index']);
