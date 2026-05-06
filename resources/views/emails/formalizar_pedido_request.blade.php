@@ -124,11 +124,11 @@
                             </div>
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ $detalle->precio_unidad }}
+                            {{ number_format($detalle->precio_unidad, 2) }}
                             {{ $tracking->currency->name }}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ $detalle->subtotal }}
+                            {{ number_format($detalle->subtotal, 2) }}
                             {{ $tracking->currency->name }}</td>
                     </tr>
                 @endforeach
@@ -150,22 +150,30 @@
                             </div> --}}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ $extra->precio_unidad }}
+                            {{ number_format($extra->precio_unidad, 2) }}
                             {{ $tracking->currency->name }}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ $extra->subtotal }}
+                            {{ number_format($extra->subtotal, 2) }}
                             {{ $tracking->currency->name }}</td>
                     </tr>
                 @endforeach
             </table>
 
-            <p><strong>Subtotal:</strong> ${{ $tracking->subtotal }}</p>
-            <p><strong>IVA:</strong> ${{ $tracking->iva_monto }}</p>
-            <p><strong>Tipo de Cambio:</strong> ${{ $tracking->tarifa_cambio }}</p>
-            <p><strong>Descuento:</strong> ${{ $tracking->descuento ?? 0 }}</p>
-            <p><strong>Total:</strong> ${{ $tracking->total }}</p>
-            <p><strong>Anticipo:</strong> ${{ $tracking->anticipo_monto ?? 0.00 }}</p>
+            <p><strong>Moneda:</strong> {{ $tracking->currency->name }}
+            <p><strong>Subtotal:</strong> ${{ number_format($tracking->subtotal, 2) }} {{ $tracking->currency->name }}
+            </p>
+            <p><strong>IVA:</strong> ${{ number_format($tracking->iva_monto, 2) }} {{ $tracking->currency->name }}</p>
+            @if ($tracking->currency->name === 'USD')
+                <p><strong>Tipo de Cambio:</strong> ${{ number_format($tracking->tarifa_cambio, 2) }}
+                    {{ $tracking->currency->name }}</p>
+            @endif
+            <p><strong>Descuento:</strong> ${{ number_format($tracking->descuento, 2) ?? 0.0 }}
+                {{ $tracking->currency->name }}</p>
+            <p><strong>Total:</strong> ${{ number_format($tracking->total, 2) }} {{ $tracking->currency->name }}
+            </p>
+            <p><strong>Anticipo:</strong> ${{ number_format($tracking->anticipo_monto, 2) ?? 0.0 }}
+                {{ $tracking->currency->name }}</p>
 
             <h5>Notas del Vendedor:</h5>
             <p>{{ $tracking->notas }}</p>
