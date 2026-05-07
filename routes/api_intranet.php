@@ -346,28 +346,27 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('tracking/options', [TrackingController::class, 'getOptions']);
     Route::get('tracking/activity/options', [TrackingController::class, 'getOptionsActivity']);
     Route::post('/tracking/{tracking}/activity', [TrackingController::class, 'storeActivity']);
-    Route::get('/tracking/estatus', [TrackingController::class,'getEstatus']);
-    Route::patch('tracking/{tracking}/estatus', [TrackingController::class,'updateEstatus']);
-    Route::patch('tracking/{tracking}/situacion/{situacion}', [TrackingController::class,'updateSituacion']);
-    Route::patch('tracking/{trackig}/cliente/{cliente_id}',[TrackingController::class,'updateACliente']);
-    Route::get('tracking/print-quote/{id}',[TrackingController::class, 'printQuote']);
-    Route::get('tracking/sendFormalizarRequest/{id}',[TrackingController::class, 'sendFormalizarRequest']);
-    Route::post('tracking/customer_assigment/{trackingId}/{clienteId}',[TrackingController::class,'customerAssigmentRequest']);
+    Route::get('/tracking/estatus', [TrackingController::class, 'getEstatus']);
+    Route::patch('tracking/{tracking}/estatus', [TrackingController::class, 'updateEstatus']);
+    Route::patch('tracking/{tracking}/situacion/{situacion}', [TrackingController::class, 'updateSituacion']);
+    Route::patch('tracking/{trackig}/cliente/{cliente_id}', [TrackingController::class, 'updateACliente']);
+    Route::get('tracking/print-quote/{id}', [TrackingController::class, 'printQuote']);
+    Route::get('tracking/sendFormalizarRequest/{id}', [TrackingController::class, 'sendFormalizarRequest']);
+    Route::post('tracking/customer_assigment/{trackingId}/{clienteId}', [TrackingController::class, 'customerAssigmentRequest']);
     Route::get('tracking/empleados/rfc/{rfc}', [TrackingController::class, 'getEmpleadosAsignados']);
     Route::apiResource('tracking', TrackingController::class);
 
     // TrackingAutorizacion
-    Route::post('trackingAutorizaciones',[TrackingAutorizacionController::class,'index']);
-    Route::apiResource('trackingAutorizacion',TrackingAutorizacionController::class);
+    Route::post('trackingAutorizaciones', [TrackingAutorizacionController::class, 'index']);
+    Route::post('trackingAutorizacion/autorizarPedido/{trackingId}/{situacion}', [TrackingAutorizacionController::class, 'autorizarPedido']);
+    Route::apiResource('trackingAutorizacion', TrackingAutorizacionController::class);
 
     //TrackingProspecto
     Route::post('tracking-prospects', [TrackingProspectoController::class, 'index']);
     Route::apiResource('tracking-prospect', TrackingProspectoController::class);
 
     //TactorContrapesos
-    Route::post('tractor-contrapesos',[TractorContrapesosController::class,'index']);
-    Route::get('tractor-contrapesos/options',[TractorContrapesosController::class,'getTractores']);
-    Route::apiResource('tractor-contrapeso',TractorContrapesosController::class);
+    Route::post('tractor-contrapesos', [TractorContrapesosController::class, 'index']);
+    Route::get('tractor-contrapesos/options', [TractorContrapesosController::class, 'getTractores']);
+    Route::apiResource('tractor-contrapeso', TractorContrapesosController::class);
 });
-
-
