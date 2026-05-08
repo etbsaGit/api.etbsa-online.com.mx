@@ -325,7 +325,7 @@
                                     {{ $quote->cliente->calle ?? ' ' }},
                                     {{ $quote->cliente->codigo_postal ?? ' ' }},
                                     <br>
-                                    <b>{{ $quote->prospecto->telefono ?? $quote->cliente->telefono }}</b>
+                                    <b>{{ $quote->prospecto->telefono ?? $quote->cliente->telefono ?? '' }}</b>
                                 </td>
 
                             </tr>
