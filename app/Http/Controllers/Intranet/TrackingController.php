@@ -347,11 +347,13 @@ class TrackingController extends ApiController
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
-            'dirComercial' => Empleado::whereHas('puesto', function ($query) {
+            'gerentes' => Empleado::whereHas('puesto', function ($query) {
                 $query->whereIn('nombre', [
+                    'Gerente Territorial',
+                    'Director General',
                     'Dirección Comercial',
                 ])->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'));
-            })->with('sucursal')->first(),
+            })->with('sucursal','puesto')->get(),
         ];
         return $this->respond($data);
     }
