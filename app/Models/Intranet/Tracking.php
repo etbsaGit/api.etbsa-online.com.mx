@@ -111,6 +111,9 @@ class Tracking extends Model
     {
         return $this->hasOne(TrackingActivity::class)->latestOfMany();
     }
+    public function feedback(){
+        return $this->hasMany(TrackingFeedback::class,'tracking_id');
+    }
     public function scopeFilter(Builder $query, $filters)
     {
         return $this->scopeFilterSearch($query, $filters, ['folio']);
