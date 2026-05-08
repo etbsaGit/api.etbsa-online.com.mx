@@ -118,7 +118,25 @@ class TrackingController extends ApiController
         try {
             $data = $request->validated();
 
+            // crear prospecto
+            $prospectoId = null;
+            if (!empty($data['prospecto'])) {
+
+                $prospecto = TrackingProspecto::create([
+                    'nombre' => $data['prospecto']['nombre'],
+                    'email' => $data['prospecto']['email'],
+                    'telefono' => $data['prospecto']['telefono'],
+                ]);
+
+                $prospectoId = $prospecto->id;
+            }
+
             $trackingData = $data;
+
+            // asignar prospecto creado
+            if($prospectoId){
+                $trackingData['prospecto_id'] = $prospectoId;
+            }
 
             // crear tracking
             if (empty($trackingdata['folio'])) {
@@ -329,13 +347,11 @@ class TrackingController extends ApiController
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
-            'gerentes' => Empleado::whereHas('puesto', function ($query) {
+            'dirComercial' => Empleado::whereHas('puesto', function ($query) {
                 $query->whereIn('nombre', [
-                    'Gerente Territorial',
-                    'Director General',
                     'Dirección Comercial',
                 ])->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'));
-            })->with('sucursal')->get(),
+            })->with('sucursal')->first(),
         ];
         return $this->respond($data);
     }

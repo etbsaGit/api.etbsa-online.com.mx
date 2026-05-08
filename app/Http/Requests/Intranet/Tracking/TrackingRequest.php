@@ -77,6 +77,11 @@ class TrackingRequest extends FormRequest
                 'activity.notas' => ['nullable', 'string'],
                 'activity.date_next_tracking' => ['nullable', 'date'],
 
+                // prospecto
+                'prospecto.nombre' => ['required'],
+                'prospecto.email' => ['nullable'],
+                'prospecto.telefono' => ['nullable'],
+
             ];
         }
         return [
@@ -131,6 +136,11 @@ class TrackingRequest extends FormRequest
             'activity.ultimo_precio_tratar' => ['nullable', 'numeric'],
             'activity.notas' => ['nullable', 'string'],
             'activity.date_next_tracking' => ['nullable', 'date'],
+
+            // prospecto
+            'prospecto.nombre' => ['required'],
+            'prospecto.email' => ['nullable'],
+            'prospecto.telefono' => ['nullable'],
         ];
     }
 
@@ -170,6 +180,8 @@ class TrackingRequest extends FormRequest
             'activity.currency_id' => 'El campo moneda es obligatorio.',
             'activity.tipo_seguimiento_id' => 'El campo de tipo de seguimiento es obligatorio',
             // 'activity.currency_id.exists' => 'La moneda seleccionada no existe.',
+
+            'prospecto.nombre.required' => 'El nombre del Prospecto es obligatorio'
         ];
     }
 
