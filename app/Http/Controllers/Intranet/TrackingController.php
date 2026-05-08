@@ -508,13 +508,13 @@ class TrackingController extends ApiController
         // Obtener binario PDF
         $pdfContent = $pdf->output();
 
-        $gerente_suc = $tracking->notificar_a;
+        $notificado = $tracking->notificar_a;
         $solicitante = $tracking->empleado;
 
         $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
         $correos = [
-            // 'gerente_suc' => $gerente_suc->correo_institucional,
+            // 'notificado' => $notificado->correo_institucional,
             // 'solicitante' => $solicitante->correo_institucional,
             $correo_pruebas
         ];

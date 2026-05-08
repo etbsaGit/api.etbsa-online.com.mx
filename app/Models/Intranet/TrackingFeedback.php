@@ -22,7 +22,7 @@ class TrackingFeedback extends Model
         'comentario',
         'empleado_id',
         'tracking_id',
-        'situacion_id'
+        'situacion_id',
     ];
 
     public function empleado(){

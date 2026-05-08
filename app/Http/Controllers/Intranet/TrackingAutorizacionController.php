@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Intranet;
 
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Tracking\TrackingFeedbackRequest;
+use App\Mail\SendAutorizacionDecision;
 use App\Models\Empleado;
 use App\Models\Estatus;
 use App\Models\Intranet\Tracking;
@@ -96,6 +97,8 @@ class TrackingAutorizacionController extends ApiController
 
             DB::commit();
 
+            $this->sendAutorizacionDecision($trackingId);
+
             return $this->respondCreated($feedback->load(['tracking']), 'Pedido Actualizado Correctamente');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -105,5 +108,45 @@ class TrackingAutorizacionController extends ApiController
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function sendAutorizacionDecision($trackingId)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+
+        $tracking->load(
+            'cliente',
+            'notificado',
+            'feedback',
+        );
+
+        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+            'quote' => $tracking
+        ]);
+
+        $pdfContent = $pdf->output();
+
+        // $solicitante = $tracking->empleado;
+        // $notificado = $tracking->notificar_a;
+
+        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+
+        $correos = [
+            // 'notificado' => $notifiicado->correo_institucional,
+            // 'solicitante' => $solicitante->correo_institucional,
+            $correo_pruebas
+        ];
+
+        foreach ($correos as $to_email) {
+            if ($to_email) {
+                Mail::to($to_email)->send(
+                    new SendAutorizacionDecision($tracking, $pdfContent)
+                );
+            }
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Correo enviado correctamente'
+        ]);
     }
 }
