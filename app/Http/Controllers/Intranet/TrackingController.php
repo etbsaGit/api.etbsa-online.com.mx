@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Exception;
 use Illuminate\Support\Facades\Mail;
 
 class TrackingController extends ApiController
@@ -120,6 +121,7 @@ class TrackingController extends ApiController
 
             // crear prospecto
             $prospectoId = null;
+
             if (!empty($data['prospecto'])) {
 
                 $prospecto = TrackingProspecto::create([
@@ -131,16 +133,21 @@ class TrackingController extends ApiController
                 $prospectoId = $prospecto->id;
             }
 
-            $trackingData = $data;
+            $trackingData = $data['tracking'];
 
             // asignar prospecto creado
-            if($prospectoId){
+            if ($prospectoId) {
                 $trackingData['prospecto_id'] = $prospectoId;
             }
 
             // crear tracking
-            if (empty($trackingdata['folio'])) {
-                $trackingData['folio'] = str_pad(Tracking::max('id') + 1, 6, '0', STR_PAD_LEFT);
+            if (empty($trackingData['folio'])) {
+                $trackingData['folio'] = str_pad(
+                    Tracking::max('id') + 1,
+                    6,
+                    '0',
+                    STR_PAD_LEFT
+                );
             }
 
             // meter estatus_id predeterminado como ACTIVO
@@ -198,16 +205,15 @@ class TrackingController extends ApiController
 
             return response()->json([
                 'success' => true,
-                'message' => 'Tracking creado correctamente',
-                'data' => $tracking->load(['detalles', 'activities', 'extras'])
-            ], 201);
-
+                'message' => 'Tracking actualizado correctamente',
+                'data' => $tracking->load(['detalles', 'activities'])
+            ]);
         } catch (\Throwable $e) {
             DB::rollBack();
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al guardar tracking',
+                'message' => 'Error al actualizar tracking',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -354,7 +360,7 @@ class TrackingController extends ApiController
                     'Director General',
                     'Dirección Comercial',
                 ])->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'));
-            })->with('sucursal','puesto')->get(),
+            })->with('sucursal', 'puesto')->get(),
         ];
         return $this->respond($data);
     }
@@ -554,59 +560,68 @@ class TrackingController extends ApiController
 
     public function customerAssigmentRequest($trackingId, $clienteId)
     {
-        $tracking = Tracking::findOrFail($trackingId);
+        try {
 
-        $tracking->load(
-            'cliente',
-            'prospecto',
-            'vendedor',
-            'sucursal',
-            'condicionPago',
-            'currency',
-            'detalles.productos',
-            'extras.item'
-        );
 
-        $cliente = Cliente::findOrFail($clienteId);
+            $tracking = Tracking::findOrFail($trackingId);
 
-        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
-            'quote' => $tracking
-        ]);
+            $tracking->load(
+                'cliente',
+                'prospecto',
+                'vendedor',
+                'sucursal',
+                'condicionPago',
+                'currency',
+                'detalles.productos',
+                'extras.item'
+            );
 
-        // Obtener binario PDF
-        $pdfContent = $pdf->output();
+            $cliente = Cliente::findOrFail($clienteId);
 
-        $gerente_corp = Empleado::where('puesto_id', Puesto::where('nombre', 'Dirección Comercial')->value('id'))
-            ->where('departamento_id', Departamento::where('nombre', 'Administracion')->value('id'))
-            ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
-            ->first();
+            $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+                'quote' => $tracking
+            ]);
 
-        $aux_jdf = Empleado::where('puesto_id', Puesto::where('nombre', 'Auxiliar John Deere Financial')->value('id'))
-            ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
-            ->first();
+            // Obtener binario PDF
+            $pdfContent = $pdf->output();
 
-        $solicitante = $tracking->empleado;
-        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+            $gerente_corp = Empleado::where('puesto_id', Puesto::where('nombre', 'Dirección Comercial')->value('id'))
+                ->where('departamento_id', Departamento::where('nombre', 'Administracion')->value('id'))
+                ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
+                ->first();
 
-        $correos = [
-            // 'gerente_corp' => $gerente_corp->correo_institucional,
-            // 'aux_jdf' => $aux_jdf->correo_institucional,
-            // 'solicitante' => $solicitante->correo_institucional,
-            $correo_pruebas
-        ];
+            $aux_jdf = Empleado::where('puesto_id', Puesto::where('nombre', 'Auxiliar John Deere Financial')->value('id'))
+                ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
+                ->first();
 
-        foreach ($correos as $to_email) {
-            if ($to_email) {
-                Mail::to($to_email)->send(
-                    new CustomerAssignmentRequest($tracking, $cliente, $pdfContent)
-                );
+            $solicitante = $tracking->empleado;
+            $correo_pruebas = 'munozchristian@etbsa.com.mx';
+
+            $correos = [
+                // 'gerente_corp' => $gerente_corp->correo_institucional,
+                // 'aux_jdf' => $aux_jdf->correo_institucional,
+                // 'solicitante' => $solicitante->correo_institucional,
+                $correo_pruebas
+            ];
+
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(
+                        new CustomerAssignmentRequest($tracking, $cliente, $pdfContent)
+                    );
+                }
             }
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Correo enviado correctamente'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Correo enviado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al mandar solicitud',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getEmpleadosAsignados($rfc)
