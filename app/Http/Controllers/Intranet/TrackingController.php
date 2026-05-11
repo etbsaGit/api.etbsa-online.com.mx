@@ -70,9 +70,6 @@ class TrackingController extends ApiController
         );
     }
 
-
-
-
     public function myIndex(Request $request)
     {
 
@@ -133,7 +130,7 @@ class TrackingController extends ApiController
                 $prospectoId = $prospecto->id;
             }
 
-            $trackingData = $data['tracking'];
+            $trackingData = $data;
 
             // asignar prospecto creado
             if ($prospectoId) {
@@ -205,15 +202,15 @@ class TrackingController extends ApiController
 
             return response()->json([
                 'success' => true,
-                'message' => 'Tracking actualizado correctamente',
-                'data' => $tracking->load(['detalles', 'activities'])
+                'message' => 'Tracking guardado correctamente',
+                'data' => $tracking->load(['detalles', 'activities', 'extras'])
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar tracking',
+                'message' => 'Error al guardar tracking',
                 'error' => $e->getMessage()
             ], 500);
         }
