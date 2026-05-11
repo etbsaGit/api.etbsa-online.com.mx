@@ -19,12 +19,12 @@ use function PHPUnit\Framework\isEmpty;
 
 class TrackingAutorizacionController extends ApiController
 {
-    public function index(Request $request)
+    public function index(Request $request, $situacion)
     {
         $filters = $request->all();
         $user = Auth::user();
 
-        $situacionId = Estatus::where('nombre', 'Formalizado')
+        $situacionId = Estatus::where('nombre', $situacion)
             ->where('tipo_estatus', 'tracking-situacion')
             ->value('id');
 

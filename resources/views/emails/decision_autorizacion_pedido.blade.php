@@ -1,5 +1,5 @@
 @php
-    $aprobado = $tracking->situacion->nombre === 'Autorizado';
+    $aprobado = $tracking->situacion->nombre === 'Autorizado' || 'Para Asignar';
 @endphp
 <!DOCTYPE html>
 <html>
