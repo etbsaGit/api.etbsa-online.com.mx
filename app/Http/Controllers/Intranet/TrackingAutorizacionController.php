@@ -149,4 +149,5 @@ class TrackingAutorizacionController extends ApiController
             'message' => 'Correo enviado correctamente'
         ]);
     }
+
 }

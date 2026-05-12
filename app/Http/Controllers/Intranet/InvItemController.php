@@ -125,7 +125,7 @@ class InvItemController extends ApiController
         $invModels = InvModel::all();
         $invFactories = InvFactory::all();
         $sucursales = Sucursal::all();
-        $estatus = Estatus::where('clave','tractor')->where('tipo_estatus','tractor-estatus')->get();
+        $estatus = Estatus::where('clave', 'tractor')->where('tipo_estatus', 'tractor-estatus')->get();
 
         return $this->respond([
             'sucursales' => $sucursales,
@@ -160,5 +160,18 @@ class InvItemController extends ApiController
         return $this->respond([
             'invCategory' => $invCategories,
         ]);
+    }
+
+    public function getInventario()
+    {
+        $estatusIds = Estatus::whereIn('nombre', ['En Inventario', 'En Camino'])
+            ->where('clave', 'tractor')
+            ->where('tipo_estatus', 'tractor-estatus')
+            ->pluck('id');
+        return [
+            'items' => InvItem::whereIn('shipping_status', $estatusIds)
+            ->whith('invModel','invFactory','sucursal','estatus')
+            ->get()
+        ];
     }
 }

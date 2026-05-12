@@ -233,6 +233,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('invItems', [InvItemController::class, 'index']);
     Route::get('invItem/invModel/{invModel}', [InvItemController::class, 'getModels']);
     Route::get('invItem/forms', [InvItemController::class, 'getForms']);
+    Route::get('invItem/inventario',[InvItemController::class, 'getInventario']);
     Route::apiResource('invItem', InvItemController::class);
 
     // 🔹 InvItemDoc
