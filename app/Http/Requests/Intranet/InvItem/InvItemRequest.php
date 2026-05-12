@@ -47,7 +47,7 @@ class InvItemRequest extends FormRequest
             'inv_factory_id' => ['required', 'integer', 'exists:inv_factories,id',],
             'rd' => ['required', 'string', 'max:255', Rule::unique('inv_items', 'rd')->ignore($item?->id)],
             'shipping_date' => ['required', 'date'],
-            'shipping_status' => ['nullable', 'boolean'],
+            'shipping_status' => ['nullable', 'integer'],
             'invoice' => ['nullable', 'string', 'max:255'],
             's_n' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 's_n')->ignore($item?->id),],
             's_n_m' => ['nullable', 'string', 'max:255', Rule::unique('inv_items', 's_n_m')->ignore($item?->id),],
