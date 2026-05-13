@@ -30,4 +30,7 @@ class TrackingAsignacionSerie extends Model{
     public function asignadoPor(){
         return $this->belongsTo(Empleado::class, 'asignado_por');
     }
+    public function invItem(){
+        return $this->belongsTo(InvItem::class, 'inv_item_id');
+    }
 }

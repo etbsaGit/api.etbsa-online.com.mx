@@ -21,7 +21,7 @@ use function PHPUnit\Framework\isEmpty;
 
 class TrackingAutorizacionController extends ApiController
 {
-    public function index(Request $request, $situacion)
+    public function index(Request $request, $situacion, $situacion2 = null)
     {
         $filters = $request->all();
         $user = Auth::user();
@@ -30,12 +30,25 @@ class TrackingAutorizacionController extends ApiController
             ->where('tipo_estatus', 'tracking-situacion')
             ->value('id');
 
+        $situacion2Id = null;
+        if ($situacion2) {
+            $situacion2Id = Estatus::where('nombre', $situacion2)
+                ->where('tipo_estatus', 'tractor-estatus')
+                ->value('id');
+        }
+
+        $situaciones = array_filter([
+            $situacionId,
+            $situacion2Id
+        ]);
+
         // si es admin ve todas las cotizaciones, si no sólo las que se les notificó
-        $trackings = Tracking::query()->when(!$user->hasRole('Admin'), function ($query) use ($user) {
-            $query->whereHas('notificado', function ($q) use ($user) {
-                $q->where('id', $user->empleado->id);
-            });
-        })
+        $trackings = Tracking::query()
+            ->when(!$user->hasRole('Admin'), function ($query) use ($user) {
+                $query->whereHas('notificado', function ($q) use ($user) {
+                    $q->where('id', $user->empleado->id);
+                });
+            })
             ->with([
                 'cliente',
                 'prospecto',
@@ -57,8 +70,11 @@ class TrackingAutorizacionController extends ApiController
                 'depto',
                 'ultimaActividad.certeza',
                 'extras.item',
-                'notificado'
-            ])->where('situacion_id', $situacionId)
+                'notificado',
+                'asignacion.invItem.invModel',
+                'asignacion.invItem.sucursal',
+            ])
+            ->whereIn('situacion_id', $situaciones)
             ->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -153,43 +169,67 @@ class TrackingAutorizacionController extends ApiController
         ]);
     }
 
-    public function asignacionSerie(TrackingAsignacionSerieRequest $request, $trackingId)
-    {
+    public function asignacionSerie(
+        TrackingAsignacionSerieRequest $request,
+        $trackingId
+    ) {
         try {
+
             DB::beginTransaction();
+
             $user = Auth::user();
+
             $empleadoId = $user->empleado?->id;
 
             $data = $request->validated();
 
-            $data['tracking_id'] = $trackingId;
-
-            $data['asignado_por'] = $empleadoId;
-
-            $asignacion = TrackingAsignacionSerie::create($data);
-
             $tracking = Tracking::findOrFail($trackingId);
 
-            $situacionId = Estatus::where('nombre', 'Asignado')->where('clave', 'tractor')->value('id');
+            $situacionId = Estatus::where('nombre', 'Asignado')
+                ->where('clave', 'tractor')
+                ->value('id');
+
+            // completar datos backend
+            $data['tracking_id'] = $trackingId;
+            $data['asignado_por'] = $empleadoId;
+
+            // crear o actualizar asignación
+            $asignacion = TrackingAsignacionSerie::updateOrCreate(
+                [
+                    'tracking_id' => $trackingId
+                ],
+                [
+                    'inv_item_id' => $data['inv_item_id'],
+                    'comentarios' => $data['comentarios'] ?? null,
+                    'asignado_por' => $empleadoId
+                ]
+            );
+
+            // actualizar tracking
             $tracking->update([
                 'situacion_id' => $situacionId
             ]);
 
-            $feedback = TrackingFeedback::create([
-                'tracking_id' => $tracking->id,
-                'empleado_id' => $data['asignado_por'],
+            // feedback historial
+            TrackingFeedback::create([
+                'tracking_id' => $trackingId,
+                'empleado_id' => $empleadoId,
                 'situacion_id' => $situacionId,
-                'comentario' => $data['comentarios'],
+                'comentario' =>
+                'Se asignó/reasignó el tractor #' .
+                    $data['inv_item_id']
             ]);
 
             DB::commit();
 
             return $this->respondCreated(
-                $tracking->load(['asignacion', 'feedback']),
-                'Número de Serie asignado'
+                $tracking->fresh(),
+                'Número de serie asignado correctamente'
             );
         } catch (\Exception $e) {
+
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Error al asignar número de serie',
                 'error' => $e->getMessage()
