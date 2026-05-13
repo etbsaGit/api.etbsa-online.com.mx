@@ -8,6 +8,7 @@ use App\Http\Requests\Intranet\Tracking\TrackingFeedbackRequest;
 use App\Mail\SendAutorizacionDecision;
 use App\Models\Empleado;
 use App\Models\Estatus;
+use App\Models\Intranet\InvItem;
 use App\Models\Intranet\Tracking;
 use App\Models\Intranet\TrackingAsignacionSerie;
 use App\Models\Intranet\TrackingFeedback;
@@ -169,12 +170,9 @@ class TrackingAutorizacionController extends ApiController
         ]);
     }
 
-    public function asignacionSerie(
-        TrackingAsignacionSerieRequest $request,
-        $trackingId
-    ) {
+    public function asignacionSerie(TrackingAsignacionSerieRequest $request, $trackingId)
+    {
         try {
-
             DB::beginTransaction();
 
             $user = Auth::user();
@@ -185,15 +183,52 @@ class TrackingAutorizacionController extends ApiController
 
             $tracking = Tracking::findOrFail($trackingId);
 
+            // ESTATUS TRACKING
             $situacionId = Estatus::where('nombre', 'Asignado')
                 ->where('clave', 'tractor')
                 ->value('id');
 
-            // completar datos backend
-            $data['tracking_id'] = $trackingId;
-            $data['asignado_por'] = $empleadoId;
+            // ESTATUS INVENTARIO
+            $estatusInventarioId = Estatus::where('nombre', 'En Inventario')
+                ->where('clave', 'tractor')
+                ->where('tipo_estatus', 'tractor-estatus')
+                ->value('id');
 
-            // crear o actualizar asignación
+            $estatusAsignadoId = Estatus::where('nombre', 'Asignado')
+                ->where('clave', 'tractor')
+                ->where('tipo_estatus', 'tractor-estatus')
+                ->value('id');
+
+            // buscar asignación actual
+            $asignacionActual = TrackingAsignacionSerie::where(
+                'tracking_id',
+                $trackingId
+            )->first();
+
+            // SI EXISTE Y CAMBIÓ EL TRACTOR
+            if (
+                $asignacionActual &&
+                $asignacionActual->inv_item_id != $data['inv_item_id']
+            ) {
+
+                // regresar tractor anterior a inventario
+                InvItem::where(
+                    'id',
+                    $asignacionActual->inv_item_id
+                )->update([
+                    'shipping_status' => $estatusInventarioId
+                ]);
+            }
+
+            // actualizar nuevo tractor a asignado
+            InvItem::where(
+                'id',
+                $data['inv_item_id']
+            )->update([
+                'shipping_status' => $estatusAsignadoId
+            ]);
+
+            // update/create asignación
             $asignacion = TrackingAsignacionSerie::updateOrCreate(
                 [
                     'tracking_id' => $trackingId
@@ -210,14 +245,16 @@ class TrackingAutorizacionController extends ApiController
                 'situacion_id' => $situacionId
             ]);
 
-            // feedback historial
+            // feedback
             TrackingFeedback::create([
                 'tracking_id' => $trackingId,
                 'empleado_id' => $empleadoId,
                 'situacion_id' => $situacionId,
                 'comentario' =>
-                'Se asignó/reasignó el tractor #' .
-                    $data['inv_item_id']
+                'Se asignó/reasignó tractor #' .
+                    $data['inv_item_id'] .
+                    ' al seguimiento. Comentarios adicionales: ' .
+                    ($data['comentarios'] ?? 'N/A')
             ]);
 
             DB::commit();

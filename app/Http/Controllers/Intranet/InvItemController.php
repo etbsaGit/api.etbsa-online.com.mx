@@ -164,7 +164,7 @@ class InvItemController extends ApiController
 
     public function getInventario()
     {
-        $estatusIds = Estatus::whereIn('nombre', ['En Inventario', 'En Camino'])
+        $estatusIds = Estatus::whereIn('nombre', ['En Inventario'])
             ->where('clave', 'tractor')
             ->where('tipo_estatus', 'tractor-estatus')
             ->pluck('id');
