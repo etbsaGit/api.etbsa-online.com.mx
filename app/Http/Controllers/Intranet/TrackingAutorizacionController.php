@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Intranet;
 
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Intranet\Tracking\TrackingAsignacionSerieRequest;
 use App\Http\Requests\Intranet\Tracking\TrackingFeedbackRequest;
 use App\Mail\SendAutorizacionDecision;
 use App\Models\Empleado;
 use App\Models\Estatus;
 use App\Models\Intranet\Tracking;
+use App\Models\Intranet\TrackingAsignacionSerie;
 use App\Models\Intranet\TrackingFeedback;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -95,6 +97,7 @@ class TrackingAutorizacionController extends ApiController
                 'situacion_id' => $situacionId
             ]);
 
+
             DB::commit();
 
             $this->sendAutorizacionDecision($trackingId);
@@ -150,4 +153,47 @@ class TrackingAutorizacionController extends ApiController
         ]);
     }
 
+    public function asignacionSerie(TrackingAsignacionSerieRequest $request, $trackingId)
+    {
+        try {
+            DB::beginTransaction();
+            $user = Auth::user();
+            $empleadoId = $user->empleado?->id;
+
+            $data = $request->validated();
+
+            $data['tracking_id'] = $trackingId;
+
+            $data['asignado_por'] = $empleadoId;
+
+            $asignacion = TrackingAsignacionSerie::create($data);
+
+            $tracking = Tracking::findOrFail($trackingId);
+
+            $situacionId = Estatus::where('nombre', 'Asignado')->where('clave', 'tractor')->value('id');
+            $tracking->update([
+                'situacion_id' => $situacionId
+            ]);
+
+            $feedback = TrackingFeedback::create([
+                'tracking_id' => $tracking->id,
+                'empleado_id' => $data['asignado_por'],
+                'situacion_id' => $situacionId,
+                'comentario' => $data['comentarios'],
+            ]);
+
+            DB::commit();
+
+            return $this->respondCreated(
+                $tracking->load(['asignacion', 'feedback']),
+                'Número de Serie asignado'
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al asignar número de serie',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

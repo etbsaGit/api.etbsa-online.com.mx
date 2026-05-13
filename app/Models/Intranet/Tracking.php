@@ -114,6 +114,9 @@ class Tracking extends Model
     public function feedback(){
         return $this->hasMany(TrackingFeedback::class,'tracking_id');
     }
+    public function asignacion(){
+        return $this->hasMany(TrackingAsignacionSerie::class,'tracking_id');
+    }
     public function scopeFilter(Builder $query, $filters)
     {
         return $this->scopeFilterSearch($query, $filters, ['folio']);

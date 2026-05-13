@@ -168,10 +168,10 @@ class InvItemController extends ApiController
             ->where('clave', 'tractor')
             ->where('tipo_estatus', 'tractor-estatus')
             ->pluck('id');
-        return [
+        return $this->respond([
             'items' => InvItem::whereIn('shipping_status', $estatusIds)
-            ->whith('invModel','invFactory','sucursal','estatus')
-            ->get()
-        ];
+                ->with('invModel', 'invFactory', 'sucursal', 'estatus')
+                ->get()
+        ]);
     }
 }
