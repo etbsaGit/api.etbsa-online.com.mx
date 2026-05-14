@@ -160,7 +160,7 @@ class TrackingAutorizacionController extends ApiController
             $tracking->load(
                 'cliente',
                 'notificado',
-                'historial',
+                'historial.empleado',
             );
 
             $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
@@ -194,7 +194,7 @@ class TrackingAutorizacionController extends ApiController
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al asignar mandar correo de Solicitud de Asignación de Serie',
+                'message' => 'Error al mandar correo de Solicitud de Asignación de Serie',
                 'error' => $e->getMessage()
             ], 500);
         }

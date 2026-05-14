@@ -120,7 +120,7 @@
 
                     <tr>
                         <td class="label">Revisado por</td>
-                        <td>{{ $tracking->notificado->nombreCompleto }}</td>
+                        <td>{{ $tracking->historial->last()?->empleado->nombreCompleto }}</td>
                     </tr>
 
                     <tr>

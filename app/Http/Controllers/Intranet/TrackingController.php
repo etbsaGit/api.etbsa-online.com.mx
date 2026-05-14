@@ -515,11 +515,7 @@ class TrackingController extends ApiController
             $tracking->update([
                 'situacion_id' => $situacion_id,
             ]);
-
-            DB::commit();
-
             if ($situacion === "Formalizado") {
-                $this->sendFormalizarRequest($id);
                 // feedback
                 TrackingFeedback::create([
                     'tracking_id' => $tracking->id,
@@ -528,6 +524,12 @@ class TrackingController extends ApiController
                     'comentario' =>
                     'Se ha actualizado la situación del seguimiento a: ' . $situacion
                 ]);
+            }
+
+            DB::commit();
+
+            if ($situacion === "Formalizado") {
+                $this->sendFormalizarRequest($id);
             }
 
             return response()->json([
