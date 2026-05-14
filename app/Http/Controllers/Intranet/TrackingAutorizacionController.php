@@ -74,6 +74,11 @@ class TrackingAutorizacionController extends ApiController
                 'notificado',
                 'asignacion.invItem.invModel',
                 'asignacion.invItem.sucursal',
+                'historial' => function ($query){
+                    $query->orderBy('created_at','asc');
+                },
+                'historial.situacion',
+                'historial.empleado'
             ])
             ->whereIn('situacion_id', $situaciones)
             ->filter($filters)
@@ -88,8 +93,9 @@ class TrackingAutorizacionController extends ApiController
 
     public function autorizarPedido(TrackingFeedbackRequest $request, $trackingId, $situacion)
     {
-        DB::beginTransaction();
+
         try {
+            DB::beginTransaction();
             $user = Auth::user();
             $empleadoId = $user->empleado?->id;
 
@@ -106,14 +112,24 @@ class TrackingAutorizacionController extends ApiController
                 $data['empleado_id'] = $empleadoId;
             }
 
-            $feedback = TrackingFeedback::create($data);
+            // feedback informativo
+            $feedback = TrackingFeedback::create([
+                'tracking_id' => $trackingId,
+                'empleado_id' => $empleadoId,
+                'situacion_id' => $situacionId,
+                'comentario' =>
+                'Se ha actualizado la situación del pedido a ' . $situacion .
+                    '. Notas: '. ($data['comentario'] ?? 'N/A')
+            ]);
+
+            // feedback descriptivo
+            // $feedback = TrackingFeedback::create($data);
 
             $tracking = Tracking::findOrFail($trackingId);
 
             $tracking->update([
                 'situacion_id' => $situacionId
             ]);
-
 
             DB::commit();
 
@@ -137,7 +153,7 @@ class TrackingAutorizacionController extends ApiController
         $tracking->load(
             'cliente',
             'notificado',
-            'feedback',
+            'historial',
         );
 
         $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
@@ -251,8 +267,7 @@ class TrackingAutorizacionController extends ApiController
                 'empleado_id' => $empleadoId,
                 'situacion_id' => $situacionId,
                 'comentario' =>
-                'Se asignó/reasignó tractor #' .
-                    $data['inv_item_id'] .
+                'Se asignó/reasignó tractor' .
                     ' al seguimiento. Comentarios adicionales: ' .
                     ($data['comentarios'] ?? 'N/A')
             ]);

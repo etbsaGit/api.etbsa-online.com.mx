@@ -23,6 +23,7 @@ use App\Models\Intranet\ExchangeRate;
 use App\Models\Intranet\TrackingActivity;
 use App\Models\Intranet\TrackingDetalle;
 use App\Models\Intranet\TrackingDetalleExtras;
+use App\Models\Intranet\TrackingFeedback;
 use App\Models\Intranet\TrackingProspecto;
 use App\Models\Intranet\TrackingTipoSeguimiento;
 use App\Models\Puesto;
@@ -154,10 +155,10 @@ class TrackingController extends ApiController
             $trackingData['estatus_id'] = $estatus_activo->id;
 
             // meter situacion_id como sin formalizar
-            $situacion_formalizado = Estatus::where('nombre', 'sin formalizar')
+            $situacion_no_formalizado = Estatus::where('nombre', 'sin formalizar')
                 ->where('tipo_estatus', 'tracking-situacion')
                 ->first();
-            $trackingData['situacion_id'] = $situacion_formalizado->id;
+            $trackingData['situacion_id'] = $situacion_no_formalizado->id;
 
             $tracking = Tracking::create($trackingData);
 
@@ -197,6 +198,18 @@ class TrackingController extends ApiController
             $activityData = $data['activity'];
             $activityData['tracking_id'] = $tracking->id;
             TrackingActivity::create($activityData);
+
+            // feedback
+            TrackingFeedback::create([
+                'tracking_id' => $tracking->id,
+                'empleado_id' => $tracking->vendedor_id,
+                'situacion_id' => $situacion_no_formalizado->id,
+                'comentario' =>
+                'Se ha realizado una cotización con el folio #' .
+                    $tracking->folio .
+                    '. Notas: ' .
+                    ($data['notas'] ?? 'N/A')
+            ]);
 
             DB::commit();
 
@@ -287,9 +300,32 @@ class TrackingController extends ApiController
 
             // activity
             if (isset($data['activity'])) {
-                TrackingActivity::create([
+                $actividad = TrackingActivity::create([
                     ...$data['activity'],
                     'tracking_id' => $tracking->id,
+                ]);
+
+                // feedback
+                TrackingFeedback::create([
+                    'tracking_id' => $tracking->id,
+                    'empleado_id' => $tracking->vendedor_id,
+                    'situacion_id' => $tracking->situacion->id,
+                    'comentario' =>
+                    'Se ha registrado una actividad de seguimiento en la cotización. ' .
+                        'Siguiente seguimiento: ' . $actividad->date_next_tracking .
+                        '. Notas: ' .
+                        $actividad->notas ?? 'N/A'
+                ]);
+            } else {
+                // feedback
+                TrackingFeedback::create([
+                    'tracking_id' => $tracking->id,
+                    'empleado_id' => $tracking->vendedor_id,
+                    'situacion_id' => $tracking->situacion->id,
+                    'comentario' =>
+                    'Se ha realizado una actualización en la cotización. ' .
+                        'Notas del vendedor: ' .
+                        ($data['notas'] ?? 'N/A')
                 ]);
             }
 
@@ -376,6 +412,7 @@ class TrackingController extends ApiController
     public function storeActivity(TrackingActivityRequest $request, $trackingId)
     {
         try {
+            DB::beginTransaction();
             $tracking = Tracking::findOrFail($trackingId);
 
             $data = $request->validated();
@@ -390,12 +427,26 @@ class TrackingController extends ApiController
                 'currency'
             ]);
 
+            // feedback
+            TrackingFeedback::create([
+                'tracking_id' => $tracking->id,
+                'empleado_id' => $tracking->vendedor_id,
+                'situacion_id' => $tracking->situacion->id,
+                'comentario' =>
+                'Se ha registrado una actividad de seguimiento. ' .
+                    'Notas: ' .
+                    ($data['notas'] ?? 'N/A')
+            ]);
+
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Actividad de seguimiento creada correctamente',
                 'data' => $activity
             ], 201);
         } catch (\Throwable $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar actividad de seguimiento',
@@ -406,20 +457,39 @@ class TrackingController extends ApiController
 
     public function updateEstatus(Request $request, $id)
     {
-        $request->validate([
-            'estatus_id' => 'required|integer|exists:estatus,id'
-        ]);
+        try {
+            DB::beginTransaction();
+            $request->validate([
+                'estatus_id' => 'required|integer|exists:estatus,id'
+            ]);
 
-        $tracking = Tracking::findOrFail($id);
+            $tracking = Tracking::findOrFail($id);
 
-        $tracking->update([
-            'estatus_id' => $request->estatus_id
-        ]);
+            $tracking->update([
+                'estatus_id' => $request->estatus_id
+            ]);
 
-        return response()->json([
-            'message' => 'Estatus actualizado correctamente',
-            'data' => $tracking
-        ]);
+            // feedback
+            TrackingFeedback::create([
+                'tracking_id' => $tracking->id,
+                'empleado_id' => $tracking->vendedor_id,
+                'situacion_id' => $tracking->situacion->id,
+                'comentario' =>
+                'Se ha actualizado el estatus del seguimiento a: . ' . $tracking->estatus->nombre
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Estatus actualizado correctamente',
+                'data' => $tracking
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al actualizar estatus',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getEstatus()
@@ -450,6 +520,14 @@ class TrackingController extends ApiController
 
             if ($situacion === "Formalizado") {
                 $this->sendFormalizarRequest($id);
+                // feedback
+                TrackingFeedback::create([
+                    'tracking_id' => $tracking->id,
+                    'empleado_id' => $tracking->vendedor_id,
+                    'situacion_id' => $tracking->situacion->id,
+                    'comentario' =>
+                    'Se ha actualizado la situación del seguimiento a: ' . $situacion
+                ]);
             }
 
             return response()->json([
