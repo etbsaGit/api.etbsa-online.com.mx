@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Intranet;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Tracking\TrackingAsignacionSerieRequest;
 use App\Http\Requests\Intranet\Tracking\TrackingFeedbackRequest;
+use App\Mail\MailToAsignacionSerie;
 use App\Mail\SendAutorizacionDecision;
 use App\Models\Empleado;
 use App\Models\Estatus;
@@ -74,8 +75,8 @@ class TrackingAutorizacionController extends ApiController
                 'notificado',
                 'asignacion.invItem.invModel',
                 'asignacion.invItem.sucursal',
-                'historial' => function ($query){
-                    $query->orderBy('created_at','asc');
+                'historial' => function ($query) {
+                    $query->orderBy('created_at', 'asc');
                 },
                 'historial.situacion',
                 'historial.empleado'
@@ -119,7 +120,7 @@ class TrackingAutorizacionController extends ApiController
                 'situacion_id' => $situacionId,
                 'comentario' =>
                 'Se ha actualizado la situación del pedido a ' . $situacion .
-                    '. Notas: '. ($data['comentario'] ?? 'N/A')
+                    '. Notas: ' . ($data['comentario'] ?? 'N/A')
             ]);
 
             // feedback descriptivo
@@ -131,7 +132,12 @@ class TrackingAutorizacionController extends ApiController
                 'situacion_id' => $situacionId
             ]);
 
+
             DB::commit();
+
+            if ($situacion === 'Para Asignar') {
+                $this->mailToAsignacionSerie($trackingId);
+            }
 
             $this->sendAutorizacionDecision($trackingId);
 
@@ -148,42 +154,94 @@ class TrackingAutorizacionController extends ApiController
 
     public function sendAutorizacionDecision($trackingId)
     {
-        $tracking = Tracking::findOrFail($trackingId);
+        try {
+            $tracking = Tracking::findOrFail($trackingId);
 
-        $tracking->load(
-            'cliente',
-            'notificado',
-            'historial',
-        );
+            $tracking->load(
+                'cliente',
+                'notificado',
+                'historial',
+            );
 
-        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
-            'quote' => $tracking
-        ]);
+            $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+                'quote' => $tracking
+            ]);
 
-        $pdfContent = $pdf->output();
+            $pdfContent = $pdf->output();
 
-        // $solicitante = $tracking->empleado;
-        // $notificado = $tracking->notificar_a;
+            // $solicitante = $tracking->empleado;
+            // $notificado = $tracking->notificar_a;
 
-        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+            $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
-        $correos = [
-            // 'notificado' => $notifiicado->correo_institucional,
-            // 'solicitante' => $solicitante->correo_institucional,
-            $correo_pruebas
-        ];
+            $correos = [
+                // 'notificado' => $notifiicado->correo_institucional,
+                // 'solicitante' => $solicitante->correo_institucional,
+                $correo_pruebas
+            ];
 
-        foreach ($correos as $to_email) {
-            if ($to_email) {
-                Mail::to($to_email)->send(
-                    new SendAutorizacionDecision($tracking, $pdfContent)
-                );
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(
+                        new SendAutorizacionDecision($tracking, $pdfContent)
+                    );
+                }
             }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Correo enviado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al asignar mandar correo de Solicitud de Asignación de Serie',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        return response()->json([
-            'success' => true,
-            'message' => 'Correo enviado correctamente'
-        ]);
+    }
+
+    public function mailToAsignacionSerie($trackingId)
+    {
+        try {
+            $tracking = Tracking::findOrFail($trackingId);
+
+            $tracking->load(
+                'cliente',
+                'notificado',
+                'historial',
+            );
+
+            $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+                'quote' => $tracking
+            ]);
+
+            $pdfContent = $pdf->output();
+
+            $correos = Empleado::whereHas('user.roles', function ($query) {
+                $query->where('name', 'Intranet.tracking.asignacion_serie');
+            })
+                ->pluck('correo_institucional')
+                ->filter()
+                ->unique();
+
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(
+                        new MailToAsignacionSerie($tracking, $pdfContent)
+                    );
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Correo enviado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al asignar mandar correo de Solicitud de Asignación de Serie',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function asignacionSerie(TrackingAsignacionSerieRequest $request, $trackingId)
@@ -287,5 +345,45 @@ class TrackingAutorizacionController extends ApiController
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function sendAsignacionSerie($trackingId)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+
+        $tracking->load(
+            'cliente',
+            'notificado',
+            'historial',
+        );
+
+        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+            'quote' => $tracking
+        ]);
+
+        $pdfContent = $pdf->output();
+
+        // $solicitante = $tracking->empleado;
+        // $notificado = $tracking->notificar_a;
+
+        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+
+        $correos = [
+            // 'notificado' => $notifiicado->correo_institucional,
+            // 'solicitante' => $solicitante->correo_institucional,
+            $correo_pruebas
+        ];
+
+        foreach ($correos as $to_email) {
+            if ($to_email) {
+                Mail::to($to_email)->send(
+                    new SendAutorizacionDecision($tracking, $pdfContent)
+                );
+            }
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Correo enviado correctamente'
+        ]);
     }
 }

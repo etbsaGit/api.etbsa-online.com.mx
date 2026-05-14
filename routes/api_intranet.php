@@ -362,6 +362,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('trackingAutorizacion/autorizarPedido/{trackingId}/{situacion}', [TrackingAutorizacionController::class, 'autorizarPedido']);
     Route::post('trackingAutorizacion/sendAutorizacionDecision/{trackingId}', [TrackingAutorizacionController::class, 'sendAutorizacionDecision']);
     Route::post('trackingAutorizacion/asignar-serie/{tracking_id}',[TrackingAutorizacionController::class,'asignacionSerie']);
+    Route::post('trackingAutorizacion/mailToAsignacionSerie/{tracking_id}',[TrackingAutorizacionController::class, 'mailToAsignacionSerie']);
     Route::apiResource('trackingAutorizacion', TrackingAutorizacionController::class);
 
     //TrackingProspecto
