@@ -24,13 +24,13 @@ class TrackingAsignacionSerie extends Model{
     public function tracking(){
         return $this->belongsTo(Tracking::class,'tracking_id');
     }
-    public function item(){
-        return $this->belongsTo(InvItem::class, 'inv_item_id');
-    }
     public function asignadoPor(){
         return $this->belongsTo(Empleado::class, 'asignado_por');
     }
     public function invItem(){
         return $this->belongsTo(InvItem::class, 'inv_item_id');
+    }
+    public function empleado(){
+        return $this->belongsTo(Empleado::class, 'asignado_por');
     }
 }

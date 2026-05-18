@@ -6,6 +6,8 @@ use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\Tracking\TrackingAsignacionSerieRequest;
 use App\Http\Requests\Intranet\Tracking\TrackingFeedbackRequest;
 use App\Mail\MailToAsignacionSerie;
+use App\Mail\MailToCreditoCobranza;
+use App\Mail\SendAsignacionSerie;
 use App\Mail\SendAutorizacionDecision;
 use App\Models\Empleado;
 use App\Models\Estatus;
@@ -46,7 +48,7 @@ class TrackingAutorizacionController extends ApiController
 
         // si es admin ve todas las cotizaciones, si no sólo las que se les notificó
         $trackings = Tracking::query()
-            ->when(!$user->hasRole('Admin'), function ($query) use ($user) {
+            ->when(!$user->hasRole('Admin') && !$user->hasRole('Intranet.crm.autorizados'), function ($query) use ($user) {
                 $query->whereHas('notificado', function ($q) use ($user) {
                     $q->where('id', $user->empleado->id);
                 });
@@ -75,6 +77,7 @@ class TrackingAutorizacionController extends ApiController
                 'notificado',
                 'asignacion.invItem.invModel',
                 'asignacion.invItem.sucursal',
+                'asignacion.empleado',
                 'historial' => function ($query) {
                     $query->orderBy('created_at', 'asc');
                 },
@@ -218,7 +221,7 @@ class TrackingAutorizacionController extends ApiController
             $pdfContent = $pdf->output();
 
             $correos = Empleado::whereHas('user.roles', function ($query) {
-                $query->where('name', 'Intranet.tracking.asignacion_serie');
+                $query->where('name', 'Intranet.crm.asignacion_serie');
             })
                 ->pluck('correo_institucional')
                 ->filter()
@@ -332,6 +335,8 @@ class TrackingAutorizacionController extends ApiController
 
             DB::commit();
 
+            $this->sendAsignacionSerie($trackingId);
+
             return $this->respondCreated(
                 $tracking->fresh(),
                 'Número de serie asignado correctamente'
@@ -349,41 +354,98 @@ class TrackingAutorizacionController extends ApiController
 
     public function sendAsignacionSerie($trackingId)
     {
-        $tracking = Tracking::findOrFail($trackingId);
+        try {
+            $tracking = Tracking::findOrFail($trackingId);
 
-        $tracking->load(
-            'cliente',
-            'notificado',
-            'historial',
-        );
+            $tracking->load(
+                'cliente',
+                'notificado',
+                'historial',
+                'asignacion.invItem.invModel',
+                'asignacion.invItem.sucursal',
+                'asignacion.empleado',
+            );
 
-        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
-            'quote' => $tracking
-        ]);
+            $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+                'quote' => $tracking
+            ]);
 
-        $pdfContent = $pdf->output();
+            $pdfContent = $pdf->output();
 
-        // $solicitante = $tracking->empleado;
-        // $notificado = $tracking->notificar_a;
+            // $solicitante = $tracking->empleado;
+            // $notificado = $tracking->notificar_a;
 
-        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+            $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
-        $correos = [
-            // 'notificado' => $notifiicado->correo_institucional,
-            // 'solicitante' => $solicitante->correo_institucional,
-            $correo_pruebas
-        ];
+            $correos = [
+                // 'notificado' => $notifiicado->correo_institucional,
+                // 'solicitante' => $solicitante->correo_institucional,
+                $correo_pruebas
+            ];
 
-        foreach ($correos as $to_email) {
-            if ($to_email) {
-                Mail::to($to_email)->send(
-                    new SendAutorizacionDecision($tracking, $pdfContent)
-                );
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(
+                        new SendAsignacionSerie($tracking, $pdfContent)
+                    );
+                }
             }
+            return response()->json([
+                'success' => true,
+                'message' => 'Correo enviado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al mandar correo de Asignación de Serie',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        return response()->json([
-            'success' => true,
-            'message' => 'Correo enviado correctamente'
-        ]);
+    }
+
+    public function mailToCreditoCobranza($trackingId)
+    {
+        try {
+            $tracking = Tracking::findOrFail($trackingId);
+
+            $tracking->load(
+                'cliente',
+                'notificado',
+                'historial',
+                'asignacion.invItem.invModel',
+                'asignacion.invItem.sucursal',
+                'asignacion.empleado',
+            );
+
+            $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+                'quote' => $tracking
+            ]);
+
+            $pdfContent = $pdf->output();
+
+            $correos = Empleado::whereHas('user.roles', function ($query) {
+                $query->where('name', 'Intranet.crm.credito');
+            })
+                ->pluck('correo_institucional')
+                ->filter()
+                ->unique();
+
+            foreach ($correos as $to_email) {
+                if ($to_email) {
+                    Mail::to($to_email)->send(
+                        new MailToCreditoCobranza($tracking, $pdfContent)
+                    );
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Correo enviado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al mandar correo de Asignación de Serie',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
