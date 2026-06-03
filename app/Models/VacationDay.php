@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class VacationDay extends Model
 {
+
     use HasFactory, FilterableModel, SoftDeletes;
 
     protected $fillable = [
@@ -53,7 +54,20 @@ class VacationDay extends Model
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearchVacation($query, $filters, ['comentarios']);
+        // if (array_key_exists('validated', $filters)) {
+
+        //     if (is_null($filters['validated'])) {
+        //         $query->whereNull('validated');
+        //     } else {
+        //         $query->where('validated', $filters['validated']);
+        //     }
+        // }
+
+        return $this->scopeFilterSearchVacation(
+            $query,
+            $filters,
+            ['comentarios']
+        );
     }
 
     public function empleado()

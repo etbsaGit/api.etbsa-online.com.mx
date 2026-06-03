@@ -111,8 +111,11 @@ class Tracking extends Model
     {
         return $this->hasOne(TrackingActivity::class)->latestOfMany();
     }
-    public function feedback(){
+    public function historial(){
         return $this->hasMany(TrackingFeedback::class,'tracking_id');
+    }
+    public function asignacion(){
+        return $this->hasOne(TrackingAsignacionSerie::class,'tracking_id');
     }
     public function scopeFilter(Builder $query, $filters)
     {

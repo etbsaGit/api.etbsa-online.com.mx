@@ -2,6 +2,7 @@
 
 namespace App\Models\Intranet;
 
+use App\Models\Estatus;
 use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
@@ -76,5 +77,10 @@ class InvItem extends Model
     public function invItemDocs()
     {
         return $this->hasMany(InvItemDoc::class, 'inv_item_id');
+    }
+
+    public function estatus()
+    {
+        return $this->belongsTo(Estatus::class, 'shipping_status');
     }
 }

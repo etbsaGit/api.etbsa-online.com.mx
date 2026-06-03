@@ -233,6 +233,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('invItems', [InvItemController::class, 'index']);
     Route::get('invItem/invModel/{invModel}', [InvItemController::class, 'getModels']);
     Route::get('invItem/forms', [InvItemController::class, 'getForms']);
+    Route::get('invItem/inventario',[InvItemController::class, 'getInventario']);
     Route::apiResource('invItem', InvItemController::class);
 
     // 🔹 InvItemDoc
@@ -357,8 +358,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('tracking', TrackingController::class);
 
     // TrackingAutorizacion
-    Route::post('trackingAutorizaciones', [TrackingAutorizacionController::class, 'index']);
+    Route::post('trackingAutorizaciones/{situacion}/{situacion2?}', [TrackingAutorizacionController::class, 'index']);
     Route::post('trackingAutorizacion/autorizarPedido/{trackingId}/{situacion}', [TrackingAutorizacionController::class, 'autorizarPedido']);
+    Route::post('trackingAutorizacion/sendAutorizacionDecision/{trackingId}', [TrackingAutorizacionController::class, 'sendAutorizacionDecision']);
+    Route::post('trackingAutorizacion/asignar-serie/{tracking_id}',[TrackingAutorizacionController::class,'asignacionSerie']);
+    Route::post('trackingAutorizacion/mailToAsignacionSerie/{tracking_id}',[TrackingAutorizacionController::class, 'mailToAsignacionSerie']);
+    Route::post('trackingAutorizacion/sendAsignacionSerie/{tracking_id}',[TrackingAutorizacionController::class, 'sendAsignacionSerie']);
     Route::apiResource('trackingAutorizacion', TrackingAutorizacionController::class);
 
     //TrackingProspecto

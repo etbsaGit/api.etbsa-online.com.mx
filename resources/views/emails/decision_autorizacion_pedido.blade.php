@@ -1,5 +1,7 @@
 @php
-    $aprobado = $tracking->situacion->nombre === 'Autorizado';
+    $aprobado = in_array(
+        $tracking->situacion->nombre, ['Autorizado', 'Para Asignar']
+    );
 @endphp
 <!DOCTYPE html>
 <html>
@@ -118,13 +120,13 @@
 
                     <tr>
                         <td class="label">Revisado por</td>
-                        <td>{{ $tracking->notificado->nombreCompleto }}</td>
+                        <td>{{ $tracking->historial->last()?->empleado->nombreCompleto }}</td>
                     </tr>
 
                     <tr>
                         <td class="label">Fecha de Revisión</td>
                         <td>
-                            {{ $tracking->feedback->last()?->created_at?->format('d/m/Y H:i') }}
+                            {{ $tracking->historial->last()?->created_at?->format('d/m/Y H:i') }}
                         </td>
                     </tr>
 
@@ -135,16 +137,16 @@
                 </table>
             </div>
 
-            @if ($tracking->feedback->last()?->comentario)
+            @if ($tracking->historial->last()?->comentario)
                 <div class="comentarios">
                     <strong>Comentarios:</strong><br>
-                    {{ $tracking->feedback->last()?->comentario }}
+                    {{ $tracking->historial->last()?->comentario }}
                 </div>
             @endif
 
             <p style="margin-top: 25px;">
                 {!! $aprobado
-                    ? 'El pedido fue autorizada y se puede continuar con el proceso correspondiente.'
+                    ? 'El pedido fue autorizado y se puede continuar con el proceso correspondiente.'
                     : 'El pedido no fue autorizado. Favor de revisar los comentarios y realizar las correcciones necesarias.' !!}
             </p>
 
