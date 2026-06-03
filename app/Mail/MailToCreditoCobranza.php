@@ -27,8 +27,8 @@ class MailToCreditoCobranza extends Mailable
 
     public function build()
     {
-        return $this->subject('')
-            ->view('emails.solicitud_asignacion_serie')
+        return $this->subject('Solicitud de aprobación de pedido (Crédito y Cobranza)')
+            ->view('emails.mail_to_credito_cobranza')
             ->attachData(
                 $this->pdfContent,
                 'cotizacion_' . $this->tracking->id . '.pdf',
