@@ -57,6 +57,7 @@ use App\Http\Controllers\Intranet\ProductCategoryController;
 use App\Http\Controllers\Intranet\ProductCondicionPagoController;
 use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
+use App\Http\Controllers\Intranet\ReporteClientesController;
 use App\Http\Controllers\Intranet\TrackingAutorizacionController;
 use App\Http\Controllers\Intranet\TrackingController;
 use App\Http\Controllers\Intranet\TrackingProspectoController;
@@ -298,6 +299,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // 🔹 Referencia Comercial
     Route::get('referenciaComercial/cliente/{cliente}', [ReferenciaComercialController::class, 'getPerCliente']);
     Route::apiResource('referenciaComercial', ReferenciaComercialController::class);
+
+    // Reportes Clientes
+    Route::post('reporte_clientes/vehiculos', [ReporteClientesController::class,'vehicles']);
 
     // 🔹 Representante
     Route::get('representante/cliente/{cliente}', [RepresentanteController::class, 'getPerCliente']);
