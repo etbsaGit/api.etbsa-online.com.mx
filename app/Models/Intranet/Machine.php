@@ -52,6 +52,10 @@ class Machine extends Model
             $query->where('marca_id', $filters['marca_id']);
         }
 
+        if(!empty($filters['anio'])){
+            $query->where('anio',$filters['anio']);
+        }
+
         if (!empty($filters['condicion_id'])) {
             $query->where('condicion_id', $filters['condicion_id']);
         }

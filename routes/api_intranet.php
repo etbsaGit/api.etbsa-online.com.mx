@@ -301,7 +301,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('referenciaComercial', ReferenciaComercialController::class);
 
     // Reportes Clientes
-    Route::post('reporte_clientes/vehiculos', [ReporteClientesController::class,'vehicles']);
+    Route::post('reporte_clientes/maquinaria', [ReporteClientesController::class,'maquinaria']);
+    Route::post('reporte_clientes/maquinaria/export',[ReporteClientesController::class,'exportMaquinaria']);
 
     // 🔹 Representante
     Route::get('representante/cliente/{cliente}', [RepresentanteController::class, 'getPerCliente']);
