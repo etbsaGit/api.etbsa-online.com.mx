@@ -15,6 +15,9 @@ use App\Models\Intranet\TipoEquipo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\VehiculosClientesExport;
+use App\Models\Intranet\Cultivo;
+use App\Models\Intranet\InversionesAgricola;
+use App\Models\Intranet\TipoCultivo;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReporteClientesController extends ApiController
@@ -67,5 +70,27 @@ class ReporteClientesController extends ApiController
             'file_name' => 'maquinaria_clientes_report',
             'file_base64' => $base64,
         ]);
+    }
+
+    public function cultivo(Request $request)
+    {
+        $filters = $request->all();
+
+        $clientes = InversionesAgricola::query()
+            ->filter($filters)
+            ->with('cliente', 'cultivo' )
+            ->paginate(10);
+
+        return $this->respond([
+            'cultivos' => $clientes,
+            'filters' => [
+                'cultivo' => Cultivo::orderBy('name', 'asc')->get(),
+                'tipo_cultivo' => TipoCultivo::all(),
+                'ciclo' => InversionesAgricola::select('ciclo')
+                    ->distinct()
+                    ->pluck('ciclo'),
+                'states' => StateEntity::orderBy('name')->get(),
+            ]
+        ], 'Cultivos de clientes cargados con éxito');
     }
 }

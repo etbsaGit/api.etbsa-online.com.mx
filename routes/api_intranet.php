@@ -303,6 +303,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // Reportes Clientes
     Route::post('reporte_clientes/maquinaria', [ReporteClientesController::class,'maquinaria']);
     Route::post('reporte_clientes/maquinaria/export',[ReporteClientesController::class,'exportMaquinaria']);
+    Route::post('reporte_clientes/cultivos', [ReporteClientesController::class,'cultivo']);
 
     // 🔹 Representante
     Route::get('representante/cliente/{cliente}', [RepresentanteController::class, 'getPerCliente']);
