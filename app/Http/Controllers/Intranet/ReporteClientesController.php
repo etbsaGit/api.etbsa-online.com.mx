@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Intranet;
 
+use App\Exports\ReporteClientes\CultivosClienteExport;
 use App\Exports\ReporteClientes\MaquinariaCliente;
 use App\Exports\ReporteClientes\MaquinariaClienteExport;
 use App\Http\Controllers\ApiController;
@@ -15,8 +16,10 @@ use App\Models\Intranet\TipoEquipo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\VehiculosClientesExport;
+use App\Models\Intranet\ClienteRiego;
 use App\Models\Intranet\Cultivo;
 use App\Models\Intranet\InversionesAgricola;
+use App\Models\Intranet\Riego;
 use App\Models\Intranet\TipoCultivo;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -92,5 +95,48 @@ class ReporteClientesController extends ApiController
                 'states' => StateEntity::orderBy('name')->get(),
             ]
         ], 'Cultivos de clientes cargados con éxito');
+    }
+
+    public function exportCultivos(Request $request)
+    {
+        $filters = $request->all();
+        $export = new CultivosClienteExport($filters);
+        $data = $export->collection();
+
+        if ($data->isEmpty()) {
+            return $this->respond([
+                'error' => 'No hay datos para exportar.'
+            ]);
+        }
+
+        $fileContent = Excel::raw(
+            $export,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
+
+        $base64 = base64_encode($fileContent);
+
+        return $this->respond([
+            'file_name' => 'cultivos_clientes_report',
+            'file_base64' => $base64,
+        ]);
+    }
+
+    // RIEGO
+    public function riego(Request $request)
+    {
+        $filters = $request->all();
+
+        $clientes = ClienteRiego::query()
+            ->filter($filters)
+            ->with('cliente.clienteAbastecimiento', 'riego' )
+            ->paginate(10);
+
+        return $this->respond([
+            'riegos' => $clientes,
+            'filters' => [
+                'riego' => Riego::all(),
+            ]
+        ], 'Sistemas de Riego de clientes cargados con éxito');
     }
 }

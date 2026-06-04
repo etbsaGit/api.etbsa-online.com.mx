@@ -20,7 +20,6 @@ class InversionesAgricola extends Model
 
     protected $appends = ['total'];
 
-
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
@@ -50,7 +49,6 @@ class InversionesAgricola extends Model
             $query->where(function ($sub) use ($filters) {
                 $sub->where('hectareas', 'like', "%{$filters['search']}%")
                 ->orWhere('costo', 'like', "%{$filters['search']}%");
-
             });
         }
 
