@@ -6,6 +6,7 @@ use App\Exports\ReporteClientes\CultivosClienteExport;
 use App\Exports\ReporteClientes\MaquinariaCliente;
 use App\Exports\ReporteClientes\MaquinariaClienteExport;
 use App\Exports\ReporteClientes\RiegosClienteExport;
+use App\Exports\ReporteClientes\TechClienteExport;
 use App\Http\Controllers\ApiController;
 use App\Models\Intranet\ClasEquipo;
 use App\Models\Intranet\Cliente;
@@ -18,8 +19,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\VehiculosClientesExport;
 use App\Models\Intranet\ClienteRiego;
+use App\Models\Intranet\ClienteTechnology;
 use App\Models\Intranet\Cultivo;
 use App\Models\Intranet\InversionesAgricola;
+use App\Models\Intranet\NuevaTecnologia;
 use App\Models\Intranet\Riego;
 use App\Models\Intranet\TipoCultivo;
 use Maatwebsite\Excel\Facades\Excel;
@@ -162,6 +165,49 @@ class ReporteClientesController extends ApiController
 
         return $this->respond([
             'file_name' => 'riegos_clientes_report',
+            'file_base64' => $base64,
+        ]);
+    }
+
+    // RIEGO
+    public function tecnologia(Request $request)
+    {
+        $filters = $request->all();
+
+        $clientes = ClienteTechnology::query()
+            ->filter($filters)
+            ->with('cliente','nuevaTecnologia')
+            ->paginate(10);
+
+        return $this->respond([
+            'tech' => $clientes,
+            'filters' => [
+                'tecnologias' => NuevaTecnologia::all(),
+            ]
+        ], 'Sistemas de Riego de clientes cargados con éxito');
+    }
+
+    public function exportTech(Request $request)
+    {
+        $filters = $request->all();
+        $export = new TechClienteExport($filters);
+        $data = $export->collection();
+
+        if ($data->isEmpty()) {
+            return $this->respond([
+                'error' => 'No hay datos para exportar.'
+            ]);
+        }
+
+        $fileContent = Excel::raw(
+            $export,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
+
+        $base64 = base64_encode($fileContent);
+
+        return $this->respond([
+            'file_name' => 'tech_clientes_report',
             'file_base64' => $base64,
         ]);
     }

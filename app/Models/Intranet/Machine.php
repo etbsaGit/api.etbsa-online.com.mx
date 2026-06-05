@@ -75,7 +75,6 @@ class Machine extends Model
             });
         }
 
-
         if (
             !empty($filters['state_entity_id']) ||
             !empty($filters['town_id'])

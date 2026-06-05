@@ -307,6 +307,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('reporte_clientes/cultivos/export',[ReporteClientesController::class,'exportCultivos']);
     Route::post('reporte_clientes/riego', [ReporteClientesController::class,'riego']);
     Route::post('reporte_clientes/riego/export',[ReporteClientesController::class,'exportRiegos']);
+    Route::post('reporte_clientes/tecnologia', [ReporteClientesController::class,'tecnologia']);
+    Route::post('reporte_clientes/tecnologia/export',[ReporteClientesController::class,'exportTech']);
 
     // 🔹 Representante
     Route::get('representante/cliente/{cliente}', [RepresentanteController::class, 'getPerCliente']);

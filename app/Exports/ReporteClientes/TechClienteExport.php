@@ -3,6 +3,7 @@
 namespace App\Exports\ReporteClientes;
 
 use App\Models\Intranet\ClienteRiego;
+use App\Models\Intranet\ClienteTechnology;
 use App\Models\Intranet\InversionesAgricola;
 use App\Models\Intranet\Machine;
 
@@ -23,7 +24,7 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class RiegosClienteExport implements
+class TechClienteExport implements
     FromCollection,
     WithHeadings,
     WithDrawings,
@@ -75,28 +76,31 @@ class RiegosClienteExport implements
      */
     public function collection()
     {
-        return ClienteRiego::query()
+        return ClienteTechnology::query()
             ->filter($this->filters)
-            ->with('cliente.clienteAbastecimiento', 'riego' )
+            ->with('cliente','nuevaTecnologia')
             ->get()
-            ->map(function ($riego) {
+            ->map(function ($tech) {
 
                 return [
-                    'cliente' => $riego->cliente?->nombre ?? '',
-                    'rfc' => $riego->cliente?->rfc ?? '',
-                    'telefono' => $riego->cliente?->telefono ?? '',
-                    'email' => $riego->cliente?->email ?? '',
+                    'cliente' => $tech->cliente?->nombre ?? '',
+                    'rfc' => $tech->cliente?->rfc ?? '',
+                    'telefono' => $tech->cliente?->telefono ?? '',
+                    'email' => $tech->cliente?->email ?? '',
 
                     'ubicacion' => trim(
-                        ($riego->cliente?->calle ?? '') . ' ' .
-                            ($riego->cliente?->colonia ?? '') . ' ' .
-                            ($riego->cliente?->town?->name ?? '')
+                        ($tech->cliente?->calle ?? '') . ' ' .
+                            ($tech->cliente?->colonia ?? '') . ' ' .
+                            ($tech->cliente?->town?->name ?? '')
                     ),
-                    'riego' => $riego->riego?->name ?? '',
-                    'hpropias' => $riego->hectareas_propias ?? '',
-                    'hrentadas' => $riego->hectareas_rentadas ?? '',
+                    'tecnologia' => $tech->nuevaTecnologia?->name ?? '',
+                    'hconectadas' => $tech->cliente?->hectareasConectadas?->hectareas_conectadas ?? '',
+                    'hpropias' => $tech->cliente?->hectareasConectadas?->hectareas_propias ?? '',
+                    'hrentadas' => $tech->cliente?->hectareasConectadas?->hectareas_rentadas ?? '',
+                    'hdesconectadas' => $tech->cliente?->hectareasConectadas?->hectareas_sin_conectar ?? '',
+                    'adopcion' => $tech->cliente?->currentClassTech ?? '',
 
-                    'vendedor_asignado' => $riego->cliente?->empleados
+                    'vendedor_asignado' => $tech->cliente?->empleados
                         ?->pluck('nombreCompleto')
                         ->implode(', ') ?? '',
                 ];
@@ -114,9 +118,12 @@ class RiegosClienteExport implements
             'Teléfono',
             'Email',
             'Ubicación',
-            'Sistema de Riego',
-            'Hectáreas Propias',
-            'Hectáreas Rentadas',
+            'Tecnología',
+            'Hectareas Conectadas',
+            'Hectareas Propias',
+            'Hectareas Rentadas',
+            'Hectareas Sin Conectar',
+            'Adopción Tecnológica',
             'Vendedor Asignado',
         ];
     }
@@ -150,7 +157,7 @@ class RiegosClienteExport implements
     public function columnFormats(): array
     {
         return [
-            'I' => '$#,##0.00',
+            // 'I' => '$#,##0.00',
         ];
     }
 
@@ -169,7 +176,7 @@ class RiegosClienteExport implements
 
                 $sheet->setCellValue(
                     'A1',
-                    'REPORTE DE SISTEMAS DE RIEGO DE CLIENTES'
+                    'REPORTE DE TECNOLOGÍAS DE CLIENTES'
                 );
 
                 $sheet->setCellValue(
@@ -195,7 +202,7 @@ class RiegosClienteExport implements
                 $sheet->freezePane('A5');
 
                 // Filtros Excel
-                $sheet->setAutoFilter('A4:M4');
+                $sheet->setAutoFilter('A4:L4');
             }
         ];
     }
