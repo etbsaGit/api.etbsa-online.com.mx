@@ -24,6 +24,7 @@ use App\Models\Intranet\Cultivo;
 use App\Models\Intranet\InversionesAgricola;
 use App\Models\Intranet\NuevaTecnologia;
 use App\Models\Intranet\Riego;
+use App\Models\Intranet\TechnologicalCapability;
 use App\Models\Intranet\TipoCultivo;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -140,6 +141,7 @@ class ReporteClientesController extends ApiController
             'riegos' => $clientes,
             'filters' => [
                 'riego' => Riego::all(),
+                'states' => StateEntity::orderBy('name')->get(),
             ]
         ], 'Sistemas de Riego de clientes cargados con éxito');
     }
@@ -183,6 +185,8 @@ class ReporteClientesController extends ApiController
             'tech' => $clientes,
             'filters' => [
                 'tecnologias' => NuevaTecnologia::all(),
+                'states' => StateEntity::orderBy('name')->get(),
+                'capacidades' => TechnologicalCapability::select('level')->distinct()->pluck('level'),
             ]
         ], 'Sistemas de Riego de clientes cargados con éxito');
     }

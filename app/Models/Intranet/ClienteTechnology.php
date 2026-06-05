@@ -35,10 +35,27 @@ class ClienteTechnology extends Model
             $query->where('nueva_tecnologia_id', $filters['tecnologia_id']);
         }
 
-        if (!empty($filters['adopcion'])) {
+        if (!empty($filters['capacidad'])) {
             $query->whereHas('cliente', function ($q) use ($filters) {
-                if (!empty($filters['adopcion'])) {
-                    $q->where('currentClassTech', $filters['adopcion']);
+                if (!empty($filters['capacidad'])) {
+                    $q->where('currentClassTech', $filters['capacidad']);
+                }
+            });
+        }
+
+        if (
+            !empty($filters['state_entity_id']) ||
+            !empty($filters['town_id'])
+        ) {
+
+            $query->whereHas('cliente', function ($q) use ($filters) {
+
+                if (!empty($filters['state_entity_id'])) {
+                    $q->where('state_entity_id', $filters['state_entity_id']);
+                }
+
+                if (!empty($filters['town_id'])) {
+                    $q->where('town_id', $filters['town_id']);
                 }
             });
         }
