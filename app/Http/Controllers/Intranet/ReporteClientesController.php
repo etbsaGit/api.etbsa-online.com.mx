@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Intranet;
 use App\Exports\ReporteClientes\CultivosClienteExport;
 use App\Exports\ReporteClientes\MaquinariaCliente;
 use App\Exports\ReporteClientes\MaquinariaClienteExport;
+use App\Exports\ReporteClientes\RiegosClienteExport;
 use App\Http\Controllers\ApiController;
 use App\Models\Intranet\ClasEquipo;
 use App\Models\Intranet\Cliente;
@@ -138,5 +139,30 @@ class ReporteClientesController extends ApiController
                 'riego' => Riego::all(),
             ]
         ], 'Sistemas de Riego de clientes cargados con éxito');
+    }
+
+    public function exportRiegos(Request $request)
+    {
+        $filters = $request->all();
+        $export = new RiegosClienteExport($filters);
+        $data = $export->collection();
+
+        if ($data->isEmpty()) {
+            return $this->respond([
+                'error' => 'No hay datos para exportar.'
+            ]);
+        }
+
+        $fileContent = Excel::raw(
+            $export,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
+
+        $base64 = base64_encode($fileContent);
+
+        return $this->respond([
+            'file_name' => 'riegos_clientes_report',
+            'file_base64' => $base64,
+        ]);
     }
 }
