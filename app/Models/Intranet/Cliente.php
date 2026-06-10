@@ -162,9 +162,9 @@ class Cliente extends Model
         return $this->hasMany(Distribucion::class, 'cliente_id');
     }
 
-    public function clienteCultivo()
+   public function clienteCultivo()
     {
-        return $this->hasMany(ClienteCultivo::class, 'cliente_id');
+        return $this->hasMany(ClienteCultivo::class, 'cultivo_id');
     }
 
     public function clienteRiego()
