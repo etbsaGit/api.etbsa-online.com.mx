@@ -29,32 +29,86 @@ class VacationDayController extends ApiController
     /**
      * Display a listing of the resource.
      */
+    // public function index(Request $request)
+    // {
+    //     $filters = $request->all();
+    //     $user = Auth::user();
+
+    //     $query = VacationDay::query();
+
+    //     // mostrar eliminados
+    //     if(($filters['validated'] ?? null) === 'deleted'){
+    //         $query->onlyTrashed();
+    //     }else{
+    //         $query->whereNull('deleted_at');
+    //     }
+
+    //     if ($user->hasRole('RRHH')) {
+    //         $vacations = VacationDay::filter($filters)
+    //             ->with(['empleado.vehicle', 'sucursal', 'puesto', 'cubre_rel', 'departamento', 'validateBy.empleado'])
+    //             ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
+    //             ->orderBy('fecha_inicio', 'desc')
+    //             ->paginate(10);
+    //     } else {
+    //         // Obtiene el arreglo de empleados subordinados
+    //         $empleados = $this->getAllSubordinates($user->empleado);
+
+    //         // Si $empleados es un arreglo de objetos o instancias de modelo, extrae los IDs
+    //         $empleadoIds = collect($empleados)->pluck('id')->toArray();
+
+    //         // Filtra las VacationDay únicamente de los empleados en el arreglo
+    //         $vacations = VacationDay::filter($filters)
+    //             ->whereIn('empleado_id', $empleadoIds)
+    //             ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento', 'validateBy.empleado'])
+    //             ->orderBy('validated', 'asc')
+    //             ->orderBy('fecha_inicio', 'desc')
+    //             ->paginate(10);
+    //     }
+
+    //     return $this->respond($vacations);
+    // }
+
     public function index(Request $request)
     {
         $filters = $request->all();
         $user = Auth::user();
 
-        if ($user->hasRole('RRHH')) {
-            $vacations = VacationDay::filter($filters)
-                ->with(['empleado.vehicle', 'sucursal', 'puesto', 'cubre_rel', 'departamento', 'validateBy.empleado'])
-                ->orderBy('validated', 'asc') // Ordenar por ID de forma descendente
-                ->orderBy('fecha_inicio', 'desc')
-                ->paginate(10);
+        $deleted = $filters['deleted'] ?? false;
+
+        unset($filters['deleted']);
+
+        $query = VacationDay::withTrashed();
+
+        if ($deleted) {
+            $query->onlyTrashed();
         } else {
-            // Obtiene el arreglo de empleados subordinados
+            $query->withoutTrashed();
+        }
+
+        $query->filter($filters)
+            ->with([
+                'empleado.vehicle',
+                'sucursal',
+                'puesto',
+                'cubre_rel',
+                'departamento',
+                'validateBy.empleado'
+            ])
+            ->orderBy('validated', 'asc')
+            ->orderBy('fecha_inicio', 'desc');
+
+        if (!$user->hasRole('RRHH')) {
+
             $empleados = $this->getAllSubordinates($user->empleado);
 
-            // Si $empleados es un arreglo de objetos o instancias de modelo, extrae los IDs
-            $empleadoIds = collect($empleados)->pluck('id')->toArray();
+            $empleadoIds = collect($empleados)
+                ->pluck('id')
+                ->toArray();
 
-            // Filtra las VacationDay únicamente de los empleados en el arreglo
-            $vacations = VacationDay::filter($filters)
-                ->whereIn('empleado_id', $empleadoIds)
-                ->with(['empleado', 'sucursal', 'puesto', 'cubre_rel', 'departamento', 'validateBy.empleado'])
-                ->orderBy('validated', 'asc')
-                ->orderBy('fecha_inicio', 'desc')
-                ->paginate(10);
+            $query->whereIn('empleado_id', $empleadoIds);
         }
+
+        $vacations = $query->paginate(10);
 
         return $this->respond($vacations);
     }

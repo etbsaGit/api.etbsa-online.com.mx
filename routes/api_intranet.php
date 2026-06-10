@@ -57,6 +57,7 @@ use App\Http\Controllers\Intranet\ProductCategoryController;
 use App\Http\Controllers\Intranet\ProductCondicionPagoController;
 use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
+use App\Http\Controllers\Intranet\ReporteClientesController;
 use App\Http\Controllers\Intranet\TrackingAutorizacionController;
 use App\Http\Controllers\Intranet\TrackingController;
 use App\Http\Controllers\Intranet\TrackingProspectoController;
@@ -233,6 +234,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('invItems', [InvItemController::class, 'index']);
     Route::get('invItem/invModel/{invModel}', [InvItemController::class, 'getModels']);
     Route::get('invItem/forms', [InvItemController::class, 'getForms']);
+    Route::get('invItem/inventario',[InvItemController::class, 'getInventario']);
     Route::apiResource('invItem', InvItemController::class);
 
     // 🔹 InvItemDoc
@@ -298,6 +300,16 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('referenciaComercial/cliente/{cliente}', [ReferenciaComercialController::class, 'getPerCliente']);
     Route::apiResource('referenciaComercial', ReferenciaComercialController::class);
 
+    // Reportes Clientes
+    Route::post('reporte_clientes/maquinaria', [ReporteClientesController::class,'maquinaria']);
+    Route::post('reporte_clientes/maquinaria/export',[ReporteClientesController::class,'exportMaquinaria']);
+    Route::post('reporte_clientes/cultivos', [ReporteClientesController::class,'cultivo']);
+    Route::post('reporte_clientes/cultivos/export',[ReporteClientesController::class,'exportCultivos']);
+    Route::post('reporte_clientes/riego', [ReporteClientesController::class,'riego']);
+    Route::post('reporte_clientes/riego/export',[ReporteClientesController::class,'exportRiegos']);
+    Route::post('reporte_clientes/tecnologia', [ReporteClientesController::class,'tecnologia']);
+    Route::post('reporte_clientes/tecnologia/export',[ReporteClientesController::class,'exportTech']);
+
     // 🔹 Representante
     Route::get('representante/cliente/{cliente}', [RepresentanteController::class, 'getPerCliente']);
     Route::apiResource('representante', RepresentanteController::class);
@@ -357,8 +369,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('tracking', TrackingController::class);
 
     // TrackingAutorizacion
-    Route::post('trackingAutorizaciones', [TrackingAutorizacionController::class, 'index']);
+    Route::post('trackingAutorizaciones/{situacion}/{situacion2?}', [TrackingAutorizacionController::class, 'index']);
     Route::post('trackingAutorizacion/autorizarPedido/{trackingId}/{situacion}', [TrackingAutorizacionController::class, 'autorizarPedido']);
+    Route::post('trackingAutorizacion/sendAutorizacionDecision/{trackingId}', [TrackingAutorizacionController::class, 'sendAutorizacionDecision']);
+    Route::post('trackingAutorizacion/asignar-serie/{tracking_id}',[TrackingAutorizacionController::class,'asignacionSerie']);
+    Route::post('trackingAutorizacion/mailToAsignacionSerie/{tracking_id}',[TrackingAutorizacionController::class, 'mailToAsignacionSerie']);
+    Route::post('trackingAutorizacion/sendAsignacionSerie/{tracking_id}',[TrackingAutorizacionController::class, 'sendAsignacionSerie']);
     Route::apiResource('trackingAutorizacion', TrackingAutorizacionController::class);
 
     //TrackingProspecto

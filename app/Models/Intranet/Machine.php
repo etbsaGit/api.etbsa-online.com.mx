@@ -45,4 +45,53 @@ class Machine extends Model
     {
         return $this->belongsTo(TipoEquipo::class, 'tipo_equipo_id');
     }
+
+    public function scopeFilter($query, array $filters)
+    {
+        if (!empty($filters['marca_id'])) {
+            $query->where('marca_id', $filters['marca_id']);
+        }
+
+        if(!empty($filters['anio'])){
+            $query->where('anio',$filters['anio']);
+        }
+
+        if (!empty($filters['condicion_id'])) {
+            $query->where('condicion_id', $filters['condicion_id']);
+        }
+
+        if (!empty($filters['tipo_equipo_id'])) {
+            $query->where('tipo_equipo_id', $filters['tipo_equipo_id']);
+        }
+
+        if (!empty($filters['clas_equipo_id'])) {
+            $query->where('clas_equipo_id', $filters['clas_equipo_id']);
+        }
+
+        if (!empty($filters['search'])) {
+            $query->where(function ($sub) use ($filters) {
+                $sub->where('modelo', 'like', "%{$filters['search']}%");
+
+            });
+        }
+
+        if (
+            !empty($filters['state_entity_id']) ||
+            !empty($filters['town_id'])
+        ) {
+
+            $query->whereHas('cliente', function ($q) use ($filters) {
+
+                if (!empty($filters['state_entity_id'])) {
+                    $q->where('state_entity_id', $filters['state_entity_id']);
+                }
+
+                if (!empty($filters['town_id'])) {
+                    $q->where('town_id', $filters['town_id']);
+                }
+            });
+        }
+
+        return $query;
+    }
 }

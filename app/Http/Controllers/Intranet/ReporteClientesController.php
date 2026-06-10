@@ -1,0 +1,218 @@
+<?php
+
+namespace App\Http\Controllers\Intranet;
+
+use App\Exports\ReporteClientes\CultivosClienteExport;
+use App\Exports\ReporteClientes\MaquinariaCliente;
+use App\Exports\ReporteClientes\MaquinariaClienteExport;
+use App\Exports\ReporteClientes\RiegosClienteExport;
+use App\Exports\ReporteClientes\TechClienteExport;
+use App\Http\Controllers\ApiController;
+use App\Models\Intranet\ClasEquipo;
+use App\Models\Intranet\Cliente;
+use App\Models\Intranet\Condicion;
+use App\Models\Intranet\Machine;
+use App\Models\Intranet\Marca;
+use App\Models\Intranet\StateEntity;
+use App\Models\Intranet\TipoEquipo;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Exports\VehiculosClientesExport;
+use App\Models\Intranet\ClienteRiego;
+use App\Models\Intranet\ClienteTechnology;
+use App\Models\Intranet\Cultivo;
+use App\Models\Intranet\InversionesAgricola;
+use App\Models\Intranet\NuevaTecnologia;
+use App\Models\Intranet\Riego;
+use App\Models\Intranet\TechnologicalCapability;
+use App\Models\Intranet\TipoCultivo;
+use Maatwebsite\Excel\Facades\Excel;
+
+class ReporteClientesController extends ApiController
+{
+    public function maquinaria(Request $request)
+    {
+        $filters = $request->all();
+
+        $clientes = Machine::query()
+            ->filter($filters)
+            ->with('cliente', 'condicion', 'marca', 'clasEquipo', 'tipoEquipo')
+            ->paginate(10);
+
+        return $this->respond([
+            'maquinas' => $clientes,
+            'filters' => [
+                'marcas' => Marca::orderBy('name', 'asc')->get(),
+                'condiciones' => Condicion::all(),
+                'clasEquipos' => ClasEquipo::all(),
+                'tiposEquipo' => TipoEquipo::orderBy('name', 'asc')->get(),
+                'states' => StateEntity::orderBy('name')->get(),
+                'anios' => Machine::select('anio')
+                    ->distinct()
+                    ->orderBy('anio')
+                    ->pluck('anio'),
+            ]
+        ], 'Vehículos de clientes cargados con éxito');
+    }
+
+    public function exportMaquinaria(Request $request)
+    {
+        $filters = $request->all();
+        $export = new MaquinariaClienteExport($filters);
+        $data = $export->collection();
+
+        if ($data->isEmpty()) {
+            return $this->respond([
+                'error' => 'No hay datos para exportar.'
+            ]);
+        }
+
+        $fileContent = Excel::raw(
+            $export,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
+
+        $base64 = base64_encode($fileContent);
+
+        return $this->respond([
+            'file_name' => 'maquinaria_clientes_report',
+            'file_base64' => $base64,
+        ]);
+    }
+
+    public function cultivo(Request $request)
+    {
+        $filters = $request->all();
+
+        $clientes = InversionesAgricola::query()
+            ->filter($filters)
+            ->with('cliente', 'cultivo' )
+            ->paginate(10);
+
+        return $this->respond([
+            'cultivos' => $clientes,
+            'filters' => [
+                'cultivo' => Cultivo::orderBy('name', 'asc')->get(),
+                'tipo_cultivo' => TipoCultivo::all(),
+                'ciclo' => InversionesAgricola::select('ciclo')
+                    ->distinct()
+                    ->pluck('ciclo'),
+                'states' => StateEntity::orderBy('name')->get(),
+            ]
+        ], 'Cultivos de clientes cargados con éxito');
+    }
+
+    public function exportCultivos(Request $request)
+    {
+        $filters = $request->all();
+        $export = new CultivosClienteExport($filters);
+        $data = $export->collection();
+
+        if ($data->isEmpty()) {
+            return $this->respond([
+                'error' => 'No hay datos para exportar.'
+            ]);
+        }
+
+        $fileContent = Excel::raw(
+            $export,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
+
+        $base64 = base64_encode($fileContent);
+
+        return $this->respond([
+            'file_name' => 'cultivos_clientes_report',
+            'file_base64' => $base64,
+        ]);
+    }
+
+    // RIEGO
+    public function riego(Request $request)
+    {
+        $filters = $request->all();
+
+        $clientes = ClienteRiego::query()
+            ->filter($filters)
+            ->with('cliente.clienteAbastecimiento', 'riego' )
+            ->paginate(10);
+
+        return $this->respond([
+            'riegos' => $clientes,
+            'filters' => [
+                'riego' => Riego::all(),
+                'states' => StateEntity::orderBy('name')->get(),
+            ]
+        ], 'Sistemas de Riego de clientes cargados con éxito');
+    }
+
+    public function exportRiegos(Request $request)
+    {
+        $filters = $request->all();
+        $export = new RiegosClienteExport($filters);
+        $data = $export->collection();
+
+        if ($data->isEmpty()) {
+            return $this->respond([
+                'error' => 'No hay datos para exportar.'
+            ]);
+        }
+
+        $fileContent = Excel::raw(
+            $export,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
+
+        $base64 = base64_encode($fileContent);
+
+        return $this->respond([
+            'file_name' => 'riegos_clientes_report',
+            'file_base64' => $base64,
+        ]);
+    }
+
+    // RIEGO
+    public function tecnologia(Request $request)
+    {
+        $filters = $request->all();
+
+        $clientes = ClienteTechnology::query()
+            ->filter($filters)
+            ->with('cliente','nuevaTecnologia')
+            ->paginate(10);
+
+        return $this->respond([
+            'tech' => $clientes,
+            'filters' => [
+                'tecnologias' => NuevaTecnologia::all(),
+                'states' => StateEntity::orderBy('name')->get(),
+                'capacidades' => TechnologicalCapability::select('level')->distinct()->pluck('level'),
+            ]
+        ], 'Sistemas de Riego de clientes cargados con éxito');
+    }
+
+    public function exportTech(Request $request)
+    {
+        $filters = $request->all();
+        $export = new TechClienteExport($filters);
+        $data = $export->collection();
+
+        if ($data->isEmpty()) {
+            return $this->respond([
+                'error' => 'No hay datos para exportar.'
+            ]);
+        }
+
+        $fileContent = Excel::raw(
+            $export,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
+
+        $base64 = base64_encode($fileContent);
+
+        return $this->respond([
+            'file_name' => 'tech_clientes_report',
+            'file_base64' => $base64,
+        ]);
+    }
+}

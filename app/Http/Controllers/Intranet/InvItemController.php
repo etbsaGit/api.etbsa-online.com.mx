@@ -12,6 +12,7 @@ use App\Models\Intranet\TipoEquipo;
 use App\Models\Intranet\InvCategory;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\InvItem\InvItemRequest;
+use App\Models\Estatus;
 use App\Models\Sucursal;
 
 class InvItemController extends ApiController
@@ -24,7 +25,7 @@ class InvItemController extends ApiController
     public function index(Request $request)
     {
         $filters = $request->all();
-        $invItems = InvItem::filter($filters)->with('invModel', 'invConfigurations', 'invItemDocs', 'sucursal')->paginate(10);
+        $invItems = InvItem::filter($filters)->with('invModel', 'invConfigurations', 'invItemDocs', 'sucursal', 'estatus')->paginate(10);
         return $this->respond(
             $invItems,
             'Inventario cargado correctamente'
@@ -124,11 +125,14 @@ class InvItemController extends ApiController
         $invModels = InvModel::all();
         $invFactories = InvFactory::all();
         $sucursales = Sucursal::all();
+        $estatus = Estatus::where('clave', 'tractor')->where('tipo_estatus', 'tractor-estatus')->get();
 
         return $this->respond([
             'sucursales' => $sucursales,
             'invModels' => $invModels,
             'invFactories' => $invFactories,
+            'estatus' => $estatus,
+
         ]);
     }
 
@@ -155,6 +159,19 @@ class InvItemController extends ApiController
 
         return $this->respond([
             'invCategory' => $invCategories,
+        ]);
+    }
+
+    public function getInventario()
+    {
+        $estatusIds = Estatus::whereIn('nombre', ['En Inventario'])
+            ->where('clave', 'tractor')
+            ->where('tipo_estatus', 'tractor-estatus')
+            ->pluck('id');
+        return $this->respond([
+            'items' => InvItem::whereIn('shipping_status', $estatusIds)
+                ->with('invModel', 'invFactory', 'sucursal', 'estatus')
+                ->get()
         ]);
     }
 }

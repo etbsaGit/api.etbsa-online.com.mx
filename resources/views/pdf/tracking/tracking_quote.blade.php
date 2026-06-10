@@ -202,8 +202,7 @@
 
     @php
 
-        function convertExchange($value, $currentTo, $currentFrom, $exchange)
-        {
+        $convertExchange = function ($value, $currentTo, $currentFrom, $exchange) {
             if ($currentTo == $currentFrom) {
                 return $value;
             } elseif ($currentTo == 'USD' && $currentFrom == 'MXN') {
@@ -211,7 +210,7 @@
             } elseif ($currentTo == 'MXN' && $currentFrom == 'USD') {
                 return $value * $exchange;
             }
-        }
+        };
 
     @endphp
 
@@ -325,7 +324,7 @@
                                     {{ $quote->cliente->calle ?? ' ' }},
                                     {{ $quote->cliente->codigo_postal ?? ' ' }},
                                     <br>
-                                    <b>{{ $quote->prospecto->telefono ?? $quote->cliente->telefono ?? '' }}</b>
+                                    <b>{{ $quote->prospecto->telefono ?? ($quote->cliente->telefono ?? '') }}</b>
                                 </td>
 
                             </tr>
@@ -373,7 +372,7 @@
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
                             {{ '$ ' .
                                 number_format(
-                                    convertExchange($detalle->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
+                                    $convertExchange($detalle->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
                                     2,
                                     '.',
                                     ',',
@@ -384,7 +383,7 @@
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
                             {{ '$ ' .
                                 number_format(
-                                    convertExchange(
+                                    $convertExchange(
                                         $detalle->cantidad * $detalle->precio_unidad,
                                         $quote->currency->name,
                                         'MXN',
@@ -417,7 +416,7 @@
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
                             {{ '$ ' .
                                 number_format(
-                                    convertExchange($extra->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
+                                    $convertExchange($extra->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
                                     2,
                                     '.',
                                     ',',
@@ -428,7 +427,7 @@
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
                             {{ '$ ' .
                                 number_format(
-                                    convertExchange($extra->cantidad * $extra->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
+                                    $convertExchange($extra->cantidad * $extra->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
                                     2,
                                     '.',
                                     ',',
