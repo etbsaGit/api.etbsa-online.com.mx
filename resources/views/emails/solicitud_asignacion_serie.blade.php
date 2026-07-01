@@ -177,6 +177,13 @@
             <h5>Notas del Vendedor:</h5>
             <p>{{ $tracking->notas }}</p>
 
+            @if ($tracking->historial->last()?->comentario)
+                <div class="comentarios">
+                    <strong>Comentarios adicionales:</strong><br>
+                    {{ $tracking->historial->last()?->comentario }}
+                </div>
+            @endif
+
             <p>
                 Se adjunta la cotización correspondiente con folio
                 <strong>#{{ $tracking->folio }}</strong>

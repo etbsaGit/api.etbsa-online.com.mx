@@ -171,6 +171,13 @@
                 @endforeach
             </table>
 
+            @if ($tracking->historial->last()?->comentario)
+                <div class="comentarios">
+                    <strong>Comentarios adicionales:</strong><br>
+                    {{ $tracking->historial->last()?->comentario }}
+                </div>
+            @endif
+
             <p>
                 Se adjunta la cotización correspondiente con folio
                 <strong>#{{ $tracking->folio }}</strong>
