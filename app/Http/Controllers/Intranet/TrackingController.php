@@ -611,7 +611,7 @@ class TrackingController extends ApiController
         $pdfContent = $pdf->output();
 
         $notificado = $tracking->notificar_a;
-        $solicitante = $tracking->empleado;
+        $solicitante = $tracking->vendedor;
 
         $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
@@ -638,8 +638,6 @@ class TrackingController extends ApiController
     public function customerAssigmentRequest($trackingId, $clienteId)
     {
         try {
-
-
             $tracking = Tracking::findOrFail($trackingId);
 
             $tracking->load(
@@ -662,30 +660,38 @@ class TrackingController extends ApiController
             // Obtener binario PDF
             $pdfContent = $pdf->output();
 
-            $gerente_corp = Empleado::where('puesto_id', Puesto::where('nombre', 'Dirección Comercial')->value('id'))
-                ->where('departamento_id', Departamento::where('nombre', 'Administracion')->value('id'))
-                ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
-                ->first();
+            $solicitante = $tracking->vendedor;
+            $sucursal_solicitante = $solicitante->sucursal;
+            $gerente_solicitante = Empleado::whereHas(
+                'puesto',
+                function ($q) {
+                    $q->where('nombre', 'Gerente Territorial');
+                }
+            )->where('sucursal_id', $sucursal_solicitante->id)
+                ->whereHas(
+                    'estatus',
+                    function ($q) {
+                        $q->where('nombre', 'Activo');
+                    }
+                )->first();
 
-            $aux_jdf = Empleado::where('puesto_id', Puesto::where('nombre', 'Auxiliar John Deere Financial')->value('id'))
-                ->where('estatus_id', Estatus::where('nombre', 'Activo')->value('id'))
-                ->first();
-
-            $solicitante = $tracking->empleado;
             $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
             $correos = [
-                // 'gerente_corp' => $gerente_corp->correo_institucional,
-                // 'aux_jdf' => $aux_jdf->correo_institucional,
-                // 'solicitante' => $solicitante->correo_institucional,
-                $correo_pruebas
+                'gerente_solicitante' => $gerente_solicitante->correo_institucional,
+                // $correo_pruebas
+            ];
+            $cc = [
+                'solicitante' => $solicitante->correo_institucional,
             ];
 
             foreach ($correos as $to_email) {
                 if ($to_email) {
-                    Mail::to($to_email)->send(
-                        new CustomerAssignmentRequest($tracking, $cliente, $pdfContent)
-                    );
+                    Mail::to($to_email)
+                        ->cc($cc)
+                        ->send(
+                            new CustomerAssignmentRequest($tracking, $cliente, $pdfContent)
+                        );
                 }
             }
 
@@ -718,7 +724,7 @@ class TrackingController extends ApiController
         }
 
         // Buscar cliente con empleados asignados
-        $cliente = Cliente::with('empleados.sucursal', 'empleados.departamento')
+        $cliente = Cliente::with('empleados.sucursal', 'empleados.departamento', 'town')
             ->where('rfc', $rfc)
             ->first();
 
@@ -735,33 +741,64 @@ class TrackingController extends ApiController
         $empleadosAsignados = $cliente->empleados;
 
         if ($empleadosAsignados->isNotEmpty()) {
+            $asignado = $empleadosAsignados->contains(function ($emp) use ($empleado_actual) {
+                return $emp->id == $empleado_actual->id;
+            }); // si no coincide pasa a falso
 
-            $coincide = $empleadosAsignados->contains(function ($emp) use ($empleado_actual) {
-                return $emp->sucursal->id == $empleado_actual->sucursal->id
-                    && $emp->departamento->id == $empleado_actual->departamento->id;
-            });
-
-            if (!$coincide) {
+            if ($asignado) { //if $asignado falso
                 return response()->json([
                     'success' => true,
-                    'message' => 'Cliente no asignado pero puedes seguir con el proceso.',
+                    'message' => 'Cliente asignado.',
                     'cliente' => $cliente,
                     'empleados_asignados' => $empleadosAsignados,
-                    'empleado_actual' => $empleado_actual
+                    'empleado_actual' => $empleado_actual,
+                    'asignado' => $asignado
                 ], 203);
-            } else {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'No tienes acceso a este cliente.',
-                    'cliente' => $cliente,
-                    'empleados_asignados' => $empleadosAsignados,
-                    'empleado_actual' => $empleado_actual
-                ], 202);
+            } else { //if $asignado false
+                // checar si VENDEDOR ASIGNADO y SOLICITANTE tienen el mismo depto
+                $mismo_depto = $empleadosAsignados->contains(function ($emp) use ($empleado_actual) {
+                    return
+                        // $emp->sucursal->id == $empleado_actual->sucursal->id
+                        // &&
+                        $emp->departamento->id == $empleado_actual->departamento->id;
+                });
+                if ($mismo_depto) { //si tienen mismo depto no se tiene acceso a cliente y se manda solicitud de asignacion
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'No tienes acceso a este cliente.',
+                        'cliente' => $cliente,
+                        'empleados_asignados' => $empleadosAsignados,
+                        'empleado_actual' => $empleado_actual,
+                        'asignado' => $asignado
+                    ], 202);
+                } else {
+                    // checar si el solicitante y cliente tienen misma sucursal
+                    $misma_sucursal = mb_strtolower($empleado_actual->sucursal->nombre) ===
+                        mb_strtolower($cliente->town->name);
+                    if ($misma_sucursal) {//si cliente y solicitante tienen misma sucursal/ciudad se puede formalizar
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Cliente ya registrado, se puede formalizar.',
+                            'cliente' => $cliente,
+                            'empleados_asignados' => $empleadosAsignados,
+                            'empleado_actual' => $empleado
+                        ], 200);
+                    } else {//si cliente y solicitante NO tienen misma sucursal/ciudad NO se puede formalizar
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'No tienes acceso a este cliente. Diferente sucursal',
+                            'cliente' => $cliente,
+                            'empleados_asignados' => $empleadosAsignados,
+                            'empleado_actual' => $empleado_actual,
+                            'asignado' => $asignado
+                        ], 202);
+                    }
+                }
             }
-        } else {
+        } else { //cliente sin vendedores asignados
             return response()->json([
                 'success' => true,
-                'message' => 'Cliente ya registrado.',
+                'message' => 'Cliente ya registrado, sin vendedores asignados.',
                 'cliente' => $cliente,
                 'empleados_asignados' => $empleadosAsignados,
                 'empleado_actual' => $empleado

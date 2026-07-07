@@ -97,71 +97,6 @@ class TrackingAutorizacionController extends ApiController
         );
     }
 
-    // public function index2(Request $request, $situacion, $situacion2 = null)
-    // {
-    //     $filters = $request->all();
-    //     $user = Auth::user();
-
-    //     $situacionId = Estatus::where('nombre', $situacion)
-    //         ->where('tipo_estatus', 'tracking-situacion')
-    //         ->value('id');
-
-    //     $situacion2Id = null;
-    //     if ($situacion2) {
-    //         $situacion2Id = Estatus::where('nombre', $situacion2)
-    //             ->where('tipo_estatus', 'tracking-situacion')
-    //             ->value('id');
-    //     }
-
-    //     $situaciones = array_filter([
-    //         $situacionId,
-    //         $situacion2Id
-    //     ]);
-
-    //     // si es admin ve todas las cotizaciones, si no sólo las que se les notificó
-    //     $trackings = Tracking::
-    //         with([
-    //             'cliente',
-    //             'prospecto',
-    //             'origen',
-    //             'vendedor',
-    //             'sucursal',
-    //             'categoria',
-    //             'condicionPago',
-    //             'currency',
-    //             'activities' => function ($query) {
-    //                 $query->orderBy('created_at', 'desc');
-    //             },
-    //             'activities.certeza',
-    //             'activities.tipoSeguimiento',
-    //             'activities.currency',
-    //             'detalles.productos',
-    //             'estatus',
-    //             'situacion',
-    //             'depto',
-    //             'ultimaActividad.certeza',
-    //             'extras.item',
-    //             'notificado',
-    //             'asignacion.invItem.invModel',
-    //             'asignacion.invItem.sucursal',
-    //             'asignacion.empleado',
-    //             'historial' => function ($query) {
-    //                 $query->orderBy('created_at', 'asc');
-    //             },
-    //             'historial.situacion',
-    //             'historial.empleado'
-    //         ])
-    //         ->whereIn('situacion_id', $situaciones)
-    //         ->filter($filters)
-    //         ->orderBy('created_at', 'desc')
-    //         ->paginate(10);
-
-    //     return $this->respond(
-    //         $trackings,
-    //         'Lista de seguimientos cargada correctamente'
-    //     );
-    // }
-
     public function autorizarPedido(TrackingFeedbackRequest $request, $trackingId, $situacion)
     {
         try {
@@ -238,7 +173,7 @@ class TrackingAutorizacionController extends ApiController
 
             $pdfContent = $pdf->output();
 
-            // $solicitante = $tracking->empleado;
+            // $solicitante = $tracking->vendedor;
             // $notificado = $tracking->notificar_a;
 
             $correo_pruebas = 'munozchristian@etbsa.com.mx';
@@ -438,7 +373,7 @@ class TrackingAutorizacionController extends ApiController
 
             $pdfContent = $pdf->output();
 
-            // $solicitante = $tracking->empleado;
+            // $solicitante = $tracking->vendedor;
             // $notificado = $tracking->notificar_a;
 
             $correo_pruebas = 'munozchristian@etbsa.com.mx';
