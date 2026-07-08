@@ -550,17 +550,35 @@ class TrackingController extends ApiController
 
     public function updateACliente($id, $cliente_id)
     {
-        $tracking = Tracking::findOrFail($id);
+        DB::beginTransaction();
 
-        $tracking->update([
-            'cliente_id' => $cliente_id,
-            'prospecto_id' => null,
-        ]);
+        try {
+            $tracking = Tracking::findOrFail($id);
+            $empleado_id = $tracking->vendedor->id;
 
-        return response()->json([
-            'message' => 'Estatus actualizado correctamente',
-            'data' => $tracking
-        ]);
+            $tracking->update([
+                'cliente_id'   => $cliente_id,
+                'prospecto_id' => null,
+            ]);
+
+            Empleado::findOrFail($empleado_id)
+                ->clientes()
+                ->syncWithoutDetaching([$cliente_id]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Estatus actualizado correctamente',
+                'data' => $tracking->fresh(),
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar estatus',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function printQuote($id)
