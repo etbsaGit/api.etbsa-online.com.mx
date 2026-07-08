@@ -2,6 +2,7 @@
 
 namespace App\Models\Intranet;
 
+use App\Models\Sucursal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -27,5 +28,15 @@ class Town extends Model
     public function representante()
     {
         return $this->hasMany(Representante::class, 'town_id');
+    }
+
+    public function sucursal()
+    {
+        return $this->belongsToMany(
+            Sucursal::class,
+            'sucursal_atiende',
+            'town_id',
+            'sucursal_id'
+        );
     }
 }

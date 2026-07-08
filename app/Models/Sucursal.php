@@ -8,6 +8,7 @@ use App\Models\Intranet\Sale;
 use App\Models\Caja\CajaCorte;
 use App\Models\Caja\CajaCuenta;
 use App\Models\Intranet\InvItem;
+use App\Models\Intranet\Town;
 use App\Models\Intranet\Tracking;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
@@ -146,7 +147,18 @@ class Sucursal extends Model
         return $this->hasMany(InvItem::class, 'sucursal_id');
     }
 
-    public function tracking(){
-        return $this->hasMany(Tracking::class,'sucursal_id');
+    public function tracking()
+    {
+        return $this->hasMany(Tracking::class, 'sucursal_id');
+    }
+
+    public function ciudadesAtendidas()
+    {
+        return $this->belongsToMany(
+            Town::class,
+            'sucursal_atiende',
+            'sucursal_id',
+            'town_id'
+        );
     }
 }

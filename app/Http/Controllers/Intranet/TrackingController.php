@@ -20,6 +20,7 @@ use App\Models\Intranet\TrackingCerteza;
 use App\Models\Intranet\TrackingOrigen;
 use App\Models\Sucursal;
 use App\Models\Intranet\ExchangeRate;
+use App\Models\Intranet\Town;
 use App\Models\Intranet\TrackingActivity;
 use App\Models\Intranet\TrackingDetalle;
 use App\Models\Intranet\TrackingDetalleExtras;
@@ -651,7 +652,7 @@ class TrackingController extends ApiController
                 'extras.item'
             );
 
-            $cliente = Cliente::findOrFail($clienteId);
+            $cliente = Cliente::with('town')->findOrFail($clienteId);
 
             $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
                 'quote' => $tracking
@@ -662,42 +663,89 @@ class TrackingController extends ApiController
 
             $solicitante = $tracking->vendedor;
             $sucursal_solicitante = $solicitante->sucursal;
+
             $gerente_solicitante = Empleado::whereHas(
                 'puesto',
                 function ($q) {
                     $q->where('nombre', 'Gerente Territorial');
                 }
-            )->where('sucursal_id', $sucursal_solicitante->id)
-                ->whereHas(
-                    'estatus',
-                    function ($q) {
+            )
+                ->where('sucursal_id', $sucursal_solicitante->id)
+                ->whereHas('estatus', function ($q) {
+                    $q->where('nombre', 'Activo');
+                })
+                ->first();
+
+            if (!$gerente_solicitante) {
+                $equivalencias = [
+                    'Abasolo' => 'Irapuato',
+                    'Pénjamo' => 'Irapuato',
+                    'Acámbaro' => 'Celaya',
+                    'Morelia' => 'Silao'
+                ];
+
+                if ($sucursal_solicitante->nombre === 'Corporativo') {
+                    $gerente_solicitante = Empleado::whereHas('puesto', function ($q) {
+                        $q->where('nombre', 'Dirección Comercial');
+                    })->whereHas('estatus', function ($q) {
                         $q->where('nombre', 'Activo');
-                    }
-                )->first();
-
-            $correo_pruebas = 'munozchristian@etbsa.com.mx';
-
-            $correos = [
-                'gerente_solicitante' => $gerente_solicitante->correo_institucional,
-                // $correo_pruebas
-            ];
-            $cc = [
-                'solicitante' => $solicitante->correo_institucional,
-            ];
-
-            foreach ($correos as $to_email) {
-                if ($to_email) {
-                    Mail::to($to_email)
-                        ->cc($cc)
-                        ->send(
-                            new CustomerAssignmentRequest($tracking, $cliente, $pdfContent)
-                        );
+                    })->first();
+                } else if (isset($equivalencias[$sucursal_solicitante->nombre])) {
+                    $sucursal_destino = $equivalencias[$sucursal_solicitante->nombre];
+                    $gerente_solicitante = Empleado::whereHas('puesto', function ($q) {
+                        $q->where('nombre', 'Gerente Territorial');
+                    })
+                        ->whereHas('sucursal', function ($q) use ($sucursal_destino) {
+                            $q->where('nombre', $sucursal_destino);
+                        })
+                        ->whereHas('estatus', function ($q) {
+                            $q->where('nombre', 'Activo');
+                        })
+                        ->first();
                 }
             }
 
+            $ciudad_cliente = $cliente->town;
+            $sucursal_cliente = $ciudad_cliente->sucursal()->first();
+
+            $gerente_cliente = Empleado::whereHas('puesto', function ($q) {
+                $q->where('nombre', 'Gerente Territorial');
+            })
+                ->where('sucursal_id', $sucursal_cliente->id)
+                ->whereHas('estatus', function ($q) {
+                    $q->where('nombre', 'Activo');
+                })
+                ->first();
+
+            // $correo_pruebas = 'munozchristian@etbsa.com.mx';
+
+            $correos = array_filter([
+                $gerente_cliente?->correo_institucional,
+                $gerente_solicitante?->correo_institucional,
+            ]);
+
+            $cc = array_filter([
+                $solicitante?->correo_institucional,
+            ]);
+
+            if (empty($correos)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontraron destinatarios válidos.'
+                ], 422);
+            }
+
+            // Mail::to($correos)
+            //     ->cc($cc)
+            //     ->send(new CustomerAssignmentRequest($tracking, $cliente, $pdfContent));
+
             return response()->json([
                 'success' => true,
-                'message' => 'Correo enviado correctamente'
+                'message' => 'Correo enviado correctamente',
+                'solicitante' => $solicitante,
+                'cliente' => $cliente,
+                'gerente_solicitante' => $gerente_solicitante,
+                'gerente_cliente' => $gerente_cliente
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -724,7 +772,7 @@ class TrackingController extends ApiController
         }
 
         // Buscar cliente con empleados asignados
-        $cliente = Cliente::with('empleados.sucursal', 'empleados.departamento', 'town')
+        $cliente = Cliente::with('empleados.sucursal', 'empleados.departamento', 'town.sucursal')
             ->where('rfc', $rfc)
             ->first();
 
