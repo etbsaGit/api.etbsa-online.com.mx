@@ -775,7 +775,7 @@ class TrackingController extends ApiController
                     // checar si el solicitante y cliente tienen misma sucursal
                     $misma_sucursal = mb_strtolower($empleado_actual->sucursal->nombre) ===
                         mb_strtolower($cliente->town->name);
-                    if ($misma_sucursal) {//si cliente y solicitante tienen misma sucursal/ciudad se puede formalizar
+                    if ($misma_sucursal) { //si cliente y solicitante tienen misma sucursal/ciudad se puede formalizar
                         return response()->json([
                             'success' => true,
                             'message' => 'Cliente ya registrado, se puede formalizar.',
@@ -783,7 +783,7 @@ class TrackingController extends ApiController
                             'empleados_asignados' => $empleadosAsignados,
                             'empleado_actual' => $empleado
                         ], 200);
-                    } else {//si cliente y solicitante NO tienen misma sucursal/ciudad NO se puede formalizar
+                    } else { //si cliente y solicitante NO tienen misma sucursal/ciudad NO se puede formalizar
                         return response()->json([
                             'success' => true,
                             'message' => 'No tienes acceso a este cliente. Diferente sucursal',
