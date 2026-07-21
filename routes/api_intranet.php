@@ -399,3 +399,4 @@ Route::prefix('powerbi')->group(function () {
     Route::get('/dwh/riego', [DwhHistoricalController::class, 'riego']);
     Route::get('/dwh/tecnologias', [DwhHistoricalController::class, 'tecnologias']);
 });
+

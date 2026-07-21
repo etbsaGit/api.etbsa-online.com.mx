@@ -292,7 +292,7 @@ class SalidaPermisoController extends ApiController
         // Enviar correos uno por uno
         foreach ($destinatarios as $correo) {
             Mail::to($correo)
-                ->send(new PermisoSolicitadoMail($salidaPermiso, $empleado, $user));
+                ->queue(new PermisoSolicitadoMail($salidaPermiso, $empleado, $user));
         }
     }
 }
