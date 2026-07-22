@@ -169,7 +169,6 @@ class VacationDayController extends ApiController
         if (!$user->hasRole('Admin')) {
             $this->sendNotify($vacationDay->id, 'put');
         }
-
         return $this->respond($vacationDay);
     }
 
@@ -193,7 +192,7 @@ class VacationDayController extends ApiController
 
         if ($user->hasRole('RRHH')) {
             $empleados = Empleado::where('estatus_id', 5)
-                ->with('vehicle', 'jefe_directo', 'notificar','sucursal','puesto','departamento',)
+                ->with('vehicle', 'jefe_directo', 'notificar', 'sucursal', 'puesto', 'departamento',)
                 ->orderBy('apellido_paterno')
                 ->get();
         } else {
@@ -202,7 +201,7 @@ class VacationDayController extends ApiController
 
         if ($empleado && !$user->hasRole('RRHH')) {
             $empleadosAll = Empleado::where('estatus_id', 5)
-                ->with('vehicle', 'jefe_directo', 'notificar')
+                ->with('vehicle', 'jefe_directo', 'notificar', 'sucursal', 'puesto', 'departamento')
                 ->where('sucursal_id', $empleado->sucursal_id)
                 ->orderBy('apellido_paterno')
                 ->get();
@@ -352,7 +351,6 @@ class VacationDayController extends ApiController
             'qc' => $qc
                 ? $qc->correo_institucional
                 : null,
-
         ];
 
         if ($vacationDay->vehiculo_utilitario) {
