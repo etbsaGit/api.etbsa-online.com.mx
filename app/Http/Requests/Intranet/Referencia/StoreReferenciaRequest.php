@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\Intranet\Referencia;
 
+use App\Models\Intranet\Kinship;
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreReferenciaRequest extends FormRequest
 {
@@ -32,11 +34,20 @@ class StoreReferenciaRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    public function messages() : array{
+        return[
+            'nombre.required' => 'El nombre es obligatorio',
+            'telefono.required' => 'El teléfono es obligatorio',
+            'kinship_id.required' => 'Se debe especificar el parentesco'
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }
