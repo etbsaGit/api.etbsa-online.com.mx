@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreDistribucionRequest extends FormRequest
 {
@@ -33,11 +34,19 @@ class StoreDistribucionRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    public function messages ():array{
+        return [
+            'nombre.required' => ' Se debe especificar el nombre',
+            'ubicacion.required' => 'Se debe especificar la ubicación',
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreRequest extends FormRequest
 {
@@ -34,11 +35,22 @@ class StoreRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    public function messages(): array{
+        return[
+            'year.required' => 'Selecciona el año',
+            'ciclo.required' => 'Selecciona el ciclo',
+            'hectareas' => 'Se deben indicar las hectareas',
+            'costo.required' => 'Se debe indicar el costo',
+            'cultivo_id.required' => 'Selecciona el cultivo'
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }

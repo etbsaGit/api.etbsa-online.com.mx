@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreClienteTechnologyRequest extends FormRequest
 {
@@ -32,11 +33,21 @@ class StoreClienteTechnologyRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    public function messages()
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        return [
+        'cantidad.required' => 'Se debe especificar la cantidad',
+        'hectareas.required' => 'Se debe especificar las hectáreas conectadas',
+        'nueva_tecnologia_id' => 'Selecciona el tipo de tecnología'
+        ];    
+    } 
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreClienteAbastecimientoRequest extends FormRequest
 {
@@ -31,11 +32,20 @@ class StoreClienteAbastecimientoRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    public function messages(): array{
+        return [
+            'cantidad.required' => 'Se debe especificar la cantidad',
+            'cantidad.integer' => 'La cantidad debe ser un número entero',
+            'abastecimiento_id.required' => 'Selecciona el tipo de abastecimiento'
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }
