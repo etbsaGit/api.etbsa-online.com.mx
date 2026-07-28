@@ -5,7 +5,7 @@ namespace App\Http\Requests\Intranet\Egreso;
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreRequest extends FormRequest
 {
@@ -36,11 +36,24 @@ class StoreRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    public function messages(): array
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        return [
+            'year.required' => 'Selecciona el año',
+            'pago.required' => 'Se debe especificar el pago',
+            'months.required' => 'Se deben especificar los pagos restantes',
+            'type.required' => 'Se debe especificar el tipo de pago',
+            'entidad.required' => 'Se debe especificar la entidad a quien se debe',
+            'concepto.required' => 'se debe especificar el detalle'
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }
