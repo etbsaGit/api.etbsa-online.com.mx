@@ -53,7 +53,7 @@ class AnaliticaController extends ApiController
             }
         }
         // 3️⃣ Enviar notificación por correo usando el método privado
-        $this->sendAnaliticaNotification($analitica, 'creada');
+        // $this->sendAnaliticaNotification($analitica, 'creada');
         return $this->respondCreated($analitica);
     }
 
@@ -83,13 +83,23 @@ class AnaliticaController extends ApiController
                 $sa->update(['path' => $relativePath]);
             }
         }
-        $this->sendAnaliticaNotification($analitica, 'actualizada');
+        // $this->sendAnaliticaNotification($analitica, 'actualizada');
 
         return $this->respond($analitica);
     }
 
-    /**
-     * Remove the specified resource from storage.
+    public function setStatus($analiticaId, $statusId)
+    {
+        $analitica = Analitica::findOrFail($analiticaId);
+
+        $analitica->status = $statusId;
+        $analitica->save();
+        // $this->sendAnaliticaNotification($analitica, 'actualizada');
+        return $this->respondSuccess();
+    }
+
+    /*
+      Remove the specified resource from storage.
      */
     public function destroy(Analitica $analitica)
     {
@@ -443,6 +453,21 @@ class AnaliticaController extends ApiController
             'mime_type' => 'application/pdf',
             'base64' => $pdfBase64,
         ]);
+    }
+
+    public function exportReportPdf(Analitica $analitica)
+    {
+        $response = $this->getReport($analitica);
+
+        $data = method_exists($response, 'getData')
+            ? (array) $response->getData(true)
+            : $response;
+
+        $pdf = Pdf::loadView('pdf.analitica.analitica', $data['data']);
+
+        return response($pdf->output(), 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="reporte_analitica_' . $analitica->id . '.pdf"');
     }
 
     private function sendAnaliticaNotification(Analitica $analitica, string $accion = 'creada')

@@ -107,6 +107,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('analitica/cliente/{cliente}', [AnaliticaController::class, 'getPerCliente']);
     Route::get('analitica/report/{analitica}', [AnaliticaController::class, 'getReport']);
     Route::get('analitica/report/pdf/{analitica}', [AnaliticaController::class, 'exportReportPdfBase64']);
+    Route::get('analitica/report/app/{analitica}', [AnaliticaController::class, 'exportReportPdf']);
+    Route::put('analitica/status/{analitica}/{status}',[AnaliticaController::class,'setStatus']);
     Route::apiResource('analitica', AnaliticaController::class);
 
     // 🔹 AnaliticaDoc
