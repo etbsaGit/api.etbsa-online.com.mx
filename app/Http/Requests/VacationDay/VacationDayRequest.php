@@ -6,7 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Http\Exceptions\HttpResponseException;
 class VacationDayRequest extends FormRequest
 {
     /**
@@ -17,7 +17,7 @@ class VacationDayRequest extends FormRequest
         return true;
     }
 
-     /**
+    /**
      * Prepare the data for validation.
      */
     protected function prepareForValidation()
@@ -56,11 +56,30 @@ class VacationDayRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    public function messages(): array
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        return [
+            'empleado_id.required' => 'El empleado es obligatorio',
+            'sucursal_id.required' => 'La sucursal es obligatoria',
+            'puesto_id.required' => 'El puesto es obligatorio',
+            'departamento_id.required' => 'El departamento es obligatorio',
+            'periodo_correspondiente.required' => 'Especifica el periodo',
+            'anios_cumplidos.required' => 'Los años cumplidos es obligatorio',
+            'fecha_inicio.required' => 'Especifica la fecha de inicio',
+            'fecha_termino.required' => 'Especifica la fecha de termino',
+            'fecha_regreso.required' => 'Especifica la fecha de regreso',
+            'cubre.required' => 'Selecciona quien te cubrirá',
+            'dias_disfrute.required' => '',
+            'dias_pendientes.required' =>''
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }

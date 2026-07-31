@@ -45,7 +45,7 @@ class StoreRequest extends FormRequest
         return [
             'date.required' => 'La fecha es obligatoria.',
             'start.required' => 'La hora de inicio es obligatoria.',
-            'end.after' => 'La hora de fin debe ser posterior a la de inicio.',
+            'end.required' => 'La hora de fin debe ser posterior a la de inicio.',
             'empleado_id.exists' => 'El empleado seleccionado no existe.',
         ];
     }
