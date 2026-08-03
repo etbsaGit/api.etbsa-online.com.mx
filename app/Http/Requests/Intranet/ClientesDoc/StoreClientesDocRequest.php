@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreClientesDocRequest extends FormRequest
 {
@@ -27,7 +28,7 @@ class StoreClientesDocRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'extension' => ['required', 'string', 'max:255'],
-            'expiration_date' => ['nullable','date'],
+            'expiration_date' => ['nullable', 'date'],
             'comments' => ['nullable', 'string', 'max:255'],
             'base64' => ['required', 'string'],
             'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
@@ -35,11 +36,21 @@ class StoreClientesDocRequest extends FormRequest
         ];
     }
 
-    function failedValidation(Validator $validator)
+    public function messages(): array
     {
-        if ($this->expectsJson()) {
-            $response = new Response($validator->errors(), 422);
-            throw new ValidationException($validator, $response);
-        }
+        return [
+            'name.required' => 'Ingrese el nombre del documento.',
+            'extension.required' => 'No se pudo identificar el tipo de archivo.',
+            'base64.required' => 'Seleccione un archivo para continuar.',
+        ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => 'Errores de validación',
+            'errors'  => $validator->errors()
+        ], 422));
     }
 }
