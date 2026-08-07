@@ -173,15 +173,15 @@ class TrackingAutorizacionController extends ApiController
 
             $pdfContent = $pdf->output();
 
-            // $solicitante = $tracking->vendedor;
-            // $notificado = $tracking->notificar_a;
+            $solicitante = $tracking->vendedor;
+            $notificado = $tracking->notificar_a;
 
             $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
             $correos = [
-                // 'notificado' => $notificado->correo_institucional,
-                // 'solicitante' => $solicitante->correo_institucional,
-                $correo_pruebas
+                'notificado' => $notificado->correo_institucional,
+                'solicitante' => $solicitante->correo_institucional,
+                // $correo_pruebas
             ];
 
             foreach ($correos as $to_email) {
@@ -373,14 +373,14 @@ class TrackingAutorizacionController extends ApiController
 
             $pdfContent = $pdf->output();
 
-            // $solicitante = $tracking->vendedor;
-            // $notificado = $tracking->notificar_a;
+            $solicitante = $tracking->vendedor;
+            $notificado = $tracking->notificar_a;
 
             $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
             $correos = [
-                // 'notificado' => $notificado->correo_institucional,
-                // 'solicitante' => $solicitante->correo_institucional,
+                'notificado' => $notificado->correo_institucional,
+                'solicitante' => $solicitante->correo_institucional,
                 $correo_pruebas
             ];
 

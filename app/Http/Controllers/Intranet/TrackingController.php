@@ -635,9 +635,9 @@ class TrackingController extends ApiController
         $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
         $correos = [
-            // 'notificado' => $notificado->correo_institucional,
-            // 'solicitante' => $solicitante->correo_institucional,
-            $correo_pruebas
+            'notificado' => $notificado->correo_institucional,
+            'solicitante' => $solicitante->correo_institucional,
+            // $correo_pruebas
         ];
 
         foreach ($correos as $to_email) {
@@ -753,9 +753,9 @@ class TrackingController extends ApiController
                 ], 422);
             }
 
-            // Mail::to($correos)
-            //     ->cc($cc)
-            //     ->send(new CustomerAssignmentRequest($tracking, $cliente, $pdfContent));
+            Mail::to($correos)
+                ->cc($cc)
+                ->send(new CustomerAssignmentRequest($tracking, $cliente, $pdfContent));
 
             return response()->json([
                 'success' => true,

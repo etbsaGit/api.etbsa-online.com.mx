@@ -370,29 +370,11 @@
                             </div>
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ '$ ' .
-                                number_format(
-                                    $convertExchange($detalle->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
-                                    2,
-                                    '.',
-                                    ',',
-                                ) }}
-
+                            {{ '$ ' . number_format($detalle->precio_unidad, 2, '.', ',') }}
                             {{ $quote->currency->name }}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ '$ ' .
-                                number_format(
-                                    $convertExchange(
-                                        $detalle->cantidad * $detalle->precio_unidad,
-                                        $quote->currency->name,
-                                        'MXN',
-                                        $quote->tarifa_cambio,
-                                    ),
-                                    2,
-                                    '.',
-                                    ',',
-                                ) }}
+                            {{ '$ ' . number_format($detalle->subtotal, 2, '.', ',') }}
                             {{ $quote->currency->name }}</td>
                     </tr>
                 @endforeach
@@ -414,24 +396,12 @@
                             </div> --}}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ '$ ' .
-                                number_format(
-                                    $convertExchange($extra->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
-                                    2,
-                                    '.',
-                                    ',',
-                                ) }}
+                            {{ '$ ' . number_format($extra->precio_unidad, 2, '.', ',') }}
 
                             {{ $quote->currency->name }}
                         </td>
                         <td colspan="2" style="text-align: right;font-size: 0.8rem;">
-                            {{ '$ ' .
-                                number_format(
-                                    $convertExchange($extra->cantidad * $extra->precio_unidad, $quote->currency->name, 'MXN', $quote->tarifa_cambio),
-                                    2,
-                                    '.',
-                                    ',',
-                                ) }}
+                            {{ '$ ' . number_format($extra->subtotal, 2, '.', ',') }}
                             {{ $quote->currency->name }}</td>
                     </tr>
                 @endforeach
@@ -465,10 +435,14 @@
 
                 <tr class="total" style="text-align: right">
                     <td colspan="4"></td>
-                    <td colspan="2">T.C.: </td>
-                    <td colspan="2" style="font-size: 0.8rem;">
-                        {{ '$ ' . number_format($quote->tarifa_cambio, 2, '.', ',') }}
-                        MXN </td>
+                    @if ($quote->currency->name == 'USD')
+                        {
+                        <td colspan="2">T.C.: </td>
+                        <td colspan="2" style="font-size: 0.8rem;">
+                            {{ '$ ' . number_format($quote->tarifa_cambio, 2, '.', ',') }}
+                            MXN </td>
+                        }
+                    @endif
                 </tr>
                 <tr class="total" style="text-align: end;">
                     <td colspan="4"></td>
