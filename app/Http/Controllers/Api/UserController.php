@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\User\PutRequest;
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\RegisterDeviceRequest;
 use App\Http\Requests\User\StoreRequest;
 use Illuminate\Support\Facades\Password;
 use Spatie\Permission\Models\Permission;
@@ -295,5 +296,48 @@ class UserController extends ApiController
             return $this->respond('Contraseña cambiada con exito');
         }
         return $this->respond('Contraseña actual no valida', 403);
+    }
+
+    // registrar device de app movil
+    private function syncDevice(User $user, array $device)
+    {
+        Device::updateOrCreate(
+
+            [
+                'expo_token' => $device['expo_token']
+            ],
+
+            [
+
+                'user_id' => $user->id,
+
+                'platform' => $device['platform'] ?? null,
+
+                'brand' => $device['brand'] ?? null,
+
+                'manufacturer' => $device['manufacturer'] ?? null,
+
+                'model_name' => $device['model_name'] ?? null,
+
+                'os_version' => $device['os_version'] ?? null,
+
+                'application_id' => $device['application_id'] ?? null,
+
+                'linked_at' => now(),
+
+            ]
+        );
+    }
+
+    public function registerDevice(RegisterDeviceRequest $request)
+    {
+        $this->syncDevice(
+            auth()->user(),
+            $request->validated()
+        );
+
+        return response()->json([
+            'message' => 'Dispositivo registrado correctamente.'
+        ]);
     }
 }

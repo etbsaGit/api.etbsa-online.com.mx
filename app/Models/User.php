@@ -65,6 +65,10 @@ class User extends Authenticatable
         return $this->scopeFilterSearch($query, $filters, ['name', 'email']);
     }
 
+    public function devices(){
+        return $this->hasMany(Device::class);
+    }
+
     public function empleado()
     {
         return $this->hasOne(Empleado::class, 'user_id');

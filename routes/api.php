@@ -312,7 +312,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('vacationDay/employeeReport', [VacationDayController::class, 'getEmployeeReport']);
     Route::post('vacationDay/employeeReportPdf', [VacationDayController::class, 'getEmployeeReportPdf']);
     Route::post('vacationDay/reportPDF', [VacationDayController::class, 'exportReport']);
-    Route::post('vacationDays/report-xlsx',[VacationDayController::class,'getEmployeeReportXls']);
+    Route::post('vacationDays/report-xlsx', [VacationDayController::class, 'getEmployeeReportXls']);
 
     Route::apiResource('vacationDay', VacationDayController::class);
 
@@ -460,7 +460,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('softSkill', SoftSkillController::class);
     Route::apiResource('softSkillNivel', SoftSkillNivelController::class);
     Route::apiResource('softSkillEmpleado', SoftSkillEmpleadoController::class);
-
 });
 // //--------------------landingPage--------------------
 // Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
@@ -481,6 +480,7 @@ Route::post('auth/login', [UserController::class, 'login']);
 Route::post('auth/verify', [UserController::class, 'verify2FA']);
 Route::post('auth/forgot-password', [UserController::class, 'sendResetLink']);
 Route::post('auth/reset-password', [UserController::class, 'reset']);
+Route::post('auth/device', [UserController::class, 'registerDevice']);
 
 Route::post('roles', [RoleController::class, 'index']);
 Route::post('permissions', [PermissionController::class, 'index']);
@@ -496,3 +496,22 @@ Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmp
 //--------------------Bolsa de trabajo--------------------
 Route::get('bolsa/all', [RequisicionPersonalController::class, 'getAll']);
 Route::post('bolsa', [CandidatoController::class, 'store']);
+
+
+// test push notificaciones
+Route::middleware('auth:sanctum')->post('/test-push', function () {
+
+    App\Services\PushNotificationService::send(
+        user: auth()->user(),
+        title: 'Prueba de notificación',
+        body: '¡Hola desde Laravel!',
+        data: [
+            'screen' => 'home',
+            'type' => 'test',
+        ]
+    );
+
+    return response()->json([
+        'success' => true,
+    ]);
+});
