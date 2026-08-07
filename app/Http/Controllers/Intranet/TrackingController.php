@@ -62,6 +62,11 @@ class TrackingController extends ApiController
             'depto',
             'ultimaActividad.certeza',
             'extras.item',
+            'historial' => function ($query) {
+                    $query->orderBy('created_at', 'asc');
+                },
+                'historial.situacion',
+                'historial.empleado'
         ])->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -99,7 +104,12 @@ class TrackingController extends ApiController
             'situacion',
             'depto',
             'extras.item',
-            'ultimaActividad.certeza'
+            'ultimaActividad.certeza',
+            'historial' => function ($query) {
+                    $query->orderBy('created_at', 'asc');
+                },
+                'historial.situacion',
+                'historial.empleado'
         ])->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
