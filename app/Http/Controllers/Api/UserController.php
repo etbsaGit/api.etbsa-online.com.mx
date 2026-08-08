@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\User\PutRequest;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\RegisterDeviceRequest;
+use App\Http\Requests\User\RegisterDeviceRequest;
+use App\Models\Device;
 use App\Http\Requests\User\StoreRequest;
 use Illuminate\Support\Facades\Password;
 use Spatie\Permission\Models\Permission;
@@ -219,7 +220,8 @@ class UserController extends ApiController
 
     public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
+        // $request->user()->tokens()->delete(); -> este borra todos los tokens activos, por lo que si se cierra sesión en lado se cierra en todos
+        $request->user()->currentAccessToken()->delete();
 
         return $this->respond('Logout exitoso');
     }

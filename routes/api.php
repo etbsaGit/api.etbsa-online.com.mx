@@ -108,6 +108,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('users/all', [UserController::class, 'all']);
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('puesto/all', [PuestoController::class, 'all']);
+    
 
     //--------------------Catalogos para empleados-------------------
     Route::post('departamentos', [DepartamentoController::class, 'index']);
@@ -250,6 +251,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     Route::post('enviar-correo-verificacion', [UserController::class, 'enviarCorreoVerificacion']);
     Route::post('verificar-correo', [UserController::class, 'verificarCorreo']);
+
+    // registrar dispositivo (app movil)
+    Route::post('auth/device', [UserController::class, 'registerDevice']);
 
     // //--------------------landingPage/admin--------------------
     // Route::get('formProduct', [ProductController::class, 'formProduct']);
@@ -480,7 +484,7 @@ Route::post('auth/login', [UserController::class, 'login']);
 Route::post('auth/verify', [UserController::class, 'verify2FA']);
 Route::post('auth/forgot-password', [UserController::class, 'sendResetLink']);
 Route::post('auth/reset-password', [UserController::class, 'reset']);
-Route::post('auth/device', [UserController::class, 'registerDevice']);
+
 
 Route::post('roles', [RoleController::class, 'index']);
 Route::post('permissions', [PermissionController::class, 'index']);
@@ -503,11 +507,10 @@ Route::middleware('auth:sanctum')->post('/test-push', function () {
 
     App\Services\PushNotificationService::send(
         user: auth()->user(),
-        title: 'Prueba de notificación',
-        body: '¡Hola desde Laravel!',
+        title: 'Nuevo Seguimiento',
+        body: 'Revisa la info del nuevo seguimiento en la app',
         data: [
-            'screen' => 'home',
-            'type' => 'test',
+            'type' => 'tracking',
         ]
     );
 
