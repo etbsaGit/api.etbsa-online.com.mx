@@ -72,6 +72,7 @@ use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\SoftSkillEmpleadoController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\CreditoDeclaracionController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\RequisicionPersonalController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
@@ -108,7 +109,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('users/all', [UserController::class, 'all']);
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('puesto/all', [PuestoController::class, 'all']);
-    
+
 
     //--------------------Catalogos para empleados-------------------
     Route::post('departamentos', [DepartamentoController::class, 'index']);
@@ -464,6 +465,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('softSkill', SoftSkillController::class);
     Route::apiResource('softSkillNivel', SoftSkillNivelController::class);
     Route::apiResource('softSkillEmpleado', SoftSkillEmpleadoController::class);
+
+    // ---------------------------Notificaciones ------------------------------
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+
+    Route::post('notifications/test', [NotificationController::class, 'test']);
 });
 // //--------------------landingPage--------------------
 // Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
@@ -510,7 +517,7 @@ Route::middleware('auth:sanctum')->post('/test-push', function () {
         title: 'Nuevo Seguimiento',
         body: 'Revisa la info del nuevo seguimiento en la app',
         data: [
-            'type' => 'tracking',
+            'type' => '2hrs',
         ]
     );
 
