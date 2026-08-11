@@ -469,8 +469,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // ---------------------------Notificaciones ------------------------------
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
-
+    Route::patch('notifications/{notification}/read',[NotificationController::class,'markAsRead']);
     Route::post('notifications/test', [NotificationController::class, 'test']);
+    
 });
 // //--------------------landingPage--------------------
 // Route::post('page/product/filter', [ProductController::class, 'filterProduct']);

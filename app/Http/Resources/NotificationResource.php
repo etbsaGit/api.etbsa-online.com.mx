@@ -4,9 +4,17 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
+
+Carbon::setLocale('es');
 
 class NotificationResource extends JsonResource
 {
+
+    public function boot()
+    {
+        Carbon::setLocale('es');
+    }
     public function toArray($request): array
     {
         return [

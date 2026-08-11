@@ -33,6 +33,22 @@ class NotificationController extends ApiController
         ]);
     }
 
+    // marcar como leida
+    public function markAsRead(Notification $notification){
+        abort_unless(
+            $notification->user_id === auth()->id(),
+            403
+        );
+
+        if(!$notification->read_at){
+            $notification->update([
+                'read_at' => now(),
+            ]);
+        }
+
+        return new NotificationResource($notification->fresh('creator'));
+    }
+
     // test
     public function test()
 {
@@ -40,7 +56,7 @@ class NotificationController extends ApiController
         user: auth()->user(),
         payload: [
             'created_by' => auth()->id(),
-            'module' => 'general',
+            'module' => 'tracking',
             'type' => 'test',
             'title' => 'Prueba',
             'body' => 'Notificación de prueba.',
