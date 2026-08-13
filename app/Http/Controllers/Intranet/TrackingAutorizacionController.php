@@ -8,6 +8,7 @@ use App\Http\Requests\Intranet\Tracking\TrackingFeedbackRequest;
 use App\Mail\MailToAsignacionSerie;
 use App\Mail\MailToCreditoCobranza;
 use App\Mail\SendAsignacionSerie;
+use App\Mail\SendAutorizarPedido;
 use App\Mail\SendAutorizacionDecision;
 use App\Models\Empleado;
 use App\Models\Estatus;
@@ -15,6 +16,7 @@ use App\Models\Intranet\InvItem;
 use App\Models\Intranet\Tracking;
 use App\Models\Intranet\TrackingAsignacionSerie;
 use App\Models\Intranet\TrackingFeedback;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,15 +49,13 @@ class TrackingAutorizacionController extends ApiController
         ]);
 
         // si es admin ve todas las cotizaciones, si no sólo las que se les notificó
-        $trackings = Tracking::
-        query()
+        $trackings = Tracking::query()
             ->when(!$user->hasRole('Admin') && $situacion == "Formalizado", function ($query) use ($user) {
                 $query->whereHas('notificado', function ($q) use ($user) {
                     $q->where('id', $user->empleado->id);
                 });
             })
-            ->
-            with([
+            ->with([
                 'cliente',
                 'prospecto',
                 'origen',
@@ -136,15 +136,22 @@ class TrackingAutorizacionController extends ApiController
                 'situacion_id' => $situacionId
             ]);
 
-
-            DB::commit();
-
             if ($situacion === 'Para Asignar') {
                 $this->mailToAsignacionSerie($trackingId);
+                $this->pushNotiToAsignacionSerie($trackingId);
+                $this->pushToNotificado($trackingId, $situacion);
             }
-
+            if ($situacion === 'Autorizado') {
+                $this->sendAutorizarRequest($trackingId);
+                $this->pushAutorizarRequest($trackingId);
+            }
+            if ($situacion === 'Formalizado') {
+                $this->pushToNotificado($trackingId, $situacion);
+            }
             $this->sendAutorizacionDecision($trackingId);
+            $this->pushNotiAutorizacionDecision($trackingId, $situacion);
 
+            DB::commit();
             return $this->respondCreated($feedback->load(['tracking']), 'Pedido Actualizado Correctamente');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -154,6 +161,57 @@ class TrackingAutorizacionController extends ApiController
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function pushToNotificado($trackingId, $situacion)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+        $notificado = $tracking->notificado->user;
+
+        $title="";
+        $body="";
+        if ($situacion === 'Para Asignar') {
+            $title = "Pedido Autorizado por Dirección Comercial";
+            $body = "El pedido #" . $tracking->folio . " ha sido autorizado.";
+        } else if ($situacion === 'Formalizado') {
+            $title = "Pedido Rechazado por Dirección Comercial";
+            $body = "El pedido #" . $tracking->folio . " no ha sido autorizado. Entra para ver los detalles";
+        }
+
+        NotificationService::send(
+            user: $notificado,
+            payload: [
+                'created_by' => auth()->user()->id,
+                'module' => 'tracking',
+                'type' => 'cambio_estatus',
+                'title' => $title,
+                'body' => $body,
+                'data' => [
+                    'type' => 'tracking.formalizado',
+                    'resource' => $tracking->folio,
+                ],
+            ]
+        );
+    }
+
+    public function pushNotiAutorizacionDecision($trackingId, $situacion)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+        $solicitante = $tracking->vendedor->user;
+        NotificationService::send(
+            user: $solicitante,
+            payload: [
+                'created_by' => auth()->user()->id,
+                'module' => 'tracking',
+                'type' => 'cambio_estatus',
+                'title' => 'Cambio de Estatus en tu Seguimiento',
+                'body' => "Tu seguimiento ha cambiado de estatus: " . $situacion . ". Entra para ver los detalles\nFolio: " . $tracking->folio,
+                'data' => [
+                    'type' => 'tracking',
+                    'resource' => $tracking->folio,
+                ],
+            ]
+        );
     }
 
     public function sendAutorizacionDecision($trackingId)
@@ -198,12 +256,109 @@ class TrackingAutorizacionController extends ApiController
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error al mandar correo de Solicitud de Asignación de Serie',
+                'message' => 'Error al mandar correo.',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
+    public function pushAutorizarRequest($trackingId)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+        $notificado = $tracking->notificado->user;
+        $dirComercial = Empleado::whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Dirección Comercial');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+        NotificationService::send(
+            user: $dirComercial->user,
+            payload: [
+                'created_by' => $notificado->id,
+                'module' => 'tracking',
+                'type' => 'formalizar',
+                'title' => 'Pedido Formalizado',
+                'body' => "Solicitud de Autorización de Pedido. \nFolio: " . $tracking->folio,
+                'data' => [
+                    'type' => 'tracking.autorizado',
+                    'resource' => $tracking->folio,
+                ],
+            ]
+        );
+    }
+
+    public function sendAutorizarRequest($trackingId)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+        $tracking->load(
+            'cliente',
+            'prospecto',
+            'vendedor',
+            'sucursal',
+            'condicionPago',
+            'currency',
+            'detalles.productos',
+            'extras.item'
+        );
+
+        $pdf = Pdf::loadView('pdf.tracking.tracking_quote', [
+            'quote' => $tracking
+        ]);
+
+        // Obtener binario PDF
+        $pdfContent = $pdf->output();
+
+        $notificado = $tracking->notificado;
+        $solicitante = $tracking->vendedor;
+        $dirComercial = Empleado::whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Dirección Comercial');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+
+        // Usamos optional() para que si el modelo es null, no truene, solo regrese null
+        $correoNotificado = optional($notificado)->correo_institucional;
+        $correoSolicitante = optional($solicitante)->correo_institucional;
+        $correoDirComercial = optional($dirComercial)->correo_institucional;
+        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+
+        $mail = Mail::to($correoDirComercial);
+        if ($correoNotificado) {
+            $mail->cc($correoNotificado);
+        }
+        if ($correoSolicitante) {
+            $mail->cc($correoSolicitante);
+        }
+        $mail->send(new SendAutorizarPedido($tracking, $pdfContent));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Correo enviado correctamente'
+        ]);
+    }
+
+    public function pushNotiToAsignacionSerie($trackingId)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+        $usuarios = Empleado::whereHas('user.roles', function ($query) {
+            $query->where('name', 'crm.asignacion_serie');
+        })->with('user')->get()->pluck('user')->filter();
+
+        NotificationService::sendMany(
+            users: $usuarios,
+            payload: [
+                'created_by' => auth()->user()->id,
+                'module' => 'tracking',
+                'type' => 'asignacion_serie',
+                'title' => 'Asignación de Número de Serie',
+                'body' => "Solicitud de Asignación de Serie a pedido. \nFolio: " . $tracking->folio,
+                'data' => [
+                    'type' => 'tracking.asignacion',
+                    'resource' => $tracking->folio,
+                ],
+            ]
+        );
+    }
     public function mailToAsignacionSerie($trackingId)
     {
         try {

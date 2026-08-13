@@ -62,6 +62,7 @@ class NotificationController extends ApiController
             'body' => 'Notificación de prueba.',
             'data' => [
                 'type' => 'tracking',
+                'subtype' => 'formalizado'
             ],
         ]
     );
