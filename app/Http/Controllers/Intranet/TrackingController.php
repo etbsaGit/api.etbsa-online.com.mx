@@ -28,6 +28,7 @@ use App\Models\Intranet\TrackingFeedback;
 use App\Models\Intranet\TrackingProspecto;
 use App\Models\Intranet\TrackingTipoSeguimiento;
 use App\Models\Puesto;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -62,6 +63,11 @@ class TrackingController extends ApiController
             'depto',
             'ultimaActividad.certeza',
             'extras.item',
+            'historial' => function ($query) {
+                $query->orderBy('created_at', 'asc');
+            },
+            'historial.situacion',
+            'historial.empleado'
         ])->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -74,9 +80,8 @@ class TrackingController extends ApiController
 
     public function myIndex(Request $request)
     {
-
         $user = Auth::user();
-
+        $filters = $request->all();
         $filters['vendedor_id'] = $user->empleado->id;
 
         $trackings = Tracking::with([
@@ -99,11 +104,15 @@ class TrackingController extends ApiController
             'situacion',
             'depto',
             'extras.item',
-            'ultimaActividad.certeza'
+            'ultimaActividad.certeza',
+            'historial' => function ($query) {
+                $query->orderBy('created_at', 'asc');
+            },
+            'historial.situacion',
+            'historial.empleado'
         ])->filter($filters)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-
 
         return $this->respond(
             $trackings,
@@ -384,7 +393,7 @@ class TrackingController extends ApiController
             'categorias' => ProductCategory::with('condicionesPago')->get(),
             'condiciones_pago' => ProductCondicionPago::all(),
             'monedas' => Currency::all(),
-            'productos' => Product::with('precios.condicionPago', 'contrapesos')->get(),
+            'productos' => Product::with('precios.condicionPago', 'contrapesos.currency')->get(),
             'tarifa_cambio' => ExchangeRate::latest()->first()?->value ?? 0,
             'tipos_seguimiento' => TrackingTipoSeguimiento::all(),
             'prospectos' => TrackingProspecto::all(),
@@ -527,20 +536,19 @@ class TrackingController extends ApiController
                 ]);
             }
 
-            DB::commit();
-
             if ($situacion === "Formalizado") {
                 $this->sendFormalizarRequest($id);
+                $this->sendPushNotiFormalizarRequest($id);
             }
+
+            DB::commit();
 
             return response()->json([
                 'message' => 'Estatus actualizado correctamente',
                 'data' => $tracking
             ]);
         } catch (\Exception $e) {
-
             DB::rollBack();
-
             return response()->json([
                 'message' => 'Error al actualizar estatus',
                 'error' => $e->getMessage()
@@ -606,11 +614,30 @@ class TrackingController extends ApiController
         return $pdf->stream('cotizacion.pdf');
     }
 
+    public function sendPushNotiFormalizarRequest($trackingId)
+    {
+        $tracking = Tracking::findOrFail($trackingId);
+        $notificado = $tracking->notificado->user;
+        $solicitante = $tracking->vendedor->user->id;
+        NotificationService::send(
+            user: $notificado,
+            payload: [
+                'created_by' => $solicitante,
+                'module' => 'tracking',
+                'type' => 'formalizar',
+                'title' => 'Pedido Formalizado',
+                'body' => "Solicitud de Formalización de Pedido. \nFolio: " . $tracking->folio,
+                'data' => [
+                    'type' => 'tracking.formalizado',
+                    'resource' => $tracking->folio,
+                ],
+            ]
+        );
+    }
+
     public function sendFormalizarRequest($trackingId)
     {
-
         $tracking = Tracking::findOrFail($trackingId);
-
         $tracking->load(
             'cliente',
             'prospecto',
@@ -629,24 +656,20 @@ class TrackingController extends ApiController
         // Obtener binario PDF
         $pdfContent = $pdf->output();
 
-        $notificado = $tracking->notificar_a;
+        $notificado = $tracking->notificado;
         $solicitante = $tracking->vendedor;
 
+        // Usamos optional() para que si el modelo es null, no truene, solo regrese null
+        $correoNotificado = optional($notificado)->correo_institucional;
+        $correoSolicitante = optional($solicitante)->correo_institucional;
         $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
-        $correos = [
-            // 'notificado' => $notificado->correo_institucional,
-            // 'solicitante' => $solicitante->correo_institucional,
-            $correo_pruebas
-        ];
+        $mail = Mail::to($correoNotificado);
 
-        foreach ($correos as $to_email) {
-            if ($to_email) {
-                Mail::to($to_email)->send(
-                    new SendFormalizarRequest($tracking, $pdfContent)
-                );
-            }
+        if ($correoSolicitante) {
+            $mail->cc($correoSolicitante);
         }
+        $mail->send(new SendFormalizarRequest($tracking, $pdfContent));
 
         return response()->json([
             'success' => true,
@@ -753,9 +776,9 @@ class TrackingController extends ApiController
                 ], 422);
             }
 
-            // Mail::to($correos)
-            //     ->cc($cc)
-            //     ->send(new CustomerAssignmentRequest($tracking, $cliente, $pdfContent));
+            Mail::to($correos)
+                ->cc($cc)
+                ->send(new CustomerAssignmentRequest($tracking, $cliente, $pdfContent));
 
             return response()->json([
                 'success' => true,

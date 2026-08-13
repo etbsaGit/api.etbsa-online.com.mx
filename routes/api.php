@@ -72,6 +72,7 @@ use App\Http\Controllers\Api\ProspectServicioController;
 use App\Http\Controllers\Api\SoftSkillEmpleadoController;
 use App\Http\Controllers\Api\ActivityTechnicianController;
 use App\Http\Controllers\Api\CreditoDeclaracionController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\RequisicionPersonalController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
@@ -108,6 +109,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('users/all', [UserController::class, 'all']);
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('puesto/all', [PuestoController::class, 'all']);
+
 
     //--------------------Catalogos para empleados-------------------
     Route::post('departamentos', [DepartamentoController::class, 'index']);
@@ -251,6 +253,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('enviar-correo-verificacion', [UserController::class, 'enviarCorreoVerificacion']);
     Route::post('verificar-correo', [UserController::class, 'verificarCorreo']);
 
+    // registrar dispositivo (app movil)
+    Route::post('auth/device', [UserController::class, 'registerDevice']);
+
     // //--------------------landingPage/admin--------------------
     // Route::get('formProduct', [ProductController::class, 'formProduct']);
     // Route::put('product/active/{product}', [ProductController::class, 'changeActive']);
@@ -312,7 +317,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('vacationDay/employeeReport', [VacationDayController::class, 'getEmployeeReport']);
     Route::post('vacationDay/employeeReportPdf', [VacationDayController::class, 'getEmployeeReportPdf']);
     Route::post('vacationDay/reportPDF', [VacationDayController::class, 'exportReport']);
-    Route::post('vacationDays/report-xlsx',[VacationDayController::class,'getEmployeeReportXls']);
+    Route::post('vacationDays/report-xlsx', [VacationDayController::class, 'getEmployeeReportXls']);
 
     Route::apiResource('vacationDay', VacationDayController::class);
 
@@ -461,6 +466,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('softSkillNivel', SoftSkillNivelController::class);
     Route::apiResource('softSkillEmpleado', SoftSkillEmpleadoController::class);
 
+    // ---------------------------Notificaciones ------------------------------
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('notifications/{notification}/read',[NotificationController::class,'markAsRead']);
+    Route::post('notifications/test', [NotificationController::class, 'test']);
+    
 });
 // //--------------------landingPage--------------------
 // Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
@@ -482,6 +493,7 @@ Route::post('auth/verify', [UserController::class, 'verify2FA']);
 Route::post('auth/forgot-password', [UserController::class, 'sendResetLink']);
 Route::post('auth/reset-password', [UserController::class, 'reset']);
 
+
 Route::post('roles', [RoleController::class, 'index']);
 Route::post('permissions', [PermissionController::class, 'index']);
 
@@ -496,3 +508,21 @@ Route::get('empleado/archivos/{rfc}/{ine}', [EmpleadoController::class, 'findEmp
 //--------------------Bolsa de trabajo--------------------
 Route::get('bolsa/all', [RequisicionPersonalController::class, 'getAll']);
 Route::post('bolsa', [CandidatoController::class, 'store']);
+
+
+// test push notificaciones
+Route::middleware('auth:sanctum')->post('/test-push', function () {
+
+    App\Services\PushNotificationService::send(
+        user: auth()->user(),
+        title: 'Nuevo Seguimiento',
+        body: 'Revisa la info del nuevo seguimiento en la app',
+        data: [
+            'type' => '2hrs',
+        ]
+    );
+
+    return response()->json([
+        'success' => true,
+    ]);
+});

@@ -65,6 +65,11 @@ class User extends Authenticatable
         return $this->scopeFilterSearch($query, $filters, ['name', 'email']);
     }
 
+    public function devices()
+    {
+        return $this->hasMany(Device::class);
+    }
+
     public function empleado()
     {
         return $this->hasOne(Empleado::class, 'user_id');
@@ -133,5 +138,20 @@ class User extends Authenticatable
     public function propuestasAuth()
     {
         return $this->hasMany(Propuesta::class, 'auth_by');
+    }
+
+    /**
+     * Notificaciones recibidas.
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+    /**
+     * Notificaciones creadas por este usuario.
+     */
+    public function createdNotifications()
+    {
+        return $this->hasMany(Notification::class, 'created_by');
     }
 }
