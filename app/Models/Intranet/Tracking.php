@@ -104,21 +104,33 @@ class Tracking extends Model
     {
         return $this->belongsTo(Departamento::class, 'departamento_id');
     }
-    public function notificado(){
-        return $this->belongsTo(Empleado::class,'notificar_a');
+    public function notificado()
+    {
+        return $this->belongsTo(Empleado::class, 'notificar_a');
     }
     public function ultimaActividad()
     {
         return $this->hasOne(TrackingActivity::class)->latestOfMany();
     }
-    public function historial(){
-        return $this->hasMany(TrackingFeedback::class,'tracking_id');
-    }
-    public function asignacion(){
-        return $this->hasOne(TrackingAsignacionSerie::class,'tracking_id');
-    }
-    public function scopeFilter(Builder $query, $filters)
+    public function historial()
     {
-        return $this->scopeFilterSearch($query, $filters, ['folio']);
+        return $this->hasMany(TrackingFeedback::class, 'tracking_id');
+    }
+    public function asignacion()
+    {
+        return $this->hasOne(TrackingAsignacionSerie::class, 'tracking_id');
+    }
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        if (!empty($filters['vendedor_id'])) {
+            $query->where('vendedor_id', $filters['vendedor_id']);
+        }
+
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('folio', 'like', '%' . $filters['search'] . '%');
+            });
+        }
+        return $query;
     }
 }
