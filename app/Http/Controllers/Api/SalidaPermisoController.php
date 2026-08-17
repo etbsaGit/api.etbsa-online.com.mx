@@ -16,6 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SalidasPermisoExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\SalidaPermiso\StoreRequest;
+use App\Services\NotificationService;
 
 class SalidaPermisoController extends ApiController
 {
@@ -79,6 +80,7 @@ class SalidaPermisoController extends ApiController
         $salidaPermiso = SalidaPermiso::create($request->validated());
 
         $this->enviarNotificacionPermiso($salidaPermiso);
+        $this->enviarNotificacionAppPermiso($salidaPermiso);
 
 
         return $this->respondCreated($salidaPermiso);
@@ -100,7 +102,7 @@ class SalidaPermisoController extends ApiController
         $salidaPermiso->update($request->validated());
 
         $this->enviarNotificacionPermiso($salidaPermiso);
-
+        $this->enviarNotificacionAppPermiso($salidaPermiso);
 
         return $this->respondCreated($salidaPermiso);
     }
@@ -163,7 +165,6 @@ class SalidaPermisoController extends ApiController
         return $this->respond($data);
     }
 
-
     public function actualizarStatus(SalidaPermiso $salidaPermiso, int $status)
     {
         $user = Auth::user();
@@ -175,6 +176,7 @@ class SalidaPermisoController extends ApiController
         $salidaPermiso->save();
 
         $this->enviarNotificacionPermiso($salidaPermiso);
+        $this->enviarNotificacionAppPermiso($salidaPermiso);
 
         // Retornar la instancia actualizada
         return $this->respondSuccess();
@@ -265,6 +267,44 @@ class SalidaPermisoController extends ApiController
         ]);
     }
 
+    public function enviarNotificacionAppPermiso(SalidaPermiso $salidaPermiso)
+    {
+        // guardamos solicitante y jefe directo
+        $solicitante = $salidaPermiso->empleado;
+        if ($solicitante->jefe_directo) {
+            $jefe = $solicitante->jefe_directo;
+        }
+        $remitente = null;
+        $destinatario = null;
+        $mensaje = "";
+        if ($salidaPermiso->status === null) {
+            $remitente  = $solicitante;
+            $destinatario = $jefe;
+            $mensaje = $solicitante->nombreCompleto . " ha solicitado un permiso de 2 Hrs. Ingresa para ver los detalles y autorizar la solicitud.";
+        } else if ($salidaPermiso->status === 1) {
+            $remitente  = $jefe;
+            $destinatario = $solicitante;
+            $mensaje = "Se ha aceptado tu permiso de 2 Hrs. Ingresa para ver los detalles.";
+        } else if ($salidaPermiso->status === 0) {
+            $remitente  = $jefe;
+            $destinatario = $solicitante;
+            $mensaje = "Se ha rechazado tu permiso de 2 Hrs. Ingresa para ver los detalles.";
+        }
+        NotificationService::send(
+            user: $destinatario->user,
+            payload: [
+                'created_by' => $remitente->user->id,
+                'module' => '2hrs',
+                'type' => 'solicitud.2hrs',
+                'title' => 'Solicitud de Permiso de 2 Hrs',
+                'body' => $mensaje,
+                'data' => [
+                    'type' => '2hrs',
+                    // 'resource' => ,
+                ],
+            ]
+        );
+    }
     private function enviarNotificacionPermiso(SalidaPermiso $salidaPermiso)
     {
         // Obtener el empleado que solicitó el salidaPermiso

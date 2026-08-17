@@ -23,6 +23,7 @@ use App\Exports\EmployeeVacationExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\VacationDay\VacationDayRequest;
 use App\Exports\EmployeeVacationExportXls;
+use App\Services\NotificationService;
 
 class VacationDayController extends ApiController
 {
@@ -140,6 +141,7 @@ class VacationDayController extends ApiController
         $user = Auth::user();
         if (!$user->hasRole('Admin')) {
             $this->sendNotify($vacation->id, 'post');
+            $this->sendAppNotify($vacation->id, 'post');
         }
         return $this->respondCreated($vacation);
     }
@@ -168,6 +170,7 @@ class VacationDayController extends ApiController
         $user = Auth::user();
         if (!$user->hasRole('Admin')) {
             $this->sendNotify($vacationDay->id, 'put');
+            $this->sendAppNotify($vacationDay->id, 'put');
         }
         return $this->respond($vacationDay);
     }
@@ -239,6 +242,35 @@ class VacationDayController extends ApiController
         return $allSubordinates;
     }
 
+
+    private function sendAppNotify($vacationDayId, $method)
+    {
+        $vacationDay = VacationDay::find($vacationDayId);
+        $solicitante = $vacationDay->empleado;
+        $jefe = $vacationDay->empleado->jefe_directo;
+        $mensaje = "";
+
+        if ($method === "post") {
+            $mensaje = $solicitante . " ha solicitado vacaciones. Ingresa para ver los detalles y autorizar.";
+        } else if ($method === "put") {
+            $mensaje = $solicitante->nombreCompleto . " ha actualizado su solicitud de vacaciones. Ingresa para ver los detalles y autorizar.";
+        }
+
+        NotificationService::send(
+            user: $jefe->user,
+            payload: [
+                'created_by' => $solicitante->user->id,
+                'module' => 'vacaciones ',
+                'type' => 'solicitud.vacaciones',
+                'title' => 'Solicitud de Vacaciones',
+                'body' => $mensaje,
+                'data' => [
+                    'type' => 'vacaciones',
+                    // 'resource' => ,
+                ],
+            ]
+        );
+    }
     private function sendNotify($vacationDayId, $method)
     {
         $vacationDay = VacationDay::find($vacationDayId);
@@ -322,6 +354,26 @@ class VacationDayController extends ApiController
         }
     }
 
+    public function sendValidatedOnAppNotify($vacationDay)
+    {
+        $vacationDay = VacationDay::find($vacationDayId);
+        $solicitante = $vacationDay->empleado;
+        $validateBy = $vacationDay->validateBy; //user 
+        NotificationService::send(
+            user: $solicitante->user,
+            payload: [
+                'created_by' => $validateBy->id,
+                'module' => 'vacaciones ',
+                'type' => 'solicitud.vacaciones',
+                'title' => 'Solicitud de Vacaciones',
+                'body' => "Se ha aceptado tu solicitud de vacaciones. Ingresa para revisar el estatus",
+                'data' => [
+                    'type' => 'vacaciones',
+                    // 'resource' => ,
+                ],
+            ]
+        );
+    }
     public function setValidatedOn(VacationDay $vacationDay)
     {
         $user = Auth::user();
@@ -368,6 +420,25 @@ class VacationDayController extends ApiController
                 Mail::to($to_email)->send(new VacationOnMailable($vacationDay->load('empleado', 'puesto', 'sucursal', 'validateBy.empleado')));
             }
         }
+
+        // mandar push noti a app
+        $solicitanteApp = $vacationDay->empleado;
+        $validateByApp = $vacationDay->validateBy; //user 
+        NotificationService::send(
+            user: $solicitanteApp->user,
+            payload: [
+                'created_by' => $validateByApp->id,
+                'module' => 'vacaciones',
+                'type' => 'solicitud.vacaciones',
+                'title' => 'Solicitud de Vacaciones',
+                'body' => "Se ha aceptado tu solicitud de vacaciones. Ingresa para revisar el estatus",
+                'data' => [
+                    'type' => 'vacaciones',
+                    // 'resource' => ,
+                ],
+            ]
+        );
+
         return $this->respondSuccess();
     }
 
@@ -414,6 +485,25 @@ class VacationDayController extends ApiController
                 Mail::to($to_email)->send(new VacationOffMailable($vacationDay->load('empleado', 'puesto', 'sucursal', 'validateBy.empleado')));
             }
         }
+
+        // mandar push noti a app
+        $solicitanteApp = $vacationDay->empleado;
+        $validateByApp = $vacationDay->validateBy; //user 
+        NotificationService::send(
+            user: $solicitanteApp->user,
+            payload: [
+                'created_by' => $validateByApp->id,
+                'module' => 'vacaciones',
+                'type' => 'solicitud.vacaciones',
+                'title' => 'Solicitud de Vacaciones',
+                'body' => "Se ha rechazado tu solicitud de vacaciones. Ingresa para revisar el estatus",
+                'data' => [
+                    'type' => 'vacaciones',
+                    // 'resource' => ,
+                ],
+            ]
+        );
+
         return $this->respondSuccess();
     }
 
