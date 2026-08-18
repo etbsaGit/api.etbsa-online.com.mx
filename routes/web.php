@@ -38,6 +38,24 @@ Route::get('/optimize', function () {
     return '<h1>Reoptimized class loader</h1>' . $exitCode;
 })->name('optimize');
 
+// schedule-list
+Route::get('/schedule-list', function () {
+    Artisan::call('schedule:list');
+
+    return response()->json([
+        'output' => Artisan::output(),
+    ]);
+})->name('schedule.list');
+
+// schedule-test
+Route::get('/tracking:send-tracking-reminders', function () {
+    Artisan::call('tracking:send-tracking-reminders');
+
+    return response()->json([
+        'output' => Artisan::output(),
+    ]);
+})->name('schedule.tracking');
+
 //Route cache:
 Route::get('/route-cache', function () {
     $exitCode = Artisan::call('route:cache');

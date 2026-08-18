@@ -93,7 +93,6 @@ class EmpleadoController extends ApiController
                         }
                     }
 
-
                     if (!is_null($request['base64'])) {
                         if ($empleado->fotografia) {
                             Storage::disk('s3')->delete($empleado->fotografia);
