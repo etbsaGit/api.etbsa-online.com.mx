@@ -8,6 +8,7 @@ use App\Models\Caja\CajaCorte;
 use App\Traits\FilterableModel;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Caja\CajaTransaccion;
+use App\Models\Intranet\Cliente;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'password',
         'two_factor_code',
         'two_factor_expires_at',
+        'user_tipo_id'
     ];
 
     /**
@@ -75,6 +77,9 @@ class User extends Authenticatable
         return $this->hasOne(Empleado::class, 'user_id');
     }
 
+    public function cliente(){
+        return $this->hasOne(Cliente::class,'user_id');
+    }
     public function survey()
     {
         return $this->hasMany(Survey::class, 'evaluator_id');

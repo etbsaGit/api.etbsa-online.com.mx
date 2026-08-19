@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role;
 
 class UserTipo extends Model
 {
@@ -13,5 +14,8 @@ class UserTipo extends Model
 
     protected $fillable = ['name'];
 
-     
+    public function roles(){
+        return $this->hasMany(Role::class,'user_tipo_id');
+    }
+    
 }

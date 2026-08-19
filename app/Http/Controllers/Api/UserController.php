@@ -20,6 +20,7 @@ use App\Http\Requests\User\StoreRequest;
 use Illuminate\Support\Facades\Password;
 use Spatie\Permission\Models\Permission;
 use App\Http\Requests\User\PasswordRequest;
+use App\Models\UserTipo;
 
 class UserController extends ApiController
 {
@@ -231,11 +232,27 @@ class UserController extends ApiController
         return $this->respond(User::get());
     }
 
-    public function all(Request $request)
+    public function usersEmpleados(Request $request)
     {
         $filters = $request->all();
+        $tipoUserId = UserTipo::where('name','Empleado')->value('id');
+
         $users = User::filter($filters)
             ->with('roles', 'roles.permissions', 'empleado', 'permissions', 'evaluee')
+            ->where('user_tipo_id',$tipoUserId)
+            ->orderBy('email')
+            ->paginate(10);
+        return $this->respond($users);
+    }
+
+    public function usersClientes(Request $request)
+    {
+        $filters = $request->all();
+        $tipoUserId = UserTipo::where('name','Cliente')->value('id');
+
+        $users = User::filter($filters)
+            ->with('roles', 'roles.permissions', 'cliente', 'permissions', 'evaluee')
+            ->where('user_tipo_id',$tipoUserId)
             ->orderBy('email')
             ->paginate(10);
         return $this->respond($users);
@@ -243,7 +260,7 @@ class UserController extends ApiController
 
     public function store(StoreRequest $request)
     {
-        $user = User::create($request->only(['name', 'email', 'password']));
+        $user = User::create($request->only(['name', 'email', 'password','user_tipo_id']));
         $roles = $request->roles;
         $permissions = $request->permissions;
 
@@ -281,11 +298,13 @@ class UserController extends ApiController
         return $this->respond("ok");
     }
 
-    public function getRolesPermissions()
+    public function getRolesPermissions(string $tipoUser)
     {
+        $tipoUserId = UserTipo::where('name',$tipoUser)->value('id');
         $data = [
-            'roles' => Role::all(),
+            'roles' => Role::where('user_tipo_id',$tipoUserId)->get(),
             'permissions' => Permission::all(),
+            'tipoUser' => UserTipo::where('name',$tipoUser)->first(),
         ];
         return $this->respond($data);
     }

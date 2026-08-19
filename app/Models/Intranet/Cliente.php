@@ -7,6 +7,7 @@ use App\Models\RentalPeriod;
 use App\Traits\FilterableModel;
 use App\Models\CreditoDeclaracion;
 use App\Models\Caja\CajaTransaccion;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -36,7 +37,9 @@ class Cliente extends Model
         'classification_id',
         'segmentation_id',
         'tactic_id',
-        'construction_classification_id'
+        'construction_classification_id',
+        'user_id',
+        'correo_institucional',
     ];
 
     protected $appends = ['currentClassTech', 'hectareasConectadas'];
@@ -244,5 +247,9 @@ class Cliente extends Model
 
     public function trackings(){
         return $this->hasMany(Tracking::class,'cliente_id');
+    }
+
+    public function user(){
+        return $this->belongsTo(User::class,'user_id');
     }
 }

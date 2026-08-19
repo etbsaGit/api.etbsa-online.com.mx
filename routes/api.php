@@ -106,7 +106,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('linea/all', [LineaController::class, 'all']);
     Route::get('sucursal/all', [SucursalController::class, 'all']);
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
-    Route::post('users/all', [UserController::class, 'all']);
+    // Route::post('users/all', [UserController::class, 'all']);
+    Route::post('users/Empleados', [UserController::class, 'usersEmpleados']);
+
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('puesto/all', [PuestoController::class, 'all']);
 
@@ -248,7 +250,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     //--------------------User--------------------
     Route::post('auth/logout', [UserController::class, 'logout']);
     Route::post('auth/change', [UserController::class, 'changePassword']);
-    Route::get('user/role/permission/all', [UserController::class, 'getRolesPermissions']);
+    Route::get('user/role/permission/{tipoUser}', [UserController::class, 'getRolesPermissions']);
 
     Route::post('enviar-correo-verificacion', [UserController::class, 'enviarCorreoVerificacion']);
     Route::post('verificar-correo', [UserController::class, 'verificarCorreo']);
@@ -494,8 +496,10 @@ Route::post('auth/forgot-password', [UserController::class, 'sendResetLink']);
 Route::post('auth/reset-password', [UserController::class, 'reset']);
 
 
-Route::post('roles', [RoleController::class, 'index']);
+Route::post('roles/Empleado', [RoleController::class, 'indexEmpleado']);
+Route::post('roles/Cliente', [RoleController::class, 'indexCliente']);
 Route::post('permissions', [PermissionController::class, 'index']);
+Route::get('roles/TipoUser/{tipo}',[RoleController::class,'getTiposUser']);
 
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
