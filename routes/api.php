@@ -108,6 +108,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('departamento/all', [DepartamentoController::class, 'all']);
     // Route::post('users/all', [UserController::class, 'all']);
     Route::post('users/Empleados', [UserController::class, 'usersEmpleados']);
+    Route::post('users/Clientes', [UserController::class, 'usersClientes']);
 
     Route::get('requisito/all', [RequisitoController::class, 'all']);
     Route::get('puesto/all', [PuestoController::class, 'all']);
