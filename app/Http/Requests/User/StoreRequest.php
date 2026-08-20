@@ -33,6 +33,7 @@ class StoreRequest extends FormRequest
             'roles.*' => ['nullable','string','exists:roles,name'],
             'permissions' => ['nullable','array'],
             'permissions.*' => ['nullable','string','exists:permissions,name'],
+            'user_tipo_id' => ['required','int'],
         ];
     }
     function failedValidation(Validator $validator)

@@ -19,6 +19,8 @@ use App\Models\Intranet\Classification;
 use App\Models\Intranet\TechnologicalCapability;
 use App\Models\Intranet\ConstructionClassification;
 use App\Http\Requests\Intranet\Cliente\ClienteRequest;
+use App\Models\UserTipo;
+use Illuminate\Support\Facades\Hash;
 
 class ClienteController extends ApiController
 {
@@ -85,6 +87,29 @@ class ClienteController extends ApiController
             $cliente->empleados()->syncWithoutDetaching($user->empleado->id);
         }
 
+        $correo = $request->correo_institucional;
+        $tipoUserId = UserTipo::where('name', 'Cliente')->get()->value('id');
+        if ($correo) {
+            $usuario = User::firstOrCreate(
+                ['email' => $correo],
+                ['password' => Hash::make("password123"), 'name' => $cliente->nombre, 'user_tipo_id' => $tipoUserId]
+            );
+
+            // si el usuario ya está asociado a otro cliente, desvinculamos al empleado anterior
+            if ($usuario->cliente && $usuario->cliente->id !== $cliente->id) {
+                $clienteAnterior = $usuario->cliente;
+                $clienteAnterior->correo_institucional = null;
+                $clienteAnterior->user_id = null;
+                $clienteAnterior->save();
+            }
+
+            //asociamos el usuario al nuevo empleado
+            if (!$cliente->user || $cliente->user->id !== $usuario->id) {
+                $cliente->user()->associate($usuario);
+                $cliente->save();
+            }
+        }
+
         return $this->respondCreated(
             $cliente,
             'Cliente registrado con exito'
@@ -113,6 +138,29 @@ class ClienteController extends ApiController
         if (! $user->hasAnyRole(['Credito', 'Intranet.sales']) && $user->empleado) {
             // Agrega la relación empleado-cliente si no existe, sin duplicar
             $cliente->empleados()->syncWithoutDetaching($user->empleado->id);
+        }
+
+        $correo = $request->correo_institucional;
+        $tipoUserId = UserTipo::where('name', 'Cliente')->get()->value('id');
+        if ($correo) {
+            $usuario = User::firstOrCreate(
+                ['email' => $correo],
+                ['password' => Hash::make("password123"), 'name' => $cliente->nombre, 'user_tipo_id' => $tipoUserId]
+            );
+
+            // si el usuario ya está asociado a otro cliente, desvinculamos al empleado anterior
+            if ($usuario->cliente && $usuario->cliente->id !== $cliente->id) {
+                $clienteAnterior = $usuario->cliente;
+                $clienteAnterior->correo_institucional = null;
+                $clienteAnterior->user_id = null;
+                $clienteAnterior->save();
+            }
+
+            //asociamos el usuario al nuevo empleado
+            if (!$cliente->user || $cliente->user->id !== $usuario->id) {
+                $cliente->user()->associate($usuario);
+                $cliente->save();
+            }
         }
 
         return $this->respond(
@@ -320,5 +368,4 @@ class ClienteController extends ApiController
             'cliente' => $cliente
         ]);
     }
-
 }
