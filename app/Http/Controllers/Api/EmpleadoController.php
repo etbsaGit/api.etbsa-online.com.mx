@@ -27,7 +27,7 @@ use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\EmpleadosVacationsExport;
 use App\Http\Requests\Empleado\EmpleadoRequest;
-
+use App\Models\UserTipo;
 
 class EmpleadoController extends ApiController
 {
@@ -69,10 +69,11 @@ class EmpleadoController extends ApiController
                     $expediente->requisito()->syncWithPivotValues($ids, ['comentaio' => 'com 1']);
 
                     $correo = $request->correo_institucional;
+                    $tipoUserId = UserTipo::where('name', 'Empleado')->get()->value('id');
                     if ($correo) {
                         $usuario = User::firstOrCreate(
                             ['email' => $correo],
-                            ['password' => Hash::make("password123"), 'name' => $empleado->nombre]
+                            ['password' => Hash::make("password123"), 'name' => $empleado->nombre, 'user_tipo_id' => $tipoUserId]
                         );
 
                         // Si el usuario ya está asociado a otro empleado, desvinculamos al empleado anterior
@@ -188,10 +189,11 @@ class EmpleadoController extends ApiController
         ]));
 
         $correo = $request->correo_institucional;
+        $tipoUserId = UserTipo::where('name', 'Empleado')->get()->value('id');
         if ($correo) {
             $usuario = User::firstOrCreate(
                 ['email' => $correo],
-                ['password' => Hash::make("password123"), 'name' => $empleado->nombre]
+                ['password' => Hash::make("password123"), 'name' => $empleado->nombre, 'user_tipo_id' => $tipoUserId]
             );
 
             // Si el usuario ya está asociado a otro empleado, desvinculamos al empleado anterior

@@ -64,7 +64,7 @@ class EmpleadoRequest extends FormRequest
             "ciudad" => ['nullable', 'string', 'max:255'],
             "estado" => ['nullable', 'string', 'max:255'],
             "cuenta_bancaria" => ['nullable', 'string', 'min:18', 'max:18'],
-            "correo_institucional" => ['nullable', 'email', Rule::unique('empleados', 'correo_institucional')->ignore($item?->id)],
+            "correo_institucional" => ['nullable', 'email', Rule::unique('empleados', 'correo_institucional')->ignore($item?->id), Rule::unique('clientes','correo_institucional')],
 
             "user_id" => ['nullable', 'integer', Rule::unique('empleados', 'user_id')->ignore($item?->id)],
             "escolaridad_id" => ['nullable', 'integer'],

@@ -45,6 +45,7 @@ class ClienteRequest extends FormRequest
             'segmentation_id' => ['nullable', 'integer', 'exists:segmentations,id'],
             'tactic_id' => ['nullable', 'integer', 'exists:tactics,id'],
             'construction_classification_id' => ['nullable', 'integer', 'exists:construction_classifications,id'],
+            'correo_institucional' => ['nullable','email', Rule::unique('clientes')->ignore($item?->id), Rule::unique('empleados','correo_institucional')],
         ];
     }
 
