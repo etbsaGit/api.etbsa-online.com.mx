@@ -329,23 +329,14 @@ class UserController extends ApiController
             ],
 
             [
-
                 'user_id' => $user->id,
-
                 'platform' => $device['platform'] ?? null,
-
                 'brand' => $device['brand'] ?? null,
-
                 'manufacturer' => $device['manufacturer'] ?? null,
-
                 'model_name' => $device['model_name'] ?? null,
-
                 'os_version' => $device['os_version'] ?? null,
-
                 'application_id' => $device['application_id'] ?? null,
-
                 'linked_at' => now(),
-
             ]
         );
     }
