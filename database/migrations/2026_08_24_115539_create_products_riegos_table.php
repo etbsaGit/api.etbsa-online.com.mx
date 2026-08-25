@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('description');
             $table->boolean('active');
-            $table->string('image_url');
+            $table->string('image_url')->nullable();
             $table->foreignId('category_id')->constrained('categories');
             $table->foreignId('subcategory_id')->constrained('product_subcategory');
             $table->foreignId('currency_id')->constrained('currency');

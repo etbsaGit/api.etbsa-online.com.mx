@@ -70,7 +70,6 @@ class ClienteController extends ApiController
         );
     }
 
-
     /**
      * Store a newly created resource in storage.
      */

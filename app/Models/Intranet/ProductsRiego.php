@@ -4,6 +4,7 @@ namespace App\Models\Intranet;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductsRiego extends Model
 {
@@ -30,7 +31,7 @@ class ProductsRiego extends Model
 
     public function proveedor()
     {
-        return $this->belongsto(ProductSupplier::class, 'vendor');
+        return $this->belongsTo(ProductSupplier::class, 'vendor_id');
     }
 
     public function categoria()
@@ -46,5 +47,21 @@ class ProductsRiego extends Model
     public function currency()
     {
         return $this->belongsTo(Currency::class, 'currency_id');
+    }
+
+    public function precios()
+    {
+        return $this->hasMany(PrecioProdRiego::class, 'producto_id')->with('currency');
+    }
+
+    public function scopeFilter(Builder $query, array $filters)
+    {
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('sku', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('name', 'like', '%' . $filters['search'] . '%');
+            });
+        }
+        return $query;
     }
 }
