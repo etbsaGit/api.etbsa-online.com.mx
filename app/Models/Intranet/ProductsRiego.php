@@ -71,8 +71,18 @@ class ProductsRiego extends Model
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('sku', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('name', 'like', '%' . $filters['search'] . '%');
+                    ->orWhere('name', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('description', 'like', '%' . $filters['search'] . '%');
             });
+        }
+        if (!empty($filters['subcategory_id'])) {
+            $query->where('subcategory_id', $filters['subcategory_id']);
+        }
+        if (!empty($filters['category_id'])) {
+            $query->where('category_id', $filters['category_id']);
+        }
+        if (isset($filters['active'])) {
+            $query->where('active', $filters['active']);
         }
         return $query;
     }

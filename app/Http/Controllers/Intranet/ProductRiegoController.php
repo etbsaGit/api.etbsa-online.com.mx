@@ -24,6 +24,8 @@ class ProductRiegoController extends ApiController
     {
         $filters = $request->all();
 
+        $perPage = $request->input('per_page', 12);
+
         $products = ProductsRiego::with([
             'marca',
             'proveedor',
@@ -32,7 +34,7 @@ class ProductRiegoController extends ApiController
             'currency',
             'precios.nivelPartner',
             'imagenes'
-        ])->filter($filters)->paginate(10);
+        ])->filter($filters)->paginate($perPage);
 
         return $this->respond($products, 'Lista de productos cargada');
     }
@@ -173,7 +175,7 @@ class ProductRiegoController extends ApiController
             'marcas' => ProductBrand::all(),
             'nivelesPartner' => NivelPartner::all(),
             'currencies' => Currency::all(),
-            'categorias' => $riegoCategory ? ProductCategory::where('id', $riegoCategoryId)->get() : ProductCategory::all(),
+            'categorias' => $riegoCategory ? ProductCategory::where('id', $riegoCategoryId)->first() : ProductCategory::all(),
             'subcategorias' => $riegoCategoryId ? ProductSubCategory::where('category_id', $riegoCategoryId)->get() : ProductSubCategory::all(),
             'monedas' => Currency::all(),
         ];

@@ -23,7 +23,15 @@ class ProductRiegoImage extends Model
     public function url(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->image_url ? Storage::disk('s3')->url($this->image_url) : null
+            get: function () {
+                if (!$this->image_url) {
+                    return null;
+                }
+                if (str_starts_with($this->image_url, 'http://') || str_starts_with($this->image_url, 'https://')) {
+                    return $this->image_url;
+                }
+                return Storage::disk('s3')->url($this->image_url);
+            }
         );
     }
 

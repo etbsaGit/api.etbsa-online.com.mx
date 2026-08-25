@@ -54,7 +54,8 @@ class UserController extends ApiController
                     'Empleado.archivable.requisito',
                     'Empleado.empleadosContact.kinship',
                     'Roles',
-                    'Permissions'
+                    'Permissions',
+                    'cliente.nivelPartnerRiego'
                 );
 
                 return $this->respond([
@@ -131,7 +132,8 @@ class UserController extends ApiController
             'Empleado.archivable.requisito',
             'Empleado.empleadosContact.kinship',
             'Roles',
-            'Permissions'
+            'Permissions',
+            'cliente.nivelPartnerRiego'
         );
 
         return $this->respond([

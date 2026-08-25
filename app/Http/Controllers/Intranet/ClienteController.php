@@ -19,6 +19,7 @@ use App\Models\Intranet\Classification;
 use App\Models\Intranet\TechnologicalCapability;
 use App\Models\Intranet\ConstructionClassification;
 use App\Http\Requests\Intranet\Cliente\ClienteRequest;
+use App\Models\Intranet\NivelPartner;
 use App\Models\UserTipo;
 use Illuminate\Support\Facades\Hash;
 
@@ -186,6 +187,7 @@ class ClienteController extends ApiController
             'segmentations' => Segmentation::all(),
             'tactics' => Tactic::all(),
             'constructionClassifications' => ConstructionClassification::all(),
+            'nivelesPartner' => NivelPartner::all(),
         ];
 
         return $this->respond($data);
