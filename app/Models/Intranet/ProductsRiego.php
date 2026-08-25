@@ -2,6 +2,7 @@
 
 namespace App\Models\Intranet;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -54,6 +55,17 @@ class ProductsRiego extends Model
         return $this->hasMany(PrecioProdRiego::class, 'producto_id')->with('currency');
     }
 
+    public function imagenes()
+    {
+        return $this->hasMany(ProductRiegoImage::class, 'product_id');
+    }
+
+    protected function defaultPathFolder(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => "products_riego/id_" . $this->id . "/galeria",
+        );
+    }
     public function scopeFilter(Builder $query, array $filters)
     {
         if (!empty($filters['search'])) {

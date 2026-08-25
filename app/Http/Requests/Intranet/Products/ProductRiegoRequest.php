@@ -34,6 +34,9 @@ class ProductRiegoRequest extends FormRequest
             'precios.*.nivel_partner_id' => ['required', 'exists:nivel_partner,id'],
             'precios.*.precio' => ['required', 'numeric'],
 
+            'imagenes'   => ['nullable', 'array'],
+            'imagenes.*' => ['nullable', 'string'],
+
         ];
     }
 

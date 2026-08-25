@@ -293,9 +293,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('product/options', [ProductController::class, 'getOptions']);
     Route::apiResource('product', ProductController::class);
 
-    // Riego
+    // Products Riego
     Route::post('products-riego', [ProductRiegoController::class, 'index']);
     Route::get('product-riego/options', [ProductRiegoController::class, 'getOptions']);
+    Route::delete('product-riego-image/{image}', [ProductRiegoController::class, 'destroyImage']);
     Route::apiResource('product-riego', ProductRiegoController::class);
 
     // 🔹 Referencia
