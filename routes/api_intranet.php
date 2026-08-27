@@ -58,6 +58,7 @@ use App\Http\Controllers\Intranet\ProductCategoryController;
 use App\Http\Controllers\Intranet\ProductCondicionPagoController;
 use App\Http\Controllers\Intranet\ProductSubCategoryController;
 use App\Http\Controllers\Intranet\ProductController;
+use App\Http\Controllers\Intranet\ProductRiegoController;
 use App\Http\Controllers\Intranet\ReporteClientesController;
 use App\Http\Controllers\Intranet\TrackingAutorizacionController;
 use App\Http\Controllers\Intranet\TrackingController;
@@ -108,7 +109,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('analitica/report/{analitica}', [AnaliticaController::class, 'getReport']);
     Route::get('analitica/report/pdf/{analitica}', [AnaliticaController::class, 'exportReportPdfBase64']);
     Route::get('analitica/report/app/{analitica}', [AnaliticaController::class, 'exportReportPdf']);
-    Route::put('analitica/status/{analitica}/{status}',[AnaliticaController::class,'setStatus']);
+    Route::put('analitica/status/{analitica}/{status}', [AnaliticaController::class, 'setStatus']);
     Route::apiResource('analitica', AnaliticaController::class);
 
     // 🔹 AnaliticaDoc
@@ -292,6 +293,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('product/options', [ProductController::class, 'getOptions']);
     Route::apiResource('product', ProductController::class);
 
+    // Products Riego
+    Route::post('products-riego', [ProductRiegoController::class, 'index']);
+    Route::get('product-riego/options', [ProductRiegoController::class, 'getOptions']);
+    Route::delete('product-riego-image/{image}', [ProductRiegoController::class, 'destroyImage']);
+    Route::apiResource('product-riego', ProductRiegoController::class);
+
     // 🔹 Referencia
     Route::get('referencia/cliente/form', [ReferenciaController::class, 'getOptions']);
     Route::get('referencia/cliente/{cliente}', [ReferenciaController::class, 'getPerCliente']);
@@ -401,4 +408,3 @@ Route::prefix('powerbi')->group(function () {
     Route::get('/dwh/riego', [DwhHistoricalController::class, 'riego']);
     Route::get('/dwh/tecnologias', [DwhHistoricalController::class, 'tecnologias']);
 });
-

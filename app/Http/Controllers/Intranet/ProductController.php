@@ -122,7 +122,7 @@ class ProductController extends ApiController
             DB::commit();
             return $this->respond(
                 $product->load('precios'),
-                'Producto actualziado correctamente'
+                'Producto actualizado correctamente'
             );
         } catch (\Exception $e) {
             DB::rollBack();

@@ -7,6 +7,8 @@ use App\Models\RentalPeriod;
 use App\Traits\FilterableModel;
 use App\Models\CreditoDeclaracion;
 use App\Models\Caja\CajaTransaccion;
+use App\Models\Intranet\NivelPartner as IntranetNivelPartner;
+use App\Models\NivelPartner;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -40,6 +42,7 @@ class Cliente extends Model
         'construction_classification_id',
         'user_id',
         'correo_institucional',
+        'nivel_partner_riego_id'
     ];
 
     protected $appends = ['currentClassTech', 'hectareasConectadas'];
@@ -165,7 +168,7 @@ class Cliente extends Model
         return $this->hasMany(Distribucion::class, 'cliente_id');
     }
 
-   public function clienteCultivo()
+    public function clienteCultivo()
     {
         return $this->hasMany(ClienteCultivo::class, 'cultivo_id');
     }
@@ -245,11 +248,19 @@ class Cliente extends Model
         return $this->belongsToMany(Empleado::class, 'p_cliente_empleado');
     }
 
-    public function trackings(){
-        return $this->hasMany(Tracking::class,'cliente_id');
+    public function trackings()
+    {
+        return $this->hasMany(Tracking::class, 'cliente_id');
     }
 
-    public function user(){
-        return $this->belongsTo(User::class,'user_id');
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // PARTNER 
+    public function nivelPartnerRiego()
+    {
+        return $this->belongsTo(IntranetNivelPartner::class, 'nivel_partner_riego_id');
     }
 }

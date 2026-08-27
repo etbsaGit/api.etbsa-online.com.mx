@@ -54,7 +54,8 @@ class UserController extends ApiController
                     'Empleado.archivable.requisito',
                     'Empleado.empleadosContact.kinship',
                     'Roles',
-                    'Permissions'
+                    'Permissions',
+                    'cliente.nivelPartnerRiego'
                 );
 
                 return $this->respond([
@@ -131,7 +132,8 @@ class UserController extends ApiController
             'Empleado.archivable.requisito',
             'Empleado.empleadosContact.kinship',
             'Roles',
-            'Permissions'
+            'Permissions',
+            'cliente.nivelPartnerRiego'
         );
 
         return $this->respond([
@@ -235,11 +237,11 @@ class UserController extends ApiController
     public function usersEmpleados(Request $request)
     {
         $filters = $request->all();
-        $tipoUserId = UserTipo::where('name','Empleado')->value('id');
+        $tipoUserId = UserTipo::where('name', 'Empleado')->value('id');
 
         $users = User::filter($filters)
             ->with('roles', 'roles.permissions', 'empleado', 'permissions', 'evaluee')
-            ->where('user_tipo_id',$tipoUserId)
+            ->where('user_tipo_id', $tipoUserId)
             ->orderBy('email')
             ->paginate(10);
         return $this->respond($users);
@@ -248,11 +250,11 @@ class UserController extends ApiController
     public function usersClientes(Request $request)
     {
         $filters = $request->all();
-        $tipoUserId = UserTipo::where('name','Cliente')->value('id');
+        $tipoUserId = UserTipo::where('name', 'Cliente')->value('id');
 
         $users = User::filter($filters)
             ->with('roles', 'roles.permissions', 'cliente', 'permissions', 'evaluee')
-            ->where('user_tipo_id',$tipoUserId)
+            ->where('user_tipo_id', $tipoUserId)
             ->orderBy('email')
             ->paginate(10);
         return $this->respond($users);
@@ -260,7 +262,7 @@ class UserController extends ApiController
 
     public function store(StoreRequest $request)
     {
-        $user = User::create($request->only(['name', 'email', 'password','user_tipo_id']));
+        $user = User::create($request->only(['name', 'email', 'password', 'user_tipo_id']));
         $roles = $request->roles;
         $permissions = $request->permissions;
 
@@ -300,11 +302,11 @@ class UserController extends ApiController
 
     public function getRolesPermissions(string $tipoUser)
     {
-        $tipoUserId = UserTipo::where('name',$tipoUser)->value('id');
+        $tipoUserId = UserTipo::where('name', $tipoUser)->value('id');
         $data = [
-            'roles' => Role::where('user_tipo_id',$tipoUserId)->get(),
+            'roles' => Role::where('user_tipo_id', $tipoUserId)->get(),
             'permissions' => Permission::all(),
-            'tipoUser' => UserTipo::where('name',$tipoUser)->first(),
+            'tipoUser' => UserTipo::where('name', $tipoUser)->first(),
         ];
         return $this->respond($data);
     }
@@ -329,23 +331,14 @@ class UserController extends ApiController
             ],
 
             [
-
                 'user_id' => $user->id,
-
                 'platform' => $device['platform'] ?? null,
-
                 'brand' => $device['brand'] ?? null,
-
                 'manufacturer' => $device['manufacturer'] ?? null,
-
                 'model_name' => $device['model_name'] ?? null,
-
                 'os_version' => $device['os_version'] ?? null,
-
                 'application_id' => $device['application_id'] ?? null,
-
                 'linked_at' => now(),
-
             ]
         );
     }

@@ -89,7 +89,7 @@ use App\Http\Controllers\Api\ProspectDistribucionController;
 */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->load('roles', 'permissions', 'cliente.nivelPartnerRiego');
 });
 
 Route::middleware(['auth:sanctum', 'cors'])->group(function () {
@@ -472,9 +472,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // ---------------------------Notificaciones ------------------------------
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::patch('notifications/{notification}/read',[NotificationController::class,'markAsRead']);
+    Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/test', [NotificationController::class, 'test']);
-    
 });
 // //--------------------landingPage--------------------
 // Route::post('page/product/filter', [ProductController::class, 'filterProduct']);
@@ -500,7 +499,7 @@ Route::post('auth/reset-password', [UserController::class, 'reset']);
 Route::post('roles/Empleado', [RoleController::class, 'indexEmpleado']);
 Route::post('roles/Cliente', [RoleController::class, 'indexCliente']);
 Route::post('permissions', [PermissionController::class, 'index']);
-Route::get('roles/TipoUser/{tipo}',[RoleController::class,'getTiposUser']);
+Route::get('roles/TipoUser/{tipo}', [RoleController::class, 'getTiposUser']);
 
 Route::apiResource('role', RoleController::class);
 Route::apiResource('permission', PermissionController::class);
