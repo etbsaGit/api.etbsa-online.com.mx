@@ -7,6 +7,8 @@ use App\Models\RentalPeriod;
 use App\Traits\FilterableModel;
 use App\Models\CreditoDeclaracion;
 use App\Models\Caja\CajaTransaccion;
+use App\Models\Intranet\CreditoInterno\CreditoAprobadoCliente;
+use App\Models\Intranet\CreditoInterno\CreditoSolicitud;
 use App\Models\Intranet\NivelPartner as IntranetNivelPartner;
 use App\Models\NivelPartner;
 use App\Models\User;
@@ -262,5 +264,15 @@ class Cliente extends Model
     public function nivelPartnerRiego()
     {
         return $this->belongsTo(IntranetNivelPartner::class, 'nivel_partner_riego_id');
+    }
+    // credito
+    public function creditosAprobados()
+    {
+        return $this->hasMany(CreditoAprobadoCliente::class, 'cliente_id');
+    }
+
+    public function solicitudesCredito()
+    {
+        return $this->hasMany(CreditoSolicitud::class, 'cliente_id');
     }
 }

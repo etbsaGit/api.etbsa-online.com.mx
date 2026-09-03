@@ -50,6 +50,7 @@ use App\Http\Controllers\Intranet\ReferenciaComercialController;
 use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
+use App\Http\Controllers\Intranet\CreditoInternoController;
 use App\Http\Controllers\Intranet\PowerBI\DwhHistoricalController;
 use App\Http\Controllers\Intranet\ExchangeRateController;
 use App\Http\Controllers\Intranet\ProductBrandController;
@@ -170,6 +171,13 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // 🔹 Construction Classification
     Route::post('constructionClassifications', [ConstructionClassificationsController::class, 'index']);
     Route::apiResource('constructionClassification', ConstructionClassificationsController::class);
+
+    // 🔹 Credito Interno
+    Route::post('creditoInternosAll', [CreditoInternoController::class, 'index']);
+    Route::post('creditoInternos/cliente/{cliente}', [CreditoInternoController::class, 'getPerCliente']);
+    Route::post('creditoInternos/autorizar', [CreditoInternoController::class, 'autorizar']);
+    Route::get('creditoInternos/options', [CreditoInternoController::class, 'getOptions']);
+    Route::apiResource('creditoInterno', CreditoInternoController::class);
 
     // 🔹 Cultivo
     Route::post('cultivos', [CultivoController::class, 'index']);
