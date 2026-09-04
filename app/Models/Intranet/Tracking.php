@@ -36,7 +36,6 @@ class Tracking extends Model
         'iva_monto',
         'incluye_iva',
         'tarifa_cambio',
-        'descuento',
         'total',
         'incluye_anticipo',
         'anticipo_monto',
