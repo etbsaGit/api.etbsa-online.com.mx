@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('fecha_a_pagar');
             $table->date('fecha_liquidado')->nullable();
             $table->foreignId('estatus_id')->constrained('estatus');
-            $table->foreignId('validated_by')->constrained('empleados')->nullable();
+            $table->foreignId('validated_by')->nullable()->constrained('empleados');
 
             $table->timestamps();
         });

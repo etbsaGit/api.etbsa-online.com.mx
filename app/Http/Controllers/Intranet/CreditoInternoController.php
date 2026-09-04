@@ -53,20 +53,17 @@ class CreditoInternoController extends ApiController
             }
 
             // crear folio
-            if ($data['folio'] == null) {
-                $data['folio'] = str_pad(
-                    CreditoSolicitud::max('id') + 1,
-                    6,
-                    '0',
-                    STR_PAD_LEFT
-                );
-            }
+            $data['folio'] = str_pad(
+                CreditoSolicitud::max('id') + 1,
+                6,
+                '0',
+                STR_PAD_LEFT
+            );
+
 
             $estatusId = Estatus::where('nombre', 'Crédito Solicitado')->where('tipo_estatus', 'credito-interno')->first();
 
-            if ($data['estatus_id'] == null) {
-                $data['estatus_id'] = $estatusId->id;
-            }
+            $data['estatus_id'] = $estatusId->id;
 
             $creditoSolicitud = CreditoSolicitud::create($data);
 
@@ -82,7 +79,7 @@ class CreditoInternoController extends ApiController
                     CreditoHistorialPagos::create([
                         'solicitud_id'    => $creditoSolicitud->id,
                         'n_pago'          => $pago['numero'] ?? ($index + 1),
-                        'saldo_pendiente' => $esPrimerPago ? $saldoPendienteInicial : null,
+                        'saldo_pendiente' => $saldoPendienteInicial,
                         'fecha_a_pagar'   => $pago['fecha'],
                         'estatus_id'      => $estatusId->id,
                     ]);

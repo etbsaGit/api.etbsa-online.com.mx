@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('estatus_id')->constrained('estatus');
             $table->foreignId('notificado_id')->constrained('empleados');
             $table->string('motivo');
-            $table->foreignId('validated_by')->constrained('empleados')->nullable();
+            $table->foreignId('validated_by')->nullable()->constrained('empleados');
             $table->decimal('monto_solicitado', 12, 2);
             $table->foreignId('linea_id')->constrained('credito_lineas');
             $table->unsignedBigInteger('numero_pagos');
