@@ -10,28 +10,43 @@ use App\Http\Requests\Intranet\Products\TractorContrapesoRequest;
 use App\Models\Empleado;
 use App\Models\Estatus;
 use App\Models\Intranet\Contrapesos;
+use App\Models\Intranet\CreditoInterno\CreditoDocs;
 use App\Models\Intranet\CreditoInterno\CreditoHistorialPagos;
+use App\Models\Intranet\CreditoInterno\CreditoHistorical;
 use App\Models\Intranet\CreditoInterno\CreditoLineas;
 use App\Models\Intranet\CreditoInterno\CreditoSolicitud;
 use App\Models\Intranet\Currency;
 use App\Models\Intranet\Product;
 use App\Models\Puesto;
+use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CreditoInternoController extends ApiController
 {
-    public function index(Request $request)
+    use UploadableFile;
+    public function index(Request $request, $estatus)
     {
         $filters = $request->all();
-        $creditoSolicitudes = CreditoSolicitud::with([
-            'cliente',
-            'asesor',
-            'notificado',
-            'estatus',
-            'validadoPor',
-            'linea'
-        ])->filter($filters)->orderBy('created_at', 'desc')->paginate(10);
+        $user = Auth::user();
+        // si es admin o director administrativo puede ver todas las cotizaciones, si no sólo las que se le notificó al usuario
+        $creditoSolicitudes = CreditoSolicitud::query()
+            ->when(!$user->hasRole('Admin') || $user->empleado->puesto_id !== Puesto::where('nombre', 'Director Administrativo')->first()->id, function ($query) use ($user) {
+                $query->whereHas('notificado', function ($q) use ($user) {
+                    $q->where('id', $user->empleado->id);
+                });
+            })
+            ->where('estatus_id', Estatus::where('nombre', $estatus)->where('tipo_estatus', 'credito-interno')->first()->id)
+            ->with([
+                'cliente',
+                'asesor',
+                'notificado',
+                'estatus',
+                'validadoPor',
+                'linea',
+                'pagos.estatus',
+                'historial.estatus'
+            ])->filter($filters)->orderBy('created_at', 'desc')->paginate(10);
         return $this->respond(
             $creditoSolicitudes,
             'Lista de solicitudes de crédito cargada correctamente'
@@ -67,24 +82,33 @@ class CreditoInternoController extends ApiController
 
             $creditoSolicitud = CreditoSolicitud::create($data);
 
-            // Calcular el saldo pendiente inicial restando el anticipo (si existe)
-            $anticipo = isset($data['anticipo']) ? (float) $data['anticipo'] : 0;
-            $saldoPendienteInicial = max(0, (float) $data['monto_solicitado'] - $anticipo);
+            $estatusPagoPendiente = Estatus::where('nombre', 'Pago Pendiente')->where('tipo_estatus', 'credito-interno')->first();
 
             // Guardar cada pago en la tabla credito_historial_pagos
             if (!empty($request->pagos)) {
                 foreach ($request->pagos as $index => $pago) {
-                    $esPrimerPago = ($index === 0) || (($pago['numero'] ?? null) == 1);
+                    // $esPrimerPago = ($index === 0) || (($pago['numero'] ?? null) == 1);
 
                     CreditoHistorialPagos::create([
                         'solicitud_id'    => $creditoSolicitud->id,
                         'n_pago'          => $pago['numero'] ?? ($index + 1),
-                        'saldo_pendiente' => $saldoPendienteInicial,
+                        'saldo_pendiente' => $data['monto_solicitado'],
                         'fecha_a_pagar'   => $pago['fecha'],
-                        'estatus_id'      => $estatusId->id,
+                        'estatus_id'      => $estatusPagoPendiente->id,
                     ]);
                 }
             }
+
+            if (!empty($request->archivos)) {
+                $this->guardarArchivosSolicitud($creditoSolicitud, $request->archivos);
+            }
+
+            CreditoHistorical::create([
+                'solicitud_id' => $creditoSolicitud->id,
+                'estatus_id' => $estatusId->id,
+                'descripcion' => "Solicitud de crédito creada. Monto: " . ($request->monto_solicitado ?? 'N/A') . ' Motivo: ' . ($request->motivo ?? 'N/A') . ' Notas adicionales: ' . ($request->notas ?? 'N/A'),
+                'empleado_id' => $empleadoId
+            ]);
 
             DB::commit();
 
@@ -175,5 +199,34 @@ class CreditoInternoController extends ApiController
         ];
 
         return $this->respond($data, 'Opciones cargadas correctamente');
+    }
+
+    public function guardarArchivosSolicitud(CreditoSolicitud $solicitud, array $archivos)
+    {
+        $user = Auth::user();
+        $empleadoId = $user->empleado?->id;
+        $folder = "intranet/credito_interno/folio_" . ($solicitud->folio ?? $solicitud->id);
+        $guardados = [];
+        foreach ($archivos as $archivo) {
+            if (!empty($archivo['base64'])) {
+                // Guarda el archivo en S3 usando el Trait UploadableFile
+                $relativePath = $this->saveDoc($archivo['base64'], $folder);
+                $guardados[] = CreditoDocs::create([
+                    'solicitud_id' => $solicitud->id,
+                    'archivo'      => $archivo['tipo'] ?? 'Documento',
+                    'path'         => $relativePath,
+                    'extension'    => $archivo['extension'] ?? pathinfo($relativePath, PATHINFO_EXTENSION),
+                    'uploaded_by'  => $empleadoId,
+                ]);
+
+                CreditoHistorical::create([
+                    'solicitud_id' => $solicitud->id,
+                    'estatus_id' => Estatus::where('nombre', 'Documento Adjuntado')->where('tipo_estatus', 'credito-interno')->first()->id,
+                    'descripcion' => "Documento: " . ($archivo['tipo'] ?? 'Documento') . ' adjuntado.',
+                    'empleado_id' => $empleadoId
+                ]);
+            }
+        }
+        return $guardados;
     }
 }

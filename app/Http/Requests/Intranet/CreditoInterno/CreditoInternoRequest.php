@@ -33,7 +33,14 @@ class CreditoInternoRequest extends FormRequest
             // calendario de pagos
             'pagos' => ['nullable', 'array'],
             'pagos.*.numero' => ['nullable', 'numeric'],
-            'pagos.*.fecha' => ['nullable', 'date']
+            'pagos.*.fecha' => ['nullable', 'date'],
+
+            // archivos
+            'archivos'             => ['nullable', 'array'],
+            'archivos.*.tipo'      => ['required', 'string'],
+            'archivos.*.base64'    => ['required', 'string'],
+            'archivos.*.extension' => ['nullable', 'string'],
+
         ];
     }
 

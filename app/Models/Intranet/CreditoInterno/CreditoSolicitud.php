@@ -61,4 +61,54 @@ class CreditoSolicitud extends Model
     {
         return $this->hasMany(CreditoHistorialPagos::class, 'solicitud_id');
     }
+    public function getResumenPagosAttribute()
+    {
+        // si la relacion 'pagos' ya fue cargada con 'with', usamos la colección en memoria
+        if ($this->relationLoaded('pagos')) {
+            $total = $this->pagos->count();
+            if ($total === 0) return '0/0';
+
+            $pagados = $this->pagos->filter(function ($pago) {
+                return $pago->estatus && $pago->estatus->nombre === 'Pago Realizado';
+            })->count();
+            return "{$pagados}/{$total}";
+        }
+        // si no está cargada en memoria, consultamos en BD
+        $total = $this->pagos()->count();
+        if ($total === 0) return '0/0';
+        $pagados = $this->pagos()->whereHas('estatus', function ($query) {
+            $query->where('nombre', 'Pago Realizado');
+        })->count();
+
+        return "{$pagados}/{total}";
+    }
+    public function getProximoPagoAttribute()
+    {
+        $estatusNoPagados = ['Pago Pendiente', 'Pago Atrasado'];
+        // si la relación pagos ya está en memoria por el with
+        if ($this->relationLoaded('pagos')) {
+            $proximo = $this->pagos->filter(function ($pago) use ($estatusNoPagados) {
+                return $pago->estatus && in_array($pago->estatus->nombre, $estatusNoPagados);
+            })->sortBy('fecha_a_pagar')->first();
+
+            return $proximo ? $proximo->fecha_a_pagar : null;
+        }
+
+        // si no está en la memoria
+        $proximo = $this->pagos()
+            ->whereHas('estatus', function ($query) use ($estatusNoPagados) {
+                $query->whereIn('nombre', $estatusNoPagados);
+            })
+            ->orderBy('fecha_a_pagar', 'asc')
+            ->first();
+        return $proximo ? $proximo->fecha_a_pagar : null;
+    }
+    public function historial()
+    {
+        return $this->hasMany(CreditoHistorical::class, 'solicitud_id');
+    }
+    public function archivos()
+    {
+        return $this->hasMany(CreditoDocs::class, 'solicitud_id');
+    }
 }
