@@ -136,5 +136,11 @@ class CreditoSolicitud extends Model
         if (isset($filters['cliente_id'])) {
             $query->where('cliente_id', $filters['cliente_id']);
         }
+        if (isset($filters['linea_id'])) {
+            $query->where('linea_id', $filters['linea_id']);
+        }
+        if (isset($filters['search'])) {
+            $query->where('folio', 'LIKE', '%' . $filters['search'] . '%');
+        }
     }
 }

@@ -42,6 +42,7 @@ class CreditoInternoController extends ApiController
                 'linea',
                 'pagos.estatus',
                 'historial.estatus',
+                'historial.empleado',
                 'sucursal',
                 'pagos',
                 'documentacion'
