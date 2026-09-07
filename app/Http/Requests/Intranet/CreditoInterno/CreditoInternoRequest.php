@@ -56,7 +56,6 @@ class CreditoInternoRequest extends FormRequest
             'monto_solicitado.required' => 'El monto solicitado es obligatorio',
             'linea_id.required' => 'La linea es obligatoria',
             'numero_pagos.required' => 'El numero de pagos es obligatorio',
-            'asesor_id.required' => 'El asesor es obligatorio',
 
             // calendario de pagos
             'pagos.*.numero.numeric' => 'El numero de pago debe ser un número',

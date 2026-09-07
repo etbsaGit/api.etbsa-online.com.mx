@@ -23,19 +23,17 @@ use Illuminate\Support\Facades\DB;
 class CreditoInternoController extends ApiController
 {
     use UploadableFile;
-    public function index(Request $request, $estatus)
+    public function index(Request $request)
     {
         $filters = $request->all();
         $user = Auth::user();
         // si es admin o director administrativo puede ver todas las cotizaciones, si no sólo las que se le notificó al usuario
         $creditoSolicitudes = CreditoSolicitud::query()
-            ->when(!$user->hasRole('Admin') || $user->empleado->puesto_id !== Puesto::where('nombre', 'Director Administrativo')->first()->id, function ($query) use ($user) {
+            ->when(!$user->hasRole('Admin') && !$user->hasRole('Credito') && $user->empleado->puesto_id !== Puesto::where('nombre', 'Director Administrativo')->first()->id, function ($query) use ($user) {
                 $query->whereHas('notificado', function ($q) use ($user) {
                     $q->where('id', $user->empleado->id);
                 });
-            })
-            ->where('estatus_id', Estatus::where('nombre', $estatus)->where('tipo_estatus', 'credito-interno')->first()->id)
-            ->with([
+            })->with([
                 'cliente',
                 'asesor',
                 'notificado',
@@ -43,7 +41,10 @@ class CreditoInternoController extends ApiController
                 'validadoPor',
                 'linea',
                 'pagos.estatus',
-                'historial.estatus'
+                'historial.estatus',
+                'sucursal',
+                'pagos',
+                'documentacion'
             ])->filter($filters)->orderBy('created_at', 'desc')->paginate(10);
         return $this->respond(
             $creditoSolicitudes,
@@ -92,12 +93,13 @@ class CreditoInternoController extends ApiController
             if (!empty($request->archivos)) {
                 $this->guardarArchivosSolicitud($creditoSolicitud, $request->archivos);
             }
-
+            $user = Auth::user();
+            $empleadoId = $user->empleado?->id;
             CreditoHistorical::create([
                 'solicitud_id' => $creditoSolicitud->id,
                 'estatus_id' => $estatusId->id,
                 'descripcion' => "Solicitud de crédito creada. Monto: " . ($request->monto_solicitado ?? 'N/A') . ' Motivo: ' . ($request->motivo ?? 'N/A') . ' Notas adicionales: ' . ($request->notas ?? 'N/A'),
-                'empleado_id' => $request->asesor_id
+                'empleado_id' => $empleadoId
             ]);
 
             DB::commit();

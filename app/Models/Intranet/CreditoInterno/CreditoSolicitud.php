@@ -35,6 +35,11 @@ class CreditoSolicitud extends Model
         'anticipo'
     ];
 
+    protected $appends = [
+        'proximo_pago',
+        'resumen_pagos'
+    ];
+
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
@@ -113,8 +118,23 @@ class CreditoSolicitud extends Model
     {
         return $this->hasMany(CreditoHistorical::class, 'solicitud_id');
     }
-    public function archivos()
+    public function documentacion()
     {
         return $this->hasMany(CreditoDocs::class, 'solicitud_id');
+    }
+    public function scopeFilter($query, $filters)
+    {
+        if (isset($filters['estatus_id'])) {
+            $query->where('estatus_id', $filters['estatus_id']);
+        }
+        if (isset($filters['asesor_id'])) {
+            $query->where('asesor_id', $filters['asesor_id']);
+        }
+        if (isset($filters['sucursal_id'])) {
+            $query->where('sucursal_id', $filters['sucursal_id']);
+        }
+        if (isset($filters['cliente_id'])) {
+            $query->where('cliente_id', $filters['cliente_id']);
+        }
     }
 }

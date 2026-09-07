@@ -173,8 +173,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('constructionClassification', ConstructionClassificationsController::class);
 
     // 🔹 Credito Interno
-    Route::post('creditoInternosAll', [CreditoInternoController::class, 'index']);
-    Route::post('creditoInternos/cliente/{cliente}', [CreditoInternoController::class, 'getPerCliente']);
+    Route::post('creditoInternos', [CreditoInternoController::class, 'index']);
     Route::post('creditoInternos/autorizar', [CreditoInternoController::class, 'autorizar']);
     Route::get('creditoInternos/options', [CreditoInternoController::class, 'getOptions']);
     Route::apiResource('creditoInterno', CreditoInternoController::class);
