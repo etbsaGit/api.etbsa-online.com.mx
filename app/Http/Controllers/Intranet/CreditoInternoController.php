@@ -9,15 +9,13 @@ use App\Http\Requests\Intranet\CreditoInterno\CreditoInternoRequest;
 use App\Http\Requests\Intranet\Products\TractorContrapesoRequest;
 use App\Models\Empleado;
 use App\Models\Estatus;
-use App\Models\Intranet\Contrapesos;
 use App\Models\Intranet\CreditoInterno\CreditoDocs;
 use App\Models\Intranet\CreditoInterno\CreditoHistorialPagos;
 use App\Models\Intranet\CreditoInterno\CreditoHistorical;
 use App\Models\Intranet\CreditoInterno\CreditoLineas;
 use App\Models\Intranet\CreditoInterno\CreditoSolicitud;
-use App\Models\Intranet\Currency;
-use App\Models\Intranet\Product;
 use App\Models\Puesto;
+use App\Models\Sucursal;
 use App\Traits\UploadableFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -60,13 +58,6 @@ class CreditoInternoController extends ApiController
         try {
             $data = $request->validated();
 
-            $user = Auth::user();
-            $empleadoId = $user->empleado?->id;
-
-            if ($empleadoId) {
-                $data['asesor_id'] = $empleadoId;
-            }
-
             // crear folio
             $data['folio'] = str_pad(
                 CreditoSolicitud::max('id') + 1,
@@ -74,7 +65,6 @@ class CreditoInternoController extends ApiController
                 '0',
                 STR_PAD_LEFT
             );
-
 
             $estatusId = Estatus::where('nombre', 'Crédito Solicitado')->where('tipo_estatus', 'credito-interno')->first();
 
@@ -107,7 +97,7 @@ class CreditoInternoController extends ApiController
                 'solicitud_id' => $creditoSolicitud->id,
                 'estatus_id' => $estatusId->id,
                 'descripcion' => "Solicitud de crédito creada. Monto: " . ($request->monto_solicitado ?? 'N/A') . ' Motivo: ' . ($request->motivo ?? 'N/A') . ' Notas adicionales: ' . ($request->notas ?? 'N/A'),
-                'empleado_id' => $empleadoId
+                'empleado_id' => $request->asesor_id
             ]);
 
             DB::commit();
@@ -193,9 +183,13 @@ class CreditoInternoController extends ApiController
 
     public function getOptions()
     {
+        $estatuses = ['Crédito Solicitado', 'Crédito Aprobado', 'Crédito Rechazado', 'Crédito en Proceso', 'Crédito Pagado'];
         $data = [
             'creditoLineas' => CreditoLineas::all(),
-            'gerentes' => Empleado::where('puesto_id', Puesto::where('nombre', 'Gerente Territorial')->first()->id)->with('sucursal')->where('estatus_id', Estatus::where('nombre', 'Activo')->where('tipo_estatus', 'empleado')->first()->id)->get()
+            'gerentes' => Empleado::where('puesto_id', Puesto::where('nombre', 'Gerente Territorial')->first()->id)->with('sucursal')->where('estatus_id', Estatus::where('nombre', 'Activo')->where('tipo_estatus', 'empleado')->first()->id)->get(),
+            'estatuses' => Estatus::whereIn('nombre', $estatuses)->where('tipo_estatus', 'credito-interno')->get(),
+            'sucursales' => Sucursal::all(),
+            'empleados' => Empleado::where('estatus_id', Estatus::where('nombre', 'Activo')->first()->id)->get(),
         ];
 
         return $this->respond($data, 'Opciones cargadas correctamente');

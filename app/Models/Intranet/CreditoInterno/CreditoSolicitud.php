@@ -5,6 +5,7 @@ namespace App\Models\Intranet\CreditoInterno;
 use App\Models\Empleado;
 use App\Models\Estatus;
 use App\Models\Intranet\Cliente;
+use App\Models\Sucursal;
 use App\Traits\FilterableModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,6 +23,7 @@ class CreditoSolicitud extends Model
         'folio',
         'cliente_id',
         'asesor_id',
+        'sucursal_id',
         'estatus_id',
         'notificado_id',
         'motivo',
@@ -40,6 +42,10 @@ class CreditoSolicitud extends Model
     public function asesor()
     {
         return $this->belongsTo(Empleado::class, 'asesor_id');
+    }
+    public function sucursal()
+    {
+        return $this->belongsTo(Sucursal::class, 'sucursal_id');
     }
     public function notificado()
     {

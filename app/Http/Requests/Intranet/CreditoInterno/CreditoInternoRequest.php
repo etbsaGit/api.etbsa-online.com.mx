@@ -23,6 +23,8 @@ class CreditoInternoRequest extends FormRequest
         return [
             'cliente_id' => ['required', 'exists:clientes,id'],
             'notificado_id' => ['required', 'exists:empleados,id'],
+            'sucursal_id' => ['required', 'exists:sucursales,id'],
+            'asesor_id' => ['required', 'exists:empleados,id'],
             'motivo' => ['required'],
             'monto_solicitado' => ['required', 'numeric'],
             'linea_id' => ['required', 'exists:credito_lineas,id'],
@@ -49,10 +51,12 @@ class CreditoInternoRequest extends FormRequest
         return [
             'cliente_id.required' => 'El cliente es obligatorio',
             'notificado_id.required' => 'El notificar es obligatorio',
+            'sucursal_id.required' => 'La sucursal es obligatoria',
             'motivo.required' => 'El motivo es obligatorio',
             'monto_solicitado.required' => 'El monto solicitado es obligatorio',
             'linea_id.required' => 'La linea es obligatoria',
             'numero_pagos.required' => 'El numero de pagos es obligatorio',
+            'asesor_id.required' => 'El asesor es obligatorio',
 
             // calendario de pagos
             'pagos.*.numero.numeric' => 'El numero de pago debe ser un número',
