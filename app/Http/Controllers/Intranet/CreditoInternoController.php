@@ -9,7 +9,11 @@ use App\Http\Requests\Intranet\CreditoInterno\CreditoInternoRequest;
 use App\Http\Requests\Intranet\Products\TractorContrapesoRequest;
 use App\Models\Empleado;
 use App\Models\Estatus;
+use App\Models\Intranet\Cliente;
+use App\Models\Intranet\ClientesDoc;
 use App\Models\Intranet\CreditoInterno\CreditoDocs;
+use App\Models\Intranet\CreditoInterno\CreditoDocsRequeridos;
+use App\Models\Intranet\CreditoInterno\CreditoDocsSolicitados;
 use App\Models\Intranet\CreditoInterno\CreditoHistorialPagos;
 use App\Models\Intranet\CreditoInterno\CreditoHistorical;
 use App\Models\Intranet\CreditoInterno\CreditoLineas;
@@ -17,8 +21,11 @@ use App\Models\Intranet\CreditoInterno\CreditoSolicitud;
 use App\Models\Puesto;
 use App\Models\Sucursal;
 use App\Traits\UploadableFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CreditoInternoController extends ApiController
 {
@@ -39,13 +46,13 @@ class CreditoInternoController extends ApiController
                 'notificado',
                 'estatus',
                 'validadoPor',
-                'linea',
+                'linea.tiposEnganche',
                 'pagos.estatus',
                 'historial.estatus',
                 'historial.empleado',
                 'sucursal',
                 'pagos',
-                'documentacion'
+                'documentacion.documento'
             ])->filter($filters)->orderBy('created_at', 'desc')->paginate(10);
         return $this->respond(
             $creditoSolicitudes,
@@ -188,11 +195,13 @@ class CreditoInternoController extends ApiController
     {
         $estatuses = ['Crédito Solicitado', 'Crédito Aprobado', 'Crédito Rechazado', 'Crédito en Proceso', 'Crédito Pagado'];
         $data = [
-            'creditoLineas' => CreditoLineas::all(),
+            'creditoLineas' => CreditoLineas::with('tiposEnganche')->get(),
             'gerentes' => Empleado::where('puesto_id', Puesto::where('nombre', 'Gerente Territorial')->first()->id)->with('sucursal')->where('estatus_id', Estatus::where('nombre', 'Activo')->where('tipo_estatus', 'empleado')->first()->id)->get(),
             'estatuses' => Estatus::whereIn('nombre', $estatuses)->where('tipo_estatus', 'credito-interno')->get(),
             'sucursales' => Sucursal::all(),
             'empleados' => Empleado::where('estatus_id', Estatus::where('nombre', 'Activo')->first()->id)->get(),
+            'documentos' => CreditoDocsSolicitados::all(),
+            'docsObligatorios' => CreditoDocsRequeridos::all()
         ];
 
         return $this->respond($data, 'Opciones cargadas correctamente');
@@ -203,24 +212,120 @@ class CreditoInternoController extends ApiController
         $user = Auth::user();
         $empleadoId = $user->empleado?->id;
         $folder = "intranet/credito_interno/folio_" . ($solicitud->folio ?? $solicitud->id);
+        $cliente = $solicitud->cliente ?? Cliente::find($solicitud->cliente_id);
         $guardados = [];
+
         foreach ($archivos as $archivo) {
+            $nombreArchivo = $archivo['tipo'] ?? 'Documento';
+            $extension = $archivo['extension'] ?? 'pdf';
+
+            // Determinar documento_id (FK a credito_docs_solicitados)
+            $documentoId = $archivo['doc_id'] ?? null;
+            if (!$documentoId && !empty($archivo['tipo'])) {
+                $docSolicitado = CreditoDocsSolicitados::where('nombre', 'LIKE', '%' . $archivo['tipo'] . '%')->first();
+                $documentoId = $docSolicitado?->id;
+            }
+
+            // CASO 1: Archivo nuevo enviado en Base64
             if (!empty($archivo['base64'])) {
-                // Guarda el archivo en S3 usando el Trait UploadableFile
+                // 1.1 Guardar archivo para la solicitud de crédito en S3
                 $relativePath = $this->saveDoc($archivo['base64'], $folder);
+                $ext = $archivo['extension'] ?? pathinfo($relativePath, PATHINFO_EXTENSION);
+
                 $guardados[] = CreditoDocs::create([
                     'solicitud_id' => $solicitud->id,
-                    'archivo'      => $archivo['tipo'] ?? 'Documento',
+                    'documento_id' => $documentoId,
                     'path'         => $relativePath,
-                    'extension'    => $archivo['extension'] ?? pathinfo($relativePath, PATHINFO_EXTENSION),
+                    'extension'    => $ext,
+                    'uploaded_by'  => $empleadoId,
+                ]);
+
+                // 1.2 Actualizar / Crear también en el expediente del cliente (cliente_docs)
+                if ($cliente) {
+                    $cleanedName = trim(mb_strtolower($nombreArchivo, 'UTF-8'));
+                    $unaccentedName = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cleanedName);
+
+                    $estatusDoc = Estatus::where('tipo_estatus', 'TypeDocs')
+                        ->where(function ($q) use ($nombreArchivo, $cleanedName, $unaccentedName) {
+                            $q->where('nombre', 'LIKE', '%' . $nombreArchivo . '%')
+                                ->orWhere('nombre', 'LIKE', '%' . $cleanedName . '%')
+                                ->orWhere('nombre', 'LIKE', '%' . ($unaccentedName ?: $cleanedName) . '%');
+                        })->first();
+
+                    if ($estatusDoc) {
+                        $clienteFolder = "intranet/cliente/id_" . ($cliente->rfc ?: $cliente->id);
+                        $clientePath = $this->saveDoc($archivo['base64'], $clienteFolder);
+
+                        $clienteDoc = ClientesDoc::where('cliente_id', $cliente->id)
+                            ->where('status_id', $estatusDoc->id)
+                            ->first();
+
+                        $fechaVenc = !empty($archivo['expiration_date'])
+                            ? $archivo['expiration_date']
+                            : Carbon::now()->addMonths(3)->format('Y-m-d');
+
+                        if ($clienteDoc) {
+                            if (!empty($clienteDoc->path)) {
+                                Storage::disk('s3')->delete($clienteDoc->path);
+                            }
+                            $clienteDoc->update([
+                                'name'            => $archivo['nombre'] ?? ($nombreArchivo . '.' . $ext),
+                                'path'            => $clientePath,
+                                'extension'       => $ext,
+                                'expiration_date' => $fechaVenc,
+                            ]);
+                        } else {
+                            ClientesDoc::create([
+                                'cliente_id'      => $cliente->id,
+                                'status_id'       => $estatusDoc->id,
+                                'name'            => $archivo['nombre'] ?? ($nombreArchivo . '.' . $ext),
+                                'path'            => $clientePath,
+                                'extension'       => $ext,
+                                'expiration_date' => $fechaVenc,
+                            ]);
+                        }
+                    }
+                }
+
+                CreditoHistorical::create([
+                    'solicitud_id' => $solicitud->id,
+                    'estatus_id'   => Estatus::where('nombre', 'Documento Adjuntado')->where('tipo_estatus', 'credito-interno')->first()->id,
+                    'descripcion'  => "Documento: " . $nombreArchivo . ' adjuntado y actualizado en expediente.',
+                    'empleado_id'  => $empleadoId
+                ]);
+            }
+            // CASO 2: Archivo existente en el expediente del cliente (copiar archivo a la carpeta de la solicitud)
+            elseif (!empty($archivo['existente']) && !empty($archivo['path'])) {
+                $sourcePath = $archivo['path'];
+                $ext = $archivo['extension'] ?? pathinfo($sourcePath, PATHINFO_EXTENSION);
+                if (empty($ext)) {
+                    $ext = 'pdf';
+                }
+
+                $fileName = Str::random(40) . '.' . $ext;
+                $targetPath = $folder . '/' . $fileName;
+
+                // Copiar el archivo en S3 a la carpeta de la solicitud de crédito
+                if (Storage::disk('s3')->exists($sourcePath)) {
+                    Storage::disk('s3')->copy($sourcePath, $targetPath);
+                    $pathGuardado = $targetPath;
+                } else {
+                    $pathGuardado = $sourcePath;
+                }
+
+                $guardados[] = CreditoDocs::create([
+                    'solicitud_id' => $solicitud->id,
+                    'documento_id' => $documentoId,
+                    'path'         => $pathGuardado,
+                    'extension'    => $ext,
                     'uploaded_by'  => $empleadoId,
                 ]);
 
                 CreditoHistorical::create([
                     'solicitud_id' => $solicitud->id,
-                    'estatus_id' => Estatus::where('nombre', 'Documento Adjuntado')->where('tipo_estatus', 'credito-interno')->first()->id,
-                    'descripcion' => "Documento: " . ($archivo['tipo'] ?? 'Documento') . ' adjuntado.',
-                    'empleado_id' => $empleadoId
+                    'estatus_id'   => Estatus::where('nombre', 'Documento Adjuntado')->where('tipo_estatus', 'credito-interno')->first()->id,
+                    'descripcion'  => "Documento: " . $nombreArchivo . ' copiado desde el expediente del cliente a la solicitud.',
+                    'empleado_id'  => $empleadoId
                 ]);
             }
         }

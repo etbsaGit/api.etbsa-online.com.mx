@@ -29,4 +29,9 @@ class CreditoLineas extends Model
     {
         return $this->hasMany(CreditoLineaCliente::class, 'linea_id');
     }
+
+    public function tiposEnganche()
+    {
+        return $this->belongsToMany(CreditoTipoEnganche::class, 'credito_lineas_enganche', 'linea_id', 'tipo_id');
+    }
 }

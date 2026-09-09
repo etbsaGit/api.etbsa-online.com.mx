@@ -22,7 +22,7 @@ class CreditoDocs extends Model
 
     protected $fillable = [
         'solicitud_id',
-        'archivo',
+        'documento_id',
         'path',
         'extension',
         'uploaded_by'
@@ -44,5 +44,9 @@ class CreditoDocs extends Model
     public function empleado()
     {
         return $this->belongsTo(Empleado::class, 'uploaded_by');
+    }
+    public function documento()
+    {
+        return $this->belongsTo(CreditoDocsSolicitados::class, 'documento_id');
     }
 }

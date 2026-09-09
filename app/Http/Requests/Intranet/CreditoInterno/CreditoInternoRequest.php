@@ -28,9 +28,11 @@ class CreditoInternoRequest extends FormRequest
             'motivo' => ['required'],
             'monto_solicitado' => ['required', 'numeric'],
             'linea_id' => ['required', 'exists:credito_lineas,id'],
+            'tipo_enganche_id' => ['required', 'exists:credito_tipo_enganche,id'],
             'numero_pagos' => ['required', 'numeric', 'min:1'],
             'notas' => ['nullable'],
             'anticipo' => ['nullable'],
+            'valor_enganche' => ['nullable'],
 
             // calendario de pagos
             'pagos' => ['nullable', 'array'],
@@ -38,10 +40,15 @@ class CreditoInternoRequest extends FormRequest
             'pagos.*.fecha' => ['nullable', 'date'],
 
             // archivos
-            'archivos'             => ['nullable', 'array'],
-            'archivos.*.tipo'      => ['required', 'string'],
-            'archivos.*.base64'    => ['required', 'string'],
-            'archivos.*.extension' => ['nullable', 'string'],
+            'archivos'                   => ['nullable', 'array'],
+            'archivos.*.tipo'            => ['required', 'string'],
+            'archivos.*.base64'          => ['nullable', 'string'],
+            'archivos.*.extension'       => ['nullable', 'string'],
+            'archivos.*.doc_id'          => ['nullable'],
+            'archivos.*.nombre'          => ['nullable', 'string'],
+            'archivos.*.path'            => ['nullable', 'string'],
+            'archivos.*.existente'       => ['nullable', 'boolean'],
+            'archivos.*.expiration_date' => ['nullable', 'date'],
 
         ];
     }
@@ -55,6 +62,7 @@ class CreditoInternoRequest extends FormRequest
             'motivo.required' => 'El motivo es obligatorio',
             'monto_solicitado.required' => 'El monto solicitado es obligatorio',
             'linea_id.required' => 'La linea es obligatoria',
+            'tipo_enganche_id.required' => 'El tipo de enganche es obligatorio',
             'numero_pagos.required' => 'El numero de pagos es obligatorio',
 
             // calendario de pagos

@@ -32,13 +32,19 @@ class CreditoSolicitud extends Model
         'linea_id',
         'numero_pagos',
         'notas',
-        'anticipo'
+        'valor_enganche',
+        'tipo_enganche_id'
     ];
 
     protected $appends = [
         'proximo_pago',
         'resumen_pagos'
     ];
+
+    public function tipoEnganche()
+    {
+        return $this->belongsTo(CreditoTipoEnganche::class, 'tipo_enganche_id');
+    }
 
     public function cliente()
     {
