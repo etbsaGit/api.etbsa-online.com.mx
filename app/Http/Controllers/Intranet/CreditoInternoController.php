@@ -46,6 +46,7 @@ class CreditoInternoController extends ApiController
                 'notificado',
                 'estatus',
                 'validadoPor',
+                'tipoEnganche',
                 'linea.tiposEnganche',
                 'pagos.estatus',
                 'historial.estatus',
