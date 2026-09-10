@@ -26,7 +26,10 @@ class CreditoHistorialPagos extends Model
         'fecha_a_pagar',
         'fecha_liquidado',
         'estatus_id',
-        'validated_by'
+        'validated_by',
+        'updated_by',
+        'etiqueta',
+        'document_id'
     ];
 
     public function solicitud()
@@ -37,8 +40,16 @@ class CreditoHistorialPagos extends Model
     {
         return $this->belongsTo(Estatus::class, 'estatus_id');
     }
-    public function empleado()
+    public function actualizadoPor()
+    {
+        return $this->belongsTo(Empleado::class, 'updated_by');
+    }
+    public function validadoPor()
     {
         return $this->belongsTo(Empleado::class, 'validated_by');
+    }
+    public function documento()
+    {
+        return $this->belongsTo(CreditoDocs::class, 'document_id');
     }
 }

@@ -122,7 +122,7 @@ class CreditoSolicitud extends Model
     }
     public function historial()
     {
-        return $this->hasMany(CreditoHistorical::class, 'solicitud_id');
+        return $this->hasMany(CreditoHistorical::class, 'solicitud_id')->orderBy('created_at', 'desc');
     }
     public function documentacion()
     {

@@ -176,6 +176,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('creditoInternos', [CreditoInternoController::class, 'index']);
     Route::post('creditoInternos/autorizar', [CreditoInternoController::class, 'autorizar']);
     Route::get('creditoInternos/options', [CreditoInternoController::class, 'getOptions']);
+    Route::put('creditoInternoPagos/{pago}', [CreditoInternoController::class, 'registrarPago']);
+    Route::post('creditoInternoPagos/{pago}/validar', [CreditoInternoController::class, 'validarPago']);
     Route::apiResource('creditoInterno', CreditoInternoController::class);
 
     // 🔹 Cultivo

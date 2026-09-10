@@ -38,6 +38,7 @@ class CreditoInternoRequest extends FormRequest
             'pagos' => ['nullable', 'array'],
             'pagos.*.numero' => ['nullable', 'numeric'],
             'pagos.*.fecha' => ['nullable', 'date'],
+            'pagos.*.etiqueta' => ['nullable', 'string'],
 
             // archivos
             'archivos'                   => ['nullable', 'array'],

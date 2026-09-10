@@ -52,7 +52,9 @@ class CreditoInternoController extends ApiController
                 'historial.estatus',
                 'historial.empleado',
                 'sucursal',
-                'pagos',
+                'pagos.actualizadoPor',
+                'pagos.validadoPor',
+                'pagos.documento.documento',
                 'documentacion.documento'
             ])->filter($filters)->orderBy('created_at', 'desc')->paginate(10);
         return $this->respond(
@@ -87,12 +89,13 @@ class CreditoInternoController extends ApiController
             // Guardar cada pago en la tabla credito_historial_pagos
             if (!empty($request->pagos)) {
                 foreach ($request->pagos as $index => $pago) {
-                    // $esPrimerPago = ($index === 0) || (($pago['numero'] ?? null) == 1);
+                    $esPrimerPago = ($index === 0) || (($pago['numero'] ?? null) == 1);
 
                     CreditoHistorialPagos::create([
                         'solicitud_id'    => $creditoSolicitud->id,
                         'n_pago'          => $pago['numero'] ?? ($index + 1),
-                        'saldo_pendiente' => $data['monto_solicitado'],
+                        'saldo_pendiente' => $esPrimerPago ? $data['monto_solicitado'] : null,
+                        'etiqueta'        => $pago['etiqueta'] ?? null,
                         'fecha_a_pagar'   => $pago['fecha'],
                         'estatus_id'      => $estatusPagoPendiente->id,
                     ]);
@@ -116,6 +119,276 @@ class CreditoInternoController extends ApiController
             return $this->respondCreated(
                 $creditoSolicitud,
                 'Solicitud de crédito creada'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function registrarPago(Request $request, int $pagoId)
+    {
+        DB::beginTransaction();
+
+        try {
+            $pago = CreditoHistorialPagos::find($pagoId);
+
+            if (!$pago) {
+                return $this->respondNotFound('Pago no encontrado');
+            }
+
+            $solicitud = CreditoSolicitud::find($pago->solicitud_id);
+            if (!$solicitud) {
+                return $this->respondNotFound('Solicitud de crédito no encontrada');
+            }
+
+            $user = Auth::user();
+            $empleadoId = $user->empleado?->id;
+
+            $estatusPagoRealizado = Estatus::where('nombre', 'Pago Realizado')->where('tipo_estatus', 'credito-interno')->first();
+            $estatusPagoPendiente = Estatus::where('nombre', 'Pago Pendiente')->where('tipo_estatus', 'credito-interno')->first();
+            $estatusCreditoPagado = Estatus::where('nombre', 'Crédito Pagado')->where('tipo_estatus', 'credito-interno')->first();
+            $estatusCreditoEnProceso = Estatus::where('nombre', 'Crédito en Proceso')->where('tipo_estatus', 'credito-interno')->first();
+            $estatusCreditoAprobado = Estatus::where('nombre', 'Crédito Aprobado')->where('tipo_estatus', 'credito-interno')->first();
+
+            $todosPagos = CreditoHistorialPagos::where('solicitud_id', $solicitud->id)
+                ->orderBy('n_pago', 'asc')
+                ->get();
+
+            $montoPagado = $request->input('monto_pagado');
+
+            // 1. Validar que no se intente pagar si los pagos anteriores no se han cubierto
+            $pagoIndex = $todosPagos->search(fn($p) => $p->id === $pago->id);
+            if ($pagoIndex > 0) {
+                $pagoPrevio = $todosPagos[$pagoIndex - 1];
+                if ($pagoPrevio->monto_pagado === null || (float)$pagoPrevio->monto_pagado <= 0) {
+                    return response()->json([
+                        'message' => 'Debe registrar primero los pagos anteriores pendientes.'
+                    ], 422);
+                }
+            }
+
+            // 2. Calcular el saldo pendiente disponible para este pago antes de aplicar el nuevo monto
+            $totalPagadoAnteriores = 0;
+            for ($i = 0; $i < $pagoIndex; $i++) {
+                $totalPagadoAnteriores += (float)($todosPagos[$i]->monto_pagado ?? 0);
+            }
+            $saldoDisponibleEstePago = max(0, (float)$solicitud->monto_solicitado - $totalPagadoAnteriores);
+
+            // 3. Validar sobrepago
+            if ($montoPagado !== null && is_numeric($montoPagado)) {
+                $montoFloat = (float)$montoPagado;
+                if ($montoFloat < 0) {
+                    return response()->json([
+                        'message' => 'El monto a pagar no puede ser negativo.'
+                    ], 422);
+                }
+                if ($montoFloat > $saldoDisponibleEstePago) {
+                    return response()->json([
+                        'message' => "El monto a pagar ($" . number_format($montoFloat, 2) . ") no puede ser mayor al saldo pendiente disponible ($" . number_format($saldoDisponibleEstePago, 2) . ")."
+                    ], 422);
+                }
+            }
+
+            // 4. Validar y procesar archivo de evidencia en PDF
+            $archivoInput = $request->input('archivo');
+            $base64 = is_array($archivoInput) ? ($archivoInput['base64'] ?? null) : $request->input('base64');
+
+            if ($montoPagado !== null && is_numeric($montoPagado) && (float)$montoPagado > 0) {
+                if (!$pago->document_id && empty($base64)) {
+                    return response()->json([
+                        'message' => 'El comprobante o evidencia de pago en formato PDF es obligatorio.'
+                    ], 422);
+                }
+            }
+
+            if (!empty($base64)) {
+                $esEnganche = ($pago->etiqueta && stripos($pago->etiqueta, 'enganche') !== false) ||
+                    ($pago->n_pago === 1 && (float)($solicitud->valor_enganche ?? $solicitud->anticipo ?? 0) > 0);
+
+                $nombreTipoDoc = $esEnganche ? 'Evidencia enganche' : 'Evidencia pago';
+                $docSolicitado = CreditoDocsSolicitados::where('nombre', $nombreTipoDoc)->first();
+                if (!$docSolicitado) {
+                    $docSolicitado = CreditoDocsSolicitados::create(['nombre' => $nombreTipoDoc]);
+                }
+
+                $folder = "intranet/credito_interno/folio_" . ($solicitud->folio ?? $solicitud->id);
+                $relativePath = $this->saveDoc($base64, $folder);
+                $ext = is_array($archivoInput) ? ($archivoInput['extension'] ?? 'pdf') : 'pdf';
+
+                $creditoDoc = CreditoDocs::create([
+                    'solicitud_id' => $solicitud->id,
+                    'documento_id' => $docSolicitado->id,
+                    'path'         => $relativePath,
+                    'extension'    => $ext ?: 'pdf',
+                    'uploaded_by'  => $empleadoId,
+                ]);
+
+                $pago->document_id = $creditoDoc->id;
+
+                CreditoHistorical::create([
+                    'solicitud_id' => $solicitud->id,
+                    'estatus_id'   => Estatus::where('nombre', 'Documento Adjuntado')->where('tipo_estatus', 'credito-interno')->first()?->id ?? $solicitud->estatus_id,
+                    'descripcion'  => "Documento ($nombreTipoDoc) adjuntado como evidencia para " . ($pago->etiqueta ?: "Pago #{$pago->n_pago}") . ".",
+                    'empleado_id'  => $empleadoId
+                ]);
+            }
+
+            // 5. Actualizar el pago actual
+            if ($montoPagado !== null && is_numeric($montoPagado) && (float)$montoPagado > 0) {
+                $pago->monto_pagado = (float)$montoPagado;
+                $pago->fecha_liquidado = $request->input('fecha_liquidado') ?? Carbon::now()->format('Y-m-d');
+                $pago->estatus_id = $estatusPagoRealizado?->id ?? $pago->estatus_id;
+                $pago->updated_by = $empleadoId;
+            } else {
+                $pago->monto_pagado = null;
+                $pago->fecha_liquidado = null;
+                $pago->estatus_id = $estatusPagoPendiente?->id ?? $pago->estatus_id;
+                $pago->updated_by = $empleadoId;
+            }
+            $pago->save();
+
+            // 6. Recalcular saldo y estatus en cascada para TODOS los pagos
+            $todosPagos = CreditoHistorialPagos::where('solicitud_id', $solicitud->id)
+                ->orderBy('n_pago', 'asc')
+                ->get();
+
+            $saldoActual = (float)$solicitud->monto_solicitado;
+            $liquidadoAnticipadamente = false;
+            $fechaLiquidacion = $pago->fecha_liquidado ?? Carbon::now()->format('Y-m-d');
+
+            foreach ($todosPagos as $idx => $p) {
+                if ($idx === 0) {
+                    $p->saldo_pendiente = (float)$solicitud->monto_solicitado;
+                } else {
+                    if ($liquidadoAnticipadamente) {
+                        // Si ya se liquidó la deuda total en un pago anterior, este pago queda en saldo 0 y marcado como realizado
+                        $p->saldo_pendiente = 0.00;
+                        $p->monto_pagado = $p->monto_pagado !== null && (float)$p->monto_pagado > 0 ? $p->monto_pagado : 0.00;
+                        $p->fecha_liquidado = $p->fecha_liquidado ?? $fechaLiquidacion;
+                        $p->estatus_id = $estatusPagoRealizado?->id ?? $p->estatus_id;
+                        $p->updated_by = $p->updated_by ?? $empleadoId;
+                    } else {
+                        $pagoAnterior = $todosPagos[$idx - 1];
+                        if ($pagoAnterior->monto_pagado !== null && (float)$pagoAnterior->monto_pagado > 0) {
+                            $p->saldo_pendiente = max(0, $saldoActual);
+                        } else {
+                            $p->saldo_pendiente = null;
+                            if ($p->id !== $pago->id) {
+                                // Limpiar estado si se desmarcó el pago anterior
+                                $p->monto_pagado = null;
+                                $p->fecha_liquidado = null;
+                                $p->estatus_id = $estatusPagoPendiente?->id ?? $p->estatus_id;
+                                $p->updated_by = $empleadoId;
+                            }
+                        }
+                    }
+                }
+
+                // Descontar abono de este pago si tiene
+                if ($p->monto_pagado !== null && (float)$p->monto_pagado > 0) {
+                    $saldoActual = max(0, $saldoActual - (float)$p->monto_pagado);
+                }
+
+                // Si al descontar este pago el saldo restante total llega a 0
+                if ($saldoActual <= 0 && !$liquidadoAnticipadamente) {
+                    $liquidadoAnticipadamente = true;
+                    if ($p->monto_pagado !== null && (float)$p->monto_pagado > 0) {
+                        $p->estatus_id = $estatusPagoRealizado?->id ?? $p->estatus_id;
+                        $p->fecha_liquidado = $p->fecha_liquidado ?? $fechaLiquidacion;
+                        $p->updated_by = $p->updated_by ?? $empleadoId;
+                    }
+                }
+
+                $p->save();
+            }
+
+            // 7. Actualizar estatus general de la solicitud de crédito
+            if ($saldoActual <= 0 && $estatusCreditoPagado) {
+                $solicitud->update(['estatus_id' => $estatusCreditoPagado->id]);
+            } else {
+                // Si aún hay saldo pendiente y la solicitud estaba marcada como Pagada, revertir
+                if ($solicitud->estatus_id === $estatusCreditoPagado?->id) {
+                    $nuevoEstatus = $estatusCreditoEnProceso ?? $estatusCreditoAprobado;
+                    if ($nuevoEstatus) {
+                        $solicitud->update(['estatus_id' => $nuevoEstatus->id]);
+                    }
+                }
+            }
+
+            // 8. Registrar en bitácora de historial
+            $estatusHistorial = Estatus::where('nombre', 'Pago Realizado')->where('tipo_estatus', 'credito-interno')->first();
+            CreditoHistorical::create([
+                'solicitud_id' => $solicitud->id,
+                'estatus_id'   => $estatusHistorial?->id ?? $solicitud->estatus_id,
+                'descripcion'  => "Pago (" . ($pago->etiqueta ?: "Pago #{$pago->n_pago}") . ") registrado: Monto pagado: " . ($pago->monto_pagado !== null ? '$' . number_format($pago->monto_pagado, 2) : '$0.00') . ". Saldo pendiente actual: $" . number_format($saldoActual, 2),
+                'empleado_id'  => $empleadoId
+            ]);
+
+            DB::commit();
+
+            return $this->respond(
+                $pago->load(['actualizadoPor', 'validadoPor', 'estatus', 'documento.documento']),
+                'Pago actualizado correctamente'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function validarPago(Request $request, int $pagoId)
+    {
+        DB::beginTransaction();
+
+        try {
+            $user = Auth::user();
+
+            if (!$user->hasRole('Credito') && !$user->hasRole('Admin')) {
+                return response()->json([
+                    'message' => 'No tiene permisos para validar pagos. Se requiere rol de Crédito.'
+                ], 403);
+            }
+
+            $pago = CreditoHistorialPagos::find($pagoId);
+            if (!$pago) {
+                return $this->respondNotFound('Pago no encontrado');
+            }
+
+            $solicitud = CreditoSolicitud::find($pago->solicitud_id);
+            if (!$solicitud) {
+                return $this->respondNotFound('Solicitud de crédito no encontrada');
+            }
+
+            if ($pago->monto_pagado === null && !$pago->fecha_liquidado) {
+                return response()->json([
+                    'message' => 'No se puede validar un pago que aún no ha sido registrado o liquidado.'
+                ], 422);
+            }
+
+            $empleadoId = $user->empleado?->id;
+            $pago->validated_by = $empleadoId;
+            $pago->save();
+
+            // Registrar en bitácora de historial
+            CreditoHistorical::create([
+                'solicitud_id' => $solicitud->id,
+                'estatus_id'   => $pago->estatus_id ?? $solicitud->estatus_id,
+                'descripcion'  => "Pago (" . ($pago->etiqueta ?: "Pago #{$pago->n_pago}") . ") de $" . number_format((float)($pago->monto_pagado ?? 0), 2) . " validado por el departamento de Crédito.",
+                'empleado_id'  => $empleadoId
+            ]);
+
+            DB::commit();
+
+            return $this->respond(
+                $pago->load(['actualizadoPor', 'validadoPor', 'estatus', 'documento.documento']),
+                'Pago validado correctamente'
             );
         } catch (\Throwable $e) {
             DB::rollBack();
