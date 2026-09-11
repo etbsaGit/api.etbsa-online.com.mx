@@ -662,22 +662,28 @@ class CreditoInternoDashboardController extends ApiController
                 ];
             }
 
+            $startOfMonthStr = $startOfMonth->toDateString();
+            $endOfMonthStr = $endOfMonth->toDateString();
+
             // 4. Variables de Resumen Mensual
             $montoPagadoMes = 0.0;
             $montoValidadoMes = 0.0;
             $montoPorValidarMes = 0.0;
             $montoVencidoMes = 0.0;
-            $conteoLiquidados = 0;
             $conteoValidados = 0;
             $conteoPorValidar = 0;
             $conteoVencidos = 0;
             $conteoPendientes = 0;
+            $totalPagosProgramadosMes = 0;
+            $conteoLiquidadosProgramadosMes = 0;
 
             foreach ($pagos as $pago) {
-                $fechaPago = $pago->fecha_a_pagar ?? $pago->fecha_liquidado;
-                if (!$fechaPago) continue;
+                $fechaAPagarStr = $pago->fecha_a_pagar ? substr($pago->fecha_a_pagar, 0, 10) : null;
+                $fechaLiquidadoStr = $pago->fecha_liquidado ? substr($pago->fecha_liquidado, 0, 10) : null;
 
-                $fechaPagoStr = substr($fechaPago, 0, 10);
+                $fueProgramadoEsteMes = ($fechaAPagarStr && $fechaAPagarStr >= $startOfMonthStr && $fechaAPagarStr <= $endOfMonthStr);
+                $fueLiquidadoEsteMes = ($fechaLiquidadoStr && $fechaLiquidadoStr >= $startOfMonthStr && $fechaLiquidadoStr <= $endOfMonthStr);
+
                 $montoEsperado = (float) ($pago->saldo_pendiente !== null && (float)$pago->saldo_pendiente > 0 ? $pago->saldo_pendiente : ($pago->monto_pagado ?? 0));
                 if ($pago->monto_pagado && (float)$pago->monto_pagado > 0) {
                     $montoEsperado = (float) $pago->monto_pagado;
@@ -693,9 +699,15 @@ class CreditoInternoDashboardController extends ApiController
                 $estadoCobro = 'pendiente';
                 if ($liquidado || ($saldoPendiente === 0.0 && $montoPagado > 0)) {
                     $estadoCobro = 'liquidado';
-                    $conteoLiquidados++;
-                    $montoPagadoMes += $montoPagado;
+                } elseif ($fechaAPagarStr && $fechaAPagarStr < $hoy) {
+                    $estadoCobro = 'vencido';
+                } else {
+                    $estadoCobro = 'pendiente';
+                }
 
+                // 1. Dinero Recaudado / Validado / Por Validar: DEPENDE ESTRICTAMENTE DE LO COBRADO EN ESTE MES ($fueLiquidadoEsteMes)
+                if ($fueLiquidadoEsteMes) {
+                    $montoPagadoMes += $montoPagado;
                     if ($estaValidado) {
                         $conteoValidados++;
                         $montoValidadoMes += $montoPagado;
@@ -703,73 +715,106 @@ class CreditoInternoDashboardController extends ApiController
                         $conteoPorValidar++;
                         $montoPorValidarMes += $montoPagado;
                     }
-                } elseif ($tienePagoRegistrado && !$estaValidado) {
+                } elseif ($tienePagoRegistrado && !$estaValidado && $fueProgramadoEsteMes) {
                     $conteoPorValidar++;
                     $montoPorValidarMes += $montoPagado;
-                } elseif ($fechaPagoStr < $hoy) {
-                    $estadoCobro = 'vencido';
-                    $conteoVencidos++;
-                    $montoVencidoMes += ($saldoPendiente > 0 ? $saldoPendiente : $montoEsperado);
-                } else {
-                    $estadoCobro = 'pendiente';
-                    $conteoPendientes++;
+                }
+
+                // 2. Pagos Programados, Vencidos y Pendientes: DEPENDEN DE LA PROGRAMACIÓN DE ESTE MES ($fueProgramadoEsteMes)
+                if ($fueProgramadoEsteMes) {
+                    $totalPagosProgramadosMes++;
+                    if ($estadoCobro === 'liquidado') {
+                        $conteoLiquidadosProgramadosMes++;
+                    } elseif ($estadoCobro === 'vencido') {
+                        $conteoVencidos++;
+                        $montoVencidoMes += ($saldoPendiente > 0 ? $saldoPendiente : $montoEsperado);
+                    } else {
+                        $conteoPendientes++;
+                    }
                 }
 
                 $estadoValidacion = $estaValidado ? 'validado' : ($tienePagoRegistrado ? 'por_validar' : 'sin_pago');
 
                 $itemPago = [
-                    'id'                => $pago->id,
-                    'solicitud_id'      => $pago->solicitud_id,
-                    'folio'             => $pago->solicitud?->folio ?? (string)$pago->solicitud_id,
-                    'cliente'           => $pago->solicitud?->cliente?->nombre ?? 'Sin cliente',
-                    'telefono'          => $pago->solicitud?->cliente?->telefono ?? '',
-                    'rfc'               => $pago->solicitud?->cliente?->rfc ?? '',
-                    'sucursal'          => $pago->solicitud?->sucursal?->nombre ?? 'General',
-                    'linea'             => $pago->solicitud?->linea?->name ?? 'General',
-                    'asesor'            => $pago->solicitud?->asesor?->nombreCompleto ?? 'Sin asesor',
-                    'n_pago'            => $pago->n_pago,
-                    'etiqueta'          => $pago->etiqueta ?? "Pago #{$pago->n_pago}",
-                    'monto_esperado'    => $montoEsperado,
-                    'monto_pagado'      => $montoPagado,
-                    'saldo_pendiente'   => $saldoPendiente,
-                    'fecha_a_pagar'     => $pago->fecha_a_pagar,
-                    'fecha_liquidado'   => $pago->fecha_liquidado,
-                    'estatus'           => $pago->estatus?->nombre ?? ($liquidado ? 'Pago Realizado' : 'Pendiente'),
-                    'estatus_color'     => $pago->estatus?->color ?? ($liquidado ? '#2e7d32' : ($estadoCobro === 'vencido' ? '#d32f2f' : '#ff9800')),
-                    'estado_cobro'      => $estadoCobro,
-                    'esta_validado'     => $estaValidado,
-                    'estado_validacion' => $estadoValidacion,
-                    'validado_por'      => $pago->validadoPor?->nombreCompleto,
-                    'comprobante_url'   => $pago->documento?->realpath ?? $pago->documento?->path ?? null,
+                    'id'                    => $pago->id,
+                    'solicitud_id'          => $pago->solicitud_id,
+                    'folio'                 => $pago->solicitud?->folio ?? (string)$pago->solicitud_id,
+                    'cliente'               => $pago->solicitud?->cliente?->nombre ?? 'Sin cliente',
+                    'telefono'              => $pago->solicitud?->cliente?->telefono ?? '',
+                    'rfc'                   => $pago->solicitud?->cliente?->rfc ?? '',
+                    'sucursal'              => $pago->solicitud?->sucursal?->nombre ?? 'General',
+                    'linea'                 => $pago->solicitud?->linea?->name ?? 'General',
+                    'asesor'                => $pago->solicitud?->asesor?->nombreCompleto ?? 'Sin asesor',
+                    'n_pago'                => $pago->n_pago,
+                    'etiqueta'              => $pago->etiqueta ?? "Pago #{$pago->n_pago}",
+                    'monto_esperado'        => $montoEsperado,
+                    'monto_pagado'          => $montoPagado,
+                    'saldo_pendiente'       => $saldoPendiente,
+                    'fecha_a_pagar'         => $pago->fecha_a_pagar,
+                    'fecha_liquidado'       => $pago->fecha_liquidado,
+                    'estatus'               => $pago->estatus?->nombre ?? ($liquidado ? 'Pago Realizado' : 'Pendiente'),
+                    'estatus_color'         => $pago->estatus?->color ?? ($liquidado ? '#2e7d32' : ($estadoCobro === 'vencido' ? '#d32f2f' : '#ff9800')),
+                    'estado_cobro'          => $estadoCobro,
+                    'esta_validado'         => $estaValidado,
+                    'estado_validacion'     => $estadoValidacion,
+                    'validado_por'          => $pago->validadoPor?->nombreCompleto,
+                    'comprobante_url'       => $pago->documento?->realpath ?? $pago->documento?->path ?? null,
+                    'fue_cobrado_en_mes'    => $fueLiquidadoEsteMes,
+                    'fue_programado_en_mes' => $fueProgramadoEsteMes,
                 ];
 
-                // Si la fecha cae en el grid del mes actual
-                if (isset($dias[$fechaPagoStr])) {
-                    $dias[$fechaPagoStr]['pagos'][] = $itemPago;
-                    $dias[$fechaPagoStr]['conteo_pagos']++;
-
-                    if ($estadoCobro === 'liquidado') {
-                        $dias[$fechaPagoStr]['conteo_liquidados']++;
-                        $dias[$fechaPagoStr]['total_pagado'] += $montoPagado;
-                        if ($estaValidado) {
-                            $dias[$fechaPagoStr]['conteo_validados']++;
-                            $dias[$fechaPagoStr]['total_validado'] += $montoPagado;
-                        } else {
-                            $dias[$fechaPagoStr]['conteo_por_validar']++;
-                            $dias[$fechaPagoStr]['total_por_validar'] += $montoPagado;
-                        }
-                    } elseif ($estadoCobro === 'vencido') {
-                        $dias[$fechaPagoStr]['conteo_vencidos']++;
-                        $dias[$fechaPagoStr]['total_vencido'] += ($saldoPendiente > 0 ? $saldoPendiente : $montoEsperado);
+                // Colocación en el Calendario:
+                // Caso A: Se liquidó y se programó en la misma fecha dentro de este mes
+                if ($fueLiquidadoEsteMes && $fueProgramadoEsteMes && $fechaLiquidadoStr === $fechaAPagarStr) {
+                    $item = array_merge($itemPago, ['tipo_evento' => 'ambos']);
+                    $dias[$fechaAPagarStr]['pagos'][] = $item;
+                    $dias[$fechaAPagarStr]['conteo_pagos']++;
+                    $dias[$fechaAPagarStr]['conteo_liquidados']++;
+                    $dias[$fechaAPagarStr]['total_pagado'] += $montoPagado;
+                    if ($estaValidado) {
+                        $dias[$fechaAPagarStr]['conteo_validados']++;
+                        $dias[$fechaAPagarStr]['total_validado'] += $montoPagado;
                     } else {
-                        $dias[$fechaPagoStr]['conteo_pendientes']++;
+                        $dias[$fechaAPagarStr]['conteo_por_validar']++;
+                        $dias[$fechaAPagarStr]['total_por_validar'] += $montoPagado;
+                    }
+                } else {
+                    // Caso B: Si fue liquidado este mes (en su fecha_liquidado se registra el cobro recibido)
+                    if ($fueLiquidadoEsteMes && isset($dias[$fechaLiquidadoStr])) {
+                        $itemCobro = array_merge($itemPago, ['tipo_evento' => 'cobro']);
+                        $dias[$fechaLiquidadoStr]['pagos'][] = $itemCobro;
+                        $dias[$fechaLiquidadoStr]['conteo_pagos']++;
+                        $dias[$fechaLiquidadoStr]['conteo_liquidados']++;
+                        $dias[$fechaLiquidadoStr]['total_pagado'] += $montoPagado;
+                        if ($estaValidado) {
+                            $dias[$fechaLiquidadoStr]['conteo_validados']++;
+                            $dias[$fechaLiquidadoStr]['total_validado'] += $montoPagado;
+                        } else {
+                            $dias[$fechaLiquidadoStr]['conteo_por_validar']++;
+                            $dias[$fechaLiquidadoStr]['total_por_validar'] += $montoPagado;
+                        }
+                    }
+
+                    // Caso C: Si fue programado para este mes (en su fecha_a_pagar se registra el pago programado)
+                    if ($fueProgramadoEsteMes && isset($dias[$fechaAPagarStr])) {
+                        $itemProgramado = array_merge($itemPago, ['tipo_evento' => 'programado']);
+                        $dias[$fechaAPagarStr]['pagos'][] = $itemProgramado;
+                        $dias[$fechaAPagarStr]['conteo_pagos']++;
+
+                        if ($estadoCobro === 'liquidado') {
+                            $dias[$fechaAPagarStr]['conteo_liquidados']++;
+                        } elseif ($estadoCobro === 'vencido') {
+                            $dias[$fechaAPagarStr]['conteo_vencidos']++;
+                            $dias[$fechaAPagarStr]['total_vencido'] += ($saldoPendiente > 0 ? $saldoPendiente : $montoEsperado);
+                        } else {
+                            $dias[$fechaAPagarStr]['conteo_pendientes']++;
+                        }
                     }
                 }
             }
 
-            $totalPagosMes = count($pagos);
-            $tasaCumplimiento = ($totalPagosMes > 0)
-                ? round(($conteoLiquidados / $totalPagosMes) * 100, 2)
+            $tasaCumplimiento = ($totalPagosProgramadosMes > 0)
+                ? round(($conteoLiquidadosProgramadosMes / $totalPagosProgramadosMes) * 100, 2)
                 : 0;
 
             $resumenMes = [
@@ -784,18 +829,22 @@ class CreditoInternoDashboardController extends ApiController
                 'monto_vencido'         => round($montoVencidoMes, 2),
                 'pagos_vencidos'        => $conteoVencidos,
                 'pagos_pendientes'      => $conteoPendientes,
-                'total_pagos_mes'       => $totalPagosMes,
-                'pagos_liquidados'      => $conteoLiquidados,
+                'total_pagos_mes'       => $totalPagosProgramadosMes,
+                'pagos_liquidados'      => $conteoLiquidadosProgramadosMes,
                 'tasa_cumplimiento_pct' => $tasaCumplimiento,
             ];
 
             return $this->respond([
                 'resumen_mes' => $resumenMes,
                 'dias'        => array_values($dias),
-                'todos_pagos' => $pagos->map(function ($p) use ($hoy) {
+                'todos_pagos' => $pagos->map(function ($p) use ($hoy, $startOfMonthStr, $endOfMonthStr) {
+                    $fechaAPagar = substr($p->fecha_a_pagar ?? '', 0, 10);
+                    $fechaLiquidado = substr($p->fecha_liquidado ?? '', 0, 10);
+                    $fueProgramadoEsteMes = ($fechaAPagar >= $startOfMonthStr && $fechaAPagar <= $endOfMonthStr);
+                    $fueLiquidadoEsteMes = ($fechaLiquidado && $fechaLiquidado >= $startOfMonthStr && $fechaLiquidado <= $endOfMonthStr);
+
                     $liquidado = (bool) ($p->fecha_liquidado || ($p->estatus && $p->estatus->nombre === 'Pago Realizado'));
-                    $fecha = substr($p->fecha_a_pagar ?? '', 0, 10);
-                    $estadoCobro = $liquidado ? 'liquidado' : ($fecha && $fecha < $hoy ? 'vencido' : 'pendiente');
+                    $estadoCobro = $liquidado ? 'liquidado' : ($fechaAPagar && $fechaAPagar < $hoy ? 'vencido' : 'pendiente');
                     $montoEsperado = (float) ($p->saldo_pendiente !== null && (float)$p->saldo_pendiente > 0 ? $p->saldo_pendiente : ($p->monto_pagado ?? 0));
                     if ($p->monto_pagado && (float)$p->monto_pagado > 0) {
                         $montoEsperado = (float) $p->monto_pagado;
@@ -806,28 +855,30 @@ class CreditoInternoDashboardController extends ApiController
                     $estadoValidacion = $estaValidado ? 'validado' : ($tienePagoRegistrado ? 'por_validar' : 'sin_pago');
 
                     return [
-                        'id'                => $p->id,
-                        'solicitud_id'      => $p->solicitud_id,
-                        'folio'             => $p->solicitud?->folio ?? (string)$pago->solicitud_id,
-                        'cliente'           => $p->solicitud?->cliente?->nombre ?? 'Sin cliente',
-                        'telefono'          => $p->solicitud?->cliente?->telefono ?? '',
-                        'sucursal'          => $p->solicitud?->sucursal?->nombre ?? 'General',
-                        'linea'             => $p->solicitud?->linea?->name ?? 'General',
-                        'asesor'            => $p->solicitud?->asesor?->nombreCompleto ?? 'Sin asesor',
-                        'n_pago'            => $p->n_pago,
-                        'etiqueta'          => $p->etiqueta ?? "Pago #{$p->n_pago}",
-                        'monto_esperado'    => $montoEsperado,
-                        'monto_pagado'      => $montoPagado,
-                        'saldo_pendiente'   => (float)($p->saldo_pendiente ?? 0),
-                        'fecha_a_pagar'     => $p->fecha_a_pagar,
-                        'fecha_liquidado'   => $p->fecha_liquidado,
-                        'estatus'           => $p->estatus?->nombre ?? ($liquidado ? 'Pago Realizado' : 'Pendiente'),
-                        'estatus_color'     => $p->estatus?->color ?? ($liquidado ? '#2e7d32' : ($estadoCobro === 'vencido' ? '#d32f2f' : '#ff9800')),
-                        'estado_cobro'      => $estadoCobro,
-                        'esta_validado'     => $estaValidado,
-                        'estado_validacion' => $estadoValidacion,
-                        'validado_por'      => $p->validadoPor?->nombreCompleto,
-                        'comprobante_url'   => $p->documento?->realpath ?? $p->documento?->path ?? null,
+                        'id'                    => $p->id,
+                        'solicitud_id'          => $p->solicitud_id,
+                        'folio'                 => $p->solicitud?->folio ?? (string)$p->solicitud_id,
+                        'cliente'               => $p->solicitud?->cliente?->nombre ?? 'Sin cliente',
+                        'telefono'              => $p->solicitud?->cliente?->telefono ?? '',
+                        'sucursal'              => $p->solicitud?->sucursal?->nombre ?? 'General',
+                        'linea'                 => $p->solicitud?->linea?->name ?? 'General',
+                        'asesor'                => $p->solicitud?->asesor?->nombreCompleto ?? 'Sin asesor',
+                        'n_pago'                => $p->n_pago,
+                        'etiqueta'              => $p->etiqueta ?? "Pago #{$p->n_pago}",
+                        'monto_esperado'        => $montoEsperado,
+                        'monto_pagado'          => $montoPagado,
+                        'saldo_pendiente'       => (float)($p->saldo_pendiente ?? 0),
+                        'fecha_a_pagar'         => $p->fecha_a_pagar,
+                        'fecha_liquidado'       => $p->fecha_liquidado,
+                        'estatus'               => $p->estatus?->nombre ?? ($liquidado ? 'Pago Realizado' : 'Pendiente'),
+                        'estatus_color'         => $p->estatus?->color ?? ($liquidado ? '#2e7d32' : ($estadoCobro === 'vencido' ? '#d32f2f' : '#ff9800')),
+                        'estado_cobro'          => $estadoCobro,
+                        'esta_validado'         => $estaValidado,
+                        'estado_validacion'     => $estadoValidacion,
+                        'validado_por'          => $p->validadoPor?->nombreCompleto,
+                        'comprobante_url'       => $p->documento?->realpath ?? $p->documento?->path ?? null,
+                        'fue_cobrado_en_mes'    => $fueLiquidadoEsteMes,
+                        'fue_programado_en_mes' => $fueProgramadoEsteMes,
                     ];
                 })
             ], 'Datos del calendario de pagos obtenidos correctamente');
