@@ -51,6 +51,7 @@ use App\Http\Controllers\Intranet\ClienteAbastecimientoController;
 use App\Http\Controllers\Intranet\TechnologicalCapabilityController;
 use App\Http\Controllers\Intranet\ConstructionClassificationsController;
 use App\Http\Controllers\Intranet\CreditoInternoController;
+use App\Http\Controllers\Intranet\CreditoInternoDashboardController;
 use App\Http\Controllers\Intranet\PowerBI\DwhHistoricalController;
 use App\Http\Controllers\Intranet\ExchangeRateController;
 use App\Http\Controllers\Intranet\ProductBrandController;
@@ -179,6 +180,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::put('creditoInternoPagos/{pago}', [CreditoInternoController::class, 'registrarPago']);
     Route::post('creditoInternoPagos/{pago}/validar', [CreditoInternoController::class, 'validarPago']);
     Route::apiResource('creditoInterno', CreditoInternoController::class);
+
+    // Credito Interno Dashboard & Calendario
+    Route::post('creditoInternos/dashboard', [CreditoInternoDashboardController::class, 'index']);
+    Route::post('creditoInternos/calendario', [CreditoInternoDashboardController::class, 'calendario']);
+
 
     // 🔹 Cultivo
     Route::post('cultivos', [CultivoController::class, 'index']);
