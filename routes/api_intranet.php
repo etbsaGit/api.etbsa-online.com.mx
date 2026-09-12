@@ -185,7 +185,6 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('creditoInternos/dashboard', [CreditoInternoDashboardController::class, 'index']);
     Route::post('creditoInternos/calendario', [CreditoInternoDashboardController::class, 'calendario']);
 
-
     // 🔹 Cultivo
     Route::post('cultivos', [CultivoController::class, 'index']);
     Route::apiResource('cultivo', CultivoController::class);
@@ -198,7 +197,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('egreso/cliente/{cliente}/{year}', [EgresoController::class, 'getPerCliente']);
     Route::apiResource('egreso', EgresoController::class);
 
-    //ExchangeRate TarifaCambio
+    // 🔹 ExchangeRate TarifaCambio
     Route::post('exchangeRates', [ExchangeRateController::class, 'index']);
     Route::apiResource('exchangeRate', ExchangeRateController::class);
 

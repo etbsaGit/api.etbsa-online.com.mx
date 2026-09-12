@@ -41,7 +41,7 @@ class ClienteController extends ApiController
                 });
             })
             ->filter($filters)
-            ->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification', 'empleados')
+            ->with('stateEntity', 'town', 'classification', 'segmentation', 'tactic', 'constructionClassification', 'empleados', 'creditoClassification')
             ->paginate(10);
 
         return $this->respond(

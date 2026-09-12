@@ -44,7 +44,8 @@ class Cliente extends Model
         'construction_classification_id',
         'user_id',
         'correo_institucional',
-        'nivel_partner_riego_id'
+        'nivel_partner_riego_id',
+        'credito_classif_id'
     ];
 
     protected $appends = ['currentClassTech', 'hectareasConectadas'];
@@ -123,6 +124,10 @@ class Cliente extends Model
     public function classification()
     {
         return $this->belongsTo(Classification::class, 'classification_id');
+    }
+    public function creditoClassification()
+    {
+        return $this->belongsTo(Classification::class, 'credito_classif_id');
     }
 
     public function segmentation()
