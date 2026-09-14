@@ -115,7 +115,7 @@ class CreditoInternoDashboardController extends ApiController
             ->where('credito_historial_pagos.fecha_a_pagar', '<', $hoy)
             ->where(function ($q) {
                 $q->where('credito_historial_pagos.saldo_pendiente', '>', 0)
-                  ->orWhereNull('credito_historial_pagos.monto_pagado');
+                    ->orWhereNull('credito_historial_pagos.monto_pagado');
             })
             ->sum(DB::raw('COALESCE(credito_historial_pagos.saldo_pendiente, 0)'));
 
@@ -131,7 +131,7 @@ class CreditoInternoDashboardController extends ApiController
             ->whereNull('credito_historial_pagos.validated_by')
             ->where(function ($q) {
                 $q->whereNotNull('credito_historial_pagos.document_id')
-                  ->orWhere('credito_historial_pagos.monto_pagado', '>', 0);
+                    ->orWhere('credito_historial_pagos.monto_pagado', '>', 0);
             })
             ->selectRaw('COUNT(*) as total_count, COALESCE(SUM(credito_historial_pagos.monto_pagado), 0) as total_monto')
             ->first();
@@ -140,7 +140,7 @@ class CreditoInternoDashboardController extends ApiController
         $totalSolicitudes = (clone $solicitudesQuery)->count('credito_solicitud.id');
         $solicitudesActivas = (clone $solicitudesQuery)
             ->whereHas('estatus', function ($q) {
-                $q->whereNotIn('nombre', ['Crédito Liquidado', 'Crédito Rechazado', 'Cancelado']);
+                $q->whereNotIn('nombre', ['Crédito Pagado', 'Crédito Rechazado', 'Cancelado']);
             })->count('credito_solicitud.id');
 
         // Índices de gestión
@@ -583,9 +583,18 @@ class CreditoInternoDashboardController extends ApiController
             $diasEnMes = $endOfMonth->day;
 
             $nombresMeses = [
-                1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
-                5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-                9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+                1 => 'Enero',
+                2 => 'Febrero',
+                3 => 'Marzo',
+                4 => 'Abril',
+                5 => 'Mayo',
+                6 => 'Junio',
+                7 => 'Julio',
+                8 => 'Agosto',
+                9 => 'Septiembre',
+                10 => 'Octubre',
+                11 => 'Noviembre',
+                12 => 'Diciembre'
             ];
 
             $user = Auth::user();
@@ -620,7 +629,7 @@ class CreditoInternoDashboardController extends ApiController
             $pagos = CreditoHistorialPagos::whereIn('credito_historial_pagos.solicitud_id', $solicitudesIds)
                 ->where(function ($q) use ($startOfMonth, $endOfMonth) {
                     $q->whereBetween('credito_historial_pagos.fecha_a_pagar', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-                      ->orWhereBetween('credito_historial_pagos.fecha_liquidado', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
+                        ->orWhereBetween('credito_historial_pagos.fecha_liquidado', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
                 })
                 ->with([
                     'solicitud.cliente',
@@ -657,7 +666,7 @@ class CreditoInternoDashboardController extends ApiController
                     'conteo_vencidos'   => 0,
                     'conteo_liquidados' => 0,
                     'conteo_validados'  => 0,
-                    'conteo_por_validar'=> 0,
+                    'conteo_por_validar' => 0,
                     'pagos'             => [],
                 ];
             }

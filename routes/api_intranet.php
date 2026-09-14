@@ -179,6 +179,11 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('creditoInternos/options', [CreditoInternoController::class, 'getOptions']);
     Route::put('creditoInternoPagos/{pago}', [CreditoInternoController::class, 'registrarPago']);
     Route::post('creditoInternoPagos/{pago}/validar', [CreditoInternoController::class, 'validarPago']);
+    Route::post('creditoInternoPagos/{pago}/aplazar', [CreditoInternoController::class, 'solicitarAplazarPago']);
+    Route::post('creditoInternoPagos/{pago}/cancelar-aplazo', [CreditoInternoController::class, 'cancelarSolicitudAplazo']);
+    Route::post('creditoAplazamientos', [CreditoInternoController::class, 'getAplazamientos']);
+    Route::post('creditoAplazamientos/{id}/aprobar', [CreditoInternoController::class, 'aprobarAplazamiento']);
+    Route::post('creditoAplazamientos/{id}/rechazar', [CreditoInternoController::class, 'rechazarAplazamiento']);
     Route::apiResource('creditoInterno', CreditoInternoController::class);
 
     // Credito Interno Dashboard & Calendario

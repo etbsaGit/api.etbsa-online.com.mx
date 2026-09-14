@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('pago_id')->constrained('credito_historial_pagos');
             $table->foreignId('solicitante_id')->constrained('empleados');
             $table->foreignId('estatus_id')->constrained('estatus');
-            $table->foreignId('validated_by')->constrained('empleados')->nullable();
+            $table->foreignId('validated_by')->nullable()->constrained('empleados');
             $table->date('fecha_actual');
             $table->date('fecha_nueva');
             $table->text('motivo');

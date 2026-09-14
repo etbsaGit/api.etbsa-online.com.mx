@@ -18,6 +18,7 @@ use App\Models\Intranet\CreditoInterno\CreditoHistorialPagos;
 use App\Models\Intranet\CreditoInterno\CreditoHistorical;
 use App\Models\Intranet\CreditoInterno\CreditoLineas;
 use App\Models\Intranet\CreditoInterno\CreditoSolicitud;
+use App\Models\Intranet\CreditoInterno\CreditoSolicitudAplazarPago;
 use App\Models\Puesto;
 use App\Models\Sucursal;
 use App\Traits\UploadableFile;
@@ -55,6 +56,12 @@ class CreditoInternoController extends ApiController
                 'pagos.actualizadoPor',
                 'pagos.validadoPor',
                 'pagos.documento.documento',
+                'pagos.solicitudesAplazarPago.estatus',
+                'pagos.solicitudesAplazarPago.solicitante',
+                'pagos.solicitudesAplazarPago.validadoPor',
+                'pagos.solicitudAplazarPago.estatus',
+                'pagos.solicitudAplazarPago.solicitante',
+                'pagos.solicitudAplazarPago.validadoPor',
                 'documentacion.documento'
             ])->filter($filters)->orderBy('created_at', 'desc')->paginate(10);
         return $this->respond(
@@ -319,7 +326,30 @@ class CreditoInternoController extends ApiController
                 }
             }
 
-            // 8. Registrar en bitácora de historial
+            // 8. Si había solicitudes de aplazamiento activas para este pago, cancelarlas automáticamente al haberse registrado el pago
+            if ($pago->monto_pagado !== null && (float)$pago->monto_pagado > 0) {
+                $estatusAplazoSolicitado = Estatus::where('nombre', 'Aplazo Solicitado')->where('tipo_estatus', 'credito-interno')->first();
+                $estatusAplazoCancelado = Estatus::where('nombre', 'Aplazo Cancelado')->where('tipo_estatus', 'credito-interno')->first();
+
+                if ($estatusAplazoSolicitado && $estatusAplazoCancelado) {
+                    $solicitudesActivas = CreditoSolicitudAplazarPago::where('pago_id', $pago->id)
+                        ->where('estatus_id', $estatusAplazoSolicitado->id)
+                        ->get();
+
+                    foreach ($solicitudesActivas as $solAplazo) {
+                        $solAplazo->update(['estatus_id' => $estatusAplazoCancelado->id]);
+
+                        CreditoHistorical::create([
+                            'solicitud_id' => $solicitud->id,
+                            'estatus_id'   => $estatusAplazoCancelado->id,
+                            'descripcion'  => "Solicitud de aplazamiento para " . ($pago->etiqueta ?: "Pago #{$pago->n_pago}") . " cancelada automáticamente al haberse registrado el pago.",
+                            'empleado_id'  => $empleadoId
+                        ]);
+                    }
+                }
+            }
+
+            // 9. Registrar en bitácora de historial
             $estatusHistorial = Estatus::where('nombre', 'Pago Realizado')->where('tipo_estatus', 'credito-interno')->first();
             CreditoHistorical::create([
                 'solicitud_id' => $solicitud->id,
@@ -399,6 +429,189 @@ class CreditoInternoController extends ApiController
         }
     }
 
+    public function solicitarAplazarPago(Request $request, int $pagoId)
+    {
+        $request->validate([
+            'fecha_nueva' => 'required|date',
+            'motivo'      => 'required|string|min:3',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $pago = CreditoHistorialPagos::with('estatus')->find($pagoId);
+
+            if (!$pago) {
+                return $this->respondNotFound('Pago no encontrado');
+            }
+
+            $solicitud = CreditoSolicitud::find($pago->solicitud_id);
+            if (!$solicitud) {
+                return $this->respondNotFound('Solicitud de crédito no encontrada');
+            }
+
+            // Validar que el pago NO tenga estatus "Pago Realizado" ni esté liquidado
+            if ($pago->estatus?->nombre === 'Pago Realizado' || !empty($pago->fecha_liquidado) || ((float)($pago->monto_pagado ?? 0) > 0 && (float)($pago->saldo_pendiente ?? 1) <= 0)) {
+                return response()->json([
+                    'message' => 'No se puede solicitar aplazamiento para un pago que ya ha sido realizado o liquidado.'
+                ], 422);
+            }
+
+            $user = Auth::user();
+            $empleadoId = $user->empleado?->id;
+
+            $estatusAplazo = Estatus::where('nombre', 'Aplazo Solicitado')
+                ->where('tipo_estatus', 'credito-interno')
+                ->first();
+
+            if (!$estatusAplazo) {
+                $estatusAplazo = Estatus::firstOrCreate(
+                    ['nombre' => 'Aplazo Solicitado', 'tipo_estatus' => 'credito-interno'],
+                    ['color' => '#007bf5', 'clave' => 'aplazo-solicitado']
+                );
+            }
+
+            $fechaActual = $pago->fecha_a_pagar ?? Carbon::now()->format('Y-m-d');
+
+            $solicitudAplazo = CreditoSolicitudAplazarPago::create([
+                'pago_id'        => $pago->id,
+                'solicitante_id' => $empleadoId,
+                'estatus_id'     => $estatusAplazo->id,
+                'validated_by'   => null,
+                'fecha_actual'   => $fechaActual,
+                'fecha_nueva'    => $request->input('fecha_nueva'),
+                'motivo'         => $request->input('motivo'),
+            ]);
+
+            // Registrar en la bitácora de historial
+            CreditoHistorical::create([
+                'solicitud_id' => $solicitud->id,
+                'estatus_id'   => $estatusAplazo->id,
+                'descripcion'  => "Solicitud de aplazamiento registrada para " . ($pago->etiqueta ?: "Pago #{$pago->n_pago}") . ". Fecha actual: {$fechaActual} -> Nueva fecha solicitada: " . $request->input('fecha_nueva') . ". Motivo: " . $request->input('motivo'),
+                'empleado_id'  => $empleadoId
+            ]);
+
+            DB::commit();
+
+            return $this->respond(
+                $solicitudAplazo->load(['pago', 'solicitante', 'estatus', 'validadoPor']),
+                'Solicitud de aplazamiento registrada correctamente'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cancelarSolicitudAplazo(Request $request, int $pagoId)
+    {
+        DB::beginTransaction();
+
+        try {
+            $pago = CreditoHistorialPagos::with('estatus')->find($pagoId);
+
+            if (!$pago) {
+                return $this->respondNotFound('Pago no encontrado');
+            }
+
+            $solicitud = CreditoSolicitud::find($pago->solicitud_id);
+            if (!$solicitud) {
+                return $this->respondNotFound('Solicitud de crédito no encontrada');
+            }
+
+            $estatusAplazoSolicitado = Estatus::where('nombre', 'Aplazo Solicitado')
+                ->where('tipo_estatus', 'credito-interno')
+                ->first();
+
+            $estatusAplazoCancelado = Estatus::where('nombre', 'Aplazo Cancelado')
+                ->where('tipo_estatus', 'credito-interno')
+                ->first();
+
+            if (!$estatusAplazoCancelado) {
+                $estatusAplazoCancelado = Estatus::firstOrCreate(
+                    ['nombre' => 'Aplazo Cancelado', 'tipo_estatus' => 'credito-interno'],
+                    ['color' => '#cce6ff', 'clave' => 'aplazo-cancelado']
+                );
+            }
+
+            $solicitudAplazo = CreditoSolicitudAplazarPago::where('pago_id', $pago->id)
+                ->where('estatus_id', $estatusAplazoSolicitado?->id ?? 168)
+                ->latest()
+                ->first();
+
+            if (!$solicitudAplazo) {
+                return response()->json([
+                    'message' => 'No se encontró una solicitud de aplazamiento activa para este pago.'
+                ], 422);
+            }
+
+            $user = Auth::user();
+            $empleadoId = $user->empleado?->id;
+
+            $solicitudAplazo->estatus_id = $estatusAplazoCancelado->id;
+            $solicitudAplazo->save();
+
+            $motivoCancelacion = $request->input('motivo_cancelacion') ? " Motivo: " . $request->input('motivo_cancelacion') : "";
+
+            // Registrar en la bitácora de historial
+            CreditoHistorical::create([
+                'solicitud_id' => $solicitud->id,
+                'estatus_id'   => $estatusAplazoCancelado->id,
+                'descripcion'  => "Solicitud de aplazamiento para " . ($pago->etiqueta ?: "Pago #{$pago->n_pago}") . " cancelada por el solicitante.{$motivoCancelacion}",
+                'empleado_id'  => $empleadoId
+            ]);
+
+            DB::commit();
+
+            return $this->respond(
+                $solicitudAplazo->load(['pago', 'solicitante', 'estatus', 'validadoPor']),
+                'Solicitud de aplazamiento cancelada correctamente'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        $credito = CreditoSolicitud::with([
+            'cliente',
+            'asesor',
+            'notificado',
+            'estatus',
+            'validadoPor',
+            'tipoEnganche',
+            'linea.tiposEnganche',
+            'pagos.estatus',
+            'historial.estatus',
+            'historial.empleado',
+            'sucursal',
+            'pagos.actualizadoPor',
+            'pagos.validadoPor',
+            'pagos.documento.documento',
+            'pagos.solicitudesAplazarPago.estatus',
+            'pagos.solicitudesAplazarPago.solicitante',
+            'pagos.solicitudesAplazarPago.validadoPor',
+            'pagos.solicitudAplazarPago.estatus',
+            'pagos.solicitudAplazarPago.solicitante',
+            'pagos.solicitudAplazarPago.validadoPor',
+            'documentacion.documento'
+        ])->find($id);
+
+        if (!$credito) {
+            return $this->respondNotFound('Solicitud de crédito no encontrada');
+        }
+
+        return $this->respond($credito, 'Solicitud de crédito cargada correctamente');
+    }
+
     public function update(CreditoSolicitud $credito_solicitud, CreditoInternoRequest $request)
     {
         DB::beginTransaction();
@@ -465,13 +678,214 @@ class CreditoInternoController extends ApiController
         }
     }
 
+    public function getAplazamientos(Request $request)
+    {
+        $filters = $request->all();
+        $user = Auth::user();
+
+        $query = CreditoSolicitudAplazarPago::query()
+            ->when(!$user->hasRole('Admin') && !$user->hasRole('Credito') && $user->empleado?->puesto_id !== Puesto::where('nombre', 'Director Administrativo')->first()?->id, function ($query) use ($user) {
+                $query->where(function ($q) use ($user) {
+                    $q->where('solicitante_id', $user->empleado?->id)
+                        ->orWhereHas('pago.solicitud', function ($sub) use ($user) {
+                            $sub->where('asesor_id', $user->empleado?->id)
+                                ->orWhereHas('notificado', function ($n) use ($user) {
+                                    $n->where('id', $user->empleado?->id);
+                                });
+                        });
+                });
+            })
+            ->with([
+                'pago.solicitud.cliente',
+                'pago.solicitud.asesor',
+                'pago.solicitud.sucursal',
+                'pago.solicitud.linea',
+                'pago.solicitud.estatus',
+                'pago.solicitud.pagos.estatus',
+                'pago.estatus',
+                'pago.documento.documento',
+                'solicitante',
+                'estatus',
+                'validadoPor'
+            ])
+            ->filter($filters)
+            ->orderBy('created_at', 'desc');
+
+        $solicitudes = $query->paginate(10);
+
+        return $this->respond(
+            $solicitudes,
+            'Lista de solicitudes de aplazamiento cargada correctamente'
+        );
+    }
+
+    public function aprobarAplazamiento(Request $request, int $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $user = Auth::user();
+            if (!$user->hasRole('Credito') && !$user->hasRole('Admin')) {
+                return response()->json([
+                    'message' => 'No tiene permisos para aprobar solicitudes de aplazamiento. Se requiere rol de Crédito o Administrador.'
+                ], 403);
+            }
+
+            $solicitudAplazo = CreditoSolicitudAplazarPago::with(['pago.solicitud', 'estatus'])->find($id);
+            if (!$solicitudAplazo) {
+                return $this->respondNotFound('Solicitud de aplazamiento no encontrada');
+            }
+
+            if ($solicitudAplazo->estatus?->nombre !== 'Aplazo Solicitado') {
+                return response()->json([
+                    'message' => "Esta solicitud ya no se encuentra en estado 'Aplazo Solicitado' (estado actual: {$solicitudAplazo->estatus?->nombre})."
+                ], 422);
+            }
+
+            $estatusAprobado = Estatus::where('nombre', 'Aplazo Aprobado')
+                ->where('tipo_estatus', 'credito-interno')
+                ->first();
+
+            if (!$estatusAprobado) {
+                $estatusAprobado = Estatus::firstOrCreate(
+                    ['nombre' => 'Aplazo Aprobado', 'tipo_estatus' => 'credito-interno'],
+                    ['color' => '#00f500', 'clave' => 'aplazo-aprobado']
+                );
+            }
+
+            $empleadoId = $user->empleado?->id;
+
+            // 1. Actualizar solicitud de aplazamiento
+            $solicitudAplazo->estatus_id = $estatusAprobado->id;
+            $solicitudAplazo->validated_by = $empleadoId;
+            $solicitudAplazo->save();
+
+            // 2. Actualizar fecha programada del pago
+            $pago = $solicitudAplazo->pago;
+            if ($pago) {
+                $pago->fecha_a_pagar = $solicitudAplazo->fecha_nueva;
+                $pago->save();
+            }
+
+            // 3. Registrar en bitácora de historial
+            if ($solicitudAplazo->pago?->solicitud_id) {
+                CreditoHistorical::create([
+                    'solicitud_id' => $solicitudAplazo->pago->solicitud_id,
+                    'estatus_id'   => $estatusAprobado->id,
+                    'descripcion'  => "Solicitud de aplazamiento para " . ($pago?->etiqueta ?: "Pago #{$pago?->n_pago}") . " APROBADA por el departamento de Crédito. Fecha de pago actualizada de {$solicitudAplazo->fecha_actual} a {$solicitudAplazo->fecha_nueva}." . ($request->notas ? " Notas: " . $request->notas : ""),
+                    'empleado_id'  => $empleadoId
+                ]);
+            }
+
+            DB::commit();
+
+            return $this->respond(
+                $solicitudAplazo->load([
+                    'pago.solicitud.cliente',
+                    'pago.solicitud.asesor',
+                    'pago.solicitud.sucursal',
+                    'pago.estatus',
+                    'solicitante',
+                    'estatus',
+                    'validadoPor'
+                ]),
+                'Solicitud de aplazamiento aprobada correctamente'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function rechazarAplazamiento(Request $request, int $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $user = Auth::user();
+            if (!$user->hasRole('Credito') && !$user->hasRole('Admin')) {
+                return response()->json([
+                    'message' => 'No tiene permisos para rechazar solicitudes de aplazamiento. Se requiere rol de Crédito o Administrador.'
+                ], 403);
+            }
+
+            $solicitudAplazo = CreditoSolicitudAplazarPago::with(['pago.solicitud', 'estatus'])->find($id);
+            if (!$solicitudAplazo) {
+                return $this->respondNotFound('Solicitud de aplazamiento no encontrada');
+            }
+
+            if ($solicitudAplazo->estatus?->nombre !== 'Aplazo Solicitado') {
+                return response()->json([
+                    'message' => "Esta solicitud ya no se encuentra en estado 'Aplazo Solicitado' (estado actual: {$solicitudAplazo->estatus?->nombre})."
+                ], 422);
+            }
+
+            $estatusRechazado = Estatus::where('nombre', 'Aplazo Rechazado')
+                ->where('tipo_estatus', 'credito-interno')
+                ->first();
+
+            if (!$estatusRechazado) {
+                $estatusRechazado = Estatus::firstOrCreate(
+                    ['nombre' => 'Aplazo Rechazado', 'tipo_estatus' => 'credito-interno'],
+                    ['color' => '#f50000', 'clave' => 'aplazo-rechazado']
+                );
+            }
+
+            $empleadoId = $user->empleado?->id;
+
+            // 1. Actualizar solicitud de aplazamiento
+            $solicitudAplazo->estatus_id = $estatusRechazado->id;
+            $solicitudAplazo->validated_by = $empleadoId;
+            $solicitudAplazo->save();
+
+            $pago = $solicitudAplazo->pago;
+            $motivoRechazo = $request->input('motivo_rechazo') ? " Motivo del rechazo: " . $request->input('motivo_rechazo') : "";
+
+            // 2. Registrar en bitácora de historial
+            if ($solicitudAplazo->pago?->solicitud_id) {
+                CreditoHistorical::create([
+                    'solicitud_id' => $solicitudAplazo->pago->solicitud_id,
+                    'estatus_id'   => $estatusRechazado->id,
+                    'descripcion'  => "Solicitud de aplazamiento para " . ($pago?->etiqueta ?: "Pago #{$pago?->n_pago}") . " RECHAZADA por el departamento de Crédito.{$motivoRechazo}",
+                    'empleado_id'  => $empleadoId
+                ]);
+            }
+
+            DB::commit();
+
+            return $this->respond(
+                $solicitudAplazo->load([
+                    'pago.solicitud.cliente',
+                    'pago.solicitud.asesor',
+                    'pago.solicitud.sucursal',
+                    'pago.estatus',
+                    'solicitante',
+                    'estatus',
+                    'validadoPor'
+                ]),
+                'Solicitud de aplazamiento rechazada'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getOptions()
     {
         $estatuses = ['Crédito Solicitado', 'Crédito Aprobado', 'Crédito Rechazado', 'Crédito en Proceso', 'Crédito Pagado'];
+        $estatusesAplazo = ['Aplazo Solicitado', 'Aplazo Aprobado', 'Aplazo Rechazado', 'Aplazo Cancelado'];
         $data = [
             'creditoLineas' => CreditoLineas::with('tiposEnganche')->get(),
             'gerentes' => Empleado::where('puesto_id', Puesto::where('nombre', 'Gerente Territorial')->first()->id)->with('sucursal')->where('estatus_id', Estatus::where('nombre', 'Activo')->where('tipo_estatus', 'empleado')->first()->id)->get(),
             'estatuses' => Estatus::whereIn('nombre', $estatuses)->where('tipo_estatus', 'credito-interno')->get(),
+            'estatusesAplazo' => Estatus::whereIn('nombre', $estatusesAplazo)->where('tipo_estatus', 'credito-interno')->get(),
             'sucursales' => Sucursal::all(),
             'empleados' => Empleado::where('estatus_id', Estatus::where('nombre', 'Activo')->first()->id)->get(),
             'documentos' => CreditoDocsSolicitados::all(),

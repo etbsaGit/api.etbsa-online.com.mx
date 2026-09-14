@@ -52,4 +52,12 @@ class CreditoHistorialPagos extends Model
     {
         return $this->belongsTo(CreditoDocs::class, 'document_id');
     }
+    public function solicitudesAplazarPago()
+    {
+        return $this->hasMany(CreditoSolicitudAplazarPago::class, 'pago_id');
+    }
+    public function solicitudAplazarPago()
+    {
+        return $this->hasOne(CreditoSolicitudAplazarPago::class, 'pago_id')->latestOfMany();
+    }
 }
