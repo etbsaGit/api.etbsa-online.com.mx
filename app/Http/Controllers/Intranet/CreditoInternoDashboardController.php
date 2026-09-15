@@ -724,22 +724,22 @@ class CreditoInternoDashboardController extends ApiController
                         $conteoPorValidar++;
                         $montoPorValidarMes += $montoPagado;
                     }
-                } elseif ($tienePagoRegistrado && !$estaValidado && $fueProgramadoEsteMes) {
+                } elseif ($tienePagoRegistrado && !$estaValidado && $fueLiquidadoEsteMes) {
                     $conteoPorValidar++;
                     $montoPorValidarMes += $montoPagado;
                 }
 
                 // 2. Pagos Programados, Vencidos y Pendientes: DEPENDEN DE LA PROGRAMACIÓN DE ESTE MES ($fueProgramadoEsteMes)
-                if ($fueProgramadoEsteMes) {
+                if ($fueLiquidadoEsteMes) {
                     $totalPagosProgramadosMes++;
                     if ($estadoCobro === 'liquidado') {
                         $conteoLiquidadosProgramadosMes++;
                     } elseif ($estadoCobro === 'vencido') {
                         $conteoVencidos++;
                         $montoVencidoMes += ($saldoPendiente > 0 ? $saldoPendiente : $montoEsperado);
-                    } else {
-                        $conteoPendientes++;
                     }
+                } elseif ($estadoCobro === 'pendiente') {
+                    $conteoPendientes++;
                 }
 
                 $estadoValidacion = $estaValidado ? 'validado' : ($tienePagoRegistrado ? 'por_validar' : 'sin_pago');
