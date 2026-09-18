@@ -385,7 +385,7 @@ class CreditoInternoDashboardController extends ApiController
     }
 
     /**
-     * 7. Top 5 Clientes con Mayor Saldo en Mora (Para Acción Ejecutiva Inmediata)
+     * 7. Top 5 Clientes con Mayor Saldo en Mora
      */
     private function getTopClientesMora(array $solicitudesIds)
     {

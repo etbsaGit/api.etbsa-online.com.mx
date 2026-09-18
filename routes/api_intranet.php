@@ -184,6 +184,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('creditoAplazamientos', [CreditoInternoController::class, 'getAplazamientos']);
     Route::post('creditoAplazamientos/{id}/aprobar', [CreditoInternoController::class, 'aprobarAplazamiento']);
     Route::post('creditoAplazamientos/{id}/rechazar', [CreditoInternoController::class, 'rechazarAplazamiento']);
+    Route::post('creditoInternos/voBoCredito', [CreditoInternoController::class, 'voBoCredito']);
     Route::apiResource('creditoInterno', CreditoInternoController::class);
 
     // Credito Interno Dashboard & Calendario

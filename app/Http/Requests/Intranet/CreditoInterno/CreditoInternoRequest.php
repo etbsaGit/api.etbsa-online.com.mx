@@ -51,6 +51,8 @@ class CreditoInternoRequest extends FormRequest
             'archivos.*.existente'       => ['nullable', 'boolean'],
             'archivos.*.expiration_date' => ['nullable', 'date'],
 
+            'analitica_solicitada' => ['required', 'boolean']
+
         ];
     }
 

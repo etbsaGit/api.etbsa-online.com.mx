@@ -128,6 +128,10 @@ class CreditoSolicitud extends Model
     {
         return $this->hasMany(CreditoDocs::class, 'solicitud_id');
     }
+    public function voBoCredito()
+    {
+        return $this->hasMany(CreditoSolicitudVoBoCredito::class, 'solicitud_id');
+    }
     public function scopeFilter($query, $filters)
     {
         if (isset($filters['estatus_id'])) {

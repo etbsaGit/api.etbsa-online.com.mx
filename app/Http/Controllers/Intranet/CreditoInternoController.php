@@ -6,9 +6,11 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Intranet\CreditoInterno\AutorizarCreditoInternoRequest;
 use App\Http\Requests\Intranet\CreditoInterno\CreditoInternoRequest;
+use App\Http\Requests\Intranet\CreditoInterno\VoBoCreditoRequest;
 use App\Http\Requests\Intranet\Products\TractorContrapesoRequest;
 use App\Models\Empleado;
 use App\Models\Estatus;
+use App\Models\Intranet\Analitica;
 use App\Models\Intranet\Cliente;
 use App\Models\Intranet\ClientesDoc;
 use App\Models\Intranet\CreditoInterno\CreditoDocs;
@@ -19,6 +21,7 @@ use App\Models\Intranet\CreditoInterno\CreditoHistorical;
 use App\Models\Intranet\CreditoInterno\CreditoLineas;
 use App\Models\Intranet\CreditoInterno\CreditoSolicitud;
 use App\Models\Intranet\CreditoInterno\CreditoSolicitudAplazarPago;
+use App\Models\Intranet\CreditoInterno\CreditoSolicitudVoBoCredito;
 use App\Models\Puesto;
 use App\Models\Sucursal;
 use App\Traits\UploadableFile;
@@ -62,7 +65,8 @@ class CreditoInternoController extends ApiController
                 'pagos.solicitudAplazarPago.estatus',
                 'pagos.solicitudAplazarPago.solicitante',
                 'pagos.solicitudAplazarPago.validadoPor',
-                'documentacion.documento'
+                'documentacion.documento',
+                'voBoCredito.estatus'
             ])->filter($filters)->orderBy('created_at', 'desc')->paginate(10);
         return $this->respond(
             $creditoSolicitudes,
@@ -121,6 +125,22 @@ class CreditoInternoController extends ApiController
                 'empleado_id' => $empleadoId
             ]);
 
+            // si la línea es maquinaria, riego, usados o drones se manda a hacer una analitica
+            if ($request->analitica_solicitada) {
+                Analitica::create([
+                    'titulo' => 'Analitica Interna ' . Carbon::now()->format('d/m/Y'),
+                    'efectivo' => 0,
+                    'caja' => 0,
+                    'gastos' => 0,
+                    'documentospc' => 0,
+                    'mercancias' => 0,
+                    'status' => 1,
+                    'fecha' => Carbon::now()->format('Y-m-d'),
+                    'comentarios' => 'Analitica interna creada para la solicitud de crédito #' . $creditoSolicitud->id . ' línea ' . CreditoLineas::find($request->linea_id)->nombre,
+                    'cliente_id' => $request->cliente_id,
+                    'empleado_id' => $empleadoId
+                ]);
+            }
             DB::commit();
 
             return $this->respondCreated(
@@ -631,43 +651,47 @@ class CreditoInternoController extends ApiController
         }
     }
 
-    public function autorizarCredito(AutorizarCreditoInternoRequest $request, int $solicitudId, bool $autorizado)
+    public function voBoCredito(VoBoCreditoRequest $request)
     {
         DB::beginTransaction();
-
         try {
-            $credito_solicitud = CreditoSolicitud::find($solicitudId);
+            $user = Auth::user();
+            $empleadoId = $user->empleado?->id;
+            $data = $request->validated();
+            $credito = CreditoSolicitud::find($data['solicitud_id']);
 
-            if ($credito_solicitud == null) {
+            if (!$credito) {
                 return $this->respondNotFound('Solicitud de crédito no encontrada');
             }
 
-            $user = Auth::user();
-            $empleadoId = $user->empleado?->id;
-            $aprobadoId = Estatus::where('nombre', 'Crédito Aprobado')->where('tipo_estatus', 'credito-interno')->first();
-            $data = $request->validated();
-            $data['validated_by'] = $empleadoId;
-            if ($autorizado) {
-                $data['monto_aprobado'] = $data['monto_aprobado'];
-                $data['autorizado'] = true;
-                $data['estatus_id'] = $aprobadoId->id;
-                $credito_solicitud->update($data);
-            } else {
-                $rechazadoId = Estatus::where('nombre', 'Crédito Rechazado')->where('tipo_estatus', 'credito-interno')->first();
-                $data['estatus_id'] = $rechazadoId->id;
-                $credito_solicitud->update($data);
-            }
+            $estatusId = $data['aprobado'] ? Estatus::where('nombre', 'Crédito Aprobado')->where('tipo_estatus', 'credito-interno')->first()->id : Estatus::where('nombre', 'Crédito Rechazado')->where('tipo_estatus', 'credito-interno')->first()->id;
+
+            $voBo = CreditoSolicitudVoBoCredito::create([
+                'solicitud_id' => $credito->id,
+                'empleado_id' => $empleadoId,
+                'notas' => $data['notas'],
+                'estatus_id' => $estatusId,
+            ]);
+
+            CreditoHistorical::create([
+                'solicitud_id' => $credito->id,
+                'estatus_id'   => $estatusId,
+                'descripcion'  => $data['aprobado'] ? 'VoBo de depto. de Crédito: Aprobado' : 'VoBo de depto. de Crédito: Rechazado' . ($data['notas'] ? " Notas: " . $data['notas'] : ""),
+                'empleado_id'  => $empleadoId
+            ]);
+
             DB::commit();
 
-            return $this->respond($credito_solicitud, 'Solicitud de crédito ' . ($autorizado ? 'autorizada' : 'rechazada') . ' correctamente');
+            return $this->respond($voBo, 'VoBo registrado con éxito');
         } catch (\Throwable $e) {
             DB::rollBack();
-
             return response()->json([
                 'message' => $e->getMessage()
             ], 500);
         }
     }
+
+    public function voBoGerencia() {}
 
     public function destroy()
     {

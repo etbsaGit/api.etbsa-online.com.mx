@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class AutorizarCreditoInternoRequest extends FormRequest
+class VoBoCreditoRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,14 +21,18 @@ class AutorizarCreditoInternoRequest extends FormRequest
     {
 
         return [
-            'monto_aprobado' => ['nullable', 'numeric'],
+            'solicitud_id' => ['required', 'exists:credito_solicitud,id'],
+            'aprobado' => ['required', 'boolean'],
+            'notas' => ['nullable', 'string'],
         ];
     }
 
     public function messages()
     {
         return [
-            'monto_aprobado.required' => 'El monto aprobado es obligatorio',
+            'solicitud_id.required' => 'La solicitud es obligatoria',
+            'solicitud_id.exists' => 'La solicitud no existe',
+            'aprobado.required' => 'El aprobacion es obligatorio',
         ];
     }
 
