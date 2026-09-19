@@ -130,7 +130,11 @@ class CreditoSolicitud extends Model
     }
     public function voBoCredito()
     {
-        return $this->hasMany(CreditoSolicitudVoBoCredito::class, 'solicitud_id');
+        return $this->hasOne(CreditoSolicitudVoBoCredito::class, 'solicitud_id')->latestOfMany();
+    }
+    public function voBoGerencia()
+    {
+        return $this->hasOne(CreditoSolicitudVoBoGerencia::class, 'solicitud_id')->latestOfMany();
     }
     public function scopeFilter($query, $filters)
     {
