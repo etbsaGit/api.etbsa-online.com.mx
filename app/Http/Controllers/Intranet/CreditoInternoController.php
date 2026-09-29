@@ -39,7 +39,7 @@ class CreditoInternoController extends ApiController
     {
         $filters = $request->all();
         $user = Auth::user();
-        // si es admin o director administrativo puede ver todas las cotizaciones, si no sólo las que se le notificó al usuario
+        // si es admin o director administrativo puede ver todas las cotizaciones, si no sólo las que se le notificó al usuario o el que la solicitó
         $creditoSolicitudes = CreditoSolicitud::query()
             ->when(!$user->hasRole('Admin') && !$user->hasRole('Credito') && $user->empleado->puesto_id !== Puesto::where('nombre', 'Director Administrativo')->first()->id, function ($query) use ($user) {
                 $query->whereHas('notificado', function ($q) use ($user) {

@@ -183,7 +183,7 @@ class CreditoInternoDashboardController extends ApiController
                 'categories' => $meses,
                 'series'     => [
                     ['name' => 'Recaudado Real', 'data' => array_values($recaudado)],
-                    ['name' => 'Cobranza Esperada / Programada', 'data' => array_values($esperado)]
+                    // ['name' => 'Cobranza Esperada / Programada', 'data' => array_values($esperado)]
                 ]
             ];
         }
@@ -217,11 +217,11 @@ class CreditoInternoDashboardController extends ApiController
                 [
                     'name' => 'Recaudado Real',
                     'data' => array_values($recaudado),
-                ],
-                [
-                    'name' => 'Cobranza Esperada / Programada',
-                    'data' => array_values($esperado),
                 ]
+                // [
+                //     'name' => 'Cobranza Esperada / Programada',
+                //     'data' => array_values($esperado),
+                // ]
             ]
         ];
     }
