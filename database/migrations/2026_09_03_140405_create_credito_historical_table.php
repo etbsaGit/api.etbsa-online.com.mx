@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('solicitud_id')->constrained('credito_solicitud');
             $table->foreignId('estatus_id')->constrained('estatus');
-            $table->string('descripcion');
+            $table->text('descripcion');
             $table->foreignId('empleado_id')->constrained('empleados');
             $table->timestamps();
         });
