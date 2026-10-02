@@ -13,6 +13,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Vehicle\PutRequest;
 use App\Http\Requests\Vehicle\StoreRequest;
+use App\Http\Requests\Vehicle\HistorialPlacasRequest;
+use App\Models\VehicleHistorialPlacas;
 
 class VehicleController extends ApiController
 {
@@ -23,7 +25,7 @@ class VehicleController extends ApiController
     {
         $filters = $request->all();
 
-        return $this->respond(Vehicle::filter($filters)->with('departamento', 'linea', 'sucursal', 'estatus', 'empleados')->paginate(10));
+        return $this->respond(Vehicle::filter($filters)->with('departamento', 'linea', 'sucursal', 'estatus', 'empleados', 'historialPlacas')->paginate(10));
     }
 
     /**
@@ -41,6 +43,7 @@ class VehicleController extends ApiController
      */
     public function show(Vehicle $vehicle)
     {
+        $vehicle->load('departamento', 'linea', 'sucursal', 'estatus', 'empleados', 'historialPlacas');
         return $this->respond($vehicle);
     }
 
@@ -49,7 +52,14 @@ class VehicleController extends ApiController
      */
     public function update(PutRequest $request, Vehicle $vehicle)
     {
+        $oldPlacas = $vehicle->placas;
+
         $vehicle->update($request->validated());
+
+        if (!empty($oldPlacas) && $vehicle->wasChanged('placas')) {
+            $this->storeHistorialPlacas($vehicle->id, $vehicle->placas);
+        }
+
         return $this->respond($vehicle);
     }
 
@@ -87,7 +97,8 @@ class VehicleController extends ApiController
         return $this->respond(['message' => 'Vehicle employees synced successfully.']);
     }
 
-    public function baja(Request $request, Vehicle $vehicle){
+    public function baja(Request $request, Vehicle $vehicle)
+    {
         $request->validate([
             'motivo_baja' => 'required|string|max:255',
         ]);
@@ -99,12 +110,22 @@ class VehicleController extends ApiController
         return $this->respond(['message' => 'Vehicle dado de baja con éxito']);
     }
 
-    public function activar(Request $request, Vehicle $vehicle){
+    public function activar(Request $request, Vehicle $vehicle)
+    {
 
         $vehicle->update([
             'activo' => true,
             'motivo_baja' => null,
         ]);
         return $this->respond(['message' => 'Vehicle activado con éxito']);
+    }
+
+    public function storeHistorialPlacas($vehicle_id, $placa)
+    {
+        $vehicleHistorialPlacas = VehicleHistorialPlacas::create([
+            'vehicle_id' => $vehicle_id,
+            'placa' => $placa,
+        ]);
+        return $this->respondCreated($vehicleHistorialPlacas);
     }
 }
