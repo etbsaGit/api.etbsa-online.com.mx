@@ -12,6 +12,7 @@ class Vehicle extends Model
     use HasFactory, FilterableModel;
 
     protected $fillable = [
+        'serie',
         'placas',
         'departamento_id',
         'linea_id',
@@ -24,7 +25,7 @@ class Vehicle extends Model
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['placas']);
+        return $this->scopeFilterSearch($query, $filters, ['placas', 'serie']);
     }
 
     public function departamento()
@@ -55,5 +56,10 @@ class Vehicle extends Model
     public function services()
     {
         return $this->hasMany(Service::class, 'vehicle_id');
+    }
+
+    public function historialPlacas()
+    {
+        return $this->hasMany(VehicleHistorialPlacas::class, 'vehicle_id')->orderBy('id', 'desc');
     }
 }
