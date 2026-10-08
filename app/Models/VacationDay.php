@@ -32,7 +32,8 @@ class VacationDay extends Model
         'comentarios',
         'created_by',
         'validate_by',
-        'cubre'
+        'cubre',
+        'vacation_dia_cuenta_id'
     ];
 
     protected $appends = ['color'];
@@ -103,5 +104,10 @@ class VacationDay extends Model
     public function cubre_rel()
     {
         return $this->belongsTo(Empleado::class, 'cubre');
+    }
+
+    public function diaCuenta()
+    {
+        return $this->belongsTo(VacationDiaCuenta::class, 'vacation_dia_cuenta_id');
     }
 }

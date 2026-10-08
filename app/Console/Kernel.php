@@ -22,6 +22,13 @@ class Kernel extends ConsoleKernel
                 Schedule::SATURDAY,
             ])
             ->at('09:05');
+
+        // Registra los dias a cuenta de vacaciones a quien cumple aniversario laboral
+        $schedule->command('vacations:apply-dias-cuenta')
+            ->dailyAt('07:00')
+            ->timezone('America/Mexico_City')
+            ->withoutOverlapping()
+            ->onOneServer();
     }
 
     /**

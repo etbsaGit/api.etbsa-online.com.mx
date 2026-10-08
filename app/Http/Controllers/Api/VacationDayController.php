@@ -354,7 +354,7 @@ class VacationDayController extends ApiController
         }
     }
 
-    public function sendValidatedOnAppNotify($vacationDay)
+    public function sendValidatedOnAppNotify($vacationDayId)
     {
         $vacationDay = VacationDay::find($vacationDayId);
         $solicitante = $vacationDay->empleado;
@@ -374,6 +374,7 @@ class VacationDayController extends ApiController
             ]
         );
     }
+
     public function setValidatedOn(VacationDay $vacationDay)
     {
         $user = Auth::user();

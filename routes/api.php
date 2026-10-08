@@ -76,6 +76,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\TechniciansInvoiceController;
 use App\Http\Controllers\Api\RequisicionPersonalController;
 use App\Http\Controllers\Api\ProspectDistribucionController;
+use App\Http\Controllers\Api\VacationDiaCuentaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -323,6 +324,13 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('vacationDays/report-xlsx', [VacationDayController::class, 'getEmployeeReportXls']);
 
     Route::apiResource('vacationDay', VacationDayController::class);
+
+    //--------------------VacationDiaCuenta--------------------
+    Route::post('vacationDiaCuentas', [VacationDiaCuentaController::class, 'index']);
+    Route::get('vacationDiaCuenta/option/{year}', [VacationDiaCuentaController::class, 'getFecha']);
+    Route::apiResource('vacationDiaCuenta', VacationDiaCuentaController::class)->parameters([
+        'vacationDiaCuenta' => 'vacationDiaCuenta'
+    ]);
 
     //--------------------Incapacity--------------------
     Route::post('incapacities', [IncapacityController::class, 'index']);

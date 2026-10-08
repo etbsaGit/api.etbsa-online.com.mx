@@ -150,7 +150,7 @@
                 {{ \Carbon\Carbon::parse($data['empleado']['fecha_de_ingreso'])->format('d/m/Y') }}</p>
 
             <h3>Quien cubre</h3>
-            <p>{{ $data['cubre_rel']['nombreCompleto'] }}</p>
+            <p>{{ $data['cubre_rel']['nombreCompleto'] ?? 'No aplica' }}</p>
 
             <h3>Información Adicional</h3>
             <p><strong>Creado el:</strong> {{ \Carbon\Carbon::parse($data['created_at'])->format('d/m/Y') }}</p>
