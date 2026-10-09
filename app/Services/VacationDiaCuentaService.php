@@ -136,7 +136,7 @@ class VacationDiaCuentaService
             'fecha_termino' => $fechaStr,
             'fecha_regreso' => $fechaRegreso,
             'validated' => 1,
-            'comentarios' => null,
+            'comentarios' => "",
             'vacation_dia_cuenta_id' => $dia->id,
             'cubre' => null,
             'created_by' => null,

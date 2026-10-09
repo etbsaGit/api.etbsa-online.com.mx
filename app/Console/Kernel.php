@@ -23,11 +23,24 @@ class Kernel extends ConsoleKernel
             ])
             ->at('09:05');
 
-        // Registra los dias a cuenta de vacaciones a quien cumple aniversario laboral
+        // Registra los dias a cuenta de vacaciones a quien cumple aniversario laboral (Pasada principal)
+        $schedule->command('vacations:apply-dias-cuenta')
+            ->dailyAt('00:00')
+            ->timezone('America/Mexico_City')
+            ->withoutOverlapping(60)
+            ->onOneServer();
+
+        // Pasada de respaldo (auto-recuperación si el servidor se interrumpió o estuvo apagado a las 00:00)
         $schedule->command('vacations:apply-dias-cuenta')
             ->dailyAt('07:00')
             ->timezone('America/Mexico_City')
-            ->withoutOverlapping()
+            ->withoutOverlapping(60)
+            ->onOneServer();
+        // Pasada de respaldo (auto-recuperación si el servidor se interrumpió o estuvo apagado a las 07:00)
+        $schedule->command('vacations:apply-dias-cuenta')
+            ->dailyAt('10:00')
+            ->timezone('America/Mexico_City')
+            ->withoutOverlapping(60)
             ->onOneServer();
     }
 
