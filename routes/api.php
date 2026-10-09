@@ -326,6 +326,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('vacationDay', VacationDayController::class);
 
     //--------------------VacationDiaCuenta--------------------
+    Route::match(['get', 'post'], 'vacationDiaCuenta/bitacora', [VacationDiaCuentaController::class, 'getBitacora']);
+    Route::get('vacationDiaCuenta/bitacora/options', [VacationDiaCuentaController::class, 'getBitacoraOptions']);
     Route::post('vacationDiaCuentas', [VacationDiaCuentaController::class, 'index']);
     Route::get('vacationDiaCuenta/option/{year}', [VacationDiaCuentaController::class, 'getFecha']);
     Route::apiResource('vacationDiaCuenta', VacationDiaCuentaController::class)->parameters([

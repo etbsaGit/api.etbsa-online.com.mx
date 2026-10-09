@@ -31,7 +31,13 @@ class PutRequest extends FormRequest
 
         return [
             "nombre" => ['required', 'string', 'max:255'],
-            'fecha' => ['required', 'date', Rule::unique('vacation_dia_cuenta', 'fecha')->ignore($id)],
+            'fecha' => [
+                'required',
+                'date',
+                Rule::unique('vacation_dia_cuenta', 'fecha')
+                    ->ignore($id)
+                    ->whereNull('deleted_at'),
+            ],
         ];
     }
 

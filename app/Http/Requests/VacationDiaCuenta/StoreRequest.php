@@ -3,6 +3,7 @@
 namespace App\Http\Requests\VacationDiaCuenta;
 
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
@@ -26,7 +27,11 @@ class StoreRequest extends FormRequest
     {
         return [
             "nombre" => ['required', 'string', 'max:255'],
-            'fecha' => ['required', 'date', 'unique:vacation_dia_cuenta,fecha'],
+            'fecha' => [
+                'required',
+                'date',
+                Rule::unique('vacation_dia_cuenta', 'fecha')->whereNull('deleted_at'),
+            ],
         ];
     }
 

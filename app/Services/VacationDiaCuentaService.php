@@ -142,7 +142,7 @@ class VacationDiaCuentaService
             'fecha_termino' => $fechaStr,
             'fecha_regreso' => $fechaRegreso,
             'validated' => 1,
-            'comentarios' => "Día a cuenta: {$dia->nombre} (automático)",
+            'comentarios' => null,
             'vacation_dia_cuenta_id' => $dia->id,
             'cubre' => null,
             'created_by' => null,

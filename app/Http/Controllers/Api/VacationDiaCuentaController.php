@@ -104,12 +104,75 @@ class VacationDiaCuentaController extends ApiController
 
     public function getFecha($year)
     {
-        $fechas = VacationDiaCuenta::whereYear('fecha', $year)
-            ->orWhereYear('fecha', $year - 1)
-            ->orWhereYear('fecha', $year + 1)
+        $fechas = VacationDiaCuenta::where(function ($q) use ($year) {
+            $q->whereYear('fecha', $year)
+                ->orWhereYear('fecha', $year - 1)
+                ->orWhereYear('fecha', $year + 1);
+        })
             ->pluck('fecha')
             ->toArray();
 
         return $this->respond($fechas);
+    }
+
+    public function getBitacora(Request $request)
+    {
+        $query = \App\Models\VacationDiaCuentaBitacora::with([
+            'empleado' => function ($q) {
+                $q->select('id', 'nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno');
+            },
+            'diaCuenta' => function ($q) {
+                $q->withTrashed();
+            },
+            'estatus:id,nombre,color'
+        ]);
+
+        if ($request->filled('fecha')) {
+            $query->whereDate('created_at', $request->input('fecha'));
+        }
+
+        if ($request->filled('empleado_id')) {
+            $query->where('empleado_id', $request->input('empleado_id'));
+        }
+
+        if ($request->filled('dia_cuenta_id')) {
+            $query->where('dia_cuenta_id', $request->input('dia_cuenta_id'));
+        }
+
+        if ($request->filled('estatus_id')) {
+            $query->where('estatus_id', $request->input('estatus_id'));
+        }
+
+        $bitacora = $query->orderBy('id', 'asc')->get();
+
+        $bitacora->each(function ($item) {
+            if ($item->empleado) {
+                $item->empleado->makeHidden(['aniosVacaciones', 'prod', 'desempenoManoObra', 'vacationPeriod', 'nuevoPermiso', 'picture', 'hasEmpleados']);
+            }
+        });
+
+        return $this->respond($bitacora);
+    }
+
+    public function getBitacoraOptions()
+    {
+        $estatus = \App\Models\Estatus::where('tipo_estatus', 'vacation-dia-cuenta')
+            ->get(['id', 'nombre', 'color']);
+
+        $diasCuenta = VacationDiaCuenta::withTrashed()
+            ->orderBy('fecha', 'desc')
+            ->get(['id', 'nombre', 'fecha']);
+
+        $empleados = \App\Models\Empleado::where('estatus_id', 5)
+            ->orderBy('apellido_paterno')
+            ->select('id', 'nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno')
+            ->get()
+            ->makeHidden(['aniosVacaciones', 'prod', 'desempenoManoObra', 'vacationPeriod', 'nuevoPermiso', 'picture', 'hasEmpleados']);
+
+        return $this->respond([
+            'estatus' => $estatus,
+            'dias_cuenta' => $diasCuenta,
+            'empleados' => $empleados,
+        ]);
     }
 }

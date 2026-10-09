@@ -219,4 +219,45 @@ class VacationDiaCuentaServiceTest extends TestCase
             ->first();
         $this->assertNotNull($infoAniv);
     }
+
+    public function test_recrear_dia_cuenta_previamente_eliminado()
+    {
+        $fecha = '2026-12-12';
+
+        // 1. Crear el día inicial
+        $dia = VacationDiaCuenta::create([
+            'nombre' => 'Día Inicial 12 Dic',
+            'fecha' => $fecha,
+        ]);
+
+        // 2. Eliminarlo (Soft Delete)
+        $dia->delete();
+        $this->assertTrue($dia->trashed());
+
+        // 3. Validar con StoreRequest: debe permitir volver a registrar la misma fecha porque la anterior está eliminada
+        $rules = (new \App\Http\Requests\VacationDiaCuenta\StoreRequest())->rules();
+        $validator = \Illuminate\Support\Facades\Validator::make([
+            'nombre' => 'Día Vuelto a Crear',
+            'fecha' => $fecha,
+        ], $rules);
+
+        $this->assertFalse($validator->fails(), 'La validación no debe fallar para fechas de registros eliminados.');
+
+        // 4. Volver a crearlo efectivamente en BD
+        $nuevoDia = VacationDiaCuenta::create([
+            'nombre' => 'Día Vuelto a Crear',
+            'fecha' => $fecha,
+        ]);
+        $this->assertNotNull($nuevoDia);
+        $this->assertNull($nuevoDia->deleted_at);
+
+        // 5. Ahora que existe uno activo, si intentamos validar nuevamente esa misma fecha, SÍ debe fallar
+        $validatorDuplicado = \Illuminate\Support\Facades\Validator::make([
+            'nombre' => 'Tercer Intento Duplicado',
+            'fecha' => $fecha,
+        ], $rules);
+
+        $this->assertTrue($validatorDuplicado->fails());
+        $this->assertArrayHasKey('fecha', $validatorDuplicado->errors()->toArray());
+    }
 }
