@@ -7,6 +7,7 @@ use App\Models\Festivo;
 use App\Models\Empleado;
 use App\Models\VacationDay;
 use App\Models\VacationDiaCuenta;
+use App\Models\VacationDiaCuentaBitacora;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -60,12 +61,13 @@ class VacationDiaCuentaService
      *
      * Retorna el VacationDay creado si fue exitoso, o null con la razón en $motivoOmitido.
      */
-    public function registrarDia(Empleado $empleado, VacationDiaCuenta $dia, bool $dryRun = false, ?string &$motivoOmitido = null): ?VacationDay
+    public function registrarDia(Empleado $empleado, VacationDiaCuenta $dia, bool $dryRun = false, ?string &$motivoOmitido = null, ?string &$codigoOmitido = null): ?VacationDay
     {
         $fechaDia = Carbon::parse($dia->fecha)->startOfDay();
 
         // 1. Validar que el día no caiga en domingo ni festivo
         if (!$this->esDiaHabil($fechaDia)) {
+            $codigoOmitido = 'festivo_o_domingo';
             $motivoOmitido = "La fecha {$dia->fecha} es domingo o día festivo oficial";
             Log::info("VacationDiaCuenta: Empleado {$empleado->id} ({$empleado->nombreCompleto}) omitido para día {$dia->nombre} ({$dia->fecha}): {$motivoOmitido}");
             return null;
@@ -77,6 +79,7 @@ class VacationDiaCuentaService
             ->exists();
 
         if ($yaAsignado) {
+            $codigoOmitido = 'ya_asignado';
             $motivoOmitido = "Ya tiene registrada la solicitud para este día a cuenta (id {$dia->id})";
             return null;
         }
@@ -93,6 +96,7 @@ class VacationDiaCuentaService
             ->exists();
 
         if ($solicitudExistente) {
+            $codigoOmitido = 'solicitud_previa';
             $motivoOmitido = "Ya tiene una solicitud de vacaciones que cubre la fecha {$fechaStr}";
             Log::info("VacationDiaCuenta: Empleado {$empleado->id} ({$empleado->nombreCompleto}) omitido para día {$dia->nombre} ({$dia->fecha}): {$motivoOmitido}");
             return null;
@@ -104,6 +108,7 @@ class VacationDiaCuentaService
         $a = $empleadoActual->aniosVacaciones;
 
         if (($a['cumplidos'] ?? 0) < 1 || empty($a['correspondientes'])) {
+            $codigoOmitido = 'sin_antiguedad';
             $motivoOmitido = "No tiene derecho a vacaciones aún (años cumplidos: " . ($a['cumplidos'] ?? 0) . ")";
             Log::info("VacationDiaCuenta: Empleado {$empleado->id} ({$empleado->nombreCompleto}) omitido para día {$dia->nombre} ({$dia->fecha}): {$motivoOmitido}");
             return null;
@@ -112,6 +117,7 @@ class VacationDiaCuentaService
         // Regla: "El saldo negativo no se registra"
         // Si el saldo disponible es menor a 1 día, no se puede descontar
         if (($a['subtotal'] ?? 0) < 1) {
+            $codigoOmitido = 'sin_dias';
             $motivoOmitido = "Saldo insuficiente (disponible: " . ($a['subtotal'] ?? 0) . " días)";
             Log::info("VacationDiaCuenta: Empleado {$empleado->id} ({$empleado->nombreCompleto}) omitido para día {$dia->nombre} ({$dia->fecha}): {$motivoOmitido}");
             return null;
@@ -136,7 +142,7 @@ class VacationDiaCuentaService
             'fecha_termino' => $fechaStr,
             'fecha_regreso' => $fechaRegreso,
             'validated' => 1,
-            'comentarios' => "",
+            'comentarios' => "Día a cuenta: {$dia->nombre} (automático)",
             'vacation_dia_cuenta_id' => $dia->id,
             'cubre' => null,
             'created_by' => null,
@@ -169,6 +175,15 @@ class VacationDiaCuentaService
         }
 
         try {
+            if (!$dryRun) {
+                $mesesCortos = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+                $fechaTexto = "{$targetDate->day} de {$mesesCortos[$targetDate->month - 1]} del {$targetDate->year}";
+                VacationDiaCuentaBitacora::registrar(
+                    VacationDiaCuentaBitacora::ESTATUS_INFO,
+                    "Se hace el proceso de buscar a los empleados con aniversario el día de hoy {$fechaTexto} para descontar los días a cuenta"
+                );
+            }
+
             $query = Empleado::where('estatus_id', 5)
                 ->whereYear('fecha_de_ingreso', '<', $targetDate->year);
 
@@ -191,6 +206,18 @@ class VacationDiaCuentaService
             }
 
             $empleados = $query->with(['vehicle'])->get();
+
+            if (!$dryRun) {
+                $totalEmpleados = $empleados->count();
+                $msgEmpleados = $totalEmpleados > 0
+                    ? "Se encontraron {$totalEmpleados} empleados con aniversario HOY"
+                    : "No se encontraron empleados con aniversario HOY";
+
+                VacationDiaCuentaBitacora::registrar(
+                    VacationDiaCuentaBitacora::ESTATUS_INFO,
+                    $msgEmpleados
+                );
+            }
 
             // Rango de fechas del nuevo periodo que comienza hoy:
             // Desde hoy hasta hoy + 1 año - 1 día
@@ -225,7 +252,8 @@ class VacationDiaCuentaService
                 try {
                     foreach ($diasCuenta as $dia) {
                         $motivo = null;
-                        $vacation = $this->registrarDia($empleado, $dia, $dryRun, $motivo);
+                        $codigo = null;
+                        $vacation = $this->registrarDia($empleado, $dia, $dryRun, $motivo, $codigo);
 
                         if ($vacation) {
                             $empleadoResumen['creados'][] = [
@@ -235,6 +263,16 @@ class VacationDiaCuentaService
                                 'vacation_id' => $vacation->id ?? 'dry-run',
                                 'dias_pendientes' => $vacation->dias_pendientes,
                             ];
+
+                            if (!$dryRun) {
+                                VacationDiaCuentaBitacora::registrar(
+                                    VacationDiaCuentaBitacora::ESTATUS_SOLICITUD_CREADA,
+                                    "Solicitud de vacaciones creada y aprobada por el día a cuenta {$dia->nombre} ({$dia->fecha})",
+                                    $dia->id,
+                                    $empleado->id,
+                                    $vacation->id
+                                );
+                            }
                         } else {
                             $empleadoResumen['omitidos'][] = [
                                 'dia_cuenta_id' => $dia->id,
@@ -242,6 +280,24 @@ class VacationDiaCuentaService
                                 'fecha' => $dia->fecha,
                                 'motivo' => $motivo,
                             ];
+
+                            if (!$dryRun) {
+                                if ($codigo === 'sin_dias') {
+                                    VacationDiaCuentaBitacora::registrar(
+                                        VacationDiaCuentaBitacora::ESTATUS_SIN_DIAS,
+                                        "No se pudo realizar la solicitud para este empleado porque ya no cuenta con días de vacaciones disponibles",
+                                        $dia->id,
+                                        $empleado->id
+                                    );
+                                } elseif ($codigo === 'solicitud_previa') {
+                                    VacationDiaCuentaBitacora::registrar(
+                                        VacationDiaCuentaBitacora::ESTATUS_SOLICITUD_PREVIA,
+                                        "No se realizó la solicitud porque el empleado ya había pedido ese día de vacaciones (se evita duplicidad de solicitudes)",
+                                        $dia->id,
+                                        $empleado->id
+                                    );
+                                }
+                            }
                         }
                     }
 
@@ -287,6 +343,15 @@ class VacationDiaCuentaService
             'fuera_de_periodo' => 0,
         ];
 
+        // 1. Bitácora Info: Se registró un día a cuenta
+        VacationDiaCuentaBitacora::registrar(
+            VacationDiaCuentaBitacora::ESTATUS_INFO,
+            "Se registró un día a cuenta {$dia->nombre} [{$dia->fecha}], se comienza el descuento del día para los empleados",
+            $dia->id
+        );
+
+        $empleadosEnPeriodo = [];
+
         foreach ($empleados as $empleado) {
             $a = $empleado->aniosVacaciones;
 
@@ -305,13 +370,47 @@ class VacationDiaCuentaService
                 continue;
             }
 
+            $empleadosEnPeriodo[] = $empleado;
+        }
+
+        // 2. Bitácora Info: a cuántos empleados se les va a descontar el día
+        VacationDiaCuentaBitacora::registrar(
+            VacationDiaCuentaBitacora::ESTATUS_INFO,
+            "Se les va a descontar el día a cuenta a " . count($empleadosEnPeriodo) . " empleados con periodo laboral vigente",
+            $dia->id
+        );
+
+        foreach ($empleadosEnPeriodo as $empleado) {
             $motivo = null;
-            $vacation = $this->registrarDia($empleado, $dia, false, $motivo);
+            $codigo = null;
+            $vacation = $this->registrarDia($empleado, $dia, false, $motivo, $codigo);
 
             if ($vacation) {
                 $stats['creados']++;
+                VacationDiaCuentaBitacora::registrar(
+                    VacationDiaCuentaBitacora::ESTATUS_SOLICITUD_CREADA,
+                    "Solicitud de vacaciones creada y aprobada por el nuevo día a cuenta {$dia->nombre} ({$dia->fecha})",
+                    $dia->id,
+                    $empleado->id,
+                    $vacation->id
+                );
             } else {
                 $stats['omitidos']++;
+                if ($codigo === 'sin_dias') {
+                    VacationDiaCuentaBitacora::registrar(
+                        VacationDiaCuentaBitacora::ESTATUS_SIN_DIAS,
+                        "No se pudo realizar la solicitud para este empleado porque ya no cuenta con días de vacaciones disponibles",
+                        $dia->id,
+                        $empleado->id
+                    );
+                } elseif ($codigo === 'solicitud_previa') {
+                    VacationDiaCuentaBitacora::registrar(
+                        VacationDiaCuentaBitacora::ESTATUS_SOLICITUD_PREVIA,
+                        "No se realizó la solicitud porque el empleado ya había pedido ese día de vacaciones (se evita duplicidad de solicitudes)",
+                        $dia->id,
+                        $empleado->id
+                    );
+                }
             }
         }
 
@@ -345,6 +444,12 @@ class VacationDiaCuentaService
                 Log::info("VacationDiaCuenta: Solicitud id {$v->id} para empleado {$v->empleado_id} fue modificada previamente por RRHH; se desvinculó de {$dia->nombre} sin eliminar.");
             }
         }
+
+        VacationDiaCuentaBitacora::registrar(
+            VacationDiaCuentaBitacora::ESTATUS_INFO,
+            "Se retiró el día a cuenta {$dia->nombre} ({$dia->fecha}); se cancelaron {$eliminadas} solicitudes automáticas no modificadas",
+            $dia->id
+        );
 
         Log::info("VacationDiaCuenta: retirarDia completado para {$dia->nombre} ({$dia->fecha}); {$eliminadas} solicitudes eliminadas.");
 

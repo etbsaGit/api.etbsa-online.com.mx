@@ -8,6 +8,7 @@ use App\Models\Festivo;
 use App\Models\Empleado;
 use App\Models\VacationDay;
 use App\Models\VacationDiaCuenta;
+use App\Models\VacationDiaCuentaBitacora;
 use App\Services\VacationDiaCuentaService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
@@ -162,5 +163,60 @@ class VacationDiaCuentaServiceTest extends TestCase
         // En BD ya no deben estar activas (deleted_at no es null)
         $activas = VacationDay::where('vacation_dia_cuenta_id', $dia->id)->whereNull('deleted_at')->count();
         $this->assertEquals(0, $activas);
+    }
+
+    public function test_soft_delete_vacation_dia_cuenta()
+    {
+        $dia = VacationDiaCuenta::create([
+            'nombre' => 'Día a Eliminar Soft Delete',
+            'fecha' => '2026-11-25',
+        ]);
+
+        $id = $dia->id;
+        $this->assertNull($dia->deleted_at);
+
+        // Al eliminarlo, Eloquent debe asignar deleted_at (soft delete)
+        $dia->delete();
+
+        $this->assertTrue($dia->trashed());
+        $this->assertNotNull($dia->deleted_at);
+
+        // Las consultas normales (como las del frontend VacationDiaCuentaController::index) lo excluyen
+        $this->assertNull(VacationDiaCuenta::find($id));
+
+        // Pero el registro sigue existiendo en base de datos con withTrashed()
+        $diaEnBD = VacationDiaCuenta::withTrashed()->find($id);
+        $this->assertNotNull($diaEnBD);
+        $this->assertNotNull($diaEnBD->deleted_at);
+        $this->assertEquals('Día a Eliminar Soft Delete', $diaEnBD->nombre);
+    }
+
+    public function test_registro_en_bitacora()
+    {
+        $dia = VacationDiaCuenta::create([
+            'nombre' => 'Día Test Bitácora',
+            'fecha' => '2026-11-26',
+        ]);
+
+        // Aplicar día
+        $this->service->aplicarDia($dia);
+
+        // Verificar que existan registros de Info en la bitácora
+        $infoInicio = VacationDiaCuentaBitacora::where('dia_cuenta_id', $dia->id)
+            ->where('comentario', 'like', '%Se registró un día a cuenta%')
+            ->first();
+        $this->assertNotNull($infoInicio);
+        $this->assertEquals(VacationDiaCuentaBitacora::getEstatusId(VacationDiaCuentaBitacora::ESTATUS_INFO), $infoInicio->estatus_id);
+
+        $infoConteo = VacationDiaCuentaBitacora::where('dia_cuenta_id', $dia->id)
+            ->where('comentario', 'like', '%Se les va a descontar el día a cuenta a%')
+            ->first();
+        $this->assertNotNull($infoConteo);
+
+        // Probar aplicación por aniversario
+        $resumen = $this->service->aplicarPorAniversario('2026-10-09', false);
+        $infoAniv = VacationDiaCuentaBitacora::where('comentario', 'like', '%Se hace el proceso de buscar a los empleados con aniversario%')
+            ->first();
+        $this->assertNotNull($infoAniv);
     }
 }
