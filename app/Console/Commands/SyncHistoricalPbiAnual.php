@@ -30,6 +30,9 @@ class SyncHistoricalPbiAnual extends Command
      */
     public function handle()
     {
+        set_time_limit(0);
+        ini_set('memory_limit', '1024M');
+
         $this->info('Iniciando sincronización de histórico anual de ventas...');
         $filePath = $this->option('file');
 

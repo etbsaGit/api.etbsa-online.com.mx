@@ -120,6 +120,13 @@ class HistoricalPbiVentaController extends ApiController
             }
         }
 
+        if ($anualRows->isEmpty()) {
+            $claveCliente = $clienteModel?->equip ?: $rows->first()?->clave_cliente;
+            if (!empty($claveCliente)) {
+                $anualRows = HistoricalPbiAnual::where('clave_cliente', $claveCliente)->get();
+            }
+        }
+
         if ($rows->isEmpty() && $anualRows->isEmpty() && !$clienteModel) {
             // Buscar posibles sugerencias de nombres parecidos
             $words = array_filter(explode(' ', $nombre), fn($w) => strlen($w) > 3);
@@ -338,6 +345,63 @@ class HistoricalPbiVentaController extends ApiController
         $totalVentaAnual = (float) $anualRows->sum('total_venta');
         $totalMargenAnual = (float) $anualRows->sum('margen_total');
 
+        // Sumas por departamento de la hoja RADIOGRAFIA CLIENTES PARA CREDITO (HistoricalPbiAnual)
+        $ventasRadiografia = [
+            'maquinaria' => (float) $anualRows->sum('venta_maquinaria'),
+            'refacciones' => (float) $anualRows->sum('venta_refacciones'),
+            'servicio' => (float) $anualRows->sum('venta_servicio'),
+            'riego' => (float) $anualRows->sum('venta_riego'),
+            'chevron' => (float) $anualRows->sum('venta_chevron'),
+            'nuevas_tecnologias' => (float) $anualRows->sum('venta_nuevas_tecnologias'),
+            'total_venta' => (float) $anualRows->sum('total_venta'),
+        ];
+        if ($ventasRadiografia['total_venta'] <= 0) {
+            $ventasRadiografia['total_venta'] = (float) array_sum([
+                $ventasRadiografia['maquinaria'],
+                $ventasRadiografia['refacciones'],
+                $ventasRadiografia['servicio'],
+                $ventasRadiografia['riego'],
+                $ventasRadiografia['chevron'],
+                $ventasRadiografia['nuevas_tecnologias'],
+            ]);
+        }
+
+        $margenRadiografia = [
+            'maquinaria' => (float) $anualRows->sum('margen_maquinaria'),
+            'refacciones' => (float) $anualRows->sum('margen_refacciones'),
+            'servicio' => (float) $anualRows->sum('margen_servicio'),
+            'riego' => (float) $anualRows->sum('margen_riego'),
+            'chevron' => (float) $anualRows->sum('margen_chevron'),
+            'nuevas_tecnologias' => (float) $anualRows->sum('margen_nuevas_tecnologias'),
+            'total_margen' => (float) $anualRows->sum('margen_total'),
+        ];
+
+        // Desglose de Ventas por Sucursal y Departamento (desde historical_pbi_anual)
+        $desgloseSucursalDepto = $anualRows->groupBy(function($item) {
+            return $item->sucursal ?: 'SIN SUCURSAL';
+        })->map(function ($items, $suc) {
+            $maq = (float) $items->sum('venta_maquinaria');
+            $ref = (float) $items->sum('venta_refacciones');
+            $serv = (float) $items->sum('venta_servicio');
+            $riego = (float) $items->sum('venta_riego');
+            $chev = (float) $items->sum('venta_chevron');
+            $nt = (float) $items->sum('venta_nuevas_tecnologias');
+            $total = (float) $items->sum('total_venta');
+            if ($total <= 0) {
+                $total = $maq + $ref + $serv + $riego + $chev + $nt;
+            }
+            return [
+                'sucursal' => $suc,
+                'venta_maquinaria' => $maq,
+                'venta_refacciones' => $ref,
+                'venta_servicio' => $serv,
+                'venta_riego' => $riego,
+                'venta_chevron' => $chev,
+                'venta_nuevas_tecnologias' => $nt,
+                'total_venta' => $total,
+            ];
+        })->values()->sortByDesc('total_venta')->values();
+
         $totalVentaPostventa = (float) $anualRows->sum(fn($r) => (float)$r->venta_refacciones + (float)$r->venta_servicio + (float)$r->venta_chevron);
         $totalVentaRiegoTec = (float) $anualRows->sum(fn($r) => (float)$r->venta_riego + (float)$r->venta_nuevas_tecnologias);
 
@@ -488,6 +552,9 @@ class HistoricalPbiVentaController extends ApiController
             'nombre_cliente' => $nombreMatch,
             'clave_cliente' => $rows->first()?->clave_cliente ?? ($clienteModel?->equip ?? null),
             'decision_kpis' => $decisionKpis,
+            'ventas_radiografia' => $ventasRadiografia,
+            'margen_radiografia' => $margenRadiografia,
+            'desglose_sucursal_depto' => $desgloseSucursalDepto,
             'kpis' => [
                 'total_venta' => $totalVenta,
                 'total_costo' => $totalCosto,
@@ -540,6 +607,9 @@ class HistoricalPbiVentaController extends ApiController
     public function sync(Request $request)
     {
         try {
+            set_time_limit(0);
+            ini_set('memory_limit', '1024M');
+
             $exitCode1 = Artisan::call('historico:sync-sheet');
             $output1 = Artisan::output();
 
