@@ -561,6 +561,7 @@ class HistoricalPbiVentaController extends ApiController
                 'total_margen' => $totalMargen,
                 'margen_pct' => $margenPct,
                 'total_unidades' => $totalUnidades,
+                'total_tractores' => $tractores->count(),
                 'primera_compra' => $primeraCompra,
                 'ultima_compra' => $ultimaCompra,
             ],
