@@ -54,6 +54,7 @@ use App\Http\Controllers\Intranet\CreditoInternoController;
 use App\Http\Controllers\Intranet\CreditoInternoDashboardController;
 use App\Http\Controllers\Intranet\PowerBI\DwhHistoricalController;
 use App\Http\Controllers\Intranet\HistoricalPbiVentaController;
+use App\Http\Controllers\Intranet\CarteraVencidaController;
 use App\Http\Controllers\Intranet\ExchangeRateController;
 use App\Http\Controllers\Intranet\ProductBrandController;
 use App\Http\Controllers\Intranet\ProductSupplierController;
@@ -422,6 +423,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('historico-ventas/cliente', [HistoricalPbiVentaController::class, 'getClienteData']);
     Route::get('historico-ventas/search-clientes', [HistoricalPbiVentaController::class, 'searchClientes']);
     Route::post('historico-ventas/sync', [HistoricalPbiVentaController::class, 'sync']);
+
+    // Cartera Vencida ETBSA
+    Route::get('cartera-vencida/cliente', [CarteraVencidaController::class, 'getClienteData']);
+    Route::post('cartera-vencida/sync', [CarteraVencidaController::class, 'sync']);
 });
 
 //PowerBI
