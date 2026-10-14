@@ -426,6 +426,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     // Cartera Vencida ETBSA
     Route::get('cartera-vencida/cliente', [CarteraVencidaController::class, 'getClienteData']);
+    Route::get('cartera-vencida/global-comparativa', [CarteraVencidaController::class, 'getGlobalComparativa']);
     Route::post('cartera-vencida/sync', [CarteraVencidaController::class, 'sync']);
 });
 

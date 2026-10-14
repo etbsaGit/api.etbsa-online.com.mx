@@ -21,6 +21,7 @@ class CarteraVencidaIngreso extends Model
         'dia',
         'fecha_orden',
         'descripcion',
+        'depto',
         'credito',
         'contado',
         'nota_debito',

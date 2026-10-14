@@ -230,8 +230,12 @@ class CarteraVencidaController extends ApiController
             ];
         })->values();
 
+        // Extraer folios de cartera vencida para identificar créditos saldados vs pendientes
+        $caratulaFolios = $rows->pluck('folio')->filter()->unique()->toArray();
+
         // MAPEO Y TOTALES DE INGRESOS (DETALLE INGRESOS)
-        $ingresosItems = $ingresosRows->map(function ($r) use ($matchedClienteName) {
+        $ingresosItems = $ingresosRows->map(function ($r) use ($matchedClienteName, $caratulaFolios) {
+            $saldado = !in_array($r->folio, $caratulaFolios);
             return [
                 'id'              => $r->id,
                 'id_cliente'      => $r->id_cliente,
@@ -248,6 +252,9 @@ class CarteraVencidaController extends ApiController
                 'pagos_cobranza'  => (float)$r->pagos_cobranza,
                 'pagos_mostrador' => (float)$r->pagos_mostrador,
                 'sucursal'        => $r->sucursal,
+                'depto'           => $r->depto ?: 'Sin Departamento',
+                'esta_saldado'    => $saldado,
+                'estado'          => $saldado ? 'Saldado' : 'Pendiente',
             ];
         });
 
@@ -259,6 +266,174 @@ class CarteraVencidaController extends ApiController
             'pagos_cobranza'  => round((float)$ingresosRows->sum('pagos_cobranza'), 2),
             'pagos_mostrador' => round((float)$ingresosRows->sum('pagos_mostrador'), 2),
             'total_filas'     => $ingresosRows->count(),
+        ];
+
+        // ANÁLISIS DE CRÉDITO OTORGADO VS PAGOS (POR MES Y POR AÑO)
+        // Regla de negocio: Crédito Total Otorgado = Pagos Cobranza (Hoja Ingresos) + Total Cartera Vencida (Hoja Carátula Columna U)
+        $pagosTotal = round((float)$ingresosRows->sum('pagos_cobranza'), 2);
+        $carteraPendienteTotal = round($sumCarteraTotal > 0 ? $sumCarteraTotal : ($totalVencido + $sumPorVencer), 2);
+        $creditoTotalOtorgado = round($pagosTotal + $carteraPendienteTotal, 2);
+
+        $saldadosRows = $ingresosRows->filter(fn($r) => !in_array($r->folio, $caratulaFolios));
+        $pendientesRows = $ingresosRows->filter(fn($r) => in_array($r->folio, $caratulaFolios));
+
+        $porcentajePagado = $creditoTotalOtorgado > 0 ? round(($pagosTotal / $creditoTotalOtorgado) * 100, 1) : 0;
+        $porcentajePendiente = $creditoTotalOtorgado > 0 ? round(($carteraPendienteTotal / $creditoTotalOtorgado) * 100, 1) : 0;
+
+        $pagosRows = $ingresosRows->filter(fn($r) => (float)$r->pagos_cobranza > 0);
+
+        $nombresMeses = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+        ];
+
+        $mesesMap = [
+            'enero' => 1, 'febrero' => 2, 'marzo' => 3, 'abril' => 4, 'mayo' => 5, 'junio' => 6,
+            'julio' => 7, 'agosto' => 8, 'septiembre' => 9, 'octubre' => 10, 'noviembre' => 11, 'diciembre' => 12,
+        ];
+
+        $parseFechaVen = function ($str) {
+            if (empty($str)) return null;
+            $s = trim(explode(' ', (string)$str)[0]);
+            if (empty($s)) return null;
+            if (str_contains($s, '/')) {
+                $parts = explode('/', $s);
+                if (count($parts) >= 3) {
+                    if (strlen($parts[0]) === 4) {
+                        $ano = (int)$parts[0];
+                        $mes = (int)$parts[1];
+                    } else {
+                        $ano = (int)$parts[2];
+                        $mes = (int)$parts[1];
+                    }
+                    if ($ano < 100) $ano += 2000;
+                    return ['ano' => $ano, 'mes' => $mes];
+                }
+            }
+            if (str_contains($s, '-')) {
+                $parts = explode('-', $s);
+                if (count($parts) >= 3) {
+                    if (strlen($parts[0]) === 4) {
+                        $ano = (int)$parts[0];
+                        $mes = (int)$parts[1];
+                    } else {
+                        $ano = (int)$parts[2];
+                        $mes = (int)$parts[1];
+                    }
+                    if ($ano < 100) $ano += 2000;
+                    return ['ano' => $ano, 'mes' => $mes];
+                }
+            }
+            return null;
+        };
+
+        // 1. Agrupación por Año (Pagos de Cobranza + Monto Vencido de Cartera)
+        $mapAno = [];
+        foreach ($pagosRows as $r) {
+            $a = (string)($r->ano ?: 'Sin Año');
+            if (!isset($mapAno[$a])) {
+                $mapAno[$a] = ['ano' => $a, 'pagos' => 0.0, 'vencido' => 0.0];
+            }
+            $mapAno[$a]['pagos'] += (float)$r->pagos_cobranza;
+        }
+        foreach ($rows as $r) {
+            $tot = (float)$r->total;
+            if ($tot <= 0) continue;
+            $parsed = $parseFechaVen($r->fecha_vencimiento);
+            $a = $parsed ? (string)$parsed['ano'] : 'Sin Año';
+            if (!isset($mapAno[$a])) {
+                $mapAno[$a] = ['ano' => $a, 'pagos' => 0.0, 'vencido' => 0.0];
+            }
+            $mapAno[$a]['vencido'] += $tot;
+        }
+        ksort($mapAno);
+        $porAno = collect(array_values($mapAno))->map(fn($item) => [
+            'ano'     => $item['ano'],
+            'pagos'   => round($item['pagos'], 2),
+            'vencido' => round($item['vencido'], 2),
+        ]);
+
+        // 2. Agrupación por Mes (Pagos de Cobranza + Monto Vencido de Cartera)
+        $mapMes = [];
+        foreach ($pagosRows as $r) {
+            $ano = $r->ano ?: 2026;
+            $mStr = strtolower(trim((string)$r->mes));
+            $mNum = $mesesMap[$mStr] ?? 1;
+            if ($r->fecha_movimiento && str_contains($r->fecha_movimiento, '/')) {
+                $parts = explode('/', $r->fecha_movimiento);
+                if (count($parts) === 3 && is_numeric($parts[0])) $mNum = (int)$parts[0];
+            }
+            $key = sprintf('%04d-%02d', $ano, $mNum);
+            $label = ($nombresMeses[$mNum] ?? 'Mes ' . $mNum) . " {$ano}";
+            if (!isset($mapMes[$key])) {
+                $mapMes[$key] = [
+                    'periodo' => $key,
+                    'label'   => $label,
+                    'mes'     => $mNum,
+                    'ano'     => $ano,
+                    'pagos'   => 0.0,
+                    'vencido' => 0.0,
+                ];
+            }
+            $mapMes[$key]['pagos'] += (float)$r->pagos_cobranza;
+        }
+        foreach ($rows as $r) {
+            $tot = (float)$r->total;
+            if ($tot <= 0) continue;
+            $parsed = $parseFechaVen($r->fecha_vencimiento);
+            if ($parsed) {
+                $ano = $parsed['ano'];
+                $mNum = $parsed['mes'];
+                $key = sprintf('%04d-%02d', $ano, $mNum);
+                $label = ($nombresMeses[$mNum] ?? 'Mes ' . $mNum) . " {$ano}";
+                if (!isset($mapMes[$key])) {
+                    $mapMes[$key] = [
+                        'periodo' => $key,
+                        'label'   => $label,
+                        'mes'     => $mNum,
+                        'ano'     => $ano,
+                        'pagos'   => 0.0,
+                        'vencido' => 0.0,
+                    ];
+                }
+                $mapMes[$key]['vencido'] += $tot;
+            }
+        }
+        ksort($mapMes);
+        $porMes = collect(array_values($mapMes))->map(fn($item) => [
+            'periodo' => $item['periodo'],
+            'label'   => $item['label'],
+            'mes'     => $item['mes'],
+            'ano'     => $item['ano'],
+            'pagos'   => round($item['pagos'], 2),
+            'vencido' => round($item['vencido'], 2),
+        ]);
+
+        // Agrupación de ingresos y pagos por departamento de cartera_vencida_ingresos
+        $porDeptoAnalisis = $ingresosRows->groupBy('depto')->map(function ($items, $dep) {
+            $p = round((float)$items->sum('pagos_cobranza'), 2);
+            $c = round((float)$items->sum('credito'), 2);
+            return [
+                'depto'        => $dep ?: 'Sin Departamento',
+                'pagos'        => $p,
+                'credito'      => $c,
+                'folios_count' => $items->pluck('folio')->unique()->count(),
+            ];
+        })->values()->sortByDesc('pagos')->values();
+
+        $analisisCreditoPagos = [
+            'credito_total_otorgado' => $creditoTotalOtorgado,
+            'credito_total'          => $creditoTotalOtorgado,
+            'pagos_total'            => $pagosTotal,
+            'cartera_pendiente'      => $carteraPendienteTotal,
+            'porcentaje_pagado'      => $porcentajePagado,
+            'porcentaje_pendiente'   => $porcentajePendiente,
+            'nota_credito_total'     => round((float)$ingresosRows->sum('nota_credito'), 2),
+            'folios_totales'         => $ingresosRows->pluck('folio')->unique()->count(),
+            'por_ano'                => $porAno,
+            'por_mes'                => $porMes,
+            'por_depto'              => $porDeptoAnalisis,
         ];
 
         return response()->json([
@@ -273,8 +448,9 @@ class CarteraVencidaController extends ApiController
             'por_depto'      => $porDepto,
             'detalles'       => $detalles,
             'ingresos'       => [
-                'items'   => $ingresosItems,
-                'totales' => $ingresosTotales,
+                'items'    => $ingresosItems,
+                'totales'  => $ingresosTotales,
+                'analisis' => $analisisCreditoPagos,
             ],
         ]);
     }
@@ -287,6 +463,8 @@ class CarteraVencidaController extends ApiController
         $resCaratula = $this->syncFromGoogleSheet();
         $resIngresos = $this->syncIngresosFromGoogleSheet();
 
+        Cache::forget('cartera_vencida_global_comparativa_data');
+
         $success = $resCaratula['success'] && $resIngresos['success'];
         $message = "Sincronización completada. Carátula: " . ($resCaratula['count'] ?? 0) . " registros. Ingresos: " . ($resIngresos['count'] ?? 0) . " registros.";
 
@@ -297,6 +475,209 @@ class CarteraVencidaController extends ApiController
             'ingresos_count' => $resIngresos['count'] ?? 0,
             'last_sync' => Cache::get(self::SYNC_CACHE_KEY, date('d/m/Y H:i')),
         ]);
+    }
+
+    /**
+     * Obtiene la comparativa mensual de deuda vs abonos para los folios presentes en ambas tablas
+     */
+    public function getGlobalComparativa(Request $request)
+    {
+        $cacheKey = 'cartera_vencida_global_comparativa_data';
+        $data = Cache::remember($cacheKey, 1800, function () {
+            $nombresMeses = [
+                1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+                5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+                9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+            ];
+
+            $mesesMap = [
+                'enero' => 1, 'febrero' => 2, 'marzo' => 3, 'abril' => 4, 'mayo' => 5, 'junio' => 6,
+                'julio' => 7, 'agosto' => 8, 'septiembre' => 9, 'octubre' => 10, 'noviembre' => 11, 'diciembre' => 12,
+            ];
+
+            $parseFechaVen = function ($str) {
+                if (empty($str)) return null;
+                $s = trim(explode(' ', (string)$str)[0]);
+                if (empty($s)) return null;
+                if (str_contains($s, '/')) {
+                    $parts = explode('/', $s);
+                    if (count($parts) >= 3) {
+                        $ano = strlen($parts[0]) === 4 ? (int)$parts[0] : (int)$parts[2];
+                        $mes = (int)$parts[1];
+                        if ($ano < 100) $ano += 2000;
+                        return ['ano' => $ano, 'mes' => $mes];
+                    }
+                }
+                if (str_contains($s, '-')) {
+                    $parts = explode('-', $s);
+                    if (count($parts) >= 3) {
+                        $ano = strlen($parts[0]) === 4 ? (int)$parts[0] : (int)$parts[2];
+                        $mes = (int)$parts[1];
+                        if ($ano < 100) $ano += 2000;
+                        return ['ano' => $ano, 'mes' => $mes];
+                    }
+                }
+                return null;
+            };
+
+            $foliosCaratula = DB::table('cartera_vencida_caratula')
+                ->whereNotNull('folio')
+                ->whereRaw("TRIM(folio) != ''")
+                ->selectRaw("DISTINCT TRIM(folio) as folio")
+                ->pluck('folio')
+                ->toArray();
+
+            $foliosIngresos = DB::table('cartera_vencida_ingresos')
+                ->whereNotNull('folio')
+                ->whereRaw("TRIM(folio) != ''")
+                ->selectRaw("DISTINCT TRIM(folio) as folio")
+                ->pluck('folio')
+                ->toArray();
+
+            $interseccion = array_intersect_key(array_flip($foliosCaratula), array_flip($foliosIngresos));
+            $foliosCompartidos = array_keys($interseccion);
+
+            $caratulaRows = DB::table('cartera_vencida_caratula')
+                ->whereIn('folio', $foliosCompartidos)
+                ->select('folio', 'fecha_vencimiento', 'total', 'depto')
+                ->get();
+
+            $ingresosRows = DB::table('cartera_vencida_ingresos')
+                ->whereIn('folio', $foliosCompartidos)
+                ->where('pagos_cobranza', '>', 0)
+                ->select('folio', 'ano', 'mes', 'fecha_movimiento', 'pagos_cobranza', 'depto')
+                ->get();
+
+            $folioCaratulaDepto = [];
+            foreach ($caratulaRows as $r) {
+                if (!isset($folioCaratulaDepto[$r->folio])) {
+                    $folioCaratulaDepto[$r->folio] = trim((string)$r->depto);
+                }
+            }
+
+            $rawCaratula = [];
+            $deptosCaratula = [];
+            $mesesData = [];
+
+            foreach ($caratulaRows as $r) {
+                $tot = (float)$r->total;
+                if ($tot <= 0) continue;
+                $parsed = $parseFechaVen($r->fecha_vencimiento);
+                if ($parsed && $parsed['ano'] >= 2020 && $parsed['ano'] <= 2030) {
+                    $ano = $parsed['ano'];
+                    $mNum = $parsed['mes'];
+                    $key = sprintf('%04d-%02d', $ano, $mNum);
+                    $label = ($nombresMeses[$mNum] ?? 'Mes ' . $mNum) . " {$ano}";
+                    $d = trim((string)($r->depto ?: 'Sin Departamento'));
+                    $deptosCaratula[$d] = true;
+
+                    $rawCaratula[] = [
+                        'folio'   => $r->folio,
+                        'periodo' => $key,
+                        'label'   => $label,
+                        'ano'     => $ano,
+                        'mes'     => $mNum,
+                        'depto'   => $d,
+                        'total'   => $tot,
+                    ];
+
+                    if (!isset($mesesData[$key])) {
+                        $mesesData[$key] = [
+                            'periodo' => $key,
+                            'label'   => $label,
+                            'ano'     => $ano,
+                            'mes'     => $mNum,
+                            'deuda'   => 0.0,
+                            'abonos'  => 0.0,
+                        ];
+                    }
+                    $mesesData[$key]['deuda'] += $tot;
+                }
+            }
+
+            $rawIngresos = [];
+            $deptosIngresos = [];
+
+            foreach ($ingresosRows as $r) {
+                $p = (float)$r->pagos_cobranza;
+                if ($p <= 0) continue;
+                $ano = (int)($r->ano ?: 2026);
+                $mStr = strtolower(trim((string)$r->mes));
+                $mNum = $mesesMap[$mStr] ?? 1;
+                if ($r->fecha_movimiento && str_contains($r->fecha_movimiento, '/')) {
+                    $parts = explode('/', $r->fecha_movimiento);
+                    if (count($parts) === 3 && is_numeric($parts[0])) $mNum = (int)$parts[0];
+                }
+                if ($ano >= 2020 && $ano <= 2030) {
+                    $key = sprintf('%04d-%02d', $ano, $mNum);
+                    $label = ($nombresMeses[$mNum] ?? 'Mes ' . $mNum) . " {$ano}";
+                    $d = trim((string)($r->depto ?: 'Sin Departamento'));
+                    $cDepto = $folioCaratulaDepto[$r->folio] ?? $d;
+                    $deptosIngresos[$d] = true;
+
+                    $rawIngresos[] = [
+                        'folio'          => $r->folio,
+                        'periodo'        => $key,
+                        'label'          => $label,
+                        'ano'            => $ano,
+                        'mes'            => $mNum,
+                        'depto'          => $d,
+                        'caratula_depto' => $cDepto,
+                        'pagos_cobranza' => $p,
+                    ];
+
+                    if (!isset($mesesData[$key])) {
+                        $mesesData[$key] = [
+                            'periodo' => $key,
+                            'label'   => $label,
+                            'ano'     => $ano,
+                            'mes'     => $mNum,
+                            'deuda'   => 0.0,
+                            'abonos'  => 0.0,
+                        ];
+                    }
+                    $mesesData[$key]['abonos'] += $p;
+                }
+            }
+
+            ksort($mesesData);
+
+            $mensual = array_values(array_map(function($item) {
+                return [
+                    'periodo' => $item['periodo'],
+                    'label'   => $item['label'],
+                    'ano'     => $item['ano'],
+                    'mes'     => $item['mes'],
+                    'deuda'   => round($item['deuda'], 2),
+                    'abonos'  => round($item['abonos'], 2),
+                ];
+            }, $mesesData));
+
+            $totalDeuda = array_sum(array_column($mensual, 'deuda'));
+            $totalAbonos = array_sum(array_column($mensual, 'abonos'));
+
+            // Lista consolidada de departamentos ordenada alfabéticamente
+            $allDeptos = array_values(array_unique(array_merge(array_keys($deptosCaratula), array_keys($deptosIngresos))));
+            sort($allDeptos);
+
+            return [
+                'total_folios_compartidos' => count($foliosCompartidos),
+                'total_folios_caratula'    => count($foliosCaratula),
+                'total_folios_ingresos'    => count($foliosIngresos),
+                'deptos'                   => $allDeptos,
+                'totales' => [
+                    'deuda'   => round($totalDeuda, 2),
+                    'abonos'  => round($totalAbonos, 2),
+                    'saldo'   => round($totalDeuda - $totalAbonos, 2),
+                    'pct'     => $totalDeuda > 0 ? round(($totalAbonos / $totalDeuda) * 100, 1) : 0,
+                ],
+                'mensual'      => $mensual,
+                'raw_caratula' => $rawCaratula,
+                'raw_ingresos' => $rawIngresos,
+            ];
+        });
+
+        return response()->json($data);
     }
 
     /**
@@ -482,6 +863,7 @@ class CarteraVencidaController extends ApiController
                     'dia'               => $dia ?: null,
                     'fecha_orden'       => $fechaOrden,
                     'descripcion'       => trim($row[20] ?? ''),
+                    'depto'             => trim($row[47] ?? ''), // Col 47 (Departamento / Modulo)
                     'credito'           => $cleanNumber($row[35] ?? 0),
                     'contado'           => $cleanNumber($row[36] ?? 0),
                     'nota_debito'       => $cleanNumber($row[37] ?? 0),
