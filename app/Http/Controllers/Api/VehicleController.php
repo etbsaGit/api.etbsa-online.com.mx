@@ -140,4 +140,31 @@ class VehicleController extends ApiController
         ]);
         return $this->respondCreated($vehicleHistorialPlacas);
     }
+
+    public function exportServices(Vehicle $vehicle)
+    {
+        $vehicle->load([
+            'departamento',
+            'linea',
+            'sucursal',
+            'estatus',
+            'empleados',
+            'historialPlacas',
+            'ordenesServicio.proveedor',
+            'ordenesServicio.solicitante',
+            'ordenesServicio.sucursalCargo',
+            'ordenesServicio.departamentoCargo',
+            'ordenesServicio.detalles.servicio.tipoServicio',
+        ]);
+
+        $exporter = new \App\Exports\VehicleServicesExport($vehicle);
+        $rawXlsx = $exporter->generateRawXlsx();
+
+        $placaClean = preg_replace('/[^A-Za-z0-9_-]/', '_', $vehicle->placas ?: 'unidad_' . $vehicle->id);
+
+        return $this->respond([
+            'file_name' => "Historial_Servicios_{$placaClean}.xlsx",
+            'file_base64' => base64_encode($rawXlsx),
+        ]);
+    }
 }
