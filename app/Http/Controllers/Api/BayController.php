@@ -153,8 +153,22 @@ class BayController extends ApiController
 
         $bays = Bay::where('sucursal_id', $sucursal->id)
             ->where('linea_id', $agricolaLinea->id)
-            ->with(['estatus', 'workOrder', 'workOrder.estatus', 'workOrder.tecnico', 'workOrder.workOrderDoc'])
+            ->with([
+                'estatus',
+                'workOrder',
+                'workOrder.estatus',
+                'workOrder.tecnico' => function ($query) {
+                    $query->select('id', 'nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno', 'fotografia');
+                },
+                'workOrder.workOrderDoc'
+            ])
             ->get();
+
+        $bays->each(function ($bay) {
+            if ($bay->workOrder && $bay->workOrder->tecnico) {
+                $bay->workOrder->tecnico->setAppends(['picture', 'nombreCompleto']);
+            }
+        });
 
         $totalBays = $bays->count();
         $bahiasEnUso = $bays->filter(function ($bay) {
@@ -187,11 +201,17 @@ class BayController extends ApiController
         });
         $promedioDesempeno = $totalTecnicos > 0 ? round(($totalDesempeno / $totalTecnicos), 2) : 0;
 
+        $tecnicos->each(function ($tecnico) {
+            $tecnico->setAppends(['picture', 'nombreCompleto', 'desempenoManoObra']);
+        });
+
         $post = Post::whereHas('estatus', function ($query) {
             $query->where('nombre', 'Pantalla');
         })
-            ->whereHas('linea', function ($query) {
-                $query->where('nombre', 'construccion');
+            ->where(function ($query) {
+                $query->whereHas('linea', function ($q) {
+                    $q->where('nombre', 'agricola');
+                })->orWhereNull('linea_id');
             })
             ->where('activo', 1) // Condición para el campo 'activo'
             ->where(function ($query) {
@@ -201,12 +221,23 @@ class BayController extends ApiController
             ->with('postDoc') // Cargar la relación 'postDoc'
             ->get();
 
-
-        // Obtener TechnicianLogs
+        // Obtener TechnicianLogs del rango relevante (semana actual +/- 7 días) con relaciones optimizadas
         $technicianLogs = TechniciansLog::whereIn('tecnico_id', $tecnicos->pluck('id'))
-            ->with('activityTechnician', 'tecnico')
+            ->whereBetween('fecha', [now()->startOfWeek()->subDays(7)->toDateString(), now()->endOfWeek()->addDays(7)->toDateString()])
+            ->with([
+                'activityTechnician',
+                'tecnico' => function ($query) {
+                    $query->select('id', 'nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno');
+                }
+            ])
             ->orderBy('hora_inicio', 'asc') // Ordena de la más temprana a la más tardía
             ->get();
+
+        $technicianLogs->each(function ($log) {
+            if ($log->tecnico) {
+                $log->tecnico->setAppends(['nombreCompleto']);
+            }
+        });
 
         $data = [
             'tecnicos' => $tecnicos,
@@ -235,14 +266,28 @@ class BayController extends ApiController
 
         $bays = Bay::where('sucursal_id', $sucursal->id)
             ->where('linea_id', $construccionLinea->id)
-            ->with(['estatus', 'workOrder', 'workOrder.estatus', 'workOrder.tecnico', 'workOrder.workOrderDoc'])
+            ->with([
+                'estatus',
+                'workOrder',
+                'workOrder.estatus',
+                'workOrder.tecnico' => function ($query) {
+                    $query->select('id', 'nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno', 'fotografia');
+                },
+                'workOrder.workOrderDoc'
+            ])
             ->get();
+
+        $bays->each(function ($bay) {
+            if ($bay->workOrder && $bay->workOrder->tecnico) {
+                $bay->workOrder->tecnico->setAppends(['picture', 'nombreCompleto']);
+            }
+        });
 
         $totalBays = $bays->count();
         $bahiasEnUso = $bays->filter(function ($bay) {
             return $bay->estatus->nombre === 'En uso';
         });
-        $porcentajeBahiasEnUso = $totalBays > 0 ? ($bahiasEnUso->count() / $totalBays) * 100 : 0;
+        $porcentajeBahiasEnUso = $totalBays > 0 ? round(($bahiasEnUso->count() / $totalBays) * 100, 2) : 0;
 
         // Obtener empleados de la sucursal que tengan el puesto de técnico y sean de línea construcción
         $tecnicos = Empleado::where('sucursal_id', $sucursal->id)
@@ -261,19 +306,25 @@ class BayController extends ApiController
         // Calcular la productividad promedio de todos los técnicos
         $totalTecnicos = $tecnicos->count();
         $sumProductividad = $tecnicos->sum('productividad');
-        $promedioProductividad = $totalTecnicos > 0 ? ($sumProductividad / $totalTecnicos) : 0;
+        $promedioProductividad = $totalTecnicos > 0 ? round(($sumProductividad / $totalTecnicos), 2) : 0;
 
         // Calcular el promedio del desempeño de mano de obra
         $totalDesempeno = $tecnicos->sum(function ($tecnico) {
             return $tecnico->desempeno_mano_obra ?? 0;
         });
-        $promedioDesempeno = $totalTecnicos > 0 ? ($totalDesempeno / $totalTecnicos) : 0;
+        $promedioDesempeno = $totalTecnicos > 0 ? round(($totalDesempeno / $totalTecnicos), 2) : 0;
+
+        $tecnicos->each(function ($tecnico) {
+            $tecnico->setAppends(['picture', 'nombreCompleto', 'desempenoManoObra']);
+        });
 
         $post = Post::whereHas('estatus', function ($query) {
             $query->where('nombre', 'Pantalla');
         })
-            ->whereHas('linea', function ($query) {
-                $query->where('nombre', 'construccion');
+            ->where(function ($query) {
+                $query->whereHas('linea', function ($q) {
+                    $q->where('nombre', 'construccion');
+                })->orWhereNull('linea_id');
             })
             ->where('activo', 1) // Condición para el campo 'activo'
             ->where(function ($query) {
@@ -284,10 +335,21 @@ class BayController extends ApiController
             ->get();
 
         $technicianLogs = TechniciansLog::whereIn('tecnico_id', $tecnicos->pluck('id'))
-            ->with('activityTechnician', 'tecnico')
+            ->whereBetween('fecha', [now()->startOfWeek()->subDays(7)->toDateString(), now()->endOfWeek()->addDays(7)->toDateString()])
+            ->with([
+                'activityTechnician',
+                'tecnico' => function ($query) {
+                    $query->select('id', 'nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno');
+                }
+            ])
             ->orderBy('hora_inicio', 'asc') // Ordena de la más temprana a la más tardía
             ->get();
 
+        $technicianLogs->each(function ($log) {
+            if ($log->tecnico) {
+                $log->tecnico->setAppends(['nombreCompleto']);
+            }
+        });
 
         $data = [
             'tecnicos' => $tecnicos,

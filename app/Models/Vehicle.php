@@ -62,4 +62,9 @@ class Vehicle extends Model
     {
         return $this->hasMany(VehicleHistorialPlacas::class, 'vehicle_id')->orderBy('id', 'desc');
     }
+
+    public function ordenesServicio()
+    {
+        return $this->hasMany(VehiclesOrdenesServicio::class, 'vehicle_id');
+    }
 }
