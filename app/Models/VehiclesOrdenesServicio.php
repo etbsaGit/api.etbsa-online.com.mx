@@ -53,6 +53,16 @@ class VehiclesOrdenesServicio extends Model
         return $this->belongsTo(VehiclesDeptoCargoA::class, 'depto_cargo_id');
     }
 
+    public function detalles()
+    {
+        return $this->hasMany(VehiclesDetallesServicio::class, 'orden_servicio_id');
+    }
+
+    public function detallesServicio()
+    {
+        return $this->hasMany(VehiclesDetallesServicio::class, 'orden_servicio_id');
+    }
+
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {

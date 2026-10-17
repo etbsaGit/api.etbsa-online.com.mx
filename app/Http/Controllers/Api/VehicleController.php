@@ -43,7 +43,19 @@ class VehicleController extends ApiController
      */
     public function show(Vehicle $vehicle)
     {
-        $vehicle->load('departamento', 'linea', 'sucursal', 'estatus', 'empleados', 'historialPlacas');
+        $vehicle->load([
+            'departamento',
+            'linea',
+            'sucursal',
+            'estatus',
+            'empleados',
+            'historialPlacas',
+            'ordenesServicio.proveedor',
+            'ordenesServicio.solicitante',
+            'ordenesServicio.sucursalCargo',
+            'ordenesServicio.departamentoCargo',
+            'ordenesServicio.detalles.servicio.tipoServicio',
+        ]);
         return $this->respond($vehicle);
     }
 

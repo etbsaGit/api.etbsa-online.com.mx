@@ -65,6 +65,8 @@ class Vehicle extends Model
 
     public function ordenesServicio()
     {
-        return $this->hasMany(VehiclesOrdenesServicio::class, 'vehicle_id');
+        return $this->hasMany(VehiclesOrdenesServicio::class, 'vehicle_id')
+            ->orderBy('fecha_elaboracion', 'desc')
+            ->orderBy('id', 'desc');
     }
 }
