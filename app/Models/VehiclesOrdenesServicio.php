@@ -23,6 +23,7 @@ class VehiclesOrdenesServicio extends Model
         'suc_cargo_id',
         'depto_cargo_id',
         'estatus_id',
+        'cotizacion_url',
     ];
 
     // -Relations-

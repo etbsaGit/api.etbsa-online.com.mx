@@ -442,6 +442,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('services', [ServiceController::class, 'index']);
     Route::post('services/auth', [ServiceController::class, 'myIndex']);
     Route::get('service/forms', [ServiceController::class, 'getforms']);
+    Route::post('service/{id}/cotizacion', [ServiceController::class, 'uploadCotizacion']);
     Route::get('service/status/{service}/{status}', [ServiceController::class, 'changeEstatus']);
     Route::get('serviceArchive/status/{serviceArchive}/{status}', [ServiceArchiveController::class, 'changeEstatus']);
 

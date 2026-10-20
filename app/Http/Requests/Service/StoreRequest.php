@@ -45,6 +45,19 @@ class StoreRequest extends FormRequest
             'solicitante_id' => ['nullable', 'integer', 'exists:empleados,id'],
             'suc_cargo_id' => ['nullable', 'integer', 'exists:vehicles_suc_cargo_a,id'],
             'depto_cargo_id' => ['nullable', 'integer', 'exists:vehicles_depto_cargo_a,id'],
+            'cotizacion_url' => ['nullable', 'string'],
+            'archivo' => ['nullable'],
+            'base64' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (!empty($value)) {
+                        if (!preg_match('/^data:application\/pdf;base64,/', $value)) {
+                            $fail('El archivo de cotización debe ser exclusivamente en formato PDF.');
+                        }
+                    }
+                },
+            ],
 
             'detalles' => ['required', 'array', 'min:1'],
             'detalles.*.servicio_id' => ['required', 'integer', 'exists:vehicles_servicios_cat,id'],

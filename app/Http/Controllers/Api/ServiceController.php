@@ -17,9 +17,12 @@ use App\Models\VehiclesServicioProveedores;
 use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
 use App\Models\VehiclesOrdenesBitacora;
+use App\Traits\UploadableFile;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends ApiController
 {
+    use UploadableFile;
     /**
      * Lista paginada de Órdenes de Servicio con sus detalles y relaciones.
      */
@@ -135,7 +138,7 @@ class ServiceController extends ApiController
     {
         $validated = $request->validated();
 
-        $orden = DB::transaction(function () use ($validated) {
+        $orden = DB::transaction(function () use ($validated, $request) {
             $estatus_id = Estatus::where('nombre', 'Solicitado')->where('tipo_estatus', 'servicio-unidad')->first()->id;
             $ordenServicio = VehiclesOrdenesServicio::create([
                 'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
@@ -152,6 +155,16 @@ class ServiceController extends ApiController
 
             $ordenServicio->orden_compra = (string) $ordenServicio->id;
             $ordenServicio->save();
+
+            // Procesar archivo PDF de cotización si se proporcionó
+            $archivoInput = $request->input('archivo');
+            $base64 = is_array($archivoInput) ? ($archivoInput['base64'] ?? null) : $request->input('base64');
+
+            if (!empty($base64)) {
+                $cotizacionUrl = $this->saveCotizacionPdf($base64, $ordenServicio->id);
+                $ordenServicio->cotizacion_url = $cotizacionUrl;
+                $ordenServicio->save();
+            }
 
             foreach ($validated['detalles'] as $detalle) {
                 VehiclesDetallesServicio::create([
@@ -238,7 +251,7 @@ class ServiceController extends ApiController
         $ordenServicio = VehiclesOrdenesServicio::findOrFail($id);
         $validated = $request->validated();
 
-        $orden = DB::transaction(function () use ($ordenServicio, $validated) {
+        $orden = DB::transaction(function () use ($ordenServicio, $validated, $request) {
             $ordenServicio->update([
                 'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
                 'orden_compra' => (string) $ordenServicio->id,
@@ -249,7 +262,20 @@ class ServiceController extends ApiController
                 'suc_cargo_id' => $validated['suc_cargo_id'] ?? null,
                 'depto_cargo_id' => $validated['depto_cargo_id'] ?? null,
                 'factura' => $validated['factura'] ?? null,
+                'cotizacion_url' => array_key_exists('cotizacion_url', $validated)
+                    ? $validated['cotizacion_url']
+                    : $ordenServicio->cotizacion_url,
             ]);
+
+            // Procesar archivo PDF de cotización si se envió
+            $archivoInput = $request->input('archivo');
+            $base64 = is_array($archivoInput) ? ($archivoInput['base64'] ?? null) : $request->input('base64');
+
+            if (!empty($base64)) {
+                $cotizacionUrl = $this->saveCotizacionPdf($base64, $ordenServicio->id);
+                $ordenServicio->cotizacion_url = $cotizacionUrl;
+                $ordenServicio->save();
+            }
 
             $ordenServicio->detalles()->delete();
 
@@ -300,6 +326,82 @@ class ServiceController extends ApiController
         });
 
         return $this->respond($orden);
+    }
+
+    /**
+     * Guarda el archivo PDF de cotización en S3 y retorna su URL pública accesible.
+     * Valida estrictamente que sea un documento PDF.
+     */
+    private function saveCotizacionPdf(string $base64, int $ordenId): string
+    {
+        if (!preg_match('/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+)?;base64,/', $base64, $matches)) {
+            throw new \Exception('El formato del archivo no es válido.');
+        }
+
+        $mimeType = strtolower($matches[1] ?? '');
+        if ($mimeType !== 'application/pdf') {
+            throw new \Exception('Solo se permiten archivos en formato PDF.');
+        }
+
+        $data = substr($base64, strpos($base64, ',') + 1);
+        $decoded = base64_decode($data);
+        if ($decoded === false || substr($decoded, 0, 4) !== '%PDF') {
+            throw new \Exception('El archivo proporcionado no es un documento PDF válido.');
+        }
+
+        $folder = "intranet/servicios_unidades/orden_{$ordenId}";
+        $relativePath = $this->saveDoc($base64, $folder);
+
+        return Storage::disk('s3')->url($relativePath);
+    }
+
+    /**
+     * Sube o actualiza la cotización en PDF para una Orden de Servicio específica.
+     */
+    public function uploadCotizacion(Request $request, int $id)
+    {
+        $ordenServicio = VehiclesOrdenesServicio::findOrFail($id);
+
+        $archivoInput = $request->input('archivo');
+        $base64 = is_array($archivoInput) ? ($archivoInput['base64'] ?? null) : $request->input('base64');
+
+        if (empty($base64)) {
+            return response()->json([
+                'message' => 'El archivo de cotización en formato PDF es obligatorio.'
+            ], 422);
+        }
+
+        try {
+            $cotizacionUrl = $this->saveCotizacionPdf($base64, $ordenServicio->id);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+
+        $ordenServicio->cotizacion_url = $cotizacionUrl;
+        $ordenServicio->save();
+
+        $this->insertBitacora($ordenServicio->id, $ordenServicio->estatus_id, 'Cotización en formato PDF adjuntada');
+
+        return $this->respond([
+            'message' => 'Cotización PDF subida correctamente.',
+            'cotizacion_url' => $cotizacionUrl,
+            'orden' => $ordenServicio->fresh([
+                'vehicle.estatus',
+                'vehicle.sucursal',
+                'vehicle.departamento',
+                'vehicle.linea',
+                'proveedor',
+                'solicitante',
+                'sucursalCargo',
+                'departamentoCargo',
+                'detalles.servicio.tipoServicio',
+                'estatus',
+                'bitacora.user.empleado',
+                'bitacora.estatus',
+            ])
+        ]);
     }
 
     /**
