@@ -24,7 +24,8 @@ class VehiclesOrdenesServicio extends Model
         'depto_cargo_id',
         'factura',
         'factura_url',
-        'orden_compra_url'
+        'orden_compra_url',
+        'estatus_id',
     ];
 
     // -Relations-
@@ -63,9 +64,96 @@ class VehiclesOrdenesServicio extends Model
         return $this->hasMany(VehiclesDetallesServicio::class, 'orden_servicio_id');
     }
 
+    public function estatus()
+    {
+        return $this->belongsTo(Estatus::class, 'estatus_id');
+    }
+
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['nombre']);
+        if (!empty($filters['search'])) {
+            $search = trim($filters['search']);
+            $query->where(function (Builder $q) use ($search) {
+                $q->where('autorizacion_compras', 'LIKE', "%{$search}%")
+                    ->orWhere('orden_compra', 'LIKE', "%{$search}%")
+                    ->orWhere('factura', 'LIKE', "%{$search}%")
+                    ->orWhereHas('vehicle', function (Builder $vq) use ($search) {
+                        $vq->where('placas', 'LIKE', "%{$search}%")
+                            ->orWhere('serie', 'LIKE', "%{$search}%")
+                            ->orWhereHas('historialPlacas', function (Builder $hq) use ($search) {
+                                $hq->where('placa', 'LIKE', "%{$search}%");
+                            });
+                    })
+                    ->orWhereHas('proveedor', function (Builder $pq) use ($search) {
+                        $pq->where('nombre', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('solicitante', function (Builder $sq) use ($search) {
+                        $sq->where('nombre', 'LIKE', "%{$search}%")
+                            ->orWhere('apellido_paterno', 'LIKE', "%{$search}%")
+                            ->orWhere('apellido_materno', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('detalles', function (Builder $dq) use ($search) {
+                        $dq->where('descripcion', 'LIKE', "%{$search}%")
+                            ->orWhere('km_evento', 'LIKE', "%{$search}%")
+                            ->orWhereHas('servicio', function (Builder $scq) use ($search) {
+                                $scq->where('nombre', 'LIKE', "%{$search}%")
+                                    ->orWhereHas('tipoServicio', function (Builder $tsq) use ($search) {
+                                        $tsq->where('nombre', 'LIKE', "%{$search}%");
+                                    });
+                            });
+                    });
+            });
+        }
+
+        if (!empty($filters['vehicle_ids']) && is_array($filters['vehicle_ids'])) {
+            $query->whereIn('vehicle_id', $filters['vehicle_ids']);
+        }
+
+        if (!empty($filters['vehicle_id'])) {
+            if (is_array($filters['vehicle_id'])) {
+                $query->whereIn('vehicle_id', $filters['vehicle_id']);
+            } else {
+                $query->where('vehicle_id', $filters['vehicle_id']);
+            }
+        }
+
+        if (!empty($filters['proveedor_id'])) {
+            $query->where('proveedor_id', $filters['proveedor_id']);
+        }
+
+        if (!empty($filters['solicitante_id'])) {
+            $query->where('solicitante_id', $filters['solicitante_id']);
+        }
+
+        if (!empty($filters['suc_cargo_id'])) {
+            $query->where('suc_cargo_id', $filters['suc_cargo_id']);
+        }
+
+        if (!empty($filters['depto_cargo_id'])) {
+            $query->where('depto_cargo_id', $filters['depto_cargo_id']);
+        }
+
+        if (!empty($filters['servicio_id'])) {
+            $query->whereHas('detalles', function (Builder $dq) use ($filters) {
+                $dq->where('servicio_id', $filters['servicio_id']);
+            });
+        }
+
+        if (!empty($filters['tipo_servicio_id'])) {
+            $query->whereHas('detalles.servicio', function (Builder $sq) use ($filters) {
+                $sq->where('tipo_servicio_id', $filters['tipo_servicio_id']);
+            });
+        }
+
+        if (!empty($filters['fecha_desde'])) {
+            $query->whereDate('fecha_elaboracion', '>=', $filters['fecha_desde']);
+        }
+
+        if (!empty($filters['fecha_hasta'])) {
+            $query->whereDate('fecha_elaboracion', '<=', $filters['fecha_hasta']);
+        }
+
+        return $query;
     }
 }

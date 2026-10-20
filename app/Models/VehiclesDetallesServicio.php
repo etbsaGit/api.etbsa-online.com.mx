@@ -20,7 +20,13 @@ class VehiclesDetallesServicio extends Model
         'subtotal',
         'iva',
         'total',
-        'km_evento'
+        'km_evento',
+        'precio_unitario',
+        'cantidad',
+        'vehicle_id',
+        'llanta_anchura',
+        'llanta_altura',
+        'llanta_rin'
     ];
 
     // -Relations-
@@ -34,6 +40,10 @@ class VehiclesDetallesServicio extends Model
         return $this->belongsTo(VehiclesServiciosCat::class, 'servicio_id');
     }
 
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class, 'vehicle_id');
+    }
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {

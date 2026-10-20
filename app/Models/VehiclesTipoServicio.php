@@ -15,7 +15,6 @@ class VehiclesTipoServicio extends Model
 
     protected $fillable = [
         'nombre',
-        'descripcion'
     ];
 
     // -Relations-

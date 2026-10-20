@@ -2,214 +2,340 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\User;
-use App\Models\Estatus;
-use App\Models\Service;
 use App\Models\Vehicle;
 use App\Models\Empleado;
-use App\Mail\ServiceEmail;
 use Illuminate\Http\Request;
-use App\Models\ServiceArchive;
-use App\Traits\UploadableFile;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Service\StoreRequest;
+use App\Models\Estatus;
+use App\Models\VehiclesOrdenesServicio;
+use App\Models\VehiclesDetallesServicio;
+use App\Models\VehiclesServiciosCat;
+use App\Models\VehiclesTipoServicio;
+use App\Models\VehiclesServicioProveedores;
+use App\Models\VehiclesSucCargoA;
+use App\Models\VehiclesDeptoCargoA;
 
 class ServiceController extends ApiController
 {
-    use UploadableFile;
-
     /**
-     * Display a listing of the resource.
+     * Lista paginada de Órdenes de Servicio con sus detalles y relaciones.
      */
     public function index(Request $request)
     {
         $filters = $request->all();
-        $user = auth()->user();
 
-        $query = Service::filter($filters);
-
-        // Caso: usuario con rol "service" y que tenga empleado
-        if ($user->hasRole('service') && $user->empleado) {
-            $sucursalId = $user->empleado->sucursal_id;
-
-            $query->whereHas('vehicle', function ($q) use ($sucursalId) {
-                $q->where('sucursal_id', $sucursalId);
-            });
-        }
-
-        // Caso: usuario normal (que no es cc ni service)
-        elseif (!$user->hasRole('cc')) {
-            $filters['empleado_id'] = $user->empleado->id;
-            $query->where('empleado_id', $filters['empleado_id']);
-        }
-
-        $service = $query
-            ->with(
+        $ordenes = VehiclesOrdenesServicio::filter($filters)
+            ->with([
                 'vehicle.estatus',
                 'vehicle.sucursal',
                 'vehicle.departamento',
-                'empleado',
-                'estatus',
-                'archives'
-            )
-            ->latest()
-            ->paginate(10);
+                'vehicle.linea',
+                'proveedor',
+                'solicitante',
+                'sucursalCargo',
+                'departamentoCargo',
+                'detalles.servicio.tipoServicio',
+            ])
+            ->orderBy('fecha_elaboracion', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(15);
 
-        return $this->respond($service);
+        return $this->respond($ordenes);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Lista paginada de Órdenes de Servicio únicamente de las unidades asignadas al empleado autenticado (tabla usuarios_unidades).
+     */
+    public function myIndex(Request $request)
+    {
+        $user = $request->user();
+        $empleado = $user?->empleado;
+
+        $vehicleIds = [];
+        if ($empleado) {
+            $vehicleIds = $empleado->vehicles()->pluck('vehicles.id')->toArray();
+            if ($empleado->vehicle_id && !in_array((int) $empleado->vehicle_id, array_map('intval', $vehicleIds), true)) {
+                $vehicleIds[] = (int) $empleado->vehicle_id;
+            }
+        }
+
+        if (empty($vehicleIds)) {
+            return $this->respond([
+                'data' => [],
+                'current_page' => 1,
+                'last_page' => 1,
+                'next_page_url' => null,
+                'prev_page_url' => null,
+                'total' => 0,
+                'assigned_vehicle' => null,
+                'assigned_vehicles' => [],
+            ]);
+        }
+
+        $filters = $request->all();
+        if (!empty($filters['vehicle_id']) && in_array((int) $filters['vehicle_id'], array_map('intval', $vehicleIds), true)) {
+            $filters['vehicle_id'] = (int) $filters['vehicle_id'];
+        } else {
+            unset($filters['vehicle_id']);
+            $filters['vehicle_ids'] = $vehicleIds;
+        }
+
+        $ordenes = VehiclesOrdenesServicio::filter($filters)
+            ->with([
+                'vehicle.estatus',
+                'vehicle.sucursal',
+                'vehicle.departamento',
+                'vehicle.linea',
+                'proveedor',
+                'solicitante',
+                'sucursalCargo',
+                'departamentoCargo',
+                'detalles.servicio.tipoServicio',
+            ])
+            ->orderBy('fecha_elaboracion', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+
+        $maxKmsByVehicle = DB::table('vehicles_detalles_servicio')
+            ->join('vehicles_ordenes_servicio', 'vehicles_detalles_servicio.orden_servicio_id', '=', 'vehicles_ordenes_servicio.id')
+            ->whereIn('vehicles_ordenes_servicio.vehicle_id', $vehicleIds)
+            ->whereNotNull('vehicles_detalles_servicio.km_evento')
+            ->groupBy('vehicles_ordenes_servicio.vehicle_id')
+            ->select('vehicles_ordenes_servicio.vehicle_id', DB::raw('MAX(vehicles_detalles_servicio.km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id');
+
+        $assignedVehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea'])
+            ->whereIn('id', $vehicleIds)
+            ->get()
+            ->map(function ($v) use ($maxKmsByVehicle) {
+                $v->ultimo_km = isset($maxKmsByVehicle[$v->id]) ? (int) $maxKmsByVehicle[$v->id] : 0;
+                return $v;
+            });
+
+        $response = $ordenes->toArray();
+        $response['assigned_vehicle'] = $assignedVehicles->first();
+        $response['assigned_vehicles'] = $assignedVehicles;
+
+        return $this->respond($response);
+    }
+
+    /**
+     * Registra una nueva Orden de Servicio junto con sus detalles de servicio.
      */
     public function store(StoreRequest $request)
     {
-        $service = Service::create($request->validated());
-        $docs = $request->base64;
+        $validated = $request->validated();
 
-        if (!empty($docs)) {
-            foreach ($docs as $doc) {
-                $sa = ServiceArchive::create([
-                    "name" => $doc['name'],
-                    "service_id" => $service->id
+        $orden = DB::transaction(function () use ($validated) {
+            $estatus_id = Estatus::where('nombre', 'Solicitado')->where('tipo_estatus', 'servicio-unidad')->first()->id;
+            $ordenServicio = VehiclesOrdenesServicio::create([
+                'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
+                'orden_compra' => null,
+                'fecha_elaboracion' => $validated['fecha_elaboracion'],
+                'vehicle_id' => $validated['vehicle_id'],
+                'proveedor_id' => $validated['proveedor_id'],
+                'solicitante_id' => $validated['solicitante_id'] ?? null,
+                'suc_cargo_id' => $validated['suc_cargo_id'] ?? null,
+                'depto_cargo_id' => $validated['depto_cargo_id'] ?? null,
+                'factura' => $validated['factura'] ?? null,
+                'estatus_id' => $estatus_id,
+            ]);
+
+            $ordenServicio->orden_compra = (string) $ordenServicio->id;
+            $ordenServicio->save();
+
+            foreach ($validated['detalles'] as $detalle) {
+                VehiclesDetallesServicio::create([
+                    'orden_servicio_id' => $ordenServicio->id,
+                    'vehicle_id' => !empty($detalle['vehicle_id']) ? $detalle['vehicle_id'] : $validated['vehicle_id'],
+                    'servicio_id' => $detalle['servicio_id'],
+                    'km_evento' => isset($detalle['km_evento']) && $detalle['km_evento'] !== ''
+                        ? (int) $detalle['km_evento']
+                        : null,
+                    'descripcion' => $detalle['descripcion'],
+                    'precio_unitario' => isset($detalle['precio_unitario']) && $detalle['precio_unitario'] !== ''
+                        ? (float) $detalle['precio_unitario']
+                        : null,
+                    'cantidad' => isset($detalle['cantidad']) && $detalle['cantidad'] !== ''
+                        ? (int) $detalle['cantidad']
+                        : null,
+                    'llanta_anchura' => isset($detalle['llanta_anchura']) && $detalle['llanta_anchura'] !== ''
+                        ? (int) $detalle['llanta_anchura']
+                        : null,
+                    'llanta_altura' => isset($detalle['llanta_altura']) && $detalle['llanta_altura'] !== ''
+                        ? (int) $detalle['llanta_altura']
+                        : null,
+                    'llanta_rin' => isset($detalle['llanta_rin']) && $detalle['llanta_rin'] !== ''
+                        ? (int) $detalle['llanta_rin']
+                        : null,
+                    'subtotal' => (float) $detalle['subtotal'],
+                    'iva' => (float) $detalle['iva'],
+                    'total' => (float) $detalle['total'],
                 ]);
-                $relativePath  = $this->saveDoc($doc['base64'], $sa->default_path_folder);
-                $sa->update(['path' => $relativePath]);
             }
-        }
 
-        $service->load(['vehicle.estatus', 'empleado', 'estatus']);
+            return $ordenServicio->load([
+                'vehicle.estatus',
+                'vehicle.sucursal',
+                'vehicle.departamento',
+                'vehicle.linea',
+                'proveedor',
+                'solicitante',
+                'sucursalCargo',
+                'departamentoCargo',
+                'detalles.servicio.tipoServicio',
+            ]);
+        });
 
-        $emails = $this->getServiceRecipients($service);
-
-        foreach ($emails as $email) {
-            Mail::to($email)->send(new ServiceEmail($service));
-        }
-
-        return $this->respondCreated($service);
-    }
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Service $service)
-    {
-        return $this->respond($service);
+        return $this->respondCreated($orden);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Muestra una Orden de Servicio con todos sus detalles.
      */
-    public function update(StoreRequest $request, Service $service)
+    public function show($id)
     {
-        $service->update($request->validated());
-        $docs = $request->base64;
+        $orden = VehiclesOrdenesServicio::with([
+            'vehicle.estatus',
+            'vehicle.sucursal',
+            'vehicle.departamento',
+            'vehicle.linea',
+            'proveedor',
+            'solicitante',
+            'sucursalCargo',
+            'departamentoCargo',
+            'detalles.servicio.tipoServicio',
+        ])->findOrFail($id);
 
-        if (!empty($docs)) {
-            foreach ($docs as $doc) {
-                $sa = ServiceArchive::create(["name" => $doc['name'], "service_id" => $service->id]);
-                $relativePath  = $this->saveDoc($doc['base64'], $sa->default_path_folder);
-                $updateData = ['path' => $relativePath];
-                $sa->update($updateData);
+        return $this->respond($orden);
+    }
+
+    /**
+     * Actualiza una Orden de Servicio y sincroniza sus detalles.
+     */
+    public function update(StoreRequest $request, $id)
+    {
+        $ordenServicio = VehiclesOrdenesServicio::findOrFail($id);
+        $validated = $request->validated();
+
+        $orden = DB::transaction(function () use ($ordenServicio, $validated) {
+            $ordenServicio->update([
+                'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
+                'orden_compra' => (string) $ordenServicio->id,
+                'fecha_elaboracion' => $validated['fecha_elaboracion'],
+                'vehicle_id' => $validated['vehicle_id'],
+                'proveedor_id' => $validated['proveedor_id'],
+                'solicitante_id' => $validated['solicitante_id'] ?? null,
+                'suc_cargo_id' => $validated['suc_cargo_id'] ?? null,
+                'depto_cargo_id' => $validated['depto_cargo_id'] ?? null,
+                'factura' => $validated['factura'] ?? null,
+            ]);
+
+            $ordenServicio->detalles()->delete();
+
+            foreach ($validated['detalles'] as $detalle) {
+                VehiclesDetallesServicio::create([
+                    'orden_servicio_id' => $ordenServicio->id,
+                    'vehicle_id' => !empty($detalle['vehicle_id']) ? $detalle['vehicle_id'] : $validated['vehicle_id'],
+                    'servicio_id' => $detalle['servicio_id'],
+                    'km_evento' => isset($detalle['km_evento']) && $detalle['km_evento'] !== ''
+                        ? (int) $detalle['km_evento']
+                        : null,
+                    'descripcion' => $detalle['descripcion'],
+                    'precio_unitario' => isset($detalle['precio_unitario']) && $detalle['precio_unitario'] !== ''
+                        ? (float) $detalle['precio_unitario']
+                        : null,
+                    'cantidad' => isset($detalle['cantidad']) && $detalle['cantidad'] !== ''
+                        ? (int) $detalle['cantidad']
+                        : null,
+                    'llanta_anchura' => isset($detalle['llanta_anchura']) && $detalle['llanta_anchura'] !== ''
+                        ? (int) $detalle['llanta_anchura']
+                        : null,
+                    'llanta_altura' => isset($detalle['llanta_altura']) && $detalle['llanta_altura'] !== ''
+                        ? (int) $detalle['llanta_altura']
+                        : null,
+                    'llanta_rin' => isset($detalle['llanta_rin']) && $detalle['llanta_rin'] !== ''
+                        ? (int) $detalle['llanta_rin']
+                        : null,
+                    'subtotal' => (float) $detalle['subtotal'],
+                    'iva' => (float) $detalle['iva'],
+                    'total' => (float) $detalle['total'],
+                ]);
             }
-        }
 
-        return $this->respond($service);
+            return $ordenServicio->load([
+                'vehicle.estatus',
+                'vehicle.sucursal',
+                'vehicle.departamento',
+                'vehicle.linea',
+                'proveedor',
+                'solicitante',
+                'sucursalCargo',
+                'departamentoCargo',
+                'detalles.servicio.tipoServicio',
+            ]);
+        });
+
+        return $this->respond($orden);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina una Orden de Servicio y sus detalles asociados.
      */
-    public function destroy(Service $service)
+    public function destroy($id)
     {
-        $service->delete();
+        $ordenServicio = VehiclesOrdenesServicio::findOrFail($id);
+
+        DB::transaction(function () use ($ordenServicio) {
+            $ordenServicio->detalles()->delete();
+            $ordenServicio->delete();
+        });
 
         return $this->respondSuccess();
     }
 
+    /**
+     * Catálogos para filtros y formulario de registro/edición de servicios.
+     */
     public function getforms()
     {
-        $user = auth()->user();
+        $maxKmsByVehicle = DB::table('vehicles_detalles_servicio')
+            ->join('vehicles_ordenes_servicio', 'vehicles_detalles_servicio.orden_servicio_id', '=', 'vehicles_ordenes_servicio.id')
+            ->whereNotNull('vehicles_detalles_servicio.km_evento')
+            ->groupBy('vehicles_ordenes_servicio.vehicle_id')
+            ->select('vehicles_ordenes_servicio.vehicle_id', DB::raw('MAX(vehicles_detalles_servicio.km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id');
 
-        if ($user->hasRole('cc')) {
-            $empleados = Empleado::with('vehicle')
-                ->whereHas('vehicle')
-                ->orderBy('apellido_paterno', 'asc')
-                ->get();
-        } else {
-            $empleados = Empleado::with('vehicle')
-                ->where('sucursal_id', $user->empleado->sucursal_id)
-                ->whereHas('vehicle')
-                ->orderBy('apellido_paterno', 'asc')
-                ->get();
-        }
+        $vehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea', 'empleados'])
+            ->orderBy('placas', 'asc')
+            ->get()
+            ->map(function ($v) use ($maxKmsByVehicle) {
+                $v->ultimo_km = isset($maxKmsByVehicle[$v->id]) ? (int) $maxKmsByVehicle[$v->id] : 0;
+                return $v;
+            });
+
+        $maxId = (int) DB::table('vehicles_ordenes_servicio')->max('id');
+        $nextId = $maxId > 0 ? $maxId + 1 : 1;
 
         $data = [
-            'estatus'  => Estatus::where('tipo_estatus', 'service')->get(),
-            'vehicles' => Vehicle::with('estatus')->get(),
-            'empleados' => $empleados,
+            'next_id' => $nextId,
+            'vehicles' => $vehicles,
+            'empleados' => Empleado::where('estatus_id', 5)
+                ->orderBy('apellido_paterno', 'asc')
+                ->get(),
+            'proveedores' => VehiclesServicioProveedores::orderBy('nombre', 'asc')->get(),
+            'tipos_servicio' => VehiclesTipoServicio::with('servicios')
+                ->orderBy('nombre', 'asc')
+                ->get(),
+            'servicios_cat' => VehiclesServiciosCat::with('tipoServicio')
+                ->orderBy('nombre', 'asc')
+                ->get(),
+            'sucursales_cargo' => VehiclesSucCargoA::orderBy('nombre', 'asc')->get(),
+            'deptos_cargo' => VehiclesDeptoCargoA::orderBy('nombre', 'asc')->get(),
         ];
 
         return $this->respond($data);
-    }
-
-
-
-    public function changeEstatus(Service $service, int $status)
-    {
-        $service->status = $status;
-        $service->save();
-
-        $service->load(['vehicle.estatus', 'empleado', 'estatus']);
-
-        $emails = $this->getServiceRecipients($service);
-
-        foreach ($emails as $email) {
-            Mail::to($email)->send(new ServiceEmail($service));
-        }
-
-        return $this->respondSuccess();
-    }
-
-
-    private function getServiceRecipients(Service $service): array
-    {
-        // Aseguramos cargar relaciones necesarias
-        $service->loadMissing(['vehicle.sucursal', 'empleado.jefe_directo']);
-
-        $emails = [];
-
-        // Usuarios con rol "cc"
-        $usersCC = User::all()->filter(fn($user) => $user->hasRole('cc'));
-        $emails = array_merge($emails, $usersCC->pluck('email')->toArray());
-
-        // Correo institucional del empleado
-        if (!empty($service->empleado?->correo_institucional)) {
-            $emails[] = $service->empleado->correo_institucional;
-        }
-
-        // Correo institucional del jefe directo
-        if (!empty($service->empleado?->jefe_directo?->correo_institucional)) {
-            $emails[] = $service->empleado->jefe_directo->correo_institucional;
-        }
-
-        // Usuario(s) con rol "service" de la misma sucursal del vehículo
-        $usersService = User::whereHas('roles', fn($q) => $q->where('name', 'service'))
-            ->whereHas(
-                'empleado',
-                fn($q) =>
-                $q->where('sucursal_id', $service->vehicle->sucursal_id)
-            )
-            ->get();
-
-        foreach ($usersService as $usr) {
-            if (!empty($usr->email)) {
-                $emails[] = $usr->email;
-            }
-        }
-
-        return array_unique($emails);
     }
 }

@@ -25,7 +25,7 @@ class VehicleController extends ApiController
     {
         $filters = $request->all();
 
-        return $this->respond(Vehicle::filter($filters)->with('departamento', 'linea', 'sucursal', 'estatus', 'empleados', 'historialPlacas')->paginate(10));
+        return $this->respond(Vehicle::filter($filters)->with('departamento', 'linea', 'sucursal', 'estatus', 'responsable', 'empleados', 'historialPlacas')->paginate(10));
     }
 
     /**
@@ -48,6 +48,7 @@ class VehicleController extends ApiController
             'linea',
             'sucursal',
             'estatus',
+            'responsable',
             'empleados',
             'historialPlacas',
             'ordenesServicio.proveedor',
@@ -98,13 +99,28 @@ class VehicleController extends ApiController
 
     public function asignEmployees(Request $request, Vehicle $vehicle)
     {
-        $newEmployeeIds = $request->all(); // array directo: [99, 78, 71]
+        $responsableId = $request->input('responsable_id');
+        $usuariosIds = $request->input('usuarios', []);
 
-        // Paso 1: Desasociar a todos los empleados actuales del vehículo
-        $vehicle->empleados()->update(['vehicle_id' => null]);
+        if (!is_array($usuariosIds)) {
+            $usuariosIds = [];
+        }
 
-        // Paso 2: Asociar los nuevos empleados al vehículo
-        Empleado::whereIn('id', $newEmployeeIds)->update(['vehicle_id' => $vehicle->id]);
+        // 1. Limpiar el responsable anterior de este vehículo en la tabla empleados
+        Empleado::where('vehicle_id', $vehicle->id)->update(['vehicle_id' => null]);
+
+        // 2. Si se seleccionó un responsable, asignarle vehicle_id en su registro de empleados
+        if (!empty($responsableId)) {
+            Empleado::where('id', $responsableId)->update(['vehicle_id' => $vehicle->id]);
+        }
+
+        // 3. Unir al responsable y a los usuarios para guardarlos todos en la tabla pivote usuarios_unidades
+        $allEmployeeIds = array_values(array_unique(array_filter(array_merge(
+            $responsableId ? [(int) $responsableId] : [],
+            array_map('intval', $usuariosIds)
+        ))));
+
+        $vehicle->empleados()->sync($allEmployeeIds);
 
         return $this->respond(['message' => 'Vehicle employees synced successfully.']);
     }

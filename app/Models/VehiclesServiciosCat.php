@@ -16,7 +16,7 @@ class VehiclesServiciosCat extends Model
     protected $fillable = [
         'nombre',
         'tipo_servicio_id',
-        'es_periodico_km',
+        'es_periodico',
         'intervalo_km_sugerido',
         'intervalo_meses_sugerido'
     ];

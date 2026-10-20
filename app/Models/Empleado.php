@@ -489,6 +489,12 @@ class Empleado extends Model
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
 
+    public function vehicles()
+    {
+        return $this->belongsToMany(Vehicle::class, 'usuarios_unidades', 'empleado_id', 'vehicle_id')
+            ->withTimestamps();
+    }
+
     // ---------------------------------Contacto de emergencia---------------------------------------------------------
 
 

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tipo_servicio_id')->constrained('vehicles_tipo_servicio');
             $table->string('nombre');
-            $table->boolean('es_perdiodico');
+            $table->boolean('es_periodico');
             $table->integer('intervalo_km_sugerido')->nullable();
             $table->integer('intervalo_meses_sugerido')->nullable();
             $table->timestamps();

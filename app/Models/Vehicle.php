@@ -48,9 +48,15 @@ class Vehicle extends Model
         return $this->belongsTo(Estatus::class, 'estatus_id');
     }
 
+    public function responsable()
+    {
+        return $this->hasOne(Empleado::class, 'vehicle_id');
+    }
+
     public function empleados()
     {
-        return $this->hasMany(Empleado::class, 'vehicle_id');
+        return $this->belongsToMany(Empleado::class, 'usuarios_unidades', 'vehicle_id', 'empleado_id')
+            ->withTimestamps();
     }
 
     public function services()
