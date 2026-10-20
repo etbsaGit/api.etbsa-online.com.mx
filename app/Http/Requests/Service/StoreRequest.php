@@ -45,7 +45,6 @@ class StoreRequest extends FormRequest
             'solicitante_id' => ['nullable', 'integer', 'exists:empleados,id'],
             'suc_cargo_id' => ['nullable', 'integer', 'exists:vehicles_suc_cargo_a,id'],
             'depto_cargo_id' => ['nullable', 'integer', 'exists:vehicles_depto_cargo_a,id'],
-            'factura' => ['nullable', 'string', 'max:255'],
 
             'detalles' => ['required', 'array', 'min:1'],
             'detalles.*.servicio_id' => ['required', 'integer', 'exists:vehicles_servicios_cat,id'],

@@ -16,6 +16,7 @@ use App\Models\VehiclesTipoServicio;
 use App\Models\VehiclesServicioProveedores;
 use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
+use App\Models\VehiclesOrdenesBitacora;
 
 class ServiceController extends ApiController
 {
@@ -37,6 +38,9 @@ class ServiceController extends ApiController
                 'sucursalCargo',
                 'departamentoCargo',
                 'detalles.servicio.tipoServicio',
+                'estatus',
+                'bitacora.user.empleado',
+                'bitacora.estatus',
             ])
             ->orderBy('fecha_elaboracion', 'desc')
             ->orderBy('id', 'desc')
@@ -93,6 +97,9 @@ class ServiceController extends ApiController
                 'sucursalCargo',
                 'departamentoCargo',
                 'detalles.servicio.tipoServicio',
+                'estatus',
+                'bitacora.user.empleado',
+                'bitacora.estatus',
             ])
             ->orderBy('fecha_elaboracion', 'desc')
             ->orderBy('id', 'desc')
@@ -176,6 +183,11 @@ class ServiceController extends ApiController
                 ]);
             }
 
+            $bitacora = $this->insertBitacora($ordenServicio->id, $estatus_id, 'Orden de Servicio creada');
+            if (!$bitacora) {
+                throw new \Exception('Error al insertar la bitácora');
+            }
+
             return $ordenServicio->load([
                 'vehicle.estatus',
                 'vehicle.sucursal',
@@ -186,6 +198,9 @@ class ServiceController extends ApiController
                 'sucursalCargo',
                 'departamentoCargo',
                 'detalles.servicio.tipoServicio',
+                'estatus',
+                'bitacora.user.empleado',
+                'bitacora.estatus',
             ]);
         });
 
@@ -207,6 +222,9 @@ class ServiceController extends ApiController
             'sucursalCargo',
             'departamentoCargo',
             'detalles.servicio.tipoServicio',
+            'estatus',
+            'bitacora.user.empleado',
+            'bitacora.estatus',
         ])->findOrFail($id);
 
         return $this->respond($orden);
@@ -275,6 +293,9 @@ class ServiceController extends ApiController
                 'sucursalCargo',
                 'departamentoCargo',
                 'detalles.servicio.tipoServicio',
+                'estatus',
+                'bitacora.user.empleado',
+                'bitacora.estatus',
             ]);
         });
 
@@ -296,6 +317,17 @@ class ServiceController extends ApiController
         return $this->respondSuccess();
     }
 
+    public function insertBitacora(int $orden_servicio_id, int $estatus_id, string $comentarios)
+    {
+        $ordenServicio = VehiclesOrdenesServicio::findOrFail($orden_servicio_id);
+        $bitacora = VehiclesOrdenesBitacora::create([
+            'orden_servicio_id' => $ordenServicio->id,
+            'estatus_id' => $estatus_id,
+            'user_id' => auth()->user()->id,
+            'comentarios' => $comentarios,
+        ]);
+        return $bitacora;
+    }
     /**
      * Catálogos para filtros y formulario de registro/edición de servicios.
      */

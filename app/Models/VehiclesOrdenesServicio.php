@@ -22,9 +22,6 @@ class VehiclesOrdenesServicio extends Model
         'solicitante_id',
         'suc_cargo_id',
         'depto_cargo_id',
-        'factura',
-        'factura_url',
-        'orden_compra_url',
         'estatus_id',
     ];
 
@@ -69,6 +66,14 @@ class VehiclesOrdenesServicio extends Model
         return $this->belongsTo(Estatus::class, 'estatus_id');
     }
 
+    public function bitacora()
+    {
+        return $this->hasMany(VehiclesOrdenesBitacora::class, 'orden_servicio_id')
+            ->with('user.empleado')
+            ->with('estatus')
+            ->orderBy('created_at', 'desc');
+    }
+
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
@@ -77,7 +82,6 @@ class VehiclesOrdenesServicio extends Model
             $query->where(function (Builder $q) use ($search) {
                 $q->where('autorizacion_compras', 'LIKE', "%{$search}%")
                     ->orWhere('orden_compra', 'LIKE', "%{$search}%")
-                    ->orWhere('factura', 'LIKE', "%{$search}%")
                     ->orWhereHas('vehicle', function (Builder $vq) use ($search) {
                         $vq->where('placas', 'LIKE', "%{$search}%")
                             ->orWhere('serie', 'LIKE', "%{$search}%")
