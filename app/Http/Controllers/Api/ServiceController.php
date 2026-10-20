@@ -49,7 +49,10 @@ class ServiceController extends ApiController
             ->orderBy('id', 'desc')
             ->paginate(15);
 
-        return $this->respond($ordenes);
+        $response = $ordenes->toArray();
+        $response['status_counts'] = $this->getEstatusCounts();
+
+        return $this->respond($response);
     }
 
     /**
@@ -127,6 +130,7 @@ class ServiceController extends ApiController
         $response = $ordenes->toArray();
         $response['assigned_vehicle'] = $assignedVehicles->first();
         $response['assigned_vehicles'] = $assignedVehicles;
+        $response['status_counts'] = $this->getEstatusCounts($vehicleIds);
 
         return $this->respond($response);
     }
@@ -468,8 +472,41 @@ class ServiceController extends ApiController
                 ->get(),
             'sucursales_cargo' => VehiclesSucCargoA::orderBy('nombre', 'asc')->get(),
             'deptos_cargo' => VehiclesDeptoCargoA::orderBy('nombre', 'asc')->get(),
+            'estatus' => Estatus::where('tipo_estatus', 'servicio-unidad')->get(),
+            'status_counts' => $this->getEstatusCounts(),
         ];
 
         return $this->respond($data);
+    }
+
+    /**
+     * Obtiene el conteo de solicitudes por estatus (Solicitado, Autorizado, No Autorizado).
+     */
+    private function getEstatusCounts(?array $vehicleIds = null): array
+    {
+        $estatusList = Estatus::where('tipo_estatus', 'servicio-unidad')->get();
+        $solicitado = $estatusList->firstWhere('nombre', 'Solicitado');
+        $autorizado = $estatusList->firstWhere('nombre', 'Autorizado');
+        $noAutorizado = $estatusList->firstWhere('nombre', 'No Autorizado');
+
+        $query = VehiclesOrdenesServicio::query();
+        if (!empty($vehicleIds)) {
+            $query->whereIn('vehicle_id', $vehicleIds);
+        }
+
+        $countsByStatus = (clone $query)
+            ->whereIn('estatus_id', $estatusList->pluck('id'))
+            ->groupBy('estatus_id')
+            ->select('estatus_id', DB::raw('COUNT(*) as total'))
+            ->pluck('total', 'estatus_id');
+
+        return [
+            'solicitado' => (int) ($countsByStatus[$solicitado?->id] ?? 0),
+            'autorizado' => (int) ($countsByStatus[$autorizado?->id] ?? 0),
+            'no_autorizado' => (int) ($countsByStatus[$noAutorizado?->id] ?? 0),
+            'solicitado_id' => $solicitado?->id,
+            'autorizado_id' => $autorizado?->id,
+            'no_autorizado_id' => $noAutorizado?->id,
+        ];
     }
 }

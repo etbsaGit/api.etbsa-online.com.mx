@@ -139,6 +139,14 @@ class VehiclesOrdenesServicio extends Model
             $query->where('depto_cargo_id', $filters['depto_cargo_id']);
         }
 
+        if (!empty($filters['estatus_id'])) {
+            if (is_array($filters['estatus_id'])) {
+                $query->whereIn('estatus_id', $filters['estatus_id']);
+            } else {
+                $query->where('estatus_id', $filters['estatus_id']);
+            }
+        }
+
         if (!empty($filters['servicio_id'])) {
             $query->whereHas('detalles', function (Builder $dq) use ($filters) {
                 $dq->where('servicio_id', $filters['servicio_id']);
