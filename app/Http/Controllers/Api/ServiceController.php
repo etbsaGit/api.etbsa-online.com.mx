@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Service\AutorizacionServicioRequest;
 use App\Http\Requests\Service\StoreRequest;
+use App\Mail\OrdenesCompra\Vehicles\SendOrdenCompraVehicle;
 use App\Models\Estatus;
 use App\Models\VehiclesOrdenesServicio;
 use App\Models\VehiclesDetallesServicio;
@@ -19,7 +20,9 @@ use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
 use App\Models\VehiclesOrdenesBitacora;
 use App\Traits\UploadableFile;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends ApiController
@@ -142,10 +145,17 @@ class ServiceController extends ApiController
      */
     public function store(StoreRequest $request)
     {
-        $validated = $request->validated();
+        DB::beginTransaction();
 
-        $orden = DB::transaction(function () use ($validated, $request) {
-            $estatus_id = Estatus::where('nombre', 'Solicitado')->where('tipo_estatus', 'servicio-unidad')->first()->id;
+        try {
+            $validated = $request->validated();
+
+            $estatus = Estatus::where('nombre', 'Solicitado')->where('tipo_estatus', 'servicio-unidad')->first();
+            if (!$estatus) {
+                throw new \Exception('No se encontró el estatus "Solicitado" para el tipo de estatus servicio-unidad.');
+            }
+            $estatus_id = $estatus->id;
+
             $ordenServicio = VehiclesOrdenesServicio::create([
                 'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
                 'orden_compra' => null,
@@ -207,7 +217,10 @@ class ServiceController extends ApiController
                 throw new \Exception('Error al insertar la bitácora');
             }
 
-            return $ordenServicio->load([
+            DB::commit();
+            $this->mailSolicitudOrden($ordenServicio->id);
+
+            $orden = $ordenServicio->load([
                 'vehicle.estatus',
                 'vehicle.sucursal',
                 'vehicle.departamento',
@@ -221,9 +234,15 @@ class ServiceController extends ApiController
                 'bitacora.user.empleado',
                 'bitacora.estatus',
             ]);
-        });
 
-        return $this->respondCreated($orden);
+            return $this->respondCreated($orden);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -355,7 +374,7 @@ class ServiceController extends ApiController
             throw new \Exception('El archivo proporcionado no es un documento PDF válido.');
         }
 
-        $folder = "intranet/servicios_unidades/orden_{$ordenId}";
+        $folder = "ordenes_compra/ordenes_compras_vehicles/orden_{$ordenId}";
         $relativePath = $this->saveDoc($base64, $folder);
 
         return Storage::disk('s3')->url($relativePath);
@@ -560,5 +579,45 @@ class ServiceController extends ApiController
             'autorizado_id' => $autorizado?->id,
             'no_autorizado_id' => $noAutorizado?->id,
         ];
+    }
+
+    public function mailSolicitudOrden(int $ordenId)
+    {
+        $orden = VehiclesOrdenesServicio::findOrFail($ordenId);
+        $orden->load(
+            'vehicle.departamento',
+            'vehicle.linea',
+            'vehicle.sucursal',
+            'solicitante',
+            'detalles.servicio',
+            'detalles.servicio.tipoServicio',
+            'sucursalCargo',
+            'departamentoCargo',
+        );
+
+        $dirAdmin = Empleado::whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Director Administrativo');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+        $solicitante = $orden->solicitante;
+
+        // sacamos mails con optional por si usuario no tiene correo
+        // $correoDir = Optional($dirAdmin)->correo_institucional;
+        $correoDir = null;
+        $correoSolicitante = Optional($solicitante)->correo_institucional;
+
+        if ($correoDir) {
+            $mail = Mail::to($correoDir);
+            if ($correoSolicitante) {
+                $mail->cc($correoSolicitante);
+            }
+            $mail->send(new SendOrdenCompraVehicle($orden));
+        } else {
+            if ($correoSolicitante) {
+                Mail::to($correoSolicitante)->send(new SendOrdenCompraVehicle($orden));
+            }
+        }
+        return $this->respond(true, 'Orden de servicio enviada correctamente.');
     }
 }

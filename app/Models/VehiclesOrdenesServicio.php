@@ -57,10 +57,10 @@ class VehiclesOrdenesServicio extends Model
         return $this->hasMany(VehiclesDetallesServicio::class, 'orden_servicio_id');
     }
 
-    public function detallesServicio()
-    {
-        return $this->hasMany(VehiclesDetallesServicio::class, 'orden_servicio_id');
-    }
+    // public function detallesServicio()
+    // {
+    //     return $this->hasMany(VehiclesDetallesServicio::class, 'orden_servicio_id');
+    // }
 
     public function estatus()
     {
