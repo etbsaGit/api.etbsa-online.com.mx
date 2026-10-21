@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Service\AutorizacionServicioRequest;
 use App\Http\Requests\Service\StoreRequest;
+use App\Mail\OrdenesCompra\Vehicles\SendOrdenAutorizacion;
 use App\Mail\OrdenesCompra\Vehicles\SendOrdenCompraVehicle;
 use App\Models\Estatus;
 use App\Models\VehiclesOrdenesServicio;
@@ -477,6 +478,12 @@ class ServiceController extends ApiController
                 'estatus_id' => $estatusId,
             ]);
 
+            if ($data['autorizado']) {
+                $this->mailOrdenAutorizacion($orden->id, true);
+            } else {
+                $this->mailOrdenAutorizacion($orden->id, false);
+            }
+
             DB::commit();
 
             return $this->respond($orden->fresh([
@@ -501,10 +508,6 @@ class ServiceController extends ApiController
         }
     }
 
-    public function autorizarCompra(AutorizacionServicioRequest $request)
-    {
-        return $this->autorizarOrdenCompra($request);
-    }
     /**
      * Catálogos para filtros y formulario de registro/edición de servicios.
      */
@@ -615,9 +618,70 @@ class ServiceController extends ApiController
             $mail->send(new SendOrdenCompraVehicle($orden));
         } else {
             if ($correoSolicitante) {
-                Mail::to($correoSolicitante)->send(new SendOrdenCompraVehicle($orden));
+                $mail = Mail::to($correoSolicitante);
+                $mail->send(new SendOrdenCompraVehicle($orden));
             }
         }
         return $this->respond(true, 'Orden de servicio enviada correctamente.');
+    }
+
+    public function mailOrdenAutorizacion(int $ordenId, bool $aut)
+    {
+        $orden = VehiclesOrdenesServicio::findOrFail($ordenId);
+        $orden->load(
+            'vehicle.departamento',
+            'vehicle.linea',
+            'vehicle.sucursal',
+            'solicitante',
+            'detalles.servicio',
+            'detalles.servicio.tipoServicio',
+            'sucursalCargo',
+            'departamentoCargo',
+            'estatus'
+        );
+
+        $solicitante = $orden->solicitante;
+        $correoSolicitante = Optional($solicitante)->correo_institucional;
+
+        if (!$aut) {
+            Mail::to($correoSolicitante)->send(new SendOrdenAutorizacion($orden));
+        } else {
+            $dirAdmin = Empleado::whereHas('puesto', function ($q) {
+                $q->where('nombre', 'Director Administrativo');
+            })->whereHas('estatus', function ($q) {
+                $q->where('nombre', 'Activo');
+            })->first();
+            $coordCompras = Empleado::whereHas('puesto', function ($q) {
+                $q->where('nombre', 'Coordinador de compras');
+            })->whereHas('estatus', function ($q) {
+                $q->where('nombre', 'Activo');
+            })->first();
+
+            // sacamos mails con optional por si usuario no tiene correo
+            // $correoDir = Optional($dirAdmin)->correo_institucional;
+            $correoDir = null;
+            // $correoCoord = Optional($coordCompras)->correo_institucional;
+            $correoCoord = null;
+
+            if ($correoDir) {
+                $mail = Mail::to($correoDir);
+                if ($correoSolicitante) {
+                    $mail->cc($correoSolicitante);
+                }
+                if ($correoCoord) {
+                    $mail->cc($correoCoord);
+                }
+                $mail->send(new SendOrdenAutorizacion($orden));
+            } elseif ($correoCoord) {
+                $mail = Mail::to($correoCoord);
+                if ($correoSolicitante) {
+                    $mail->cc($correoSolicitante);
+                }
+                $mail->send(new SendOrdenAutorizacion($orden));
+            } elseif ($correoSolicitante) {
+                Mail::to($correoSolicitante)->send(new SendOrdenAutorizacion($orden));
+            }
+        }
+        return $this->respond(true, 'Autorización enviada correctamente.');
     }
 }

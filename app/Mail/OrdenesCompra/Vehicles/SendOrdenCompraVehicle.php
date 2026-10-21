@@ -56,7 +56,7 @@ class SendOrdenCompraVehicle extends Mailable
 
         if (!empty($this->orden->cotizacion_url)) {
             // Extraer la ruta relativa dentro de S3 (desde "intranet/...")
-            $pos = strpos($this->orden->cotizacion_url, 'intranet/');
+            $pos = strpos($this->orden->cotizacion_url, 'ordenes_compra/');
             $relativePath = $pos !== false
                 ? substr($this->orden->cotizacion_url, $pos)
                 : ltrim(parse_url($this->orden->cotizacion_url, PHP_URL_PATH), '/');
