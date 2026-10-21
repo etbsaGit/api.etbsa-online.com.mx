@@ -443,6 +443,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('services/auth', [ServiceController::class, 'myIndex']);
     Route::get('service/forms', [ServiceController::class, 'getforms']);
     Route::post('service/{id}/cotizacion', [ServiceController::class, 'uploadCotizacion']);
+    Route::post('service/autorizar', [ServiceController::class, 'autorizarOrdenCompra']);
+    Route::post('service/autorizarCompra', [ServiceController::class, 'autorizarOrdenCompra']);
     Route::get('service/status/{service}/{status}', [ServiceController::class, 'changeEstatus']);
     Route::get('serviceArchive/status/{serviceArchive}/{status}', [ServiceArchiveController::class, 'changeEstatus']);
 

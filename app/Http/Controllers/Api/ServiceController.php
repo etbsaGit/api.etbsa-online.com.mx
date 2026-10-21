@@ -7,6 +7,7 @@ use App\Models\Empleado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Service\AutorizacionServicioRequest;
 use App\Http\Requests\Service\StoreRequest;
 use App\Models\Estatus;
 use App\Models\VehiclesOrdenesServicio;
@@ -18,6 +19,7 @@ use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
 use App\Models\VehiclesOrdenesBitacora;
 use App\Traits\UploadableFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends ApiController
@@ -433,6 +435,56 @@ class ServiceController extends ApiController
             'comentarios' => $comentarios,
         ]);
         return $bitacora;
+    }
+
+    // autorización de solicitud
+    public function autorizarOrdenCompra(AutorizacionServicioRequest $request)
+    {
+        DB::beginTransaction();
+        try {
+            $user_id = Auth::user()->id;
+            $data = $request->validated();
+            $orden = VehiclesOrdenesServicio::findOrFail($data['orden_servicio_id']);
+
+            if (!$orden) {
+                return $this->respondNotFound('Orden de compra no encontrada.');
+            }
+
+            $estatusId = $data['autorizado'] ? Estatus::where('nombre', 'Autorizado')->where('tipo_estatus', 'servicio-unidad')->first()->id : Estatus::where('nombre', 'No Autorizado')->where('tipo_estatus', 'servicio-unidad')->first()->id;
+
+            $this->insertBitacora($orden->id, $estatusId, $data['comentarios'] ?? 'Sin comentarios');
+
+            $orden->update([
+                'estatus_id' => $estatusId,
+            ]);
+
+            DB::commit();
+
+            return $this->respond($orden->fresh([
+                'vehicle.estatus',
+                'vehicle.sucursal',
+                'vehicle.departamento',
+                'vehicle.linea',
+                'proveedor',
+                'solicitante',
+                'sucursalCargo',
+                'departamentoCargo',
+                'detalles.servicio.tipoServicio',
+                'estatus',
+                'bitacora.user.empleado',
+                'bitacora.estatus',
+            ]), $data['autorizado'] ? 'Orden de servicio autorizada correctamente.' : 'Orden de servicio marcada como no autorizada.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function autorizarCompra(AutorizacionServicioRequest $request)
+    {
+        return $this->autorizarOrdenCompra($request);
     }
     /**
      * Catálogos para filtros y formulario de registro/edición de servicios.
