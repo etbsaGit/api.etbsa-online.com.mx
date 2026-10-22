@@ -309,7 +309,7 @@
                 </div>
                 <div>
                     <span class="status-badge" style="background-color: {{ $badgeBg }}; color: {{ $badgeText }};">
-                        {{ $estatusNombre }}
+                        {{ $estatusNombre }} @php if($orden->autorizacion_compras != null) echo "-> Autorización ".$orden->autorizacion_compras @endphp
                     </span>
                 </div>
 

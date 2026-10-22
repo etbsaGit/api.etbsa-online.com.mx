@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Service;
+namespace App\Http\Requests\OrdenCompra\Vehicle;
 
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;

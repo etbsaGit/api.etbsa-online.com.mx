@@ -7,8 +7,8 @@ use App\Models\Empleado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
-use App\Http\Requests\Service\AutorizacionServicioRequest;
-use App\Http\Requests\Service\StoreRequest;
+use App\Http\Requests\OrdenCompra\Vehicle\OCServiceVehicleRequest;
+use App\Http\Requests\OrdenCompra\Vehicle\AutorizacionServicioRequest;
 use App\Mail\OrdenesCompra\Vehicles\SendOrdenAutorizacion;
 use App\Mail\OrdenesCompra\Vehicles\SendOrdenCompraVehicle;
 use App\Models\Estatus;
@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
-class ServiceController extends ApiController
+class OCServiceVehicleController extends ApiController
 {
     use UploadableFile;
     /**
@@ -144,7 +144,7 @@ class ServiceController extends ApiController
     /**
      * Registra una nueva Orden de Servicio junto con sus detalles de servicio.
      */
-    public function store(StoreRequest $request)
+    public function store(OCServiceVehicleRequest $request)
     {
         DB::beginTransaction();
 
@@ -272,7 +272,7 @@ class ServiceController extends ApiController
     /**
      * Actualiza una Orden de Servicio y sincroniza sus detalles.
      */
-    public function update(StoreRequest $request, $id)
+    public function update(OCServiceVehicleRequest $request, $id)
     {
         $ordenServicio = VehiclesOrdenesServicio::findOrFail($id);
         $validated = $request->validated();
@@ -477,6 +477,18 @@ class ServiceController extends ApiController
             $orden->update([
                 'estatus_id' => $estatusId,
             ]);
+            if (!$orden->autorizacion_compras) {
+                $sucCargo = $orden->sucursalCargo->siglas;
+                $deptoCargo = $orden->departamentoCargo->siglas;
+                $aut = DB::select("SELECT MAX(id) AS max_id FROM contador_folio_autorizacion_compras");
+                $folio = $aut[0]->max_id + 1;
+                $siguiente_folio = $sucCargo . '-' . $deptoCargo . '-' . $folio;
+                $orden->update([
+                    'autorizacion_compras' => $siguiente_folio,
+                ]);
+
+                DB::insert("insert into contador_folio_autorizacion_compras() values();");
+            }
 
             if ($data['autorizado']) {
                 $this->mailOrdenAutorizacion($orden->id, true);
@@ -538,10 +550,10 @@ class ServiceController extends ApiController
                 ->orderBy('apellido_paterno', 'asc')
                 ->get(),
             'proveedores' => VehiclesServicioProveedores::orderBy('nombre', 'asc')->get(),
-            'tipos_servicio' => VehiclesTipoServicio::with('servicios')
+            'tipos_servicio' => VehiclesTipoServicio::with('servicios')->where('nombre', '!=', 'Gasolina')
                 ->orderBy('nombre', 'asc')
                 ->get(),
-            'servicios_cat' => VehiclesServiciosCat::with('tipoServicio')
+            'servicios_cat' => VehiclesServiciosCat::with('tipoServicio')->where('nombre', '!=', 'Dispersión de gasolina')
                 ->orderBy('nombre', 'asc')
                 ->get(),
             'sucursales_cargo' => VehiclesSucCargoA::orderBy('nombre', 'asc')->get(),

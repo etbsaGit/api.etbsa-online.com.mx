@@ -14,12 +14,12 @@ class VehiclesSucCargoA extends Model
     protected $table = 'vehicles_suc_cargo_a';
 
     protected $fillable = [
-        'nombre'
+        'nombre',
+        'siglas'
     ];
 
-    // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['nombre']);
+        return $this->scopeFilterSearch($query, $filters, ['nombre', 'siglas']);
     }
 }

@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests\Service;
+namespace App\Http\Requests\OrdenCompra\Vehicle;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class StoreRequest extends FormRequest
+class OCServiceVehicleRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

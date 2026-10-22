@@ -18,7 +18,8 @@ use App\Http\Controllers\Api\ArchivoController;
 use App\Http\Controllers\Api\EstatusController;
 use App\Http\Controllers\Api\FestivoController;
 use App\Http\Controllers\Api\PostDocController;
-use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\OCServiceVehicleController;
+use App\Http\Controllers\Api\OCGasolinaVehicleController;
 use App\Http\Controllers\Api\UsedDocController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\ActivityController;
@@ -438,19 +439,27 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('propuesta/forms', [PropuestaController::class, 'getforms']);
     Route::apiResource('propuesta', PropuestaController::class);
 
-    //--------------------service--------------------
-    Route::post('services', [ServiceController::class, 'index']);
-    Route::post('services/auth', [ServiceController::class, 'myIndex']);
-    Route::get('service/forms', [ServiceController::class, 'getforms']);
-    Route::post('service/{id}/cotizacion', [ServiceController::class, 'uploadCotizacion']);
-    Route::post('service/autorizar', [ServiceController::class, 'autorizarOrdenCompra']);
-    Route::post('service/autorizarCompra', [ServiceController::class, 'autorizarOrdenCompra']);
-    Route::get('service/status/{service}/{status}', [ServiceController::class, 'changeEstatus']);
+    //--------------------OCService Vehicle--------------------
+    Route::post('services', [OCServiceVehicleController::class, 'index']);
+    Route::post('services/auth', [OCServiceVehicleController::class, 'myIndex']);
+    Route::get('service/forms', [OCServiceVehicleController::class, 'getforms']);
+    Route::post('service/{id}/cotizacion', [OCServiceVehicleController::class, 'uploadCotizacion']);
+    Route::post('service/autorizar', [OCServiceVehicleController::class, 'autorizarOrdenCompra']);
+    // Route::post('service/autorizarCompra', [OCServiceVehicleController::class, 'autorizarOrdenCompra']);
+    Route::get('service/status/{service}/{status}', [OCServiceVehicleController::class, 'changeEstatus']);
     Route::get('serviceArchive/status/{serviceArchive}/{status}', [ServiceArchiveController::class, 'changeEstatus']);
 
-
-    Route::apiResource('service', ServiceController::class);
+    Route::apiResource('service', OCServiceVehicleController::class);
     Route::apiResource('serviceArchive', ServiceArchiveController::class);
+
+    //--------------------OC Service Gasolina--------------------
+    Route::post('gasolinas', [OCGasolinaVehicleController::class, 'index']);
+    Route::post('gasolinas/auth', [OCGasolinaVehicleController::class, 'myIndex']);
+    Route::get('gasolina/forms', [OCGasolinaVehicleController::class, 'getforms']);
+    Route::post('gasolina/{id}/cotizacion', [OCGasolinaVehicleController::class, 'uploadCotizacion']);
+    Route::post('gasolina/autorizar', [OCGasolinaVehicleController::class, 'autorizarOrdenCompra']);
+    Route::apiResource('gasolina', OCGasolinaVehicleController::class);
+
 
     //--------------------Credito--------------------
     Route::post('creditoConceptos', [CreditoConceptoController::class, 'index']);
