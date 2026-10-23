@@ -42,8 +42,7 @@ class OCGasolinaVehicleController extends ApiController
 
         $ordenes = VehiclesOrdenesServicio::filter($filters)
             ->whereHas('detalles.servicio', function ($q) {
-                $q->where('nombre', 'Dispersión de gasolina')
-                    ->orWhere('tipo_servicio_id', 14);
+                $q->where('nombre', 'Dispersión de gasolina');
             })
             ->with([
                 'vehicle.estatus',
@@ -95,6 +94,11 @@ class OCGasolinaVehicleController extends ApiController
                 'total' => 0,
                 'assigned_vehicle' => null,
                 'assigned_vehicles' => [],
+                'status_counts' => [
+                    'solicitado' => 0,
+                    'autorizado' => 0,
+                    'no_autorizado' => 0,
+                ],
             ]);
         }
 
@@ -106,10 +110,13 @@ class OCGasolinaVehicleController extends ApiController
             $filters['vehicle_ids'] = $vehicleIds;
         }
 
+        if ($empleado) {
+            $filters['solicitante_id'] = $empleado->id;
+        }
+
         $ordenes = VehiclesOrdenesServicio::filter($filters)
             ->whereHas('detalles.servicio', function ($q) {
-                $q->where('nombre', 'Dispersión de gasolina')
-                    ->orWhere('tipo_servicio_id', 14);
+                $q->where('nombre', 'Dispersión de gasolina');
             })
             ->with([
                 'vehicle.estatus',
@@ -148,7 +155,7 @@ class OCGasolinaVehicleController extends ApiController
         $response = $ordenes->toArray();
         $response['assigned_vehicle'] = $assignedVehicles->first();
         $response['assigned_vehicles'] = $assignedVehicles;
-        $response['status_counts'] = $this->getEstatusCounts($vehicleIds);
+        $response['status_counts'] = $this->getEstatusCounts($vehicleIds, $empleado?->id);
 
         return $this->respond($response);
     }
@@ -383,7 +390,7 @@ class OCGasolinaVehicleController extends ApiController
                 return $this->respondNotFound('Orden de compra no encontrada.');
             }
 
-            $estatusId = $data['autorizado'] ? Estatus::where('nombre', 'Autorizado')->where('tipo_estatus', 'servicio-unidad')->first()->id : Estatus::where('nombre', 'No Autorizado')->where('tipo_estatus', 'servicio-unidad')->first()->id;
+            $estatusId = $data['autorizado'] ? Estatus::where('nombre', 'Por dispersar')->where('tipo_estatus', 'servicio-unidad')->first()->id : Estatus::where('nombre', '')->where('tipo_estatus', 'servicio-unidad')->first()->id;
 
             $this->insertBitacora($orden->id, $estatusId, $data['comentarios'] ?? 'Sin comentarios');
 
@@ -425,6 +432,39 @@ class OCGasolinaVehicleController extends ApiController
                 'bitacora.user.empleado',
                 'bitacora.estatus',
             ]), $data['autorizado'] ? 'Orden de servicio autorizada correctamente.' : 'Orden de servicio marcada como no autorizada.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // función para marcar orden como dispersada
+    public function marcarDispersada(int $id)
+    {
+        DB::beginTransaction();
+        try {
+            $orden = VehiclesOrdenesServicio::findOrFail($id);
+            $orden->update([
+                'estatus_id' => Estatus::where('nombre', 'Dispersada')->where('tipo_estatus', 'servicio-unidad')->first()->id,
+            ]);
+            $this->insertBitacora($orden->id, Estatus::where('nombre', 'Dispersada')->where('tipo_estatus', 'servicio-unidad')->first()->id, 'La solicitud de dispersión de gasolina ha sido surtida');
+            DB::commit();
+            return $this->respond($orden->fresh([
+                'vehicle.estatus',
+                'vehicle.sucursal',
+                'vehicle.departamento',
+                'vehicle.linea',
+                'proveedor',
+                'solicitante',
+                'sucursalCargo',
+                'departamentoCargo',
+                'detalles.servicio.tipoServicio',
+                'estatus',
+                'bitacora.user.empleado',
+                'bitacora.estatus',
+            ]), 'Orden de servicio marcada como dispersada correctamente.');
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -477,20 +517,23 @@ class OCGasolinaVehicleController extends ApiController
     /**
      * Obtiene el conteo de solicitudes por estatus (Solicitado, Autorizado, No Autorizado).
      */
-    private function getEstatusCounts(?array $vehicleIds = null): array
+    private function getEstatusCounts(?array $vehicleIds = null, ?int $solicitanteId = null): array
     {
         $estatusList = Estatus::where('tipo_estatus', 'servicio-unidad')->get();
         $solicitado = $estatusList->firstWhere('nombre', 'Solicitado');
-        $autorizado = $estatusList->firstWhere('nombre', 'Autorizado');
+        $porDispersar = $estatusList->firstWhere('nombre', 'Por dispersar');
+        $dispersado = $estatusList->firstWhere('nombre', 'Dispersada');
         $noAutorizado = $estatusList->firstWhere('nombre', 'No Autorizado');
 
         $query = VehiclesOrdenesServicio::query()
             ->whereHas('detalles.servicio', function ($q) {
-                $q->where('nombre', 'Dispersión de gasolina')
-                    ->orWhere('tipo_servicio_id', 14);
+                $q->where('nombre', 'Dispersión de gasolina');
             });
         if (!empty($vehicleIds)) {
             $query->whereIn('vehicle_id', $vehicleIds);
+        }
+        if (!empty($solicitanteId)) {
+            $query->where('solicitante_id', $solicitanteId);
         }
 
         $countsByStatus = (clone $query)
@@ -501,10 +544,12 @@ class OCGasolinaVehicleController extends ApiController
 
         return [
             'solicitado' => (int) ($countsByStatus[$solicitado?->id] ?? 0),
-            'autorizado' => (int) ($countsByStatus[$autorizado?->id] ?? 0),
+            'por_dispersar' => (int) ($countsByStatus[$porDispersar?->id] ?? 0),
+            'dispersado' => (int) ($countsByStatus[$dispersado?->id] ?? 0),
             'no_autorizado' => (int) ($countsByStatus[$noAutorizado?->id] ?? 0),
             'solicitado_id' => $solicitado?->id,
-            'autorizado_id' => $autorizado?->id,
+            'por_dispersar_id' => $porDispersar?->id,
+            'dispersado_id' => $dispersado?->id,
             'no_autorizado_id' => $noAutorizado?->id,
         ];
     }

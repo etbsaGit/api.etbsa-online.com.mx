@@ -37,6 +37,9 @@ class OCServiceVehicleController extends ApiController
         $filters = $request->all();
 
         $ordenes = VehiclesOrdenesServicio::filter($filters)
+            ->whereHas('detalles.servicio', function ($q) {
+                $q->where('nombre', '!=', 'Dispersión de gasolina');
+            })
             ->with([
                 'vehicle.estatus',
                 'vehicle.sucursal',
@@ -99,6 +102,9 @@ class OCServiceVehicleController extends ApiController
         }
 
         $ordenes = VehiclesOrdenesServicio::filter($filters)
+            ->whereHas('detalles.servicio', function ($q) {
+                $q->where('nombre', '!=', 'Dispersión de gasolina');
+            })
             ->with([
                 'vehicle.estatus',
                 'vehicle.sucursal',
@@ -113,6 +119,7 @@ class OCServiceVehicleController extends ApiController
                 'bitacora.user.empleado',
                 'bitacora.estatus',
             ])
+
             ->orderBy('fecha_elaboracion', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(15);
@@ -575,7 +582,11 @@ class OCServiceVehicleController extends ApiController
         $autorizado = $estatusList->firstWhere('nombre', 'Autorizado');
         $noAutorizado = $estatusList->firstWhere('nombre', 'No Autorizado');
 
-        $query = VehiclesOrdenesServicio::query();
+        $query = VehiclesOrdenesServicio::query()
+            ->whereHas('detalles.servicio', function ($q) {
+                $q->where('nombre', '!=', 'Dispersión de gasolina');
+            });
+
         if (!empty($vehicleIds)) {
             $query->whereIn('vehicle_id', $vehicleIds);
         }

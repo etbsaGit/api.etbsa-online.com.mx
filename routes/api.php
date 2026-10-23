@@ -458,6 +458,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('gasolina/forms', [OCGasolinaVehicleController::class, 'getforms']);
     Route::post('gasolina/{id}/cotizacion', [OCGasolinaVehicleController::class, 'uploadCotizacion']);
     Route::post('gasolina/autorizar', [OCGasolinaVehicleController::class, 'autorizarOrdenCompra']);
+    Route::post('gasolina/{id}/dispersada', [OCGasolinaVehicleController::class, 'marcarDispersada']);
+    Route::post('gasolina/marcarDispersada/{id}', [OCGasolinaVehicleController::class, 'marcarDispersada']);
     Route::apiResource('gasolina', OCGasolinaVehicleController::class);
 
 
