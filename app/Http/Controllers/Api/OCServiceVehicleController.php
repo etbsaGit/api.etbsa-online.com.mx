@@ -477,20 +477,20 @@ class OCServiceVehicleController extends ApiController
             $orden->update([
                 'estatus_id' => $estatusId,
             ]);
-            if (!$orden->autorizacion_compras) {
-                $sucCargo = $orden->sucursalCargo->siglas;
-                $deptoCargo = $orden->departamentoCargo->siglas;
-                $aut = DB::select("SELECT MAX(id) AS max_id FROM contador_folio_autorizacion_compras");
-                $folio = $aut[0]->max_id + 1;
-                $siguiente_folio = $sucCargo . '-' . $deptoCargo . '-' . $folio;
-                $orden->update([
-                    'autorizacion_compras' => $siguiente_folio,
-                ]);
-
-                DB::insert("insert into contador_folio_autorizacion_compras() values();");
-            }
 
             if ($data['autorizado']) {
+                if (!$orden->autorizacion_compras) {
+                    $sucCargo = $orden->sucursalCargo->siglas;
+                    $deptoCargo = $orden->departamentoCargo->siglas;
+                    $aut = DB::select("SELECT MAX(id) AS max_id FROM contador_folio_autorizacion_compras");
+                    $folio = $aut[0]->max_id + 1;
+                    $siguiente_folio = $sucCargo . '-' . $deptoCargo . '-' . $folio;
+                    $orden->update([
+                        'autorizacion_compras' => $siguiente_folio,
+                    ]);
+
+                    DB::insert("insert into contador_folio_autorizacion_compras() values();");
+                }
                 $this->mailOrdenAutorizacion($orden->id, true);
             } else {
                 $this->mailOrdenAutorizacion($orden->id, false);

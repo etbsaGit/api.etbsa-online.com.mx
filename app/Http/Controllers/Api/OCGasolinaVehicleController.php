@@ -11,6 +11,7 @@ use App\Http\Requests\OrdenCompra\Vehicle\AutorizacionServicioRequest as Vehicle
 use App\Http\Requests\OrdenCompra\Vehicle\OCGasolinaVehicleRequest;
 use App\Http\Requests\Service\AutorizacionServicioRequest;
 use App\Http\Requests\Service\StoreRequest;
+use App\Mail\OrdenesCompra\Vehicles\SendGasAutorizacion;
 use App\Mail\OrdenesCompra\Vehicles\SendGasSolicitud;
 use App\Mail\OrdenesCompra\Vehicles\SendOrdenAutorizacion;
 use App\Mail\OrdenesCompra\Vehicles\SendOrdenCompraVehicle;
@@ -389,24 +390,24 @@ class OCGasolinaVehicleController extends ApiController
             $orden->update([
                 'estatus_id' => $estatusId,
             ]);
-            if (!$orden->autorizacion_compras) {
-                $sucCargo = $orden->sucursalCargo->siglas;
-                $deptoCargo = $orden->departamentoCargo->siglas;
-                $aut = DB::select("SELECT MAX(id) AS max_id FROM contador_folio_autorizacion_compras");
-                $folio = $aut[0]->max_id + 1;
-                $siguiente_folio = $sucCargo . '-' . $deptoCargo . '-' . $folio;
-                $orden->update([
-                    'autorizacion_compras' => $siguiente_folio,
-                ]);
 
-                DB::insert("insert into contador_folio_autorizacion_compras() values();");
+            if ($data['autorizado']) {
+                if (!$orden->autorizacion_compras) {
+                    $sucCargo = $orden->sucursalCargo->siglas;
+                    $deptoCargo = $orden->departamentoCargo->siglas;
+                    $aut = DB::select("SELECT MAX(id) AS max_id FROM contador_folio_autorizacion_compras");
+                    $folio = $aut[0]->max_id + 1;
+                    $siguiente_folio = $sucCargo . '-' . $deptoCargo . '-' . $folio;
+                    $orden->update([
+                        'autorizacion_compras' => $siguiente_folio,
+                    ]);
+
+                    DB::insert("insert into contador_folio_autorizacion_compras() values();");
+                }
+                $this->mailDispersionAutorizacion($orden->id, true);
+            } else {
+                $this->mailDispersionAutorizacion($orden->id, false);
             }
-
-            // if ($data['autorizado']) {
-            //     $this->mailOrdenAutorizacion($orden->id, true);
-            // } else {
-            //     $this->mailOrdenAutorizacion($orden->id, false);
-            // }
 
             DB::commit();
 
@@ -558,19 +559,23 @@ class OCGasolinaVehicleController extends ApiController
             'vehicle.departamento',
             'vehicle.linea',
             'vehicle.sucursal',
+            'vehicle.estatus',
             'solicitante',
             'detalles.servicio',
             'detalles.servicio.tipoServicio',
             'sucursalCargo',
             'departamentoCargo',
-            'estatus'
+            'proveedor',
+            'estatus',
+            'bitacora.user.empleado',
+            'bitacora.estatus',
         );
 
         $solicitante = $orden->solicitante;
         $correoSolicitante = Optional($solicitante)->correo_institucional;
 
         if (!$aut) {
-            Mail::to($correoSolicitante)->send(new SendOrdenAutorizacion($orden));
+            Mail::to($correoSolicitante)->send(new SendGasAutorizacion($orden));
         } else {
             $dirAdmin = Empleado::whereHas('puesto', function ($q) {
                 $q->where('nombre', 'Director Administrativo');
@@ -597,15 +602,15 @@ class OCGasolinaVehicleController extends ApiController
                 if ($correoCoord) {
                     $mail->cc($correoCoord);
                 }
-                $mail->send(new SendOrdenAutorizacion($orden));
+                $mail->send(new SendGasAutorizacion($orden));
             } elseif ($correoCoord) {
                 $mail = Mail::to($correoCoord);
                 if ($correoSolicitante) {
                     $mail->cc($correoSolicitante);
                 }
-                $mail->send(new SendOrdenAutorizacion($orden));
+                $mail->send(new SendGasAutorizacion($orden));
             } elseif ($correoSolicitante) {
-                Mail::to($correoSolicitante)->send(new SendOrdenAutorizacion($orden));
+                Mail::to($correoSolicitante)->send(new SendGasAutorizacion($orden));
             }
         }
         return $this->respond(true, 'Autorización enviada correctamente.');
