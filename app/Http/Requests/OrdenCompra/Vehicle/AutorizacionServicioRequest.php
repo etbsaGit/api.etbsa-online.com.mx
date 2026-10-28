@@ -19,7 +19,6 @@ class AutorizacionServicioRequest extends FormRequest
 
     public function rules(): array
     {
-
         return [
             'orden_servicio_id' => ['required', 'exists:vehicles_ordenes_servicio,id'],
             'autorizado' => ['required', 'boolean'],
@@ -29,6 +28,18 @@ class AutorizacionServicioRequest extends FormRequest
                 }),
                 'nullable',
                 'string',
+            ],
+            'detalles_ids' => [
+                Rule::requiredIf(function () {
+                    return filter_var($this->input('autorizado'), FILTER_VALIDATE_BOOLEAN) === true;
+                }),
+                'nullable',
+                'array',
+                'min:1',
+            ],
+            'detalles_ids.*' => [
+                'integer',
+                'exists:vehicles_detalles_servicio,id',
             ],
         ];
     }
@@ -40,6 +51,10 @@ class AutorizacionServicioRequest extends FormRequest
             'orden_servicio_id.exists' => 'La orden de servicio no existe',
             'autorizado.required' => 'La autorización es obligatoria',
             'comentarios.required' => 'El comentario es obligatorio cuando no se autoriza la orden',
+            'detalles_ids.required' => 'Debe seleccionar al menos una cotización para autorizar la orden',
+            'detalles_ids.min' => 'Debe seleccionar al menos una cotización para autorizar la orden',
+            'detalles_ids.array' => 'El formato de cotizaciones seleccionadas es inválido',
+            'detalles_ids.*.exists' => 'Una de las cotizaciones seleccionadas no existe',
         ];
     }
 

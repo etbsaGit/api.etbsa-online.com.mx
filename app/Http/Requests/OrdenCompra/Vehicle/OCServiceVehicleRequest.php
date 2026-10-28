@@ -41,7 +41,7 @@ class OCServiceVehicleRequest extends FormRequest
             'orden_compra' => ['nullable', 'string', 'max:255'],
             'fecha_elaboracion' => ['required', 'date'],
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
-            'proveedor_id' => ['required', 'integer', 'exists:vehicles_servicio_proveedores,id'],
+            'proveedor_id' => ['nullable', 'integer', 'exists:vehicles_servicio_proveedores,id'],
             'solicitante_id' => ['nullable', 'integer', 'exists:empleados,id'],
             'suc_cargo_id' => ['nullable', 'integer', 'exists:vehicles_suc_cargo_a,id'],
             'depto_cargo_id' => ['nullable', 'integer', 'exists:vehicles_depto_cargo_a,id'],
@@ -61,6 +61,7 @@ class OCServiceVehicleRequest extends FormRequest
 
             'detalles' => ['required', 'array', 'min:1'],
             'detalles.*.servicio_id' => ['required', 'integer', 'exists:vehicles_servicios_cat,id'],
+            'detalles.*.proveedor_id' => ['required', 'integer', 'exists:vehicles_servicio_proveedores,id'],
             'detalles.*.vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'detalles.*.km_evento' => [
                 'required',
@@ -83,6 +84,22 @@ class OCServiceVehicleRequest extends FormRequest
             'detalles.*.subtotal' => ['required', 'numeric', 'min:0'],
             'detalles.*.iva' => ['required', 'numeric', 'min:0'],
             'detalles.*.total' => ['required', 'numeric', 'min:0'],
+            'detalles.*.forma_pago_id' => ['required', 'integer', 'exists:cat_formas_pago,id'],
+            'detalles.*.metodo_pago_id' => ['required', 'integer', 'exists:cat_metodos_pago,id'],
+            'detalles.*.uso_cfdi_id' => ['required', 'integer', 'exists:cat_usos_cfdi,id'],
+            'detalles.*.cotizacion_url' => ['nullable', 'string'],
+            'detalles.*.archivo' => ['nullable'],
+            'detalles.*.base64' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (!empty($value)) {
+                        if (!preg_match('/^data:application\/pdf;base64,/', $value)) {
+                            $fail('El archivo de cotización debe ser exclusivamente en formato PDF.');
+                        }
+                    }
+                },
+            ],
         ];
     }
 
@@ -95,17 +112,18 @@ class OCServiceVehicleRequest extends FormRequest
             'fecha_elaboracion.date' => 'La fecha de elaboración no tiene un formato válido',
             'vehicle_id.required' => 'La unidad / vehículo es obligatoria',
             'vehicle_id.exists' => 'La unidad seleccionada no existe',
-            'proveedor_id.required' => 'El proveedor es obligatorio',
             'proveedor_id.exists' => 'El proveedor seleccionado no existe',
             'solicitante_id.exists' => 'El empleado solicitante seleccionado no existe',
             'suc_cargo_id.exists' => 'La sucursal con cargo seleccionada no existe',
             'depto_cargo_id.exists' => 'El departamento con cargo seleccionado no existe',
 
-            'detalles.required' => 'Debes agregar al menos un servicio a la orden',
+            'detalles.required' => 'Debes agregar al menos una cotización a la orden',
             'detalles.array' => 'El formato de los detalles de servicio no es válido',
-            'detalles.min' => 'Debes registrar al menos un servicio en la orden',
-            'detalles.*.servicio_id.required' => 'El servicio realizado es obligatorio en cada concepto',
+            'detalles.min' => 'Debes registrar al menos una cotización en la orden',
+            'detalles.*.servicio_id.required' => 'El servicio o concepto es obligatorio en cada cotización',
             'detalles.*.servicio_id.exists' => 'El servicio seleccionado no existe en el catálogo',
+            'detalles.*.proveedor_id.required' => 'El proveedor es obligatorio en cada cotización',
+            'detalles.*.proveedor_id.exists' => 'El proveedor seleccionado no existe en el catálogo',
             'detalles.*.km_evento.required' => 'El kilometraje es obligatorio',
             'detalles.*.km_evento.numeric' => 'El kilometraje debe ser un valor numérico',
             'detalles.*.km_evento.min' => 'El kilometraje no puede ser negativo',
@@ -122,6 +140,12 @@ class OCServiceVehicleRequest extends FormRequest
             'detalles.*.iva.numeric' => 'El IVA debe ser numérico',
             'detalles.*.total.required' => 'El total es obligatorio',
             'detalles.*.total.numeric' => 'El total debe ser numérico',
+            'detalles.*.forma_pago_id.required' => 'La forma de pago es obligatoria en cada cotización',
+            'detalles.*.forma_pago_id.exists' => 'La forma de pago seleccionada no existe en el catálogo',
+            'detalles.*.metodo_pago_id.required' => 'El método de pago es obligatorio en cada cotización',
+            'detalles.*.metodo_pago_id.exists' => 'El método de pago seleccionado no existe en el catálogo',
+            'detalles.*.uso_cfdi_id.required' => 'El uso de CFDI es obligatorio en cada cotización',
+            'detalles.*.uso_cfdi_id.exists' => 'El uso de CFDI seleccionado no existe en el catálogo',
         ];
     }
 

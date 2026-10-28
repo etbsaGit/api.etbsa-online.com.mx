@@ -26,7 +26,12 @@ class VehiclesDetallesServicio extends Model
         'vehicle_id',
         'llanta_anchura',
         'llanta_altura',
-        'llanta_rin'
+        'llanta_rin',
+        'proveedor_id',
+        'cotizacion_url',
+        'forma_pago_id',
+        'metodo_pago_id',
+        'uso_cfdi_id'
     ];
 
     // -Relations-
@@ -44,6 +49,27 @@ class VehiclesDetallesServicio extends Model
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
+
+    public function proveedor()
+    {
+        return $this->belongsTo(VehiclesServicioProveedores::class, 'proveedor_id');
+    }
+
+    public function formaPago()
+    {
+        return $this->belongsTo(CatFormasPago::class, 'forma_pago_id');
+    }
+
+    public function metodoPago()
+    {
+        return $this->belongsTo(CatMetodosPago::class, 'metodo_pago_id');
+    }
+
+    public function usoCfdi()
+    {
+        return $this->belongsTo(CatUsosCfdi::class, 'uso_cfdi_id');
+    }
+
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
