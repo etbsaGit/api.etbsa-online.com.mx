@@ -499,8 +499,9 @@ class OCGasolinaVehicleController extends ApiController
         $data = [
             'next_id' => $nextId,
             'vehicles' => $vehicles,
-            'empleados' => Empleado::where('estatus_id', 5)
-                ->orderBy('apellido_paterno', 'asc')
+            'empleados' => Empleado::whereHas('estatus', function ($q) {
+                $q->where('nombre', 'Activo');
+            })->orderBy('apellido_paterno', 'asc')
                 ->get(),
             'proveedores' => VehiclesServicioProveedores::orderBy('nombre', 'asc')->get(),
             'tipos_servicio' => VehiclesTipoServicio::with('servicios')->where('nombre', 'Gasolina')->get(),

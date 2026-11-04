@@ -17,7 +17,7 @@
         }
 
         .container {
-            max-width: 720px;
+            max-width: 760px;
             margin: 0 auto;
             background-color: #ffffff;
             border-radius: 10px;
@@ -62,14 +62,14 @@
         }
 
         .intro {
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.5;
             color: #475569;
             margin-bottom: 20px;
         }
 
         .section-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #1e3a8a;
             border-bottom: 2px solid #e2e8f0;
@@ -83,15 +83,15 @@
         .grid-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 10px;
-            margin: 0 -10px 10px -10px;
+            border-spacing: 8px;
+            margin: 0 -8px 10px -8px;
         }
 
         .info-card {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            padding: 10px 14px;
+            padding: 9px 12px;
             vertical-align: top;
         }
 
@@ -104,7 +104,7 @@
         }
 
         .info-value {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             color: #0f172a;
         }
@@ -120,42 +120,32 @@
             letter-spacing: 0.5px;
         }
 
-        /* Tabla de Conceptos */
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 16px;
-            font-size: 12px;
+        /* Bloque de Concepto */
+        .concept-block {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-left: 4px solid #0284c7;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
         }
 
-        .items-table th {
+        .concept-header {
             background-color: #f1f5f9;
-            color: #334155;
-            font-weight: 700;
-            text-align: left;
-            padding: 10px 8px;
-            border-bottom: 2px solid #cbd5e1;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
-
-        .items-table td {
-            padding: 10px 8px;
+            padding: 10px 14px;
             border-bottom: 1px solid #e2e8f0;
-            vertical-align: middle;
         }
 
-        .items-table tr:nth-child(even) {
-            background-color: #f8fafc;
+        .concept-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
         }
 
-        .text-center {
-            text-align: center;
-        }
-
-        .text-right {
-            text-align: right;
+        .concept-desc {
+            font-size: 12px;
+            color: #475569;
+            margin-top: 3px;
         }
 
         .badge-type {
@@ -176,45 +166,93 @@
             border-radius: 4px;
             font-size: 10px;
             font-weight: 600;
-            white-space: nowrap;
         }
 
-        /* Totales */
-        .totals-container {
+        .badge-quote-count {
+            display: inline-block;
+            background-color: #ccfbf1;
+            color: #0f766e;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* Tabla de Cotizaciones Comparativas */
+        .quotes-table {
             width: 100%;
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-
-        .totals-table {
-            width: 280px;
-            margin-left: auto;
             border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .quotes-table th {
             background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
+            color: #475569;
+            font-weight: 700;
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 11px;
+            text-transform: uppercase;
         }
 
-        .totals-table td {
-            padding: 8px 14px;
-            font-size: 13px;
+        .quotes-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
         }
 
-        .totals-table tr.grand-total td {
-            border-top: 2px solid #10b981;
-            font-size: 15px;
+        .quotes-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .badge-quote-num {
+            display: inline-block;
+            background-color: #0f766e;
+            color: #ffffff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
             font-weight: bold;
-            color: #065f46;
-            background-color: #ecfdf5;
         }
 
-        .attachment-banner {
+        .fiscal-badge {
+            display: inline-block;
+            background-color: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-right: 2px;
+            margin-top: 2px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        /* Callouts / Banners */
+        .status-callout {
+            background-color: #fefce8;
+            border-left: 4px solid #ca8a04;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+            font-size: 13px;
+            color: #854d0e;
+        }
+
+        .info-callout {
             background-color: #eff6ff;
             border-left: 4px solid #3b82f6;
             padding: 12px 16px;
             border-radius: 6px;
-            margin: 20px 0 10px 0;
+            margin: 16px 0;
             font-size: 13px;
             color: #1e40af;
         }
@@ -231,25 +269,34 @@
 </head>
 
 <body>
+    @php
+        $kmEvento = $orden->detalles?->firstWhere('km_evento', '!=', null)?->km_evento 
+            ?? $orden->detalles?->max('km_evento');
+
+        $conceptosAgrupados = $orden->detalles ? $orden->detalles->groupBy(function ($d) {
+            $srvId = $d->servicio_id ?? 'sin_srv';
+            $desc = trim($d->descripcion ?? '');
+            $anchura = $d->llanta_anchura ?? '';
+            $altura = $d->llanta_altura ?? '';
+            $rin = $d->llanta_rin ?? '';
+            return "{$srvId}_{$desc}_{$anchura}_{$altura}_{$rin}";
+        }) : collect();
+    @endphp
+
     <div class="container">
         <!-- Encabezado -->
         <div class="header">
             <h1>Nueva Solicitud de Orden de Compra</h1>
-            <p>Se ha registrado una nueva orden de servicio para su revisión y autorización.</p>
+            <p>Se ha registrado una nueva orden de servicio con cotizaciones comparativas para su revisión y autorización.</p>
             <div class="badge-folio">
-                Orden #{{ $orden->id }} &bull; OC: {{ $orden->orden_compra ?? $orden->id }}
+                Orden #{{ $orden->id }} &bull; Unidad: {{ $orden->vehicle?->placas ?? 'S/P' }} &bull; Estatus: Solicitado
             </div>
         </div>
 
         <div class="content">
             <p class="intro">
-                Estimado(a), se ha generado una nueva solicitud de servicio en el sistema. A continuación se presentan los detalles generales, la unidad asignada y los conceptos incluidos:
+                Estimado(a), se ha generado una nueva solicitud de compra/servicio en el sistema. A continuación se presentan los datos de la unidad y el desglose de los conceptos con sus cotizaciones comparativas:
             </p>
-
-            @php
-                $kmEvento = $orden->detalles?->firstWhere('km_evento', '!=', null)?->km_evento 
-                    ?? $orden->detalles?->max('km_evento');
-            @endphp
 
             <!-- Datos de la Unidad / Vehículo -->
             <div class="section-title">Datos de la Unidad</div>
@@ -322,92 +369,118 @@
                 <tr>
                     <td class="info-card" colspan="2">
                         <div class="info-label">Proveedor / Taller</div>
-                        <div class="info-value">{{ $orden->proveedor?->nombre ?? 'No asignado' }}</div>
+                        <div class="info-value" style="color: #64748b; font-style: italic;">
+                            Pendiente de selección al momento de autorizar (múltiples cotizaciones comparativas)
+                        </div>
                     </td>
                 </tr>
             </table>
 
-            <!-- Desglose de Conceptos -->
+            <!-- Desglose de Conceptos y Cotizaciones -->
             <div class="section-title">
-                Desglose de Conceptos ({{ $orden->detalles ? count($orden->detalles) : 0 }})
+                Conceptos y Cotizaciones Comparativas ({{ $conceptosAgrupados->count() }} concepto{{ $conceptosAgrupados->count() > 1 ? 's' : '' }} &bull; {{ $orden->detalles ? count($orden->detalles) : 0 }} cotizaciones en total)
             </div>
 
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th width="5%">#</th>
-                        <th width="18%">Tipo</th>
-                        <th width="22%">Concepto</th>
-                        <th width="30%">Descripción</th>
-                        <th width="7%" class="text-center">Cant.</th>
-                        <th width="9%" class="text-right">P. Unitario</th>
-                        <th width="9%" class="text-right">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($orden->detalles as $index => $det)
-                        <tr>
-                            <td class="text-center"><strong>{{ $index + 1 }}</strong></td>
-                            <td>
-                                <span class="badge-type">
-                                    {{ $det->servicio?->tipoServicio?->nombre ?? ($det->servicio?->tipo_servicio?->nombre ?? 'General') }}
-                                </span>
-                            </td>
-                            <td>
-                                <strong>{{ $det->servicio?->nombre ?? 'Servicio' }}</strong>
-                                @if($det->llanta_anchura || $det->llanta_altura || $det->llanta_rin)
-                                    <br>
-                                    <span class="badge-tire">
-                                        R: {{ $det->llanta_anchura ?? '-' }}/{{ $det->llanta_altura ?? '-' }} R{{ $det->llanta_rin ?? '-' }}
+            @forelse($conceptosAgrupados as $grupo)
+                @php
+                    $primerDet = $grupo->first();
+                @endphp
+                <div class="concept-block">
+                    <div class="concept-header">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td>
+                                    <div class="concept-title">
+                                        Concepto #{{ $loop->iteration }}: {{ $primerDet->servicio?->nombre ?? 'Servicio' }}
+                                        <span class="badge-type">
+                                            {{ $primerDet->servicio?->tipoServicio?->nombre ?? ($primerDet->servicio?->tipo_servicio?->nombre ?? 'General') }}
+                                        </span>
+                                        @if($primerDet->llanta_anchura || $primerDet->llanta_altura || $primerDet->llanta_rin)
+                                            <span class="badge-tire">
+                                                Medida: {{ $primerDet->llanta_anchura ?? '-' }}/{{ $primerDet->llanta_altura ?? '-' }} R{{ $primerDet->llanta_rin ?? '-' }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="concept-desc">
+                                        <strong>Descripción:</strong> {{ $primerDet->descripcion ?: 'Sin descripción' }}
+                                    </div>
+                                </td>
+                                <td align="right" valign="top" style="width: 130px;">
+                                    <span class="badge-quote-count">
+                                        {{ $grupo->count() }} {{ $grupo->count() === 1 ? 'cotización' : 'cotizaciones' }}
                                     </span>
-                                @endif
-                            </td>
-                            <td>{{ $det->descripcion }}</td>
-                            <td class="text-center">{{ $det->cantidad ?? 1 }}</td>
-                            <td class="text-right">
-                                {{ $det->precio_unitario ? '$' . number_format($det->precio_unitario, 2) : '-' }}
-                            </td>
-                            <td class="text-right" style="font-weight: 600;">
-                                {{ $det->total ? '$' . number_format($det->total, 2) : '$0.00' }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center" style="padding: 15px; color: #94a3b8;">
-                                No se encontraron conceptos registrados para esta orden.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
 
-            <!-- Resumen de Totales -->
-            <div class="totals-container">
-                <table class="totals-table">
-                    @php
-                        $subtotalAcumulado = $orden->detalles ? $orden->detalles->sum('subtotal') : 0;
-                        $ivaAcumulado = $orden->detalles ? $orden->detalles->sum('iva') : 0;
-                        $totalAcumulado = $orden->detalles ? $orden->detalles->sum('total') : 0;
-                    @endphp
-                    <tr>
-                        <td class="text-right"><strong>Subtotal:</strong></td>
-                        <td class="text-right">${{ number_format($subtotalAcumulado, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-right"><strong>IVA (16%):</strong></td>
-                        <td class="text-right">${{ number_format($ivaAcumulado, 2) }}</td>
-                    </tr>
-                    <tr class="grand-total">
-                        <td class="text-right">Total:</td>
-                        <td class="text-right">${{ number_format($totalAcumulado, 2) }} MXN</td>
-                    </tr>
-                </table>
+                    <table class="quotes-table">
+                        <thead>
+                            <tr>
+                                <th width="10%">Opción</th>
+                                <th width="30%">Proveedor / Taller</th>
+                                <th width="7%" class="text-center">Cant.</th>
+                                <th width="12%" class="text-right">P. Unitario</th>
+                                <th width="12%" class="text-right">Subtotal</th>
+                                <th width="12%" class="text-right">IVA</th>
+                                <th width="17%" class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($grupo as $qIdx => $cot)
+                                <tr>
+                                    <td>
+                                        <span class="badge-quote-num">Opción #{{ $qIdx + 1 }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ $cot->proveedor?->nombre ?? 'Sin proveedor' }}</strong>
+                                        <div style="margin-top: 2px;">
+                                            @if($cot->formaPago)
+                                                <span class="fiscal-badge" title="Forma de Pago">FP: {{ $cot->formaPago->clave }} - {{ $cot->formaPago->nombre }}</span>
+                                            @endif
+                                            @if($cot->metodoPago)
+                                                <span class="fiscal-badge" title="Método de Pago">MP: {{ $cot->metodoPago->clave }}</span>
+                                            @endif
+                                            @if($cot->usoCfdi)
+                                                <span class="fiscal-badge" title="Uso CFDI">Uso: {{ $cot->usoCfdi->clave }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="text-center font-mono">{{ $cot->cantidad ?? 1 }}</td>
+                                    <td class="text-right">
+                                        {{ $cot->precio_unitario ? '$' . number_format($cot->precio_unitario, 2) : '-' }}
+                                    </td>
+                                    <td class="text-right">${{ number_format($cot->subtotal ?? 0, 2) }}</td>
+                                    <td class="text-right">${{ number_format($cot->iva ?? 0, 2) }}</td>
+                                    <td class="text-right" style="font-weight: 700; color: #0f766e;">
+                                        ${{ number_format($cot->total ?? 0, 2) }} MXN
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @empty
+                <div style="padding: 16px; background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: #94a3b8;">
+                    No se encontraron conceptos registrados para esta orden.
+                </div>
+            @endforelse
+
+            <!-- Banner Informativo del Estado de la Orden -->
+            <div class="status-callout">
+                <strong>Estatus actual:</strong> Pendiente de Autorización.<br>
+                <span style="font-size: 12px;">
+                    El monto definitivo y el/los proveedores asignados se confirmarán al momento de la autorización en el sistema. Si se seleccionan cotizaciones de distintos proveedores, el sistema generará automáticamente las órdenes de compra independientes correspondientes bajo el mismo folio de autorización.
+                </span>
             </div>
 
-            <!-- Aviso de Cotización Adjunta -->
-            @if(!empty($orden->cotizacion_url))
-                <div class="attachment-banner">
-                    <strong>Documento adjunto:</strong> Se ha adjuntado la cotización en formato PDF correspondiente a esta orden de compra para su validación.
+            <!-- Aviso de Documentos Adjuntos -->
+            @php
+                $hasCotizaciones = $orden->detalles?->whereNotNull('cotizacion_url')->count() > 0 || !empty($orden->cotizacion_url);
+            @endphp
+            @if($hasCotizaciones)
+                <div class="info-callout">
+                    <strong>Archivos Adjuntos:</strong> Se han adjuntado a este correo los archivos PDF de las cotizaciones registradas para su consulta y comparativa directa.
                 </div>
             @endif
         </div>

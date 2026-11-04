@@ -723,12 +723,6 @@ class OCServiceVehicleController extends ApiController
                             $data['comentarios'] ?? 'Orden autorizada correctamente.'
                         );
 
-                        try {
-                            $this->mailOrdenAutorizacion($orden->id, true);
-                        } catch (\Throwable $mEx) {
-                            \Log::error("Error enviando correo de autorización para orden #{$orden->id}: " . $mEx->getMessage());
-                        }
-
                         $ordenesGeneradas[] = $orden;
                         $isFirstGroup = false;
                     } else {
@@ -764,17 +758,18 @@ class OCServiceVehicleController extends ApiController
                             $comentariosBitacora
                         );
 
-                        try {
-                            $this->mailOrdenAutorizacion($nuevaOrden->id, true);
-                        } catch (\Throwable $mEx) {
-                            \Log::error("Error enviando correo de autorización para nueva orden #{$nuevaOrden->id}: " . $mEx->getMessage());
-                        }
-
                         $ordenesGeneradas[] = $nuevaOrden;
                     }
                 }
 
                 DB::commit();
+
+                // Enviar UN SOLO correo de confirmación para todas las órdenes generadas bajo esta autorización
+                try {
+                    $this->mailOrdenesAutorizadas($ordenesGeneradas, true);
+                } catch (\Throwable $mEx) {
+                    \Log::error("Error enviando correo de confirmación de autorización: " . $mEx->getMessage());
+                }
 
                 $totalOrdenes = count($ordenesGeneradas);
                 $foliosTexto = collect($ordenesGeneradas)->pluck('id')->map(fn($id) => "#{$id}")->join(', ');
@@ -800,7 +795,6 @@ class OCServiceVehicleController extends ApiController
                     'bitacora.user.empleado',
                     'bitacora.estatus',
                 ]), $mensajeFinal);
-
             } else {
                 // No autorizado
                 $estatusId = $estatusNoAutorizado->id;
@@ -809,13 +803,13 @@ class OCServiceVehicleController extends ApiController
                     'estatus_id' => $estatusId,
                 ]);
 
+                DB::commit();
+
                 try {
-                    $this->mailOrdenAutorizacion($orden->id, false);
+                    $this->mailOrdenesAutorizadas([$orden], false);
                 } catch (\Throwable $mEx) {
                     \Log::error("Error enviando correo de no autorización para orden #{$orden->id}: " . $mEx->getMessage());
                 }
-
-                DB::commit();
 
                 return $this->respond($orden->fresh([
                     'vehicle.estatus',
@@ -845,6 +839,85 @@ class OCServiceVehicleController extends ApiController
     }
 
     /**
+     * Genera el formato impreso oficial de la Orden de Compra en PDF.
+     * Solo se puede generar si la orden de servicio está marcada como 'Autorizado'.
+     */
+    public function getOrdenCompraPdf(int $id)
+    {
+        $orden = VehiclesOrdenesServicio::with([
+            'vehicle.estatus',
+            'vehicle.sucursal',
+            'vehicle.departamento',
+            'vehicle.linea',
+            'proveedor',
+            'solicitante.puesto',
+            'sucursalCargo',
+            'departamentoCargo',
+            'detalles.servicio.tipoServicio',
+            'detalles.proveedor',
+            'detalles.formaPago',
+            'detalles.metodoPago',
+            'detalles.usoCfdi',
+            'estatus',
+            'bitacora.user.empleado.puesto',
+            'bitacora.estatus',
+        ])->findOrFail($id);
+
+        if ($orden->estatus?->nombre !== 'Autorizado') {
+            return response()->json([
+                'message' => 'Solo se puede imprimir el formato de una orden de compra autorizada.'
+            ], 403);
+        }
+
+        // Obtener datos del elaborador a partir de la bitácora
+        $bitacoraElaboracion = $orden->bitacora->sortBy('created_at')->first();
+        $elaboraNombre = $bitacoraElaboracion?->user?->empleado?->nombreCompleto ?: ($orden->solicitante?->nombreCompleto ?: 'N/A');
+
+        // Nombre para el Departamento de Compras: Director Administrativo
+        $dirAdmin = Empleado::whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Director Administrativo');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+
+        if (!$dirAdmin) {
+            $dirAdmin = Empleado::whereHas('puesto', function ($q) {
+                $q->where('nombre', 'LIKE', '%Director%Administrativo%');
+            })->first();
+        }
+
+        $comprasNombre = $dirAdmin?->nombreCompleto ?: 'AUGUSTO ALBERTO GUEVARA';
+
+        // Datos fiscales de referencia (del primer detalle)
+        $firstDetalle = $orden->detalles->first();
+
+        // Condiciones de pago (por ahora vacío a petición del usuario)
+        $condicionesPago = '';
+
+        $data = [
+            'orden' => $orden,
+            'folioOC' => $orden->orden_compra ?: $orden->id,
+            'proveedor' => $orden->proveedor ?: ($firstDetalle?->proveedor ?: null),
+            'fechaEntrega' => $orden->fecha_elaboracion ? \Carbon\Carbon::parse($orden->fecha_elaboracion)->format('d/m/Y') : now()->format('d/m/Y'),
+            'embarqueseA' => 'L.A.B.: ' . ($orden->sucursalCargo?->nombre ?: ($orden->vehicle?->sucursal?->nombre ?: 'Celaya')),
+            'condicionesPago' => $condicionesPago,
+            'firstDetalle' => $firstDetalle,
+            'elaboraNombre' => $elaboraNombre,
+            'voBoNombre' => $orden->solicitante?->nombreCompleto ?: 'N/A',
+            'comprasNombre' => $comprasNombre,
+            'subtotal' => (float) $orden->detalles->sum('subtotal'),
+            'iva' => (float) $orden->detalles->sum('iva'),
+            'total' => (float) $orden->detalles->sum('total'),
+        ];
+
+        $pdf = Pdf::loadView('pdf.orden_compra.formato', $data)->setPaper('letter', 'portrait');
+        $pdfContent = $pdf->output();
+        $pdfBase64 = base64_encode($pdfContent);
+
+        return $this->respond($pdfBase64);
+    }
+
+    /**
      * Catálogos para filtros y formulario de registro/edición de servicios.
      */
     public function getforms()
@@ -870,8 +943,9 @@ class OCServiceVehicleController extends ApiController
         $data = [
             'next_id' => $nextId,
             'vehicles' => $vehicles,
-            'empleados' => Empleado::where('estatus_id', 5)
-                ->orderBy('apellido_paterno', 'asc')
+            'empleados' => Empleado::whereHas('estatus', function ($q) {
+                $q->where('nombre', 'Activo');
+            })->orderBy('apellido_paterno', 'asc')
                 ->get(),
             'proveedores' => VehiclesServicioProveedores::orderBy('nombre', 'asc')->get(),
             'tipos_servicio' => VehiclesTipoServicio::with('servicios')->where('nombre', '!=', 'Gasolina')
@@ -934,7 +1008,9 @@ class OCServiceVehicleController extends ApiController
             'vehicle.departamento',
             'vehicle.linea',
             'vehicle.sucursal',
+            'vehicle.estatus',
             'solicitante',
+            'proveedor',
             'detalles.servicio',
             'detalles.servicio.tipoServicio',
             'detalles.proveedor',
@@ -943,6 +1019,7 @@ class OCServiceVehicleController extends ApiController
             'detalles.usoCfdi',
             'sucursalCargo',
             'departamentoCargo',
+            'estatus',
         );
 
         $dirAdmin = Empleado::whereHas('puesto', function ($q) {
@@ -970,43 +1047,71 @@ class OCServiceVehicleController extends ApiController
         return $this->respond(true, 'Orden de servicio enviada correctamente.');
     }
 
-    public function mailOrdenAutorizacion(int $ordenId, bool $aut)
+    /**
+     * Envía un único correo de confirmación de autorización o rechazo para las órdenes generadas.
+     * Si se generaron múltiples órdenes por división de proveedor, se envían agrupadas en este único correo.
+     */
+    public function mailOrdenesAutorizadas($ordenes, bool $aut)
     {
-        $orden = VehiclesOrdenesServicio::findOrFail($ordenId);
-        $orden->load(
-            'vehicle.departamento',
-            'vehicle.linea',
-            'vehicle.sucursal',
-            'solicitante',
-            'detalles.servicio',
-            'detalles.servicio.tipoServicio',
-            'detalles.proveedor',
-            'detalles.formaPago',
-            'detalles.metodoPago',
-            'detalles.usoCfdi',
-            'sucursalCargo',
-            'departamentoCargo',
-            'estatus'
+        $ordenesList = is_array($ordenes) ? collect($ordenes) : (
+            $ordenes instanceof \Illuminate\Support\Collection ? $ordenes : collect([$ordenes])
         );
 
-        $solicitante = $orden->solicitante;
-        $correoSolicitante = Optional($solicitante)->correo_institucional;
+        if ($ordenesList->isEmpty()) {
+            return $this->respond(false, 'No hay órdenes para notificar.');
+        }
+
+        // Cargar todas las relaciones necesarias para cada una de las órdenes
+        $ordenesCargadas = $ordenesList->map(function ($ord) {
+            $model = $ord instanceof VehiclesOrdenesServicio
+                ? $ord
+                : VehiclesOrdenesServicio::findOrFail((int) $ord);
+
+            return $model->fresh([
+                'vehicle.departamento',
+                'vehicle.linea',
+                'vehicle.sucursal',
+                'vehicle.estatus',
+                'solicitante',
+                'proveedor',
+                'detalles.servicio',
+                'detalles.servicio.tipoServicio',
+                'detalles.proveedor',
+                'detalles.formaPago',
+                'detalles.metodoPago',
+                'detalles.usoCfdi',
+                'sucursalCargo',
+                'departamentoCargo',
+                'estatus',
+                'bitacora.user.empleado',
+                'bitacora.estatus',
+            ]);
+        });
+
+        $ordenPrincipal = $ordenesCargadas->first();
+        $solicitante = $ordenPrincipal->solicitante;
+        $correoSolicitante = optional($solicitante)->correo_institucional;
+        $mailable = new SendOrdenAutorizacion($ordenPrincipal, $ordenesCargadas);
 
         if (!$aut) {
-            Mail::to($correoSolicitante)->send(new SendOrdenAutorizacion($orden));
+            if ($correoSolicitante) {
+                Mail::to($correoSolicitante)->send($mailable);
+            }
         } else {
             $dirAdmin = Empleado::whereHas('puesto', function ($q) {
                 $q->where('nombre', 'Director Administrativo');
             })->whereHas('estatus', function ($q) {
                 $q->where('nombre', 'Activo');
             })->first();
+
             $coordCompras = Empleado::whereHas('puesto', function ($q) {
                 $q->where('nombre', 'Coordinador de compras');
             })->whereHas('estatus', function ($q) {
                 $q->where('nombre', 'Activo');
             })->first();
 
-            $correoDir = null;
+            $correoDir = null; // Mantener null según entorno actual
+            // $correoCoord = optional($coordCompras)->correo_institucional;
             $correoCoord = null;
 
             if ($correoDir) {
@@ -1017,17 +1122,23 @@ class OCServiceVehicleController extends ApiController
                 if ($correoCoord) {
                     $mail->cc($correoCoord);
                 }
-                $mail->send(new SendOrdenAutorizacion($orden));
+                $mail->send($mailable);
             } elseif ($correoCoord) {
                 $mail = Mail::to($correoCoord);
                 if ($correoSolicitante) {
                     $mail->cc($correoSolicitante);
                 }
-                $mail->send(new SendOrdenAutorizacion($orden));
+                $mail->send($mailable);
             } elseif ($correoSolicitante) {
-                Mail::to($correoSolicitante)->send(new SendOrdenAutorizacion($orden));
+                Mail::to($correoSolicitante)->send($mailable);
             }
         }
+
         return $this->respond(true, 'Autorización enviada correctamente.');
+    }
+
+    public function mailOrdenAutorizacion(int $ordenId, bool $aut)
+    {
+        return $this->mailOrdenesAutorizadas([$ordenId], $aut);
     }
 }

@@ -422,12 +422,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     // Historico de Ventas Power BI
     Route::get('historico-ventas/cliente', [HistoricalPbiVentaController::class, 'getClienteData']);
     Route::get('historico-ventas/search-clientes', [HistoricalPbiVentaController::class, 'searchClientes']);
-    Route::post('historico-ventas/sync', [HistoricalPbiVentaController::class, 'sync']);
+    Route::match(['get', 'post'], 'historico-ventas/sync', [HistoricalPbiVentaController::class, 'sync']);
 
     // Cartera Vencida ETBSA
     Route::get('cartera-vencida/cliente', [CarteraVencidaController::class, 'getClienteData']);
     Route::get('cartera-vencida/global-comparativa', [CarteraVencidaController::class, 'getGlobalComparativa']);
-    Route::post('cartera-vencida/sync', [CarteraVencidaController::class, 'sync']);
+    Route::match(['get', 'post'], 'cartera-vencida/sync', [CarteraVencidaController::class, 'sync']);
 });
 
 //PowerBI
