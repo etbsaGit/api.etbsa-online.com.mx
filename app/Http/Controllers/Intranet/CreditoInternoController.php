@@ -35,45 +35,120 @@ use Illuminate\Support\Str;
 class CreditoInternoController extends ApiController
 {
     use UploadableFile;
+
+    private const SOLICITUD_RELATIONS = [
+        'cliente',
+        'asesor',
+        'notificado',
+        'estatus',
+        'validadoPor',
+        'tipoEnganche',
+        'linea.tiposEnganche',
+        'pagos.estatus',
+        'historial.estatus',
+        'historial.empleado',
+        'sucursal',
+        'pagos.actualizadoPor',
+        'pagos.validadoPor',
+        'pagos.documento.documento',
+        'pagos.solicitudesAplazarPago.estatus',
+        'pagos.solicitudesAplazarPago.solicitante',
+        'pagos.solicitudesAplazarPago.validadoPor',
+        'pagos.solicitudAplazarPago.estatus',
+        'pagos.solicitudAplazarPago.solicitante',
+        'pagos.solicitudAplazarPago.validadoPor',
+        'documentacion.documento',
+        'voBoCredito.estatus',
+        'voBoCredito.empleado',
+        'voBoGerencia.estatus',
+        'voBoGerencia.empleado',
+    ];
+
+    /**
+     * Limpia los $appends pesados de Cliente y Empleado en solicitudes cargadas.
+     */
+    private function optimizeSolicitudModels($solicitudes): void
+    {
+        $items = $solicitudes instanceof \Illuminate\Support\Collection ? $solicitudes : collect([$solicitudes]);
+        $empAppends = ['nombreCompleto', 'apellidoCompleto'];
+
+        foreach ($items as $sol) {
+            if (!$sol) {
+                continue;
+            }
+            if ($sol->relationLoaded('cliente') && $sol->cliente) {
+                $sol->cliente->setAppends([]);
+            }
+            foreach (['asesor', 'notificado', 'validadoPor'] as $rel) {
+                if ($sol->relationLoaded($rel) && $sol->$rel) {
+                    $sol->$rel->setAppends($empAppends);
+                }
+            }
+            foreach (['voBoCredito', 'voBoGerencia'] as $voBoRel) {
+                if ($sol->relationLoaded($voBoRel) && $sol->$voBoRel?->relationLoaded('empleado') && $sol->$voBoRel->empleado) {
+                    $sol->$voBoRel->empleado->setAppends($empAppends);
+                }
+            }
+            if ($sol->relationLoaded('historial') && $sol->historial) {
+                foreach ($sol->historial as $hist) {
+                    if ($hist->relationLoaded('empleado') && $hist->empleado) {
+                        $hist->empleado->setAppends($empAppends);
+                    }
+                }
+            }
+            if ($sol->relationLoaded('pagos') && $sol->pagos) {
+                foreach ($sol->pagos as $pago) {
+                    foreach (['actualizadoPor', 'validadoPor'] as $pRel) {
+                        if ($pago->relationLoaded($pRel) && $pago->$pRel) {
+                            $pago->$pRel->setAppends($empAppends);
+                        }
+                    }
+                    if ($pago->relationLoaded('solicitudAplazarPago') && $pago->solicitudAplazarPago) {
+                        $ap = $pago->solicitudAplazarPago;
+                        if ($ap->relationLoaded('solicitante') && $ap->solicitante) {
+                            $ap->solicitante->setAppends($empAppends);
+                        }
+                        if ($ap->relationLoaded('validadoPor') && $ap->validadoPor) {
+                            $ap->validadoPor->setAppends($empAppends);
+                        }
+                    }
+                    if ($pago->relationLoaded('solicitudesAplazarPago') && $pago->solicitudesAplazarPago) {
+                        foreach ($pago->solicitudesAplazarPago as $apItem) {
+                            if ($apItem->relationLoaded('solicitante') && $apItem->solicitante) {
+                                $apItem->solicitante->setAppends($empAppends);
+                            }
+                            if ($apItem->relationLoaded('validadoPor') && $apItem->validadoPor) {
+                                $apItem->validadoPor->setAppends($empAppends);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function index(Request $request)
     {
         $filters = $request->all();
         $user = Auth::user();
+        $dirAdminPuestoId = Puesto::where('nombre', 'Director Administrativo')->value('id');
+
         // si es admin o director administrativo puede ver todas las cotizaciones, si no sólo las que se le notificó al usuario o el que la solicitó
         $creditoSolicitudes = CreditoSolicitud::query()
-            ->when(!$user->hasRole('Admin') && !$user->hasRole('Credito') && $user->empleado->puesto_id !== Puesto::where('nombre', 'Director Administrativo')->first()->id, function ($query) use ($user) {
-                $query->whereHas('notificado', function ($q) use ($user) {
-                    $q->where('id', $user->empleado->id);
-                })->orWhereHas('asesor', function ($q) use ($user) {
-                    $q->where('id', $user->empleado->id);
+            ->when(!$user->hasRole('Admin') && !$user->hasRole('Credito') && $user->empleado?->puesto_id !== $dirAdminPuestoId, function ($query) use ($user) {
+                $empleadoId = $user->empleado?->id;
+                $query->where(function ($q) use ($empleadoId) {
+                    $q->where('notificado_id', $empleadoId)
+                        ->orWhere('asesor_id', $empleadoId);
                 });
-            })->with([
-                'cliente',
-                'asesor',
-                'notificado',
-                'estatus',
-                'validadoPor',
-                'tipoEnganche',
-                'linea.tiposEnganche',
-                'pagos.estatus',
-                'historial.estatus',
-                'historial.empleado',
-                'sucursal',
-                'pagos.actualizadoPor',
-                'pagos.validadoPor',
-                'pagos.documento.documento',
-                'pagos.solicitudesAplazarPago.estatus',
-                'pagos.solicitudesAplazarPago.solicitante',
-                'pagos.solicitudesAplazarPago.validadoPor',
-                'pagos.solicitudAplazarPago.estatus',
-                'pagos.solicitudAplazarPago.solicitante',
-                'pagos.solicitudAplazarPago.validadoPor',
-                'documentacion.documento',
-                'voBoCredito.estatus',
-                'voBoCredito.empleado',
-                'voBoGerencia.estatus',
-                'voBoGerencia.empleado',
-            ])->filter($filters)->orderBy('created_at', 'desc')->paginate(10);
+            })
+            ->with(self::SOLICITUD_RELATIONS)
+            ->filter($filters)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        $this->optimizeSolicitudModels($creditoSolicitudes->getCollection());
+
         return $this->respond(
             $creditoSolicitudes,
             'Lista de solicitudes de crédito cargada correctamente'
@@ -181,11 +256,12 @@ class CreditoInternoController extends ApiController
             $user = Auth::user();
             $empleadoId = $user->empleado?->id;
 
-            $estatusPagoRealizado = Estatus::where('nombre', 'Pago Realizado')->where('tipo_estatus', 'credito-interno')->first();
-            $estatusPagoPendiente = Estatus::where('nombre', 'Pago Pendiente')->where('tipo_estatus', 'credito-interno')->first();
-            $estatusCreditoPagado = Estatus::where('nombre', 'Crédito Pagado')->where('tipo_estatus', 'credito-interno')->first();
-            $estatusCreditoEnProceso = Estatus::where('nombre', 'Crédito en Proceso')->where('tipo_estatus', 'credito-interno')->first();
-            $estatusCreditoAprobado = Estatus::where('nombre', 'Crédito Aprobado')->where('tipo_estatus', 'credito-interno')->first();
+            $estatusMap = Estatus::where('tipo_estatus', 'credito-interno')->get()->keyBy('nombre');
+            $estatusPagoRealizado = $estatusMap->get('Pago Realizado');
+            $estatusPagoPendiente = $estatusMap->get('Pago Pendiente');
+            $estatusCreditoPagado = $estatusMap->get('Crédito Pagado');
+            $estatusCreditoEnProceso = $estatusMap->get('Crédito en Proceso');
+            $estatusCreditoAprobado = $estatusMap->get('Crédito Aprobado');
 
             $todosPagos = CreditoHistorialPagos::where('solicitud_id', $solicitud->id)
                 ->orderBy('n_pago', 'asc')
@@ -264,7 +340,7 @@ class CreditoInternoController extends ApiController
 
                 CreditoHistorical::create([
                     'solicitud_id' => $solicitud->id,
-                    'estatus_id'   => Estatus::where('nombre', 'Documento Adjuntado')->where('tipo_estatus', 'credito-interno')->first()?->id ?? $solicitud->estatus_id,
+                    'estatus_id'   => $estatusMap->get('Documento Adjuntado')?->id ?? $solicitud->estatus_id,
                     'descripcion'  => "Documento ($nombreTipoDoc) adjuntado como evidencia para " . ($pago->etiqueta ?: "Pago #{$pago->n_pago}") . ".",
                     'empleado_id'  => $empleadoId
                 ]);
@@ -336,7 +412,9 @@ class CreditoInternoController extends ApiController
                     }
                 }
 
-                $p->save();
+                if ($p->isDirty()) {
+                    $p->save();
+                }
             }
 
             // 7. Actualizar estatus general de la solicitud de crédito
@@ -354,8 +432,8 @@ class CreditoInternoController extends ApiController
 
             // 8. Si había solicitudes de aplazamiento activas para este pago, cancelarlas automáticamente al haberse registrado el pago
             if ($pago->monto_pagado !== null && (float)$pago->monto_pagado > 0) {
-                $estatusAplazoSolicitado = Estatus::where('nombre', 'Aplazo Solicitado')->where('tipo_estatus', 'credito-interno')->first();
-                $estatusAplazoCancelado = Estatus::where('nombre', 'Aplazo Cancelado')->where('tipo_estatus', 'credito-interno')->first();
+                $estatusAplazoSolicitado = $estatusMap->get('Aplazo Solicitado');
+                $estatusAplazoCancelado = $estatusMap->get('Aplazo Cancelado');
 
                 if ($estatusAplazoSolicitado && $estatusAplazoCancelado) {
                     $solicitudesActivas = CreditoSolicitudAplazarPago::where('pago_id', $pago->id)
@@ -376,18 +454,21 @@ class CreditoInternoController extends ApiController
             }
 
             // 9. Registrar en bitácora de historial
-            $estatusHistorial = Estatus::where('nombre', 'Pago Realizado')->where('tipo_estatus', 'credito-interno')->first();
             CreditoHistorical::create([
                 'solicitud_id' => $solicitud->id,
-                'estatus_id'   => $estatusHistorial?->id ?? $solicitud->estatus_id,
+                'estatus_id'   => $estatusPagoRealizado?->id ?? $solicitud->estatus_id,
                 'descripcion'  => "Pago (" . ($pago->etiqueta ?: "Pago #{$pago->n_pago}") . ") registrado: Monto pagado: " . ($pago->monto_pagado !== null ? '$' . number_format($pago->monto_pagado, 2) : '$0.00') . ". Saldo pendiente actual: $" . number_format($saldoActual, 2),
                 'empleado_id'  => $empleadoId
             ]);
 
             DB::commit();
 
+            $pago->load(['actualizadoPor', 'validadoPor', 'estatus', 'documento.documento']);
+            $pago->actualizadoPor?->setAppends(['nombreCompleto', 'apellidoCompleto']);
+            $pago->validadoPor?->setAppends(['nombreCompleto', 'apellidoCompleto']);
+
             return $this->respond(
-                $pago->load(['actualizadoPor', 'validadoPor', 'estatus', 'documento.documento']),
+                $pago,
                 'Pago actualizado correctamente'
             );
         } catch (\Throwable $e) {
@@ -607,33 +688,13 @@ class CreditoInternoController extends ApiController
 
     public function show($id)
     {
-        $credito = CreditoSolicitud::with([
-            'cliente',
-            'asesor',
-            'notificado',
-            'estatus',
-            'validadoPor',
-            'tipoEnganche',
-            'linea.tiposEnganche',
-            'pagos.estatus',
-            'historial.estatus',
-            'historial.empleado',
-            'sucursal',
-            'pagos.actualizadoPor',
-            'pagos.validadoPor',
-            'pagos.documento.documento',
-            'pagos.solicitudesAplazarPago.estatus',
-            'pagos.solicitudesAplazarPago.solicitante',
-            'pagos.solicitudesAplazarPago.validadoPor',
-            'pagos.solicitudAplazarPago.estatus',
-            'pagos.solicitudAplazarPago.solicitante',
-            'pagos.solicitudAplazarPago.validadoPor',
-            'documentacion.documento'
-        ])->find($id);
+        $credito = CreditoSolicitud::with(self::SOLICITUD_RELATIONS)->find($id);
 
         if (!$credito) {
             return $this->respondNotFound('Solicitud de crédito no encontrada');
         }
+
+        $this->optimizeSolicitudModels($credito);
 
         return $this->respond($credito, 'Solicitud de crédito cargada correctamente');
     }
@@ -728,12 +789,12 @@ class CreditoInternoController extends ApiController
 
             if ($data['aprobado']) {
                 $credito->update([
-                    'estatus_id' => Estatus::where('nombre', 'Crédito en Proceso')->where('tipo_estatus', 'credito-interno')->first()->id,
+                    'estatus_id' => Estatus::where('nombre', 'Crédito en Proceso')->where('tipo_estatus', 'credito-interno')->value('id'),
                     'validated_by' => $empleadoId,
                 ]);
             } else {
                 $credito->update([
-                    'estatus_id' => Estatus::where('nombre', 'Crédito Rechazado')->where('tipo_estatus', 'credito-interno')->first()->id,
+                    'estatus_id' => $estatusId,
                     'validated_by' => $empleadoId,
                 ]);
             }
@@ -762,16 +823,16 @@ class CreditoInternoController extends ApiController
     {
         $filters = $request->all();
         $user = Auth::user();
+        $dirAdminPuestoId = Puesto::where('nombre', 'Director Administrativo')->value('id');
 
         $query = CreditoSolicitudAplazarPago::query()
-            ->when(!$user->hasRole('Admin') && !$user->hasRole('Credito') && $user->empleado?->puesto_id !== Puesto::where('nombre', 'Director Administrativo')->first()?->id, function ($query) use ($user) {
-                $query->where(function ($q) use ($user) {
-                    $q->where('solicitante_id', $user->empleado?->id)
-                        ->orWhereHas('pago.solicitud', function ($sub) use ($user) {
-                            $sub->where('asesor_id', $user->empleado?->id)
-                                ->orWhereHas('notificado', function ($n) use ($user) {
-                                    $n->where('id', $user->empleado?->id);
-                                });
+            ->when(!$user->hasRole('Admin') && !$user->hasRole('Credito') && $user->empleado?->puesto_id !== $dirAdminPuestoId, function ($query) use ($user) {
+                $empleadoId = $user->empleado?->id;
+                $query->where(function ($q) use ($empleadoId) {
+                    $q->where('solicitante_id', $empleadoId)
+                        ->orWhereHas('pago.solicitud', function ($sub) use ($empleadoId) {
+                            $sub->where('asesor_id', $empleadoId)
+                                ->orWhere('notificado_id', $empleadoId);
                         });
                 });
             })
@@ -792,6 +853,17 @@ class CreditoInternoController extends ApiController
             ->orderBy('created_at', 'desc');
 
         $solicitudes = $query->paginate(10);
+
+        $empAppends = ['nombreCompleto', 'apellidoCompleto'];
+        $solicitudes->getCollection()->each(function ($aplazo) use ($empAppends) {
+            $aplazo->solicitante?->setAppends($empAppends);
+            $aplazo->validadoPor?->setAppends($empAppends);
+            $sol = $aplazo->pago?->solicitud;
+            if ($sol) {
+                $sol->cliente?->setAppends([]);
+                $sol->asesor?->setAppends($empAppends);
+            }
+        });
 
         return $this->respond(
             $solicitudes,
@@ -961,13 +1033,28 @@ class CreditoInternoController extends ApiController
     {
         $estatuses = ['Crédito Solicitado', 'Crédito Aprobado', 'Crédito Rechazado', 'Crédito en Proceso', 'Crédito Pagado'];
         $estatusesAplazo = ['Aplazo Solicitado', 'Aplazo Aprobado', 'Aplazo Rechazado', 'Aplazo Cancelado'];
+
+        $estatusActivoId = Estatus::where('nombre', 'Activo')->where('tipo_estatus', 'empleado')->value('id')
+            ?? Estatus::where('nombre', 'Activo')->value('id');
+        $puestoGerenteId = Puesto::where('nombre', 'Gerente Territorial')->value('id');
+
+        $estatusCreditoAll = Estatus::where('tipo_estatus', 'credito-interno')
+            ->whereIn('nombre', array_merge($estatuses, $estatusesAplazo))
+            ->get();
+
         $data = [
             'creditoLineas' => CreditoLineas::with('tiposEnganche')->get(),
-            'gerentes' => Empleado::where('puesto_id', Puesto::where('nombre', 'Gerente Territorial')->first()->id)->with('sucursal')->where('estatus_id', Estatus::where('nombre', 'Activo')->where('tipo_estatus', 'empleado')->first()->id)->get(),
-            'estatuses' => Estatus::whereIn('nombre', $estatuses)->where('tipo_estatus', 'credito-interno')->get(),
-            'estatusesAplazo' => Estatus::whereIn('nombre', $estatusesAplazo)->where('tipo_estatus', 'credito-interno')->get(),
+            'gerentes' => Empleado::where('puesto_id', $puestoGerenteId)
+                ->with('sucursal')
+                ->where('estatus_id', $estatusActivoId)
+                ->get()
+                ->each->setAppends(['nombreCompleto', 'apellidoCompleto']),
+            'estatuses' => $estatusCreditoAll->whereIn('nombre', $estatuses)->values(),
+            'estatusesAplazo' => $estatusCreditoAll->whereIn('nombre', $estatusesAplazo)->values(),
             'sucursales' => Sucursal::all(),
-            'empleados' => Empleado::where('estatus_id', Estatus::where('nombre', 'Activo')->first()->id)->get(),
+            'empleados' => Empleado::where('estatus_id', $estatusActivoId)
+                ->get()
+                ->each->setAppends(['nombreCompleto', 'apellidoCompleto']),
             'documentos' => CreditoDocsSolicitados::all(),
             'docsObligatorios' => CreditoDocsRequeridos::all()
         ];
@@ -981,6 +1068,9 @@ class CreditoInternoController extends ApiController
         $empleadoId = $user->empleado?->id;
         $folder = "intranet/credito_interno/folio_" . ($solicitud->folio ?? $solicitud->id);
         $cliente = $solicitud->cliente ?? Cliente::find($solicitud->cliente_id);
+        $estatusDocAdjuntadoId = Estatus::where('nombre', 'Documento Adjuntado')
+            ->where('tipo_estatus', 'credito-interno')
+            ->value('id');
         $guardados = [];
 
         foreach ($archivos as $archivo) {
@@ -996,7 +1086,7 @@ class CreditoInternoController extends ApiController
 
             // CASO 1: Archivo nuevo enviado en Base64
             if (!empty($archivo['base64'])) {
-                // 1.1 Guardar archivo para la solicitud de crédito en S3
+                // 1.1 Guardar archivo para la solicitud de crédito en S3 (una sola subida desde el servidor)
                 $relativePath = $this->saveDoc($archivo['base64'], $folder);
                 $ext = $archivo['extension'] ?? pathinfo($relativePath, PATHINFO_EXTENSION);
 
@@ -1008,7 +1098,7 @@ class CreditoInternoController extends ApiController
                     'uploaded_by'  => $empleadoId,
                 ]);
 
-                // 1.2 Actualizar / Crear también en el expediente del cliente (cliente_docs)
+                // 1.2 Actualizar / Crear también en el expediente del cliente (cliente_docs) copiando internamente en S3
                 if ($cliente) {
                     $cleanedName = trim(mb_strtolower($nombreArchivo, 'UTF-8'));
                     $unaccentedName = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cleanedName);
@@ -1022,7 +1112,8 @@ class CreditoInternoController extends ApiController
 
                     if ($estatusDoc) {
                         $clienteFolder = "intranet/cliente/id_" . ($cliente->rfc ?: $cliente->id);
-                        $clientePath = $this->saveDoc($archivo['base64'], $clienteFolder);
+                        $clientePath = $clienteFolder . '/' . basename($relativePath);
+                        Storage::disk('s3')->copy($relativePath, $clientePath);
 
                         $clienteDoc = ClientesDoc::where('cliente_id', $cliente->id)
                             ->where('status_id', $estatusDoc->id)
@@ -1057,7 +1148,7 @@ class CreditoInternoController extends ApiController
 
                 CreditoHistorical::create([
                     'solicitud_id' => $solicitud->id,
-                    'estatus_id'   => Estatus::where('nombre', 'Documento Adjuntado')->where('tipo_estatus', 'credito-interno')->first()->id,
+                    'estatus_id'   => $estatusDocAdjuntadoId,
                     'descripcion'  => "Documento: " . $nombreArchivo . ' adjuntado y actualizado en expediente.',
                     'empleado_id'  => $empleadoId
                 ]);
@@ -1091,7 +1182,7 @@ class CreditoInternoController extends ApiController
 
                 CreditoHistorical::create([
                     'solicitud_id' => $solicitud->id,
-                    'estatus_id'   => Estatus::where('nombre', 'Documento Adjuntado')->where('tipo_estatus', 'credito-interno')->first()->id,
+                    'estatus_id'   => $estatusDocAdjuntadoId,
                     'descripcion'  => "Documento: " . $nombreArchivo . ' copiado desde el expediente del cliente a la solicitud.',
                     'empleado_id'  => $empleadoId
                 ]);
