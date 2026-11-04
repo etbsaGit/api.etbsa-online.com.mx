@@ -33,6 +33,45 @@ use Illuminate\Support\Facades\Storage;
 class OCGasolinaVehicleController extends ApiController
 {
     use UploadableFile;
+
+    private const ORDEN_RELATIONS = [
+        'vehicle.estatus',
+        'vehicle.sucursal',
+        'vehicle.departamento',
+        'vehicle.linea',
+        'proveedor',
+        'solicitante',
+        'sucursalCargo',
+        'departamentoCargo',
+        'detalles.servicio.tipoServicio',
+        'estatus',
+        'bitacora.user.empleado',
+        'bitacora.estatus',
+    ];
+
+    /**
+     * Evita que al serializar una o varias órdenes se disparen consultas N+1 por los $appends de Empleado.
+     */
+    private function optimizeOrdenEmpleados($ordenes): void
+    {
+        $items = $ordenes instanceof \Illuminate\Support\Collection ? $ordenes : collect([$ordenes]);
+
+        foreach ($items as $orden) {
+            if (!$orden) {
+                continue;
+            }
+            if ($orden->relationLoaded('solicitante') && $orden->solicitante) {
+                $orden->solicitante->setAppends(['nombreCompleto', 'apellidoCompleto']);
+            }
+            if ($orden->relationLoaded('bitacora') && $orden->bitacora) {
+                foreach ($orden->bitacora as $bit) {
+                    if ($bit->relationLoaded('user') && $bit->user && $bit->user->relationLoaded('empleado') && $bit->user->empleado) {
+                        $bit->user->empleado->setAppends(['nombreCompleto', 'apellidoCompleto']);
+                    }
+                }
+            }
+        }
+    }
     /**
      * Lista paginada de Órdenes de Servicio con sus detalles y relaciones.
      */
@@ -44,23 +83,12 @@ class OCGasolinaVehicleController extends ApiController
             ->whereHas('detalles.servicio', function ($q) {
                 $q->where('nombre', 'Dispersión de gasolina');
             })
-            ->with([
-                'vehicle.estatus',
-                'vehicle.sucursal',
-                'vehicle.departamento',
-                'vehicle.linea',
-                'proveedor',
-                'solicitante',
-                'sucursalCargo',
-                'departamentoCargo',
-                'detalles.servicio.tipoServicio',
-                'estatus',
-                'bitacora.user.empleado',
-                'bitacora.estatus',
-            ])
+            ->with(self::ORDEN_RELATIONS)
             ->orderBy('fecha_elaboracion', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(15);
+
+        $this->optimizeOrdenEmpleados($ordenes->getCollection());
 
         $response = $ordenes->toArray();
         $response['status_counts'] = $this->getEstatusCounts();
@@ -118,30 +146,18 @@ class OCGasolinaVehicleController extends ApiController
             ->whereHas('detalles.servicio', function ($q) {
                 $q->where('nombre', 'Dispersión de gasolina');
             })
-            ->with([
-                'vehicle.estatus',
-                'vehicle.sucursal',
-                'vehicle.departamento',
-                'vehicle.linea',
-                'proveedor',
-                'solicitante',
-                'sucursalCargo',
-                'departamentoCargo',
-                'detalles.servicio.tipoServicio',
-                'estatus',
-                'bitacora.user.empleado',
-                'bitacora.estatus',
-            ])
+            ->with(self::ORDEN_RELATIONS)
             ->orderBy('fecha_elaboracion', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(15);
 
+        $this->optimizeOrdenEmpleados($ordenes->getCollection());
+
         $maxKmsByVehicle = DB::table('vehicles_detalles_servicio')
-            ->join('vehicles_ordenes_servicio', 'vehicles_detalles_servicio.orden_servicio_id', '=', 'vehicles_ordenes_servicio.id')
-            ->whereIn('vehicles_ordenes_servicio.vehicle_id', $vehicleIds)
-            ->whereNotNull('vehicles_detalles_servicio.km_evento')
-            ->groupBy('vehicles_ordenes_servicio.vehicle_id')
-            ->select('vehicles_ordenes_servicio.vehicle_id', DB::raw('MAX(vehicles_detalles_servicio.km_evento) as ultimo_km'))
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->whereNotNull('km_evento')
+            ->groupBy('vehicle_id')
+            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
             ->pluck('ultimo_km', 'vehicle_id');
 
         $assignedVehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea'])
@@ -223,22 +239,18 @@ class OCGasolinaVehicleController extends ApiController
             }
 
             DB::commit();
-            $this->mailSolicitudGasolina($ordenServicio->id);
 
-            $orden = $ordenServicio->load([
-                'vehicle.estatus',
-                'vehicle.sucursal',
-                'vehicle.departamento',
-                'vehicle.linea',
-                'proveedor',
-                'solicitante',
-                'sucursalCargo',
-                'departamentoCargo',
-                'detalles.servicio.tipoServicio',
-                'estatus',
-                'bitacora.user.empleado',
-                'bitacora.estatus',
-            ]);
+            $ordenId = $ordenServicio->id;
+            dispatch(function () use ($ordenId) {
+                try {
+                    $this->mailSolicitudGasolina($ordenId);
+                } catch (\Throwable $e) {
+                    \Log::error("Error enviando correo de gasolina para orden #{$ordenId}: " . $e->getMessage());
+                }
+            })->afterResponse();
+
+            $orden = $ordenServicio->load(self::ORDEN_RELATIONS);
+            $this->optimizeOrdenEmpleados($orden);
 
             return $this->respondCreated($orden);
         } catch (\Throwable $e) {
@@ -255,20 +267,8 @@ class OCGasolinaVehicleController extends ApiController
      */
     public function show($id)
     {
-        $orden = VehiclesOrdenesServicio::with([
-            'vehicle.estatus',
-            'vehicle.sucursal',
-            'vehicle.departamento',
-            'vehicle.linea',
-            'proveedor',
-            'solicitante',
-            'sucursalCargo',
-            'departamentoCargo',
-            'detalles.servicio.tipoServicio',
-            'estatus',
-            'bitacora.user.empleado',
-            'bitacora.estatus',
-        ])->findOrFail($id);
+        $orden = VehiclesOrdenesServicio::with(self::ORDEN_RELATIONS)->findOrFail($id);
+        $this->optimizeOrdenEmpleados($orden);
 
         return $this->respond($orden);
     }
@@ -330,21 +330,10 @@ class OCGasolinaVehicleController extends ApiController
                 throw new \Exception('Error al insertar la bitácora');
             }
 
-            return $ordenServicio->load([
-                'vehicle.estatus',
-                'vehicle.sucursal',
-                'vehicle.departamento',
-                'vehicle.linea',
-                'proveedor',
-                'solicitante',
-                'sucursalCargo',
-                'departamentoCargo',
-                'detalles.servicio.tipoServicio',
-                'estatus',
-                'bitacora.user.empleado',
-                'bitacora.estatus',
-            ]);
+            return $ordenServicio->load(self::ORDEN_RELATIONS);
         });
+
+        $this->optimizeOrdenEmpleados($orden);
 
         return $this->respond($orden);
     }
@@ -358,7 +347,6 @@ class OCGasolinaVehicleController extends ApiController
 
         DB::transaction(function () use ($ordenServicio) {
             $ordenServicio->detalles()->delete();
-            $servicioId = VehiclesServiciosCat::where('nombre', 'Dispersión de gasolina')->first();
             $ordenServicio->delete();
         });
 
@@ -367,71 +355,61 @@ class OCGasolinaVehicleController extends ApiController
 
     public function insertBitacora(int $orden_servicio_id, int $estatus_id, string $comentarios)
     {
-        $ordenServicio = VehiclesOrdenesServicio::findOrFail($orden_servicio_id);
-        $bitacora = VehiclesOrdenesBitacora::create([
-            'orden_servicio_id' => $ordenServicio->id,
+        return VehiclesOrdenesBitacora::create([
+            'orden_servicio_id' => $orden_servicio_id,
             'estatus_id' => $estatus_id,
             'user_id' => auth()->user()->id,
             'comentarios' => $comentarios,
         ]);
-        return $bitacora;
     }
 
+    // autorización de solicitud
     // autorización de solicitud
     public function autorizarOrdenCompra(VehicleAutorizacionServicioRequest $request)
     {
         DB::beginTransaction();
         try {
-            $user_id = Auth::user()->id;
             $data = $request->validated();
             $orden = VehiclesOrdenesServicio::findOrFail($data['orden_servicio_id']);
 
-            if (!$orden) {
-                return $this->respondNotFound('Orden de compra no encontrada.');
-            }
-
-            $estatusId = $data['autorizado'] ? Estatus::where('nombre', 'Por dispersar')->where('tipo_estatus', 'servicio-unidad')->first()->id : Estatus::where('nombre', '')->where('tipo_estatus', 'servicio-unidad')->first()->id;
+            $nombreEstatus = $data['autorizado'] ? 'Por dispersar' : 'No Autorizado';
+            $estatusId = Estatus::where('nombre', $nombreEstatus)->where('tipo_estatus', 'servicio-unidad')->first()->id;
 
             $this->insertBitacora($orden->id, $estatusId, $data['comentarios'] ?? 'Sin comentarios');
 
-            $orden->update([
-                'estatus_id' => $estatusId,
-            ]);
+            $updateData = ['estatus_id' => $estatusId];
 
-            if ($data['autorizado']) {
-                if (!$orden->autorizacion_compras) {
-                    $sucCargo = $orden->sucursalCargo->siglas;
-                    $deptoCargo = $orden->departamentoCargo->siglas;
-                    $aut = DB::select("SELECT MAX(id) AS max_id FROM contador_folio_autorizacion_compras");
-                    $folio = $aut[0]->max_id + 1;
-                    $siguiente_folio = $sucCargo . '-' . $deptoCargo . '-' . $folio;
-                    $orden->update([
-                        'autorizacion_compras' => $siguiente_folio,
-                    ]);
+            if ($data['autorizado'] && !$orden->autorizacion_compras) {
+                $sucCargo = $orden->sucursalCargo->siglas;
+                $deptoCargo = $orden->departamentoCargo->siglas;
+                $aut = DB::select("SELECT MAX(id) AS max_id FROM contador_folio_autorizacion_compras");
+                $folio = $aut[0]->max_id + 1;
+                $updateData['autorizacion_compras'] = $sucCargo . '-' . $deptoCargo . '-' . $folio;
 
-                    DB::insert("insert into contador_folio_autorizacion_compras() values();");
-                }
-                $this->mailDispersionAutorizacion($orden->id, true);
-            } else {
-                $this->mailDispersionAutorizacion($orden->id, false);
+                DB::insert("insert into contador_folio_autorizacion_compras() values();");
             }
+
+            $orden->update($updateData);
 
             DB::commit();
 
-            return $this->respond($orden->fresh([
-                'vehicle.estatus',
-                'vehicle.sucursal',
-                'vehicle.departamento',
-                'vehicle.linea',
-                'proveedor',
-                'solicitante',
-                'sucursalCargo',
-                'departamentoCargo',
-                'detalles.servicio.tipoServicio',
-                'estatus',
-                'bitacora.user.empleado',
-                'bitacora.estatus',
-            ]), $data['autorizado'] ? 'Orden de servicio autorizada correctamente.' : 'Orden de servicio marcada como no autorizada.');
+            $ordenId = $orden->id;
+            $autorizado = (bool) $data['autorizado'];
+            dispatch(function () use ($ordenId, $autorizado) {
+                try {
+                    $this->mailDispersionAutorizacion($ordenId, $autorizado);
+                } catch (\Throwable $e) {
+                    \Log::error("Error enviando correo de autorización de gasolina #{$ordenId}: " . $e->getMessage());
+                }
+            })->afterResponse();
+
+            $ordenFresh = $orden->fresh(self::ORDEN_RELATIONS);
+            $this->optimizeOrdenEmpleados($ordenFresh);
+
+            return $this->respond(
+                $ordenFresh,
+                $data['autorizado'] ? 'Orden de servicio autorizada correctamente.' : 'Orden de servicio marcada como no autorizada.'
+            );
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -446,25 +424,19 @@ class OCGasolinaVehicleController extends ApiController
         DB::beginTransaction();
         try {
             $orden = VehiclesOrdenesServicio::findOrFail($id);
+            $estatusId = Estatus::where('nombre', 'Dispersada')->where('tipo_estatus', 'servicio-unidad')->first()->id;
+
             $orden->update([
-                'estatus_id' => Estatus::where('nombre', 'Dispersada')->where('tipo_estatus', 'servicio-unidad')->first()->id,
+                'estatus_id' => $estatusId,
             ]);
-            $this->insertBitacora($orden->id, Estatus::where('nombre', 'Dispersada')->where('tipo_estatus', 'servicio-unidad')->first()->id, 'La solicitud de dispersión de gasolina ha sido surtida');
+            $this->insertBitacora($orden->id, $estatusId, 'La solicitud de dispersión de gasolina ha sido surtida');
+
             DB::commit();
-            return $this->respond($orden->fresh([
-                'vehicle.estatus',
-                'vehicle.sucursal',
-                'vehicle.departamento',
-                'vehicle.linea',
-                'proveedor',
-                'solicitante',
-                'sucursalCargo',
-                'departamentoCargo',
-                'detalles.servicio.tipoServicio',
-                'estatus',
-                'bitacora.user.empleado',
-                'bitacora.estatus',
-            ]), 'Orden de servicio marcada como dispersada correctamente.');
+
+            $ordenFresh = $orden->fresh(self::ORDEN_RELATIONS);
+            $this->optimizeOrdenEmpleados($ordenFresh);
+
+            return $this->respond($ordenFresh, 'Orden de servicio marcada como dispersada correctamente.');
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -478,20 +450,24 @@ class OCGasolinaVehicleController extends ApiController
      */
     public function getforms()
     {
-        $maxKmsByVehicle = DB::table('vehicles_detalles_servicio')
-            ->join('vehicles_ordenes_servicio', 'vehicles_detalles_servicio.orden_servicio_id', '=', 'vehicles_ordenes_servicio.id')
-            ->whereNotNull('vehicles_detalles_servicio.km_evento')
-            ->groupBy('vehicles_ordenes_servicio.vehicle_id')
-            ->select('vehicles_ordenes_servicio.vehicle_id', DB::raw('MAX(vehicles_detalles_servicio.km_evento) as ultimo_km'))
-            ->pluck('ultimo_km', 'vehicle_id');
-
         $vehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea', 'empleados'])
             ->orderBy('placas', 'asc')
-            ->get()
-            ->map(function ($v) use ($maxKmsByVehicle) {
-                $v->ultimo_km = isset($maxKmsByVehicle[$v->id]) ? (int) $maxKmsByVehicle[$v->id] : 0;
-                return $v;
-            });
+            ->get();
+
+        $maxKmsByVehicle = $vehicles->isNotEmpty()
+            ? DB::table('vehicles_detalles_servicio')
+            ->whereIn('vehicle_id', $vehicles->pluck('id'))
+            ->whereNotNull('km_evento')
+            ->groupBy('vehicle_id')
+            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id')
+            : collect();
+
+        $vehicles->each(function ($v) use ($maxKmsByVehicle) {
+            $v->ultimo_km = isset($maxKmsByVehicle[$v->id]) ? (int) $maxKmsByVehicle[$v->id] : 0;
+            $v->empleados->each->setAppends(['nombreCompleto', 'apellidoCompleto']);
+        });
+
 
         $maxId = (int) DB::table('vehicles_ordenes_servicio')->max('id');
         $nextId = $maxId > 0 ? $maxId + 1 : 1;
@@ -502,7 +478,8 @@ class OCGasolinaVehicleController extends ApiController
             'empleados' => Empleado::whereHas('estatus', function ($q) {
                 $q->where('nombre', 'Activo');
             })->orderBy('apellido_paterno', 'asc')
-                ->get(),
+                ->get()
+                ->each->setAppends(['nombreCompleto', 'apellidoCompleto']),
             'proveedores' => VehiclesServicioProveedores::orderBy('nombre', 'asc')->get(),
             'tipos_servicio' => VehiclesTipoServicio::with('servicios')->where('nombre', 'Gasolina')->get(),
             'servicios_cat' => VehiclesServiciosCat::with('tipoServicio')->where('nombre', 'Dispersión de gasolina')->get(),
