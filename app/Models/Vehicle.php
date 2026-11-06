@@ -20,12 +20,37 @@ class Vehicle extends Model
         'estatus_id',
         'activo',
         'motivo_baja',
+        'marca_id',
+        'modelo_id',
+        'tipo_id',
+        'version',
+        'anio',
     ];
 
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {
-        return $this->scopeFilterSearch($query, $filters, ['placas', 'serie']);
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('placas', 'LIKE', '%' . $search . '%')
+                    ->orWhere('serie', 'LIKE', '%' . $search . '%')
+                    ->orWhere('version', 'LIKE', '%' . $search . '%')
+                    ->orWhere('anio', 'LIKE', '%' . $search . '%')
+                    ->orWhereHas('marca', function ($qMarca) use ($search) {
+                        $qMarca->where('nombre', 'LIKE', '%' . $search . '%');
+                    })
+                    ->orWhereHas('modelo', function ($qModelo) use ($search) {
+                        $qModelo->where('nombre', 'LIKE', '%' . $search . '%');
+                    })
+                    ->orWhereHas('tipo', function ($qTipo) use ($search) {
+                        $qTipo->where('nombre', 'LIKE', '%' . $search . '%');
+                    });
+            });
+            unset($filters['search']);
+        }
+
+        return $this->scopeFilterSearch($query, $filters);
     }
 
     public function departamento()
@@ -74,5 +99,20 @@ class Vehicle extends Model
         return $this->hasMany(VehiclesOrdenesServicio::class, 'vehicle_id')
             ->orderBy('fecha_elaboracion', 'desc')
             ->orderBy('id', 'desc');
+    }
+
+    public function marca()
+    {
+        return $this->belongsTo(VehiclesMarcas::class, 'marca_id', 'id');
+    }
+
+    public function modelo()
+    {
+        return $this->belongsTo(VehiclesModelos::class, 'modelo_id', 'id');
+    }
+
+    public function tipo()
+    {
+        return $this->belongsTo(VehiclesTipos::class, 'tipo_id', 'id');
     }
 }

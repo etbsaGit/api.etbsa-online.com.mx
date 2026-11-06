@@ -15,9 +15,40 @@ use App\Http\Requests\Vehicle\PutRequest;
 use App\Http\Requests\Vehicle\StoreRequest;
 use App\Http\Requests\Vehicle\HistorialPlacasRequest;
 use App\Models\VehicleHistorialPlacas;
+use App\Models\VehiclesMarcas;
+use App\Models\VehiclesModelos;
+use App\Models\VehiclesTipos;
 
 class VehicleController extends ApiController
 {
+    /**
+     * Limpia los $appends pesados de Empleado en vehículos cargados.
+     */
+    private function optimizeVehicleEmpleados($vehicles): void
+    {
+        $items = $vehicles instanceof \Illuminate\Support\Collection ? $vehicles : collect([$vehicles]);
+        $empAppends = ['nombreCompleto', 'apellidoCompleto'];
+
+        foreach ($items as $vehicle) {
+            if (!$vehicle) {
+                continue;
+            }
+            if ($vehicle->relationLoaded('responsable') && $vehicle->responsable) {
+                $vehicle->responsable->setAppends($empAppends);
+            }
+            if ($vehicle->relationLoaded('empleados') && $vehicle->empleados) {
+                $vehicle->empleados->each->setAppends($empAppends);
+            }
+            if ($vehicle->relationLoaded('ordenesServicio') && $vehicle->ordenesServicio) {
+                foreach ($vehicle->ordenesServicio as $orden) {
+                    if ($orden->relationLoaded('solicitante') && $orden->solicitante) {
+                        $orden->solicitante->setAppends($empAppends);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -25,7 +56,20 @@ class VehicleController extends ApiController
     {
         $filters = $request->all();
 
-        return $this->respond(Vehicle::filter($filters)->with('departamento', 'linea', 'sucursal', 'estatus', 'responsable', 'empleados', 'historialPlacas')->paginate(10));
+        $paginated = Vehicle::filter($filters)->with([
+            'departamento',
+            'linea',
+            'sucursal',
+            'responsable:id,nombre,segundo_nombre,apellido_paterno,apellido_materno,vehicle_id',
+            'empleados:empleados.id,empleados.nombre,empleados.segundo_nombre,empleados.apellido_paterno,empleados.apellido_materno,empleados.vehicle_id',
+            'marca',
+            'modelo',
+            'tipo',
+        ])->paginate(10);
+
+        $this->optimizeVehicleEmpleados($paginated->getCollection());
+
+        return $this->respond($paginated);
     }
 
     /**
@@ -47,16 +91,21 @@ class VehicleController extends ApiController
             'departamento',
             'linea',
             'sucursal',
-            'estatus',
-            'responsable',
-            'empleados',
+            'marca',
+            'modelo',
+            'tipo',
+            'responsable:id,nombre,segundo_nombre,apellido_paterno,apellido_materno,vehicle_id',
+            'empleados:empleados.id,empleados.nombre,empleados.segundo_nombre,empleados.apellido_paterno,empleados.apellido_materno,empleados.vehicle_id',
             'historialPlacas',
             'ordenesServicio.proveedor',
-            'ordenesServicio.solicitante',
+            'ordenesServicio.solicitante:id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
             'ordenesServicio.sucursalCargo',
             'ordenesServicio.departamentoCargo',
             'ordenesServicio.detalles.servicio.tipoServicio',
         ]);
+
+        $this->optimizeVehicleEmpleados($vehicle);
+
         return $this->respond($vehicle);
     }
 
@@ -87,12 +136,22 @@ class VehicleController extends ApiController
 
     public function getforms()
     {
+        $empleados = Empleado::whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })
+            ->select('id', 'nombre', 'segundo_nombre', 'apellido_paterno', 'apellido_materno', 'vehicle_id')
+            ->orderBy('apellido_paterno')
+            ->get()
+            ->each->setAppends(['nombreCompleto', 'apellidoCompleto']);
+
         $data = [
             'sucursales' => Sucursal::all(),
             'lineas' => Linea::all(),
             'departamentos' => Departamento::all(),
-            'estatus' => Estatus::where('tipo_estatus', 'vehicle')->get(),
-            'empleados' => Empleado::where('estatus_id', 5)->orderBy('apellido_paterno')->get(),
+            'empleados' => $empleados,
+            'marcas' => VehiclesMarcas::orderBy('nombre')->get(),
+            'modelos' => VehiclesModelos::orderBy('nombre')->get(),
+            'tipos' => VehiclesTipos::orderBy('nombre')->get(),
         ];
         return $this->respond($data);
     }
@@ -163,15 +222,16 @@ class VehicleController extends ApiController
             'departamento',
             'linea',
             'sucursal',
-            'estatus',
-            'empleados',
+            'empleados:empleados.id,empleados.nombre,empleados.segundo_nombre,empleados.apellido_paterno,empleados.apellido_materno,empleados.vehicle_id',
             'historialPlacas',
             'ordenesServicio.proveedor',
-            'ordenesServicio.solicitante',
+            'ordenesServicio.solicitante:id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
             'ordenesServicio.sucursalCargo',
             'ordenesServicio.departamentoCargo',
             'ordenesServicio.detalles.servicio.tipoServicio',
         ]);
+
+        $this->optimizeVehicleEmpleados($vehicle);
 
         $exporter = new \App\Exports\VehicleServicesExport($vehicle);
         $rawXlsx = $exporter->generateRawXlsx();
