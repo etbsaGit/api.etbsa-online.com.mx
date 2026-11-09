@@ -33,7 +33,13 @@ class OCServiceVehicleRequest extends FormRequest
                 $query->where('vehicles_ordenes_servicio.id', '!=', $ignoreOrderId);
             }
 
-            $ultimoKm = (int) $query->max('vehicles_detalles_servicio.km_evento');
+            $ultimoKmServicios = (int) $query->max('vehicles_detalles_servicio.km_evento');
+
+            $ultimoKmGasolina = (int) DB::table('vehicles_dispersion_gasolina')
+                ->where('vehicle_id', $vehicleId)
+                ->max('km_evento');
+
+            $ultimoKm = max($ultimoKmServicios, $ultimoKmGasolina);
         }
 
         return [

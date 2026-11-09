@@ -57,6 +57,18 @@
             margin-top: 8px;
         }
 
+        .badge-urgente {
+            display: inline-block;
+            background-color: #ef4444;
+            color: #ffffff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+            margin-left: 6px;
+        }
+
         .content {
             padding: 24px 28px;
         }
@@ -148,105 +160,6 @@
             letter-spacing: 0.5px;
         }
 
-        .badge-litros {
-            display: inline-block;
-            background-color: #ffedd5;
-            color: #c2410c;
-            border: 1px solid #fed7aa;
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .badge-type {
-            display: inline-block;
-            background-color: #e0f2fe;
-            color: #0369a1;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: bold;
-        }
-
-        /* Tabla de Conceptos */
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 16px;
-            font-size: 12px;
-        }
-
-        .items-table th {
-            background-color: #f1f5f9;
-            color: #334155;
-            font-weight: 700;
-            text-align: left;
-            padding: 10px 8px;
-            border-bottom: 2px solid #cbd5e1;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
-
-        .items-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #e2e8f0;
-            vertical-align: middle;
-        }
-
-        .items-table tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        /* Totales */
-        .totals-container {
-            width: 100%;
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-
-        .totals-table {
-            width: 280px;
-            margin-left: auto;
-            border-collapse: collapse;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .totals-table td {
-            padding: 8px 14px;
-            font-size: 13px;
-        }
-
-        .totals-table tr.grand-total td {
-            border-top: 2px solid #ea580c;
-            font-size: 15px;
-            font-weight: bold;
-            color: #9a3412;
-            background-color: #fff7ed;
-        }
-
-        .attachment-banner {
-            background-color: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin: 20px 0 10px 0;
-            font-size: 13px;
-            color: #1e40af;
-        }
-
         .footer {
             background-color: #f8fafc;
             border-top: 1px solid #e2e8f0;
@@ -264,8 +177,13 @@
         <div class="header">
             <h1>Nueva Solicitud de Dispersión de Gasolina</h1>
             <p>Se ha registrado una nueva solicitud de dispersión de gasolina para su revisión y autorización.</p>
-            <div class="badge-folio">
-                Solicitud #{{ $orden->id }} &bull; Gasolina
+            <div>
+                <span class="badge-folio">
+                    Solicitud #{{ $orden->id }} &bull; Gasolina
+                </span>
+                @if($orden->is_urgente)
+                    <span class="badge-urgente">URGENTE</span>
+                @endif
             </div>
         </div>
 
@@ -275,11 +193,8 @@
             </p>
 
             @php
-                $kmEvento = $orden->detalles?->firstWhere('km_evento', '!=', null)?->km_evento 
-                    ?? $orden->detalles?->max('km_evento')
-                    ?? $orden->vehicle?->km;
-                $totalLitros = $orden->detalles ? $orden->detalles->sum('cantidad') : 0;
-                $hasAmounts = $orden->detalles && $orden->detalles->sum('total') > 0;
+                $kmEvento = $orden->km_evento ?? $orden->vehicle?->km;
+                $ltsSolicitados = $orden->lts_solicitados ?? 0;
             @endphp
 
             <!-- Resumen de Combustible -->
@@ -288,7 +203,7 @@
                     <tr>
                         <td width="50%">
                             <div class="fuel-summary-label">Litros Solicitados</div>
-                            <div class="fuel-summary-value">{{ number_format($totalLitros, 2) }} Lts</div>
+                            <div class="fuel-summary-value">{{ number_format($ltsSolicitados) }} Lts</div>
                         </td>
                         <td width="50%">
                             <div class="fuel-summary-label">Kilometraje Reportado</div>
@@ -354,7 +269,7 @@
                     <td class="info-card" width="50%">
                         <div class="info-label">Fecha de Registro</div>
                         <div class="info-value">
-                            {{ $orden->fecha_elaboracion ? \Carbon\Carbon::parse($orden->fecha_elaboracion)->format('d/m/Y') : 'N/A' }}
+                            {{ $orden->created_at ? \Carbon\Carbon::parse($orden->created_at)->format('d/m/Y h:i A') : 'N/A' }}
                         </div>
                     </td>
                 </tr>
@@ -368,99 +283,13 @@
                         <div class="info-value">{{ $orden->departamentoCargo?->nombre ?? 'No especificado' }}</div>
                     </td>
                 </tr>
-                @if(!empty($orden->proveedor))
                 <tr>
                     <td class="info-card" colspan="2">
-                        <div class="info-label">Proveedor / Estación</div>
-                        <div class="info-value">{{ $orden->proveedor->nombre }}</div>
+                        <div class="info-label">Notas / Observaciones</div>
+                        <div class="info-value">{{ $orden->notas ?: 'Sin observaciones adicionales' }}</div>
                     </td>
                 </tr>
-                @endif
             </table>
-
-            <!-- Desglose de Dispersión -->
-            <div class="section-title">
-                Desglose de Combustible
-            </div>
-
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th width="5%" class="text-center">#</th>
-                        <th width="{{ $hasAmounts ? '20%' : '26%' }}">Concepto</th>
-                        <th width="16%" class="text-center">Litros</th>
-                        <th width="16%" class="text-center">KM Evento</th>
-                        <th width="{{ $hasAmounts ? '23%' : '37%' }}">Descripción / Observaciones</th>
-                        @if($hasAmounts)
-                            <th width="10%" class="text-right">P. Unitario</th>
-                            <th width="10%" class="text-right">Total</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($orden->detalles as $index => $det)
-                        <tr>
-                            <td class="text-center"><strong>{{ $index + 1 }}</strong></td>
-                            <td>
-                                <strong>{{ $det->servicio?->nombre ?? 'Dispersión de gasolina' }}</strong>
-                            </td>
-                            <td class="text-center">
-                                <span class="badge-litros">{{ $det->cantidad ?? 0 }} Lts</span>
-                            </td>
-                            <td class="text-center" style="color: #ea580c; font-weight: 700;">
-                                {{ $det->km_evento ? number_format($det->km_evento) . ' km' : 'N/A' }}
-                            </td>
-                            <td>{{ $det->descripcion ?: 'Dispersión de gasolina' }}</td>
-                            @if($hasAmounts)
-                                <td class="text-right">
-                                    {{ $det->precio_unitario ? '$' . number_format($det->precio_unitario, 2) : '-' }}
-                                </td>
-                                <td class="text-right" style="font-weight: 600;">
-                                    {{ $det->total ? '$' . number_format($det->total, 2) : '$0.00' }}
-                                </td>
-                            @endif
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="{{ $hasAmounts ? 7 : 5 }}" class="text-center" style="padding: 15px; color: #94a3b8;">
-                                No se encontraron conceptos registrados para esta solicitud.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-
-            <!-- Resumen de Totales (si existen importes asignados) -->
-            @if($hasAmounts)
-            <div class="totals-container">
-                <table class="totals-table">
-                    @php
-                        $subtotalAcumulado = $orden->detalles ? $orden->detalles->sum('subtotal') : 0;
-                        $ivaAcumulado = $orden->detalles ? $orden->detalles->sum('iva') : 0;
-                        $totalAcumulado = $orden->detalles ? $orden->detalles->sum('total') : 0;
-                    @endphp
-                    <tr>
-                        <td class="text-right"><strong>Subtotal:</strong></td>
-                        <td class="text-right">${{ number_format($subtotalAcumulado, 2) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-right"><strong>IVA (16%):</strong></td>
-                        <td class="text-right">${{ number_format($ivaAcumulado, 2) }}</td>
-                    </tr>
-                    <tr class="grand-total">
-                        <td class="text-right">Total:</td>
-                        <td class="text-right">${{ number_format($totalAcumulado, 2) }} MXN</td>
-                    </tr>
-                </table>
-            </div>
-            @endif
-
-            <!-- Aviso de Cotización / Comprobante Adjunto -->
-            @if(!empty($orden->cotizacion_url))
-                <div class="attachment-banner">
-                    <strong>Documento adjunto:</strong> Se ha adjuntado el documento en formato PDF correspondiente a esta solicitud para su validación.
-                </div>
-            @endif
         </div>
 
         <!-- Pie de página -->

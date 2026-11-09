@@ -4,67 +4,56 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Vehicle;
 use App\Models\Empleado;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\ApiController;
-use App\Http\Requests\OrdenCompra\Vehicle\AutorizacionServicioRequest as VehicleAutorizacionServicioRequest;
-use App\Http\Requests\OrdenCompra\Vehicle\OCGasolinaVehicleRequest;
-use App\Http\Requests\Service\AutorizacionServicioRequest;
-use App\Http\Requests\Service\StoreRequest;
-use App\Mail\OrdenesCompra\Vehicles\SendGasAutorizacion;
-use App\Mail\OrdenesCompra\Vehicles\SendGasSolicitud;
-use App\Mail\OrdenesCompra\Vehicles\SendOrdenAutorizacion;
-use App\Mail\OrdenesCompra\Vehicles\SendOrdenCompraVehicle;
 use App\Models\Estatus;
-use App\Models\VehiclesOrdenesServicio;
-use App\Models\VehiclesDetallesServicio;
-use App\Models\VehiclesServiciosCat;
-use App\Models\VehiclesTipoServicio;
-use App\Models\VehiclesServicioProveedores;
+use App\Models\VehiclesDispersionGasolina;
+use App\Models\VehiclesGasolinaBitacora;
 use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
-use App\Models\VehiclesOrdenesBitacora;
-use App\Traits\UploadableFile;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use App\Http\Controllers\ApiController;
+use App\Http\Requests\OrdenCompra\Vehicle\OCGasolinaVehicleRequest;
+use App\Mail\OrdenesCompra\Vehicles\SendGasAutorizacion;
+use App\Mail\OrdenesCompra\Vehicles\SendGasDispersada;
+use App\Mail\OrdenesCompra\Vehicles\SendGasSolicitud;
 
 class OCGasolinaVehicleController extends ApiController
 {
-    use UploadableFile;
-
-    private const ORDEN_RELATIONS = [
+    private const DISPERSION_RELATIONS = [
         'vehicle.estatus',
         'vehicle.sucursal',
         'vehicle.departamento',
         'vehicle.linea',
-        'proveedor',
         'solicitante',
+        'registrador.empleado',
         'sucursalCargo',
         'departamentoCargo',
-        'detalles.servicio.tipoServicio',
         'estatus',
         'bitacora.user.empleado',
         'bitacora.estatus',
     ];
 
     /**
-     * Evita que al serializar una o varias órdenes se disparen consultas N+1 por los $appends de Empleado.
+     * Evita que al serializar una o varias dispersiones se disparen consultas N+1 por los $appends de Empleado.
      */
-    private function optimizeOrdenEmpleados($ordenes): void
+    private function optimizeDispersionEmpleados($dispersiones): void
     {
-        $items = $ordenes instanceof \Illuminate\Support\Collection ? $ordenes : collect([$ordenes]);
+        $items = $dispersiones instanceof \Illuminate\Support\Collection ? $dispersiones : collect([$dispersiones]);
 
-        foreach ($items as $orden) {
-            if (!$orden) {
+        foreach ($items as $disp) {
+            if (!$disp) {
                 continue;
             }
-            if ($orden->relationLoaded('solicitante') && $orden->solicitante) {
-                $orden->solicitante->setAppends(['nombreCompleto', 'apellidoCompleto']);
+            if ($disp->relationLoaded('solicitante') && $disp->solicitante) {
+                $disp->solicitante->setAppends(['nombreCompleto', 'apellidoCompleto']);
             }
-            if ($orden->relationLoaded('bitacora') && $orden->bitacora) {
-                foreach ($orden->bitacora as $bit) {
+            if ($disp->relationLoaded('registrador') && $disp->registrador && $disp->registrador->relationLoaded('empleado') && $disp->registrador->empleado) {
+                $disp->registrador->empleado->setAppends(['nombreCompleto', 'apellidoCompleto']);
+            }
+            if ($disp->relationLoaded('bitacora') && $disp->bitacora) {
+                foreach ($disp->bitacora as $bit) {
                     if ($bit->relationLoaded('user') && $bit->user && $bit->user->relationLoaded('empleado') && $bit->user->empleado) {
                         $bit->user->empleado->setAppends(['nombreCompleto', 'apellidoCompleto']);
                     }
@@ -72,23 +61,21 @@ class OCGasolinaVehicleController extends ApiController
             }
         }
     }
+
     /**
-     * Lista paginada de Órdenes de Servicio con sus detalles y relaciones.
+     * Lista paginada de Dispersiones de Gasolina con sus relaciones y bitácora.
      */
     public function index(Request $request)
     {
         $filters = $request->all();
 
-        $ordenes = VehiclesOrdenesServicio::filter($filters)
-            ->whereHas('detalles.servicio', function ($q) {
-                $q->where('nombre', 'Dispersión de gasolina');
-            })
-            ->with(self::ORDEN_RELATIONS)
-            ->orderBy('fecha_elaboracion', 'desc')
+        $ordenes = VehiclesDispersionGasolina::filter($filters)
+            ->with(self::DISPERSION_RELATIONS)
+            ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(15);
 
-        $this->optimizeOrdenEmpleados($ordenes->getCollection());
+        $this->optimizeDispersionEmpleados($ordenes->getCollection());
 
         $response = $ordenes->toArray();
         $response['status_counts'] = $this->getEstatusCounts();
@@ -97,7 +84,7 @@ class OCGasolinaVehicleController extends ApiController
     }
 
     /**
-     * Lista paginada de Órdenes de Servicio únicamente de las unidades asignadas al empleado autenticado (tabla usuarios_unidades).
+     * Lista paginada de Dispersiones de Gasolina únicamente de las unidades asignadas al empleado autenticado.
      */
     public function myIndex(Request $request)
     {
@@ -124,7 +111,8 @@ class OCGasolinaVehicleController extends ApiController
                 'assigned_vehicles' => [],
                 'status_counts' => [
                     'solicitado' => 0,
-                    'autorizado' => 0,
+                    'por_dispersar' => 0,
+                    'dispersado' => 0,
                     'no_autorizado' => 0,
                 ],
             ]);
@@ -139,21 +127,25 @@ class OCGasolinaVehicleController extends ApiController
         }
 
         if ($empleado) {
-            $filters['solicitante_id'] = $empleado->id;
+            $filters['solicitado_por'] = $empleado->id;
         }
 
-        $ordenes = VehiclesOrdenesServicio::filter($filters)
-            ->whereHas('detalles.servicio', function ($q) {
-                $q->where('nombre', 'Dispersión de gasolina');
-            })
-            ->with(self::ORDEN_RELATIONS)
-            ->orderBy('fecha_elaboracion', 'desc')
+        $ordenes = VehiclesDispersionGasolina::filter($filters)
+            ->with(self::DISPERSION_RELATIONS)
+            ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(15);
 
-        $this->optimizeOrdenEmpleados($ordenes->getCollection());
+        $this->optimizeDispersionEmpleados($ordenes->getCollection());
 
-        $maxKmsByVehicle = DB::table('vehicles_detalles_servicio')
+        $maxKmsGasolina = DB::table('vehicles_dispersion_gasolina')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->whereNotNull('km_evento')
+            ->groupBy('vehicle_id')
+            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id');
+
+        $maxKmsServicios = DB::table('vehicles_detalles_servicio')
             ->whereIn('vehicle_id', $vehicleIds)
             ->whereNotNull('km_evento')
             ->groupBy('vehicle_id')
@@ -163,8 +155,10 @@ class OCGasolinaVehicleController extends ApiController
         $assignedVehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea'])
             ->whereIn('id', $vehicleIds)
             ->get()
-            ->map(function ($v) use ($maxKmsByVehicle) {
-                $v->ultimo_km = isset($maxKmsByVehicle[$v->id]) ? (int) $maxKmsByVehicle[$v->id] : 0;
+            ->map(function ($v) use ($maxKmsGasolina, $maxKmsServicios) {
+                $kmGas = isset($maxKmsGasolina[$v->id]) ? (int) $maxKmsGasolina[$v->id] : 0;
+                $kmServ = isset($maxKmsServicios[$v->id]) ? (int) $maxKmsServicios[$v->id] : 0;
+                $v->ultimo_km = max($kmGas, $kmServ);
                 return $v;
             });
 
@@ -177,7 +171,7 @@ class OCGasolinaVehicleController extends ApiController
     }
 
     /**
-     * Registra una nueva Orden de Servicio junto con sus detalles de servicio.
+     * Registra una nueva Solicitud de Dispersión de Gasolina.
      */
     public function store(OCGasolinaVehicleRequest $request)
     {
@@ -192,65 +186,40 @@ class OCGasolinaVehicleController extends ApiController
             }
             $estatus_id = $estatus->id;
 
-            $ordenServicio = VehiclesOrdenesServicio::create([
-                'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
-                'orden_compra' => null,
-                'fecha_elaboracion' => $validated['fecha_elaboracion'],
+            $solicitadoPor = $validated['solicitado_por'] ?? auth()->user()?->empleado?->id ?? null;
+
+            $dispersion = VehiclesDispersionGasolina::create([
                 'vehicle_id' => $validated['vehicle_id'],
-                // 'proveedor_id' => $validated['proveedor_id'],
-                'solicitante_id' => $validated['solicitante_id'] ?? null,
+                'solicitado_por' => $solicitadoPor,
+                'registrado_por' => auth()->id(),
                 'suc_cargo_id' => $validated['suc_cargo_id'] ?? null,
                 'depto_cargo_id' => $validated['depto_cargo_id'] ?? null,
-                'factura' => $validated['factura'] ?? null,
+                'lts_solicitados' => (int) $validated['lts_solicitados'],
+                'lts_dispersados' => isset($validated['lts_dispersados']) ? (int) $validated['lts_dispersados'] : null,
+                'km_evento' => (int) $validated['km_evento'],
+                'notas' => $validated['notas'] ?? 'Dispersión de gasolina para unidad',
                 'estatus_id' => $estatus_id,
+                'is_urgente' => (bool) ($validated['is_urgente'] ?? false),
             ]);
 
-            $ordenServicio->orden_compra = (string) $ordenServicio->id;
-            $ordenServicio->save();
-
-            $servicioId = VehiclesServiciosCat::where('nombre', 'Dispersión de gasolina')->first();
-            foreach ($validated['detalles'] as $detalle) {
-                VehiclesDetallesServicio::create([
-                    'orden_servicio_id' => $ordenServicio->id,
-                    'vehicle_id' => !empty($detalle['vehicle_id']) ? $detalle['vehicle_id'] : $validated['vehicle_id'],
-                    'servicio_id' => $servicioId->id,
-                    'km_evento' => isset($detalle['km_evento']) && $detalle['km_evento'] !== ''
-                        ? (int) $detalle['km_evento']
-                        : null,
-                    'descripcion' => $detalle['descripcion'] ?? 'Dispersión de gasolina para unidad',
-                    'precio_unitario' => isset($detalle['precio_unitario']) && $detalle['precio_unitario'] !== ''
-                        ? (float) $detalle['precio_unitario']
-                        : null,
-                    'cantidad' => isset($detalle['cantidad']) && $detalle['cantidad'] !== ''
-                        ? (int) $detalle['cantidad']
-                        : null,
-                    'llanta_anchura' => null,
-                    'llanta_altura' => null,
-                    'llanta_rin' => null,
-                    'subtotal' => (float) $detalle['subtotal'] ?? null,
-                    'iva' => (float) $detalle['iva'] ?? null,
-                    'total' => (float) $detalle['total'] ?? null,
-                ]);
-            }
-
-            $bitacora = $this->insertBitacora($ordenServicio->id, $estatus_id, 'Orden de dispersión de gasolina creada');
+            $bitacora = $this->insertBitacora($dispersion->id, $estatus_id, 'Solicitud de dispersión de gasolina creada');
             if (!$bitacora) {
                 throw new \Exception('Error al insertar la bitácora');
             }
 
             DB::commit();
 
-            $ordenId = $ordenServicio->id;
-            dispatch(function () use ($ordenId) {
+            $dispersionId = $dispersion->id;
+            dispatch(function () use ($dispersionId) {
                 try {
-                    $this->mailSolicitudGasolina($ordenId);
+                    $this->mailSolicitudGasolina($dispersionId);
                 } catch (\Throwable $e) {
-                    \Log::error("Error enviando correo de gasolina para orden #{$ordenId}: " . $e->getMessage());
+                    \Log::error("Error enviando correo de gasolina para solicitud #{$dispersionId}: " . $e->getMessage());
                 }
             })->afterResponse();
 
-            $orden = $ordenServicio->load(self::ORDEN_RELATIONS);
-            $this->optimizeOrdenEmpleados($orden);
+            $orden = $dispersion->load(self::DISPERSION_RELATIONS);
+            $this->optimizeDispersionEmpleados($orden);
 
             return $this->respondCreated($orden);
         } catch (\Throwable $e) {
@@ -263,152 +232,162 @@ class OCGasolinaVehicleController extends ApiController
     }
 
     /**
-     * Muestra una Orden de Servicio con todos sus detalles.
+     * Muestra una Solicitud de Dispersión de Gasolina con sus relaciones y bitácora.
      */
     public function show($id)
     {
-        $orden = VehiclesOrdenesServicio::with(self::ORDEN_RELATIONS)->findOrFail($id);
-        $this->optimizeOrdenEmpleados($orden);
+        $orden = VehiclesDispersionGasolina::with(self::DISPERSION_RELATIONS)->findOrFail($id);
+        $this->optimizeDispersionEmpleados($orden);
 
         return $this->respond($orden);
     }
 
     /**
-     * Actualiza una Orden de Servicio y sincroniza sus detalles.
+     * Actualiza una Solicitud de Dispersión de Gasolina.
      */
     public function update(OCGasolinaVehicleRequest $request, $id)
     {
-        $ordenServicio = VehiclesOrdenesServicio::findOrFail($id);
+        $dispersion = VehiclesDispersionGasolina::findOrFail($id);
         $validated = $request->validated();
 
-        $orden = DB::transaction(function () use ($ordenServicio, $validated, $request) {
-            $ordenServicio->update([
-                'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
-                'orden_compra' => (string) $ordenServicio->id,
-                'fecha_elaboracion' => $validated['fecha_elaboracion'],
+        $orden = DB::transaction(function () use ($dispersion, $validated) {
+            $dispersion->update([
                 'vehicle_id' => $validated['vehicle_id'],
-                // 'proveedor_id' => $validated['proveedor_id'],
-                'solicitante_id' => $validated['solicitante_id'] ?? null,
+                'solicitado_por' => $validated['solicitado_por'] ?? $dispersion->solicitado_por,
                 'suc_cargo_id' => $validated['suc_cargo_id'] ?? null,
                 'depto_cargo_id' => $validated['depto_cargo_id'] ?? null,
-                'factura' => $validated['factura'] ?? null,
-                'cotizacion_url' => array_key_exists('cotizacion_url', $validated)
-                    ? $validated['cotizacion_url']
-                    : $ordenServicio->cotizacion_url,
+                'lts_solicitados' => (int) $validated['lts_solicitados'],
+                'lts_dispersados' => array_key_exists('lts_dispersados', $validated) && $validated['lts_dispersados'] !== null
+                    ? (int) $validated['lts_dispersados']
+                    : $dispersion->lts_dispersados,
+                'km_evento' => (int) $validated['km_evento'],
+                'notas' => $validated['notas'] ?? $dispersion->notas,
+                'is_urgente' => isset($validated['is_urgente']) ? (bool) $validated['is_urgente'] : $dispersion->is_urgente,
             ]);
 
-
-            $ordenServicio->detalles()->delete();
-            $servicioId = VehiclesServiciosCat::where('nombre', 'Dispersión de gasolina')->first();
-
-            foreach ($validated['detalles'] as $detalle) {
-                VehiclesDetallesServicio::create([
-                    'orden_servicio_id' => $ordenServicio->id,
-                    'vehicle_id' => !empty($detalle['vehicle_id']) ? $detalle['vehicle_id'] : $validated['vehicle_id'],
-                    'servicio_id' => !empty($detalle['servicio_id']) ? $detalle['servicio_id'] : ($servicioId ? $servicioId->id : 3417),
-                    'km_evento' => isset($detalle['km_evento']) && $detalle['km_evento'] !== ''
-                        ? (int) $detalle['km_evento']
-                        : null,
-                    'descripcion' => $detalle['descripcion'] ?? 'Dispersión de gasolina para unidad',
-                    'precio_unitario' => isset($detalle['precio_unitario']) && $detalle['precio_unitario'] !== ''
-                        ? (float) $detalle['precio_unitario']
-                        : null,
-                    'cantidad' => isset($detalle['cantidad']) && $detalle['cantidad'] !== ''
-                        ? (int) $detalle['cantidad']
-                        : null,
-                    'llanta_anchura' => null,
-                    'llanta_altura' => null,
-                    'llanta_rin' => null,
-                    'subtotal' => (float) $detalle['subtotal'] ?? null,
-                    'iva' => (float) $detalle['iva'] ?? null,
-                    'total' => (float) $detalle['total'] ?? null,
-                ]);
-            }
-
-            $bitacora = $this->insertBitacora($ordenServicio->id, $validated['estatus_id'] ?? $ordenServicio->estatus_id, 'Orden de dispersión de gasolina actualizada');
+            $bitacora = $this->insertBitacora(
+                $dispersion->id,
+                $validated['estatus_id'] ?? $dispersion->estatus_id,
+                'Solicitud de dispersión de gasolina actualizada'
+            );
             if (!$bitacora) {
                 throw new \Exception('Error al insertar la bitácora');
             }
 
-            return $ordenServicio->load(self::ORDEN_RELATIONS);
+            return $dispersion->load(self::DISPERSION_RELATIONS);
         });
 
-        $this->optimizeOrdenEmpleados($orden);
+        $this->optimizeDispersionEmpleados($orden);
 
         return $this->respond($orden);
     }
 
     /**
-     * Elimina una Orden de Servicio y sus detalles asociados.
+     * Elimina una Solicitud de Dispersión de Gasolina y su bitácora asociada.
      */
     public function destroy($id)
     {
-        $ordenServicio = VehiclesOrdenesServicio::findOrFail($id);
+        $dispersion = VehiclesDispersionGasolina::findOrFail($id);
 
-        DB::transaction(function () use ($ordenServicio) {
-            $ordenServicio->detalles()->delete();
-            $ordenServicio->delete();
+        DB::transaction(function () use ($dispersion) {
+            $dispersion->bitacora()->delete();
+            $dispersion->delete();
         });
 
         return $this->respondSuccess();
     }
 
-    public function insertBitacora(int $orden_servicio_id, int $estatus_id, string $comentarios)
+    public function insertBitacora(int $dispersion_id, int $estatus_id, ?string $comentarios)
     {
-        return VehiclesOrdenesBitacora::create([
-            'orden_servicio_id' => $orden_servicio_id,
+        return VehiclesGasolinaBitacora::create([
+            'dispersion_id' => $dispersion_id,
             'estatus_id' => $estatus_id,
             'user_id' => auth()->user()->id,
             'comentarios' => $comentarios,
         ]);
     }
 
-    // autorización de solicitud
-    // autorización de solicitud
-    public function autorizarOrdenCompra(VehicleAutorizacionServicioRequest $request)
+    /**
+     * Autorización o rechazo de solicitud de dispersión de gasolina.
+     * Al autorizar, el Director Administrativo define cuántos litros se dispersan (lts_dispersados).
+     */
+    public function autorizarOrdenCompra(Request $request)
     {
+        $inputId = $request->input('dispersion_id') ?? $request->input('orden_servicio_id') ?? $request->input('id');
+        $request->merge(['dispersion_id' => $inputId]);
+
+        $data = $request->validate([
+            'dispersion_id' => ['required', 'integer', 'exists:vehicles_dispersion_gasolina,id'],
+            'autorizado' => ['required', 'boolean'],
+            'lts_dispersados' => [
+                Rule::requiredIf(fn () => filter_var($request->input('autorizado'), FILTER_VALIDATE_BOOLEAN) === true),
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+            'comentarios' => [
+                Rule::requiredIf(fn () => filter_var($request->input('autorizado'), FILTER_VALIDATE_BOOLEAN) === false),
+                'nullable',
+                'string',
+            ],
+        ], [
+            'dispersion_id.required' => 'La solicitud de gasolina es obligatoria',
+            'dispersion_id.exists' => 'La solicitud de gasolina no existe',
+            'autorizado.required' => 'La decisión de autorización es obligatoria',
+            'lts_dispersados.required' => 'Debe indicar la cantidad de litros autorizados a dispersar',
+            'lts_dispersados.integer' => 'Los litros autorizados deben ser un número entero',
+            'lts_dispersados.min' => 'Los litros autorizados deben ser al menos 1',
+            'comentarios.required' => 'El comentario es obligatorio cuando no se autoriza la solicitud',
+        ]);
+
         DB::beginTransaction();
         try {
-            $data = $request->validated();
-            $orden = VehiclesOrdenesServicio::findOrFail($data['orden_servicio_id']);
+            $dispersion = VehiclesDispersionGasolina::findOrFail($data['dispersion_id']);
 
-            $nombreEstatus = $data['autorizado'] ? 'Por dispersar' : 'No Autorizado';
-            $estatusId = Estatus::where('nombre', $nombreEstatus)->where('tipo_estatus', 'servicio-unidad')->first()->id;
-
-            $this->insertBitacora($orden->id, $estatusId, $data['comentarios'] ?? 'Sin comentarios');
-
-            $updateData = ['estatus_id' => $estatusId];
-
-            if ($data['autorizado'] && !$orden->autorizacion_compras) {
-                $sucCargo = $orden->sucursalCargo->siglas;
-                $deptoCargo = $orden->departamentoCargo->siglas;
-                $aut = DB::select("SELECT MAX(id) AS max_id FROM contador_folio_autorizacion_compras");
-                $folio = $aut[0]->max_id + 1;
-                $updateData['autorizacion_compras'] = $sucCargo . '-' . $deptoCargo . '-' . $folio;
-
-                DB::insert("insert into contador_folio_autorizacion_compras() values();");
+            $autorizado = (bool) $data['autorizado'];
+            $nombreEstatus = $autorizado ? 'Por dispersar' : 'No Autorizado';
+            $estatus = Estatus::where('nombre', $nombreEstatus)->where('tipo_estatus', 'servicio-unidad')->first();
+            if (!$estatus) {
+                throw new \Exception("No se encontró el estatus \"{$nombreEstatus}\" para servicio-unidad.");
             }
+            $estatusId = $estatus->id;
 
-            $orden->update($updateData);
+            $ltsDispersados = $autorizado
+                ? (int) ($data['lts_dispersados'] ?? $dispersion->lts_solicitados)
+                : null;
+
+            $dispersion->update([
+                'estatus_id' => $estatusId,
+                'lts_dispersados' => $ltsDispersados,
+            ]);
+
+            $comentarioBitacora = !empty($data['comentarios'])
+                ? trim($data['comentarios'])
+                : ($autorizado
+                    ? "Solicitud autorizada ({$ltsDispersados} Lts autorizados para dispersión)"
+                    : 'Solicitud no autorizada');
+
+            $this->insertBitacora($dispersion->id, $estatusId, $comentarioBitacora);
 
             DB::commit();
 
-            $ordenId = $orden->id;
-            $autorizado = (bool) $data['autorizado'];
-            dispatch(function () use ($ordenId, $autorizado) {
+            $dispersionId = $dispersion->id;
+            dispatch(function () use ($dispersionId, $autorizado) {
                 try {
-                    $this->mailDispersionAutorizacion($ordenId, $autorizado);
+                    $this->mailDispersionAutorizacion($dispersionId, $autorizado);
                 } catch (\Throwable $e) {
-                    \Log::error("Error enviando correo de autorización de gasolina #{$ordenId}: " . $e->getMessage());
+                    \Log::error("Error enviando correo de autorización de gasolina #{$dispersionId}: " . $e->getMessage());
                 }
             })->afterResponse();
 
-            $ordenFresh = $orden->fresh(self::ORDEN_RELATIONS);
-            $this->optimizeOrdenEmpleados($ordenFresh);
+            $ordenFresh = $dispersion->fresh(self::DISPERSION_RELATIONS);
+            $this->optimizeDispersionEmpleados($ordenFresh);
 
             return $this->respond(
                 $ordenFresh,
-                $data['autorizado'] ? 'Orden de servicio autorizada correctamente.' : 'Orden de servicio marcada como no autorizada.'
+                $autorizado
+                    ? 'Solicitud de dispersión de gasolina autorizada correctamente.'
+                    : 'Solicitud de dispersión de gasolina marcada como no autorizada.'
             );
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -418,25 +397,37 @@ class OCGasolinaVehicleController extends ApiController
         }
     }
 
-    // función para marcar orden como dispersada
+    /**
+     * Marcar solicitud como dispersada (Coordinación de Compras).
+     */
     public function marcarDispersada(int $id)
     {
         DB::beginTransaction();
         try {
-            $orden = VehiclesOrdenesServicio::findOrFail($id);
+            $dispersion = VehiclesDispersionGasolina::findOrFail($id);
             $estatusId = Estatus::where('nombre', 'Dispersada')->where('tipo_estatus', 'servicio-unidad')->first()->id;
 
-            $orden->update([
+            $dispersion->update([
                 'estatus_id' => $estatusId,
+                'lts_dispersados' => $dispersion->lts_dispersados ?? $dispersion->lts_solicitados,
             ]);
-            $this->insertBitacora($orden->id, $estatusId, 'La solicitud de dispersión de gasolina ha sido surtida');
+            $this->insertBitacora($dispersion->id, $estatusId, 'La solicitud de dispersión de gasolina ha sido surtida');
 
             DB::commit();
 
-            $ordenFresh = $orden->fresh(self::ORDEN_RELATIONS);
-            $this->optimizeOrdenEmpleados($ordenFresh);
+            $dispersionId = $dispersion->id;
+            dispatch(function () use ($dispersionId) {
+                try {
+                    $this->mailGasolinaDispersada($dispersionId);
+                } catch (\Throwable $e) {
+                    \Log::error("Error enviando correo de gasolina dispersada #{$dispersionId}: " . $e->getMessage());
+                }
+            })->afterResponse();
 
-            return $this->respond($ordenFresh, 'Orden de servicio marcada como dispersada correctamente.');
+            $ordenFresh = $dispersion->fresh(self::DISPERSION_RELATIONS);
+            $this->optimizeDispersionEmpleados($ordenFresh);
+
+            return $this->respond($ordenFresh, 'Solicitud marcada como dispersada correctamente.');
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -446,7 +437,7 @@ class OCGasolinaVehicleController extends ApiController
     }
 
     /**
-     * Catálogos para filtros y formulario de registro/edición de servicios.
+     * Catálogos para filtros y formulario de registro/edición de dispersión de gasolina.
      */
     public function getforms()
     {
@@ -454,22 +445,34 @@ class OCGasolinaVehicleController extends ApiController
             ->orderBy('placas', 'asc')
             ->get();
 
-        $maxKmsByVehicle = $vehicles->isNotEmpty()
-            ? DB::table('vehicles_detalles_servicio')
-            ->whereIn('vehicle_id', $vehicles->pluck('id'))
-            ->whereNotNull('km_evento')
-            ->groupBy('vehicle_id')
-            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
-            ->pluck('ultimo_km', 'vehicle_id')
+        $vehicleIds = $vehicles->pluck('id');
+
+        $maxKmsGasolina = $vehicles->isNotEmpty()
+            ? DB::table('vehicles_dispersion_gasolina')
+                ->whereIn('vehicle_id', $vehicleIds)
+                ->whereNotNull('km_evento')
+                ->groupBy('vehicle_id')
+                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+                ->pluck('ultimo_km', 'vehicle_id')
             : collect();
 
-        $vehicles->each(function ($v) use ($maxKmsByVehicle) {
-            $v->ultimo_km = isset($maxKmsByVehicle[$v->id]) ? (int) $maxKmsByVehicle[$v->id] : 0;
+        $maxKmsServicios = $vehicles->isNotEmpty()
+            ? DB::table('vehicles_detalles_servicio')
+                ->whereIn('vehicle_id', $vehicleIds)
+                ->whereNotNull('km_evento')
+                ->groupBy('vehicle_id')
+                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+                ->pluck('ultimo_km', 'vehicle_id')
+            : collect();
+
+        $vehicles->each(function ($v) use ($maxKmsGasolina, $maxKmsServicios) {
+            $kmGas = isset($maxKmsGasolina[$v->id]) ? (int) $maxKmsGasolina[$v->id] : 0;
+            $kmServ = isset($maxKmsServicios[$v->id]) ? (int) $maxKmsServicios[$v->id] : 0;
+            $v->ultimo_km = max($kmGas, $kmServ);
             $v->empleados->each->setAppends(['nombreCompleto', 'apellidoCompleto']);
         });
 
-
-        $maxId = (int) DB::table('vehicles_ordenes_servicio')->max('id');
+        $maxId = (int) DB::table('vehicles_dispersion_gasolina')->max('id');
         $nextId = $maxId > 0 ? $maxId + 1 : 1;
 
         $data = [
@@ -480,9 +483,6 @@ class OCGasolinaVehicleController extends ApiController
             })->orderBy('apellido_paterno', 'asc')
                 ->get()
                 ->each->setAppends(['nombreCompleto', 'apellidoCompleto']),
-            'proveedores' => VehiclesServicioProveedores::orderBy('nombre', 'asc')->get(),
-            'tipos_servicio' => VehiclesTipoServicio::with('servicios')->where('nombre', 'Gasolina')->get(),
-            'servicios_cat' => VehiclesServiciosCat::with('tipoServicio')->where('nombre', 'Dispersión de gasolina')->get(),
             'sucursales_cargo' => VehiclesSucCargoA::orderBy('nombre', 'asc')->get(),
             'deptos_cargo' => VehiclesDeptoCargoA::orderBy('nombre', 'asc')->get(),
             'estatus' => Estatus::where('tipo_estatus', 'servicio-unidad')->get(),
@@ -493,7 +493,7 @@ class OCGasolinaVehicleController extends ApiController
     }
 
     /**
-     * Obtiene el conteo de solicitudes por estatus (Solicitado, Autorizado, No Autorizado).
+     * Obtiene el conteo de solicitudes por estatus (Solicitado, Por dispersar, Dispersada, No Autorizado).
      */
     private function getEstatusCounts(?array $vehicleIds = null, ?int $solicitanteId = null): array
     {
@@ -503,15 +503,12 @@ class OCGasolinaVehicleController extends ApiController
         $dispersado = $estatusList->firstWhere('nombre', 'Dispersada');
         $noAutorizado = $estatusList->firstWhere('nombre', 'No Autorizado');
 
-        $query = VehiclesOrdenesServicio::query()
-            ->whereHas('detalles.servicio', function ($q) {
-                $q->where('nombre', 'Dispersión de gasolina');
-            });
+        $query = VehiclesDispersionGasolina::query();
         if (!empty($vehicleIds)) {
             $query->whereIn('vehicle_id', $vehicleIds);
         }
         if (!empty($solicitanteId)) {
-            $query->where('solicitante_id', $solicitanteId);
+            $query->where('solicitado_por', $solicitanteId);
         }
 
         $countsByStatus = (clone $query)
@@ -532,21 +529,10 @@ class OCGasolinaVehicleController extends ApiController
         ];
     }
 
-    public function mailSolicitudGasolina(int $ordenId)
+    public function mailSolicitudGasolina(int $dispersionId)
     {
-        $orden = VehiclesOrdenesServicio::findOrFail($ordenId);
-        $orden->load(
-            'vehicle.departamento',
-            'vehicle.linea',
-            'vehicle.sucursal',
-            'vehicle.estatus',
-            'solicitante',
-            'detalles.servicio',
-            'detalles.servicio.tipoServicio',
-            'sucursalCargo',
-            'departamentoCargo',
-            'proveedor',
-        );
+        $orden = VehiclesDispersionGasolina::findOrFail($dispersionId);
+        $orden->load(self::DISPERSION_RELATIONS);
 
         $dirAdmin = Empleado::whereHas('puesto', function ($q) {
             $q->where('nombre', 'Director Administrativo');
@@ -555,10 +541,9 @@ class OCGasolinaVehicleController extends ApiController
         })->first();
         $solicitante = $orden->solicitante;
 
-        // sacamos mails con optional por si usuario no tiene correo
-        // $correoDir = Optional($dirAdmin)->correo_institucional;
+        // $correoDir = optional($dirAdmin)->correo_institucional;
         $correoDir = null;
-        $correoSolicitante = Optional($solicitante)->correo_institucional;
+        $correoSolicitante = optional($solicitante)->correo_institucional;
 
         if ($correoDir) {
             $mail = Mail::to($correoDir);
@@ -572,33 +557,21 @@ class OCGasolinaVehicleController extends ApiController
                 $mail->send(new SendGasSolicitud($orden));
             }
         }
-        return $this->respond(true, 'Orden de servicio enviada correctamente.');
+        return $this->respond(true, 'Solicitud de gasolina enviada correctamente.');
     }
 
-    public function mailDispersionAutorizacion(int $ordenId, bool $aut)
+    public function mailDispersionAutorizacion(int $dispersionId, bool $aut)
     {
-        $orden = VehiclesOrdenesServicio::findOrFail($ordenId);
-        $orden->load(
-            'vehicle.departamento',
-            'vehicle.linea',
-            'vehicle.sucursal',
-            'vehicle.estatus',
-            'solicitante',
-            'detalles.servicio',
-            'detalles.servicio.tipoServicio',
-            'sucursalCargo',
-            'departamentoCargo',
-            'proveedor',
-            'estatus',
-            'bitacora.user.empleado',
-            'bitacora.estatus',
-        );
+        $orden = VehiclesDispersionGasolina::findOrFail($dispersionId);
+        $orden->load(self::DISPERSION_RELATIONS);
 
         $solicitante = $orden->solicitante;
-        $correoSolicitante = Optional($solicitante)->correo_institucional;
+        $correoSolicitante = optional($solicitante)->correo_institucional;
 
         if (!$aut) {
-            Mail::to($correoSolicitante)->send(new SendGasAutorizacion($orden));
+            if ($correoSolicitante) {
+                Mail::to($correoSolicitante)->send(new SendGasDispersada($orden));
+            }
         } else {
             $dirAdmin = Empleado::whereHas('puesto', function ($q) {
                 $q->where('nombre', 'Director Administrativo');
@@ -611,10 +584,9 @@ class OCGasolinaVehicleController extends ApiController
                 $q->where('nombre', 'Activo');
             })->first();
 
-            // sacamos mails con optional por si usuario no tiene correo
-            // $correoDir = Optional($dirAdmin)->correo_institucional;
+            // $correoDir = optional($dirAdmin)->correo_institucional;
             $correoDir = null;
-            // $correoCoord = Optional($coordCompras)->correo_institucional;
+            // $correoCoord = optional($coordCompras)->correo_institucional;
             $correoCoord = null;
 
             if ($correoDir) {
@@ -637,5 +609,23 @@ class OCGasolinaVehicleController extends ApiController
             }
         }
         return $this->respond(true, 'Autorización enviada correctamente.');
+    }
+
+    /**
+     * Envía correo al solicitante notificando que la gasolina ha sido dispersada (o no autorizada).
+     */
+    public function mailGasolinaDispersada(int $dispersionId)
+    {
+        $orden = VehiclesDispersionGasolina::findOrFail($dispersionId);
+        $orden->load(self::DISPERSION_RELATIONS);
+
+        $solicitante = $orden->solicitante;
+        $correoSolicitante = optional($solicitante)->correo_institucional;
+
+        if ($correoSolicitante) {
+            Mail::to($correoSolicitante)->send(new SendGasDispersada($orden));
+        }
+
+        return $this->respond(true, 'Notificación de dispersión enviada al solicitante correctamente.');
     }
 }

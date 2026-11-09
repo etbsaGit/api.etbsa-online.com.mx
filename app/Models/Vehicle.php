@@ -101,6 +101,13 @@ class Vehicle extends Model
             ->orderBy('id', 'desc');
     }
 
+    public function dispersionesGasolina()
+    {
+        return $this->hasMany(VehiclesDispersionGasolina::class, 'vehicle_id')
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc');
+    }
+
     public function marca()
     {
         return $this->belongsTo(VehiclesMarcas::class, 'marca_id', 'id');

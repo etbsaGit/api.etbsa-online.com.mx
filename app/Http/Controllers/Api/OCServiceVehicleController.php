@@ -149,7 +149,14 @@ class OCServiceVehicleController extends ApiController
 
         $this->optimizeOrdenEmpleados($ordenes->getCollection());
 
-        $maxKmsByVehicle = DB::table('vehicles_detalles_servicio')
+        $maxKmsServicios = DB::table('vehicles_detalles_servicio')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->whereNotNull('km_evento')
+            ->groupBy('vehicle_id')
+            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id');
+
+        $maxKmsGasolina = DB::table('vehicles_dispersion_gasolina')
             ->whereIn('vehicle_id', $vehicleIds)
             ->whereNotNull('km_evento')
             ->groupBy('vehicle_id')
@@ -159,8 +166,10 @@ class OCServiceVehicleController extends ApiController
         $assignedVehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea'])
             ->whereIn('id', $vehicleIds)
             ->get()
-            ->map(function ($v) use ($maxKmsByVehicle) {
-                $v->ultimo_km = isset($maxKmsByVehicle[$v->id]) ? (int) $maxKmsByVehicle[$v->id] : 0;
+            ->map(function ($v) use ($maxKmsServicios, $maxKmsGasolina) {
+                $kmServ = isset($maxKmsServicios[$v->id]) ? (int) $maxKmsServicios[$v->id] : 0;
+                $kmGas = isset($maxKmsGasolina[$v->id]) ? (int) $maxKmsGasolina[$v->id] : 0;
+                $v->ultimo_km = max($kmServ, $kmGas);
                 return $v;
             });
 
@@ -846,16 +855,30 @@ class OCServiceVehicleController extends ApiController
             $q->where('activo', 1);
         })->orderby('placas', 'asc')->get();
 
-        $maxKmsByVehicle = $vehicles->isNotEmpty()
+        $vehicleIds = $vehicles->pluck('id');
+
+        $maxKmsServicios = $vehicles->isNotEmpty()
             ? DB::table('vehicles_detalles_servicio')
-            ->whereIn('vehicle_id', $vehicles->pluck('id'))
-            ->whereNotNull('km_evento')
-            ->groupBy('vehicle_id')
-            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
-            ->pluck('ultimo_km', 'vehicle_id')
+                ->whereIn('vehicle_id', $vehicleIds)
+                ->whereNotNull('km_evento')
+                ->groupBy('vehicle_id')
+                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+                ->pluck('ultimo_km', 'vehicle_id')
             : collect();
-        $vehicles->each(function ($v) use ($maxKmsByVehicle) {
-            $v->ultimo_km = isset($maxKmsByVehicle[$v->id]) ? (int) $maxKmsByVehicle[$v->id] : 0;
+
+        $maxKmsGasolina = $vehicles->isNotEmpty()
+            ? DB::table('vehicles_dispersion_gasolina')
+                ->whereIn('vehicle_id', $vehicleIds)
+                ->whereNotNull('km_evento')
+                ->groupBy('vehicle_id')
+                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+                ->pluck('ultimo_km', 'vehicle_id')
+            : collect();
+
+        $vehicles->each(function ($v) use ($maxKmsServicios, $maxKmsGasolina) {
+            $kmServ = isset($maxKmsServicios[$v->id]) ? (int) $maxKmsServicios[$v->id] : 0;
+            $kmGas = isset($maxKmsGasolina[$v->id]) ? (int) $maxKmsGasolina[$v->id] : 0;
+            $v->ultimo_km = max($kmServ, $kmGas);
             $v->empleados->each->setAppends(['nombreCompleto']);
         });
 

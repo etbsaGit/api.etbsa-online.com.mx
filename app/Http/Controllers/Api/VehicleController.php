@@ -46,6 +46,20 @@ class VehicleController extends ApiController
                     }
                 }
             }
+            if ($vehicle->relationLoaded('dispersionesGasolina') && $vehicle->dispersionesGasolina) {
+                foreach ($vehicle->dispersionesGasolina as $disp) {
+                    if ($disp->relationLoaded('solicitante') && $disp->solicitante) {
+                        $disp->solicitante->setAppends($empAppends);
+                    }
+                    if ($disp->relationLoaded('bitacora') && $disp->bitacora) {
+                        foreach ($disp->bitacora as $bit) {
+                            if ($bit->relationLoaded('user') && $bit->user && $bit->user->relationLoaded('empleado') && $bit->user->empleado) {
+                                $bit->user->empleado->setAppends($empAppends);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -102,6 +116,11 @@ class VehicleController extends ApiController
             'ordenesServicio.sucursalCargo',
             'ordenesServicio.departamentoCargo',
             'ordenesServicio.detalles.servicio.tipoServicio',
+            'dispersionesGasolina.solicitante:id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
+            'dispersionesGasolina.registrador:id,name',
+            'dispersionesGasolina.sucursalCargo',
+            'dispersionesGasolina.departamentoCargo',
+            'dispersionesGasolina.estatus',
         ]);
 
         $this->optimizeVehicleEmpleados($vehicle);
@@ -229,6 +248,11 @@ class VehicleController extends ApiController
             'ordenesServicio.sucursalCargo',
             'ordenesServicio.departamentoCargo',
             'ordenesServicio.detalles.servicio.tipoServicio',
+            'dispersionesGasolina.solicitante:id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
+            'dispersionesGasolina.registrador:id,name',
+            'dispersionesGasolina.sucursalCargo',
+            'dispersionesGasolina.departamentoCargo',
+            'dispersionesGasolina.estatus',
         ]);
 
         $this->optimizeVehicleEmpleados($vehicle);
