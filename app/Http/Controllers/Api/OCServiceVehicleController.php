@@ -252,6 +252,7 @@ class OCServiceVehicleController extends ApiController
                     'servicio_id' => $detalle['servicio_id'],
                     'proveedor_id' => $detalle['proveedor_id'],
                     'cotizacion_url' => $cotizacionUrl,
+                    'valido_hasta' => !empty($detalle['valido_hasta']) ? $detalle['valido_hasta'] : null,
                     'km_evento' => isset($detalle['km_evento']) && $detalle['km_evento'] !== ''
                         ? (int) $detalle['km_evento']
                         : null,
@@ -385,6 +386,7 @@ class OCServiceVehicleController extends ApiController
                     'servicio_id' => $detalle['servicio_id'],
                     'proveedor_id' => $detalle['proveedor_id'],
                     'cotizacion_url' => $cotizacionUrl,
+                    'valido_hasta' => !empty($detalle['valido_hasta']) ? $detalle['valido_hasta'] : null,
                     'km_evento' => isset($detalle['km_evento']) && $detalle['km_evento'] !== ''
                         ? (int) $detalle['km_evento']
                         : null,
@@ -802,7 +804,7 @@ class OCServiceVehicleController extends ApiController
         $bitacoraElaboracion = $orden->bitacora->sortBy('created_at')->first();
         $elaboraNombre = $bitacoraElaboracion?->user?->empleado?->nombreCompleto ?: ($orden->solicitante?->nombreCompleto ?: 'N/A');
 
-        // Nombre para el Departamento de Compras: Director Administrativo
+        // Nombre para Vo. Bo.: Director Administrativo
         $dirAdmin = Empleado::whereHas('puesto', function ($q) {
             $q->where('nombre', 'Director Administrativo');
         })->whereHas('estatus', function ($q) {
@@ -815,7 +817,22 @@ class OCServiceVehicleController extends ApiController
             })->first();
         }
 
-        $comprasNombre = $dirAdmin?->nombreCompleto ?: 'AUGUSTO ALBERTO GUEVARA';
+        $voBoNombre = $dirAdmin?->nombreCompleto ?: 'N/A';
+
+        // Nombre para el Departamento de Compras: Coordinador de Compras
+        $coordCompras = Empleado::whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Coordinador de compras');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+
+        if (!$coordCompras) {
+            $coordCompras = Empleado::whereHas('puesto', function ($q) {
+                $q->where('nombre', 'LIKE', '%Coordinador%compra%');
+            })->first();
+        }
+
+        $comprasNombre = $coordCompras?->nombreCompleto ?: 'N/A';
 
         // Datos fiscales de referencia (del primer detalle)
         $firstDetalle = $orden->detalles->first();
@@ -832,7 +849,7 @@ class OCServiceVehicleController extends ApiController
             'condicionesPago' => $condicionesPago,
             'firstDetalle' => $firstDetalle,
             'elaboraNombre' => $elaboraNombre,
-            'voBoNombre' => $orden->solicitante?->nombreCompleto ?: 'N/A',
+            'voBoNombre' => $voBoNombre,
             'comprasNombre' => $comprasNombre,
             'subtotal' => (float) $orden->detalles->sum('subtotal'),
             'iva' => (float) $orden->detalles->sum('iva'),

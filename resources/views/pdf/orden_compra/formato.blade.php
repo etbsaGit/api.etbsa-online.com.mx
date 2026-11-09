@@ -320,13 +320,8 @@
             font-size: 8px;
         }
 
-        .sig-col-obs {
-            width: 38%;
-            height: 62px;
-        }
-
         .sig-col-person {
-            width: 31%;
+            width: 33.33%;
             height: 62px;
             text-align: center;
         }
@@ -337,24 +332,6 @@
             color: #111;
             text-align: left;
             margin-bottom: 2px;
-        }
-
-        .sig-obs-text {
-            font-size: 7.5px;
-            color: #444;
-            line-height: 1.25;
-            min-height: 20px;
-        }
-
-        .sig-elabora-sec {
-            margin-top: 4px;
-            text-align: center;
-        }
-
-        .sig-elabora-label {
-            font-weight: bold;
-            font-size: 8px;
-            margin-bottom: 1px;
         }
 
         .sig-person-space {
@@ -604,25 +581,14 @@
         </tbody>
     </table>
 
-    <!-- 4. CUADRO DE FIRMAS / RESPONSABLES (3 COLUMNAS EXACTAS COMO EN EL FORMATO FÍSICO) -->
+    <!-- 4. CUADRO DE FIRMAS / RESPONSABLES -->
     <table class="signatures-box">
         <tr>
-            <!-- Columna 1: OBSERVACIONES + ELABORA -->
-            <td class="sig-col-obs">
-                <div class="sig-title">OBSERVACIONES:</div>
-                <div class="sig-obs-text">
-                    @php
-                        $maxKm = (int) $orden->detalles->max('km_evento');
-                    @endphp
-                    @if($maxKm > 0)
-                        Kilometraje registrado de la unidad: {{ number_format($maxKm) }} km.<br/>
-                    @endif
-                    Orden aprobada bajo autorización central de compras.
-                </div>
-                <div class="sig-elabora-sec">
-                    <div class="sig-elabora-label">ELABORA:</div>
-                    <div class="sig-name">{{ $elaboraNombre }}</div>
-                </div>
+            <!-- Columna 1: ELABORA -->
+            <td class="sig-col-person">
+                <div class="sig-title">ELABORA:</div>
+                <div class="sig-person-space"></div>
+                <div class="sig-name-center">{{ $elaboraNombre }}</div>
             </td>
 
             <!-- Columna 2: Vo. Bo. -->

@@ -58,9 +58,14 @@ class VehicleServicesExport
                     ? Carbon::parse($orden->fecha_elaboracion)->format('Y-m')
                     : 'Sin fecha';
 
+                $anioServicio = $orden->fecha_elaboracion
+                    ? (int) Carbon::parse($orden->fecha_elaboracion)->format('Y')
+                    : null;
+
                 $flatServices[] = [
                     'fecha' => $fechaStr,
                     'periodo' => $periodoStr,
+                    'anio_servicio' => $anioServicio,
                     'orden_compra' => $orden->orden_compra ?? '-',
                     'autorizacion_compras' => $orden->autorizacion_compras ?? '-',
                     'factura' => $orden->factura ?? '-',
@@ -377,7 +382,7 @@ class VehicleServicesExport
         $kpiHeaders = [
             'A4:C4' => ['cell' => 'A4', 'title' => 'DINERO TOTAL INVERTIDO', 'color' => '1B5E20', 'bg' => 'E8F5E9'],
             'D4:E4' => ['cell' => 'D4', 'title' => 'SUBTOTAL + IVA', 'color' => '0D47A1', 'bg' => 'E3F2FD'],
-            'F4:G4' => ['cell' => 'F4', 'title' => 'SERVICIOS REALIZADOS', 'color' => '4A148C', 'bg' => 'F3E5F5'],
+            'F4:G4' => ['cell' => 'F4', 'title' => 'AÑO DE LA UNIDAD', 'color' => '4A148C', 'bg' => 'F3E5F5'],
             'H4:I4' => ['cell' => 'H4', 'title' => 'ÓRDENES DE SERVICIO', 'color' => '006064', 'bg' => 'E0F7FA'],
             'J4:K4' => ['cell' => 'J4', 'title' => 'MAYOR KM REGISTRADO', 'color' => 'E65100', 'bg' => 'FFF3E0'],
             'L4:N4' => ['cell' => 'L4', 'title' => 'ÚLTIMO SERVICIO REALIZADO', 'color' => '37474F', 'bg' => 'ECEFF1'],
@@ -403,7 +408,7 @@ class VehicleServicesExport
         $sheet->getStyle('D5')->getNumberFormat()->setFormatCode('$#,##0.00');
 
         $sheet->mergeCells('F5:G5');
-        $sheet->setCellValue('F5', $countServices > 0 ? "='Historial de Servicios'!B4" : 0);
+        $sheet->setCellValue('F5', $this->vehicle->anio ? (string) $this->vehicle->anio : 'No especificado');
 
         $sheet->mergeCells('H5:I5');
         $sheet->setCellValue('H5', $totalOrdenes);
@@ -693,6 +698,197 @@ class VehicleServicesExport
         $lineChart->setTopLeftPosition('K7');
         $lineChart->setBottomRightPosition('N23');
         $sheet->addChart($lineChart);
+
+        // =====================================================================
+        // 5. SECCIÓN DE TENDENCIAS: ANTIGÜEDAD Y RANGO DE KILOMETRAJE (10,000 KM)
+        // =====================================================================
+        $anioModelo = isset($this->vehicle->anio) && is_numeric($this->vehicle->anio)
+            ? (int) $this->vehicle->anio
+            : null;
+
+        $byAntiguedad = [];
+        $byKmBucket = [];
+
+        foreach ($services as $s) {
+            if (!empty($s['anio_servicio'])) {
+                if ($anioModelo && $anioModelo >= 1970 && $anioModelo <= 2100) {
+                    $key = max(0, (int) $s['anio_servicio'] - $anioModelo);
+                    $calYear = $anioModelo + $key;
+                    $label = $key === 0
+                        ? "0 años ({$calYear})"
+                        : ($key === 1 ? "1 año ({$calYear})" : "{$key} años ({$calYear})");
+                } else {
+                    $key = (int) $s['anio_servicio'];
+                    $label = "Año {$key}";
+                }
+
+                if (!isset($byAntiguedad[$key])) {
+                    $byAntiguedad[$key] = [
+                        'label' => $label,
+                        'count' => 0,
+                        'total' => 0.0,
+                    ];
+                }
+                $byAntiguedad[$key]['count']++;
+                $byAntiguedad[$key]['total'] += $s['total'];
+            }
+
+            if (!empty($s['km_evento']) && $s['km_evento'] > 0) {
+                $b = (int) floor(($s['km_evento'] - 1) / 10000);
+                if ($b >= 0 && $b <= 200) {
+                    if (!isset($byKmBucket[$b])) {
+                        $byKmBucket[$b] = [
+                            'label' => ($b * 10) . 'k - ' . (($b + 1) * 10) . 'k km',
+                            'count' => 0,
+                            'total' => 0.0,
+                        ];
+                    }
+                    $byKmBucket[$b]['count']++;
+                    $byKmBucket[$b]['total'] += $s['total'];
+                }
+            }
+        }
+
+        ksort($byAntiguedad);
+        ksort($byKmBucket);
+
+        $antiguedadRows = array_values($byAntiguedad);
+        if (empty($antiguedadRows)) {
+            $antiguedadRows[] = ['label' => 'Sin datos', 'count' => 0, 'total' => 0.0];
+        }
+
+        $kmRows = array_values($byKmBucket);
+        if (empty($kmRows)) {
+            $kmRows[] = ['label' => 'Sin datos', 'count' => 0, 'total' => 0.0];
+        }
+
+        $maxFirstTablesRow = max($lastTipoRow, $lastServRow, $lastPerRow);
+        $trendChartTopRow = $maxFirstTablesRow + 3;
+        $trendChartBottomRow = $trendChartTopRow + 15;
+        $trendTableHeaderRow = $trendChartBottomRow + 2;
+        $trendTableStartRow = $trendTableHeaderRow + 1;
+
+        // TABLA 4: Tendencia por Antigüedad de la Unidad (A:D)
+        $sheet->setCellValue("A{$trendTableHeaderRow}", 'Antigüedad / Año');
+        $sheet->setCellValue("B{$trendTableHeaderRow}", 'Cant. Servicios');
+        $sheet->setCellValue("C{$trendTableHeaderRow}", 'Monto Total ($)');
+        $sheet->setCellValue("D{$trendTableHeaderRow}", 'Promedio / Serv. ($)');
+        $sheet->getStyle("A{$trendTableHeaderRow}:D{$trendTableHeaderRow}")->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0D47A1']],
+        ]);
+
+        $rAnt = $trendTableStartRow;
+        foreach ($antiguedadRows as $item) {
+            $avgSrv = $item['count'] > 0 ? $item['total'] / $item['count'] : 0.0;
+            $sheet->setCellValue("A{$rAnt}", $item['label']);
+            $sheet->setCellValue("B{$rAnt}", (int) $item['count']);
+            $sheet->setCellValue("C{$rAnt}", (float) $item['total']);
+            $sheet->setCellValue("D{$rAnt}", (float) $avgSrv);
+            $rAnt++;
+        }
+        $lastAntRow = $rAnt - 1;
+        $sheet->getStyle("C{$trendTableStartRow}:D{$lastAntRow}")->getNumberFormat()->setFormatCode('$#,##0.00');
+        $sheet->getStyle("A{$trendTableHeaderRow}:D{$lastAntRow}")->applyFromArray([
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'CFD8DC']]],
+        ]);
+
+        // TABLA 5: Tendencia por Rango de Kilometraje 10,000 km (F:I)
+        $sheet->setCellValue("F{$trendTableHeaderRow}", 'Rango de KM (10k)');
+        $sheet->setCellValue("G{$trendTableHeaderRow}", 'Cant. Servicios');
+        $sheet->setCellValue("H{$trendTableHeaderRow}", 'Monto Total ($)');
+        $sheet->setCellValue("I{$trendTableHeaderRow}", 'Promedio / Serv. ($)');
+        $sheet->getStyle("F{$trendTableHeaderRow}:I{$trendTableHeaderRow}")->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '00695C']],
+        ]);
+
+        $rKm = $trendTableStartRow;
+        foreach ($kmRows as $item) {
+            $avgSrv = $item['count'] > 0 ? $item['total'] / $item['count'] : 0.0;
+            $sheet->setCellValue("F{$rKm}", $item['label']);
+            $sheet->setCellValue("G{$rKm}", (int) $item['count']);
+            $sheet->setCellValue("H{$rKm}", (float) $item['total']);
+            $sheet->setCellValue("I{$rKm}", (float) $avgSrv);
+            $rKm++;
+        }
+        $lastKmRow = $rKm - 1;
+        $sheet->getStyle("H{$trendTableStartRow}:I{$lastKmRow}")->getNumberFormat()->setFormatCode('$#,##0.00');
+        $sheet->getStyle("F{$trendTableHeaderRow}:I{$lastKmRow}")->applyFromArray([
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'CFD8DC']]],
+        ]);
+
+        // GRÁFICA DE LÍNEAS 4: Tendencia por Antigüedad de la Unidad
+        $antLabels = [
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, "Dashboard!\$C\${$trendTableHeaderRow}", null, 1),
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, "Dashboard!\$D\${$trendTableHeaderRow}", null, 1),
+        ];
+        $antCategories = [
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, "Dashboard!\$A\${$trendTableStartRow}:\$A\${$lastAntRow}", null, count($antiguedadRows)),
+        ];
+        $antValues = [
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_NUMBER, "Dashboard!\$C\${$trendTableStartRow}:\$C\${$lastAntRow}", null, count($antiguedadRows)),
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_NUMBER, "Dashboard!\$D\${$trendTableStartRow}:\$D\${$lastAntRow}", null, count($antiguedadRows)),
+        ];
+        $antSeries = new DataSeries(
+            DataSeries::TYPE_LINECHART,
+            DataSeries::GROUPING_STANDARD,
+            range(0, count($antValues) - 1),
+            $antLabels,
+            $antCategories,
+            $antValues
+        );
+        $antLayout = new Layout();
+        $antLayout->setShowVal(true);
+        $antChart = new Chart(
+            'chart_unit_antiguedad',
+            new Title('Tendencia de Gasto ($) por Antigüedad de la Unidad'),
+            new Legend(Legend::POSITION_BOTTOM, null, false),
+            new PlotArea($antLayout, [$antSeries]),
+            true,
+            DataSeries::EMPTY_AS_GAP,
+            new Title('Antigüedad / Año'),
+            new Title('Monto Invertido (MXN)')
+        );
+        $antChart->setTopLeftPosition("A{$trendChartTopRow}");
+        $antChart->setBottomRightPosition("F{$trendChartBottomRow}");
+        $sheet->addChart($antChart);
+
+        // GRÁFICA DE LÍNEAS 5: Tendencia por Rango de KM (Intervalos de 10,000 km)
+        $kmChartLabels = [
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, "Dashboard!\$H\${$trendTableHeaderRow}", null, 1),
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, "Dashboard!\$I\${$trendTableHeaderRow}", null, 1),
+        ];
+        $kmChartCategories = [
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, "Dashboard!\$F\${$trendTableStartRow}:\$F\${$lastKmRow}", null, count($kmRows)),
+        ];
+        $kmChartValues = [
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_NUMBER, "Dashboard!\$H\${$trendTableStartRow}:\$H\${$lastKmRow}", null, count($kmRows)),
+            new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_NUMBER, "Dashboard!\$I\${$trendTableStartRow}:\$I\${$lastKmRow}", null, count($kmRows)),
+        ];
+        $kmChartSeries = new DataSeries(
+            DataSeries::TYPE_LINECHART,
+            DataSeries::GROUPING_STANDARD,
+            range(0, count($kmChartValues) - 1),
+            $kmChartLabels,
+            $kmChartCategories,
+            $kmChartValues
+        );
+        $kmChartLayout = new Layout();
+        $kmChartLayout->setShowVal(true);
+        $kmChart = new Chart(
+            'chart_unit_km',
+            new Title('Tendencia de Gasto ($) por Rango de KM (Intervalos de 10,000 km)'),
+            new Legend(Legend::POSITION_BOTTOM, null, false),
+            new PlotArea($kmChartLayout, [$kmChartSeries]),
+            true,
+            DataSeries::EMPTY_AS_GAP,
+            new Title('Rango de Kilometraje'),
+            new Title('Monto Invertido (MXN)')
+        );
+        $kmChart->setTopLeftPosition("G{$trendChartTopRow}");
+        $kmChart->setBottomRightPosition("N{$trendChartBottomRow}");
+        $sheet->addChart($kmChart);
 
         // Ajustar anchos de columna en Dashboard
         $dashWidths = [

@@ -98,6 +98,10 @@ class VehiclesOrdenesServicio extends Model
                             ->orWhere('apellido_paterno', 'LIKE', "%{$search}%")
                             ->orWhere('apellido_materno', 'LIKE', "%{$search}%");
                     })
+                    ->orWhereHas('sucursalCargo', function (Builder $sucq) use ($search) {
+                        $sucq->where('nombre', 'LIKE', "%{$search}%")
+                            ->orWhere('siglas', 'LIKE', "%{$search}%");
+                    })
                     ->orWhereHas('detalles', function (Builder $dq) use ($search) {
                         $dq->where('descripcion', 'LIKE', "%{$search}%")
                             ->orWhere('km_evento', 'LIKE', "%{$search}%")

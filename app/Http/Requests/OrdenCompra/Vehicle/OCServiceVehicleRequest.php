@@ -68,6 +68,7 @@ class OCServiceVehicleRequest extends FormRequest
             'detalles' => ['required', 'array', 'min:1'],
             'detalles.*.servicio_id' => ['required', 'integer', 'exists:vehicles_servicios_cat,id'],
             'detalles.*.proveedor_id' => ['required', 'integer', 'exists:vehicles_servicio_proveedores,id'],
+            'detalles.*.valido_hasta' => ['required', 'date'],
             'detalles.*.vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'detalles.*.km_evento' => [
                 'required',
@@ -130,6 +131,8 @@ class OCServiceVehicleRequest extends FormRequest
             'detalles.*.servicio_id.exists' => 'El servicio seleccionado no existe en el catálogo',
             'detalles.*.proveedor_id.required' => 'El proveedor es obligatorio en cada cotización',
             'detalles.*.proveedor_id.exists' => 'El proveedor seleccionado no existe en el catálogo',
+            'detalles.*.valido_hasta.required' => 'La fecha de vigencia (válido hasta) de la cotización es obligatoria',
+            'detalles.*.valido_hasta.date' => 'La fecha de vigencia de la cotización no tiene un formato válido',
             'detalles.*.km_evento.required' => 'El kilometraje es obligatorio',
             'detalles.*.km_evento.numeric' => 'El kilometraje debe ser un valor numérico',
             'detalles.*.km_evento.min' => 'El kilometraje no puede ser negativo',

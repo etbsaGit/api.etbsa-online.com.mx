@@ -401,6 +401,8 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
 
     //--------------------vehicle--------------------
     Route::post('vehicles', [VehicleController::class, 'index']);
+    Route::get('vehicles/dashboard', [VehicleController::class, 'dashboard']);
+    Route::post('vehicles/dashboard/export', [VehicleController::class, 'exportDashboardServices']);
     Route::post('vehicle/asign/{vehicle}', [VehicleController::class, 'asignEmployees']);
     Route::get('vehicle/forms', [VehicleController::class, 'getforms']);
     Route::get('vehicle/export-services/{vehicle}', [VehicleController::class, 'exportServices']);

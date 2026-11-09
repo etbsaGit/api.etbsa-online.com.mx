@@ -31,7 +31,8 @@ class VehiclesDetallesServicio extends Model
         'cotizacion_url',
         'forma_pago_id',
         'metodo_pago_id',
-        'uso_cfdi_id'
+        'uso_cfdi_id',
+        'valido_hasta'
     ];
 
     // -Relations-
