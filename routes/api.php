@@ -446,6 +446,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('services/auth', [OCServiceVehicleController::class, 'myIndex']);
     Route::get('service/forms', [OCServiceVehicleController::class, 'getforms']);
     Route::post('service/{id}/cotizacion', [OCServiceVehicleController::class, 'uploadCotizacion']);
+    Route::post('service/revision', [OCServiceVehicleController::class, 'revisarOrdenCompra']);
     Route::post('service/autorizar', [OCServiceVehicleController::class, 'autorizarOrdenCompra']);
     Route::get('service/{id}/pdf', [OCServiceVehicleController::class, 'getOrdenCompraPdf']);
     // Route::post('service/autorizarCompra', [OCServiceVehicleController::class, 'autorizarOrdenCompra']);

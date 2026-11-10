@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\OrdenCompra\Vehicle\OCServiceVehicleRequest;
+use App\Http\Requests\OrdenCompra\Vehicle\RevisionServicioRequest;
 use App\Http\Requests\OrdenCompra\Vehicle\AutorizacionServicioRequest;
 use App\Mail\OrdenesCompra\Vehicles\SendOrdenAutorizacion;
 use App\Mail\OrdenesCompra\Vehicles\SendOrdenCompraVehicle;
@@ -65,12 +66,12 @@ class OCServiceVehicleController extends ApiController
                 continue;
             }
             if ($orden->relationLoaded('solicitante') && $orden->solicitante) {
-                $orden->solicitante->setAppends(['nombreCompleto', 'apellidoCompleto']);
+                $orden->solicitante->setAppends(['nombreCompleto']);
             }
             if ($orden->relationLoaded('bitacora') && $orden->bitacora) {
                 foreach ($orden->bitacora as $bit) {
                     if ($bit->relationLoaded('user') && $bit->user && $bit->user->relationLoaded('empleado') && $bit->user->empleado) {
-                        $bit->user->empleado->setAppends(['nombreCompleto', 'apellidoCompleto']);
+                        $bit->user->empleado->setAppends(['nombreCompleto']);
                     }
                 }
             }
@@ -190,12 +191,7 @@ class OCServiceVehicleController extends ApiController
 
         try {
             $validated = $request->validated();
-
-            $estatus = Estatus::where('nombre', 'Solicitado')->where('tipo_estatus', 'servicio-unidad')->first();
-            if (!$estatus) {
-                throw new \Exception('No se encontró el estatus "Solicitado" para el tipo de estatus servicio-unidad.');
-            }
-            $estatus_id = $estatus->id;
+            $estatus_id = $this->getEstatusDB('En revisión', 'servicio-unidad');
 
             $ordenServicio = VehiclesOrdenesServicio::create([
                 'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
@@ -281,7 +277,7 @@ class OCServiceVehicleController extends ApiController
                 ]);
             }
 
-            $bitacora = $this->insertBitacora($ordenServicio->id, $estatus_id, 'Orden de Servicio creada');
+            $bitacora = $this->insertBitacora($ordenServicio->id, $estatus_id, 'Orden de Servicio registrada en revisión');
             if (!$bitacora) {
                 throw new \Exception('Error al insertar la bitácora');
             }
@@ -291,9 +287,9 @@ class OCServiceVehicleController extends ApiController
             $ordenId = $ordenServicio->id;
             dispatch(function () use ($ordenId) {
                 try {
-                    $this->mailSolicitudOrden($ordenId);
+                    $this->mailSolicitudRevision($ordenId);
                 } catch (\Throwable $e) {
-                    \Log::error("Error enviando correo de solicitud para orden #{$ordenId}: " . $e->getMessage());
+                    \Log::error("Error enviando correo de revisión para orden #{$ordenId}: " . $e->getMessage());
                 }
             })->afterResponse();
 
@@ -326,10 +322,23 @@ class OCServiceVehicleController extends ApiController
      */
     public function update(OCServiceVehicleRequest $request, $id)
     {
-        $ordenServicio = VehiclesOrdenesServicio::findOrFail($id);
+        $ordenServicio = VehiclesOrdenesServicio::with('estatus')->findOrFail($id);
         $validated = $request->validated();
 
-        $orden = DB::transaction(function () use ($ordenServicio, $validated, $request) {
+        $prevEstatusNombre = mb_strtolower(trim($ordenServicio->estatus?->nombre ?? ''));
+        $isCorregir = ($prevEstatusNombre === 'a corregir');
+
+        $orden = DB::transaction(function () use ($ordenServicio, $validated, $request, $isCorregir) {
+            $nuevoEstatusId = $ordenServicio->estatus_id;
+            if ($isCorregir) {
+                // $estatusRevision = Estatus::where('nombre', 'En Revisión')->where('tipo_estatus', 'servicio-unidad')->first()
+                //     ?: Estatus::where('clave', 'en-revision')->where('tipo_estatus', 'servicio-unidad')->first();
+                $estatusRevision = $this->getEstatusDB('En Revisión', 'servicio-unidad');
+                if ($estatusRevision) {
+                    $nuevoEstatusId = $estatusRevision;
+                }
+            }
+
             $ordenServicio->update([
                 'autorizacion_compras' => $validated['autorizacion_compras'] ?? null,
                 'orden_compra' => (string) $ordenServicio->id,
@@ -340,6 +349,7 @@ class OCServiceVehicleController extends ApiController
                 'suc_cargo_id' => $validated['suc_cargo_id'] ?? null,
                 'depto_cargo_id' => $validated['depto_cargo_id'] ?? null,
                 'factura' => $validated['factura'] ?? null,
+                'estatus_id' => $nuevoEstatusId,
                 'cotizacion_url' => array_key_exists('cotizacion_url', $validated)
                     ? $validated['cotizacion_url']
                     : $ordenServicio->cotizacion_url,
@@ -415,8 +425,24 @@ class OCServiceVehicleController extends ApiController
                 ]);
             }
 
+            $comentarioBit = $isCorregir
+                ? 'Orden de Servicio corregida y enviada a revisión'
+                : 'Orden de Servicio actualizada';
+            $this->insertBitacora($ordenServicio->id, $ordenServicio->estatus_id, $comentarioBit);
+
             return $ordenServicio->load(self::ORDEN_RELATIONS);
         });
+
+        if ($isCorregir) {
+            $ordenId = $orden->id;
+            dispatch(function () use ($ordenId) {
+                try {
+                    $this->mailSolicitudCorregida($ordenId);
+                } catch (\Throwable $e) {
+                    \Log::error("Error enviando correo de orden corregida #{$ordenId}: " . $e->getMessage());
+                }
+            })->afterResponse();
+        }
 
         $this->optimizeOrdenEmpleados($orden);
 
@@ -579,6 +605,132 @@ class OCServiceVehicleController extends ApiController
         }
     }
 
+    /**
+     * Obtiene el empleado activo con puesto de Coordinador de Compras.
+     */
+    public function getOneEmpleadoxPuesto(string $puesto)
+    {
+        $empleado = Empleado::whereHas('puesto', function ($q) {
+            $q->where('nombre', $puesto);
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+
+        return $empleado;
+    }
+
+    public function getEstatusDB(string $nombre, string $tipo)
+    {
+        $estatus = Estatus::where('nombre', $nombre)->where('tipo_estatus', $tipo)->first()->id;
+        return $estatus;
+    }
+
+    /**
+     * Paso intermedio de revisión de Orden de Compra por Coordinación de Compras.
+     * Acciones:
+     * - 'aprobar': Pasa a estatus 'Solicitado', registra bitácora y notifica al Director Administrativo.
+     * - 'corregir': Pasa a estatus 'A Corregir', registra bitácora con motivo obligatorio y notifica al Solicitante.
+     * - 'rechazar': Pasa a estatus 'No Autorizado', registra bitácora con motivo obligatorio y notifica al Solicitante.
+     */
+    public function revisarOrdenCompra(RevisionServicioRequest $request)
+    {
+        $validated = $request->validated();
+
+        DB::beginTransaction();
+        try {
+            $orden = VehiclesOrdenesServicio::with('estatus')->findOrFail($validated['orden_servicio_id']);
+
+            if ($validated['accion'] === 'aprobar') {
+                $estatus = $this->getEstatusDB('Solicitado', 'servicio-unidad');
+                if (!$estatus) {
+                    throw new \Exception('No se encontró el estatus "Solicitado" para el tipo de estatus servicio-unidad.');
+                }
+
+                $comentario = !empty(trim($validated['comentarios'] ?? ''))
+                    ? "Revisión aprobada por Coordinación de Compras: " . trim($validated['comentarios'])
+                    : "Revisión aprobada por Coordinación de Compras. Solicitud enviada a autorización.";
+
+                $orden->update(['estatus_id' => $estatus]);
+                $this->insertBitacora($orden->id, $estatus, $comentario);
+
+                DB::commit();
+
+                $ordenId = $orden->id;
+                $comentariosMail = !empty(trim($validated['comentarios'] ?? '')) ? trim($validated['comentarios']) : null;
+                dispatch(function () use ($ordenId, $comentariosMail) {
+                    try {
+                        $this->mailOrdenParaAutorizacion($ordenId, $comentariosMail);
+                    } catch (\Throwable $e) {
+                        \Log::error("Error enviando correo de autorización para orden #{$ordenId}: " . $e->getMessage());
+                    }
+                })->afterResponse();
+
+                $ordenFresh = $orden->fresh(self::ORDEN_RELATIONS);
+                $this->optimizeOrdenEmpleados($ordenFresh);
+
+                return $this->respond($ordenFresh, 'Orden pre-autorizada por Coordinación de Compras y enviada a autorización del Director Administrativo.');
+            } elseif ($validated['accion'] === 'corregir') {
+                $estatus = $this->getEstatusDB('A Corregir', 'servicio-unidad');
+                if (!$estatus) {
+                    throw new \Exception('No se encontró el estatus "A Corregir" para el tipo de estatus servicio-unidad.');
+                }
+
+                $comentario = "Solicitud enviada a corregir: " . trim($validated['comentarios']);
+                $orden->update(['estatus_id' => $estatus]);
+                $this->insertBitacora($orden->id, $estatus, $comentario);
+
+                DB::commit();
+
+                $ordenId = $orden->id;
+                $comentariosMail = trim($validated['comentarios']);
+                dispatch(function () use ($ordenId, $comentariosMail) {
+                    try {
+                        $this->mailOrdenCorreccion($ordenId, $comentariosMail);
+                    } catch (\Throwable $e) {
+                        \Log::error("Error enviando correo de corrección para orden #{$ordenId}: " . $e->getMessage());
+                    }
+                })->afterResponse();
+
+                $ordenFresh = $orden->fresh(self::ORDEN_RELATIONS);
+                $this->optimizeOrdenEmpleados($ordenFresh);
+
+                return $this->respond($ordenFresh, 'Orden enviada a corregir al solicitante.');
+            } elseif ($validated['accion'] === 'rechazar') {
+                $estatus = Estatus::where('nombre', 'No Autorizado')->where('tipo_estatus', 'servicio-unidad')->first();
+                $estatus = $this->getEstatusDB('No Autorizado', 'servicio-unidad');
+                if (!$estatus) {
+                    throw new \Exception('No se encontró el estatus "No Autorizado" para el tipo de estatus servicio-unidad.');
+                }
+
+                $comentario = "Solicitud rechazada en revisión: " . trim($validated['comentarios']);
+                $orden->update(['estatus_id' => $estatus]);
+                $this->insertBitacora($orden->id, $estatus, $comentario);
+
+                DB::commit();
+
+                $ordenId = $orden->id;
+                $comentariosMail = trim($validated['comentarios']);
+                dispatch(function () use ($ordenId, $comentariosMail) {
+                    try {
+                        $this->mailOrdenRechazoRevision($ordenId, $comentariosMail);
+                    } catch (\Throwable $e) {
+                        \Log::error("Error enviando correo de rechazo en revisión para orden #{$ordenId}: " . $e->getMessage());
+                    }
+                })->afterResponse();
+
+                $ordenFresh = $orden->fresh(self::ORDEN_RELATIONS);
+                $this->optimizeOrdenEmpleados($ordenFresh);
+
+                return $this->respond($ordenFresh, 'Orden de compra rechazada en revisión.');
+            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     // autorización de solicitud
     public function autorizarOrdenCompra(AutorizacionServicioRequest $request)
     {
@@ -586,17 +738,24 @@ class OCServiceVehicleController extends ApiController
         try {
             $user_id = Auth::user()->id;
             $data = $request->validated();
-            $orden = VehiclesOrdenesServicio::findOrFail($data['orden_servicio_id']);
+            $orden = VehiclesOrdenesServicio::with('estatus')->findOrFail($data['orden_servicio_id']);
 
             if (!$orden) {
                 return $this->respondNotFound('Orden de compra no encontrada.');
             }
 
-            $estatusAutorizado = Estatus::where('nombre', 'Autorizado')->where('tipo_estatus', 'servicio-unidad')->first();
-            $estatusNoAutorizado = Estatus::where('nombre', 'No Autorizado')->where('tipo_estatus', 'servicio-unidad')->first();
+            $estatusActualNombre = mb_strtolower(trim($orden->estatus?->nombre ?? ''));
+            if ($data['autorizado'] && ($estatusActualNombre === 'en revisión' || $estatusActualNombre === 'en revision')) {
+                return response()->json([
+                    'message' => 'Esta orden de compra se encuentra en estatus "En Revisión". Debe ser revisada y pre-autorizada por la Coordinación de Compras antes de la autorización final.'
+                ], 422);
+            }
+
+            $estatusAutorizado = $this->getEstatusDB('Autorizado', 'servicio-unidad');
+            $estatusNoAutorizado = $this->getEstatusDB('No Autorizado', 'servicio-unidad');
 
             if ($data['autorizado']) {
-                $estatusId = $estatusAutorizado->id;
+                $estatusId = $estatusAutorizado;
                 $detallesSeleccionadosIds = array_map('intval', $data['detalles_ids'] ?? []);
 
                 $detallesExistentes = VehiclesDetallesServicio::where('orden_servicio_id', $orden->id)->get();
@@ -739,7 +898,7 @@ class OCServiceVehicleController extends ApiController
                 return $this->respond($ordenFresh, $mensajeFinal);
             } else {
                 // No autorizado
-                $estatusId = $estatusNoAutorizado->id;
+                $estatusId = $estatusNoAutorizado;
                 $this->insertBitacora($orden->id, $estatusId, $data['comentarios'] ?? 'Sin comentarios');
                 $orden->update([
                     'estatus_id' => $estatusId,
@@ -805,33 +964,11 @@ class OCServiceVehicleController extends ApiController
         $elaboraNombre = $bitacoraElaboracion?->user?->empleado?->nombreCompleto ?: ($orden->solicitante?->nombreCompleto ?: 'N/A');
 
         // Nombre para Vo. Bo.: Director Administrativo
-        $dirAdmin = Empleado::whereHas('puesto', function ($q) {
-            $q->where('nombre', 'Director Administrativo');
-        })->whereHas('estatus', function ($q) {
-            $q->where('nombre', 'Activo');
-        })->first();
-
-        if (!$dirAdmin) {
-            $dirAdmin = Empleado::whereHas('puesto', function ($q) {
-                $q->where('nombre', 'LIKE', '%Director%Administrativo%');
-            })->first();
-        }
-
+        $dirAdmin = $this->getOneEmpleadoxPuesto('Director administrativo');
         $voBoNombre = $dirAdmin?->nombreCompleto ?: 'N/A';
 
         // Nombre para el Departamento de Compras: Coordinador de Compras
-        $coordCompras = Empleado::whereHas('puesto', function ($q) {
-            $q->where('nombre', 'Coordinador de compras');
-        })->whereHas('estatus', function ($q) {
-            $q->where('nombre', 'Activo');
-        })->first();
-
-        if (!$coordCompras) {
-            $coordCompras = Empleado::whereHas('puesto', function ($q) {
-                $q->where('nombre', 'LIKE', '%Coordinador%compra%');
-            })->first();
-        }
-
+        $coordCompras = $this->getOneEmpleadoxPuesto('Coordinador de compras');
         $comprasNombre = $coordCompras?->nombreCompleto ?: 'N/A';
 
         // Datos fiscales de referencia (del primer detalle)
@@ -876,20 +1013,20 @@ class OCServiceVehicleController extends ApiController
 
         $maxKmsServicios = $vehicles->isNotEmpty()
             ? DB::table('vehicles_detalles_servicio')
-                ->whereIn('vehicle_id', $vehicleIds)
-                ->whereNotNull('km_evento')
-                ->groupBy('vehicle_id')
-                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
-                ->pluck('ultimo_km', 'vehicle_id')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->whereNotNull('km_evento')
+            ->groupBy('vehicle_id')
+            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id')
             : collect();
 
         $maxKmsGasolina = $vehicles->isNotEmpty()
             ? DB::table('vehicles_dispersion_gasolina')
-                ->whereIn('vehicle_id', $vehicleIds)
-                ->whereNotNull('km_evento')
-                ->groupBy('vehicle_id')
-                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
-                ->pluck('ultimo_km', 'vehicle_id')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->whereNotNull('km_evento')
+            ->groupBy('vehicle_id')
+            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id')
             : collect();
 
         $vehicles->each(function ($v) use ($maxKmsServicios, $maxKmsGasolina) {
@@ -929,12 +1066,14 @@ class OCServiceVehicleController extends ApiController
     }
 
     /**
-     * Obtiene el conteo de solicitudes por estatus (Solicitado, Autorizado, No Autorizado).
+     * Obtiene el conteo de solicitudes por estatus (En Revisión, Solicitado, A Corregir, Autorizado, No Autorizado).
      */
     private function getEstatusCounts(?array $vehicleIds = null): array
     {
         $estatusList = Estatus::where('tipo_estatus', 'servicio-unidad')->get();
+        $enRevision = $estatusList->firstWhere('nombre', 'En Revisión') ?: $estatusList->firstWhere('clave', 'en-revision');
         $solicitado = $estatusList->firstWhere('nombre', 'Solicitado');
+        $aCorregir = $estatusList->firstWhere('nombre', 'A Corregir') ?: $estatusList->firstWhere('clave', 'a-corregir');
         $autorizado = $estatusList->firstWhere('nombre', 'Autorizado');
         $noAutorizado = $estatusList->firstWhere('nombre', 'No Autorizado');
 
@@ -954,59 +1093,138 @@ class OCServiceVehicleController extends ApiController
             ->pluck('total', 'estatus_id');
 
         return [
+            'en_revision' => (int) ($countsByStatus[$enRevision?->id] ?? 0),
             'solicitado' => (int) ($countsByStatus[$solicitado?->id] ?? 0),
+            'a_corregir' => (int) ($countsByStatus[$aCorregir?->id] ?? 0),
             'autorizado' => (int) ($countsByStatus[$autorizado?->id] ?? 0),
             'no_autorizado' => (int) ($countsByStatus[$noAutorizado?->id] ?? 0),
+            'en_revision_id' => $enRevision?->id,
             'solicitado_id' => $solicitado?->id,
+            'a_corregir_id' => $aCorregir?->id,
             'autorizado_id' => $autorizado?->id,
             'no_autorizado_id' => $noAutorizado?->id,
         ];
     }
 
-    public function mailSolicitudOrden(int $ordenId)
+    /**
+     * Envía correo de notificación a Coordinación de Compras cuando se registra una nueva orden para revisión.
+     */
+    public function mailSolicitudRevision(int $ordenId)
     {
-        $orden = VehiclesOrdenesServicio::findOrFail($ordenId);
-        $orden->load(
-            'vehicle.departamento',
-            'vehicle.linea',
-            'vehicle.sucursal',
-            'vehicle.estatus',
-            'solicitante',
-            'proveedor',
-            'detalles.servicio',
-            'detalles.servicio.tipoServicio',
-            'detalles.proveedor',
-            'detalles.formaPago',
-            'detalles.metodoPago',
-            'detalles.usoCfdi',
-            'sucursalCargo',
-            'departamentoCargo',
-            'estatus',
-        );
+        $orden = VehiclesOrdenesServicio::with(self::ORDEN_RELATIONS)->findOrFail($ordenId);
+        $coordCompras = $this->getOneEmpleadoxPuesto('Coordinador de compras');
+        // $correoCoord = optional($coordCompras)->correo_institucional;
+        $correoCoord = null;
+        $correoSolicitante = optional($orden->solicitante)->correo_institucional;
 
-        $dirAdmin = Empleado::whereHas('puesto', function ($q) {
-            $q->where('nombre', 'Director Administrativo');
-        })->whereHas('estatus', function ($q) {
-            $q->where('nombre', 'Activo');
-        })->first();
-        $solicitante = $orden->solicitante;
-
-        $correoDir = null;
-        $correoSolicitante = Optional($solicitante)->correo_institucional;
-
-        if ($correoDir) {
-            $mail = Mail::to($correoDir);
-            if ($correoSolicitante) {
+        $destinatario = $correoCoord ?: $correoSolicitante;
+        if ($destinatario) {
+            $mail = Mail::to($destinatario);
+            if ($correoCoord && $correoSolicitante && $correoCoord !== $correoSolicitante) {
                 $mail->cc($correoSolicitante);
             }
-            $mail->send(new SendOrdenCompraVehicle($orden));
-        } else {
-            if ($correoSolicitante) {
-                $mail = Mail::to($correoSolicitante);
-                $mail->send(new SendOrdenCompraVehicle($orden));
-            }
+            $mail->send(new SendOrdenCompraVehicle($orden, 'revision'));
         }
-        return $this->respond(true, 'Orden de servicio enviada correctamente.');
+
+        return $this->respond(true, 'Orden enviada a revisión correctamente.');
+    }
+
+    /**
+     * Envía correo de notificación a Coordinación de Compras cuando el solicitante solventa y actualiza una orden que estaba "A Corregir".
+     */
+    public function mailSolicitudCorregida(int $ordenId)
+    {
+        $orden = VehiclesOrdenesServicio::with(self::ORDEN_RELATIONS)->findOrFail($ordenId);
+        $coordCompras = $this->getOneEmpleadoxPuesto('Coordinador de compras');
+        // $correoCoord = optional($coordCompras)->correo_institucional;
+        $correoCoord = null;
+        $correoSolicitante = optional($orden->solicitante)->correo_institucional;
+
+        $destinatario = $correoCoord ?: $correoSolicitante;
+        if ($destinatario) {
+            $mail = Mail::to($destinatario);
+            if ($correoCoord && $correoSolicitante && $correoCoord !== $correoSolicitante) {
+                $mail->cc($correoSolicitante);
+            }
+            $mail->send(new SendOrdenCompraVehicle($orden, 'corregida'));
+        }
+
+        return $this->respond(true, 'Orden corregida enviada a revisión correctamente.');
+    }
+
+    /**
+     * Envía correo de notificación al Director Administrativo cuando la Coordinación de Compras aprueba la revisión (pasa a Solicitado).
+     */
+    public function mailOrdenParaAutorizacion(int $ordenId, ?string $comentarios = null)
+    {
+        $orden = VehiclesOrdenesServicio::with(self::ORDEN_RELATIONS)->findOrFail($ordenId);
+        $dirAdmin = $this->getOneEmpleadoxPuesto('Director administrativo');
+        $coordCompras = $this->getOneEmpleadoxPuesto('Coordinador de compras');
+        // $correoDir = optional($dirAdmin)->correo_institucional;
+        $correoDir = null;
+        // $correoCoord = optional($coordCompras)->correo_institucional;
+        $correoCoord = null;
+        $correoSolicitante = optional($orden->solicitante)->correo_institucional;
+
+        $destinatario = $correoDir ?: ($correoCoord ?: $correoSolicitante);
+        if ($destinatario) {
+            $mail = Mail::to($destinatario);
+            if ($correoDir && $correoCoord) {
+                $mail->cc($correoCoord);
+            }
+            if ($correoDir && $correoSolicitante) {
+                $mail->cc($correoSolicitante);
+            }
+            $mail->send(new SendOrdenCompraVehicle($orden, 'solicitado', $comentarios));
+        }
+
+        return $this->respond(true, 'Notificación de orden lista para autorización enviada correctamente.');
+    }
+
+    /**
+     * Envía correo al Solicitante cuando la Coordinación de Compras manda la orden "A Corregir" con motivo obligatorio.
+     */
+    public function mailOrdenCorreccion(int $ordenId, string $comentarios)
+    {
+        $orden = VehiclesOrdenesServicio::with(self::ORDEN_RELATIONS)->findOrFail($ordenId);
+        $coordCompras = $this->getOneEmpleadoxPuesto('Coordinador de compras');
+        // $correoCoord = optional($coordCompras)->correo_institucional;
+        $correoCoord = null;
+        $correoSolicitante = optional($orden->solicitante)->correo_institucional;
+
+        $destinatario = $correoSolicitante ?: $correoCoord;
+        if ($destinatario) {
+            $mail = Mail::to($destinatario);
+            if ($correoSolicitante && $correoCoord) {
+                $mail->cc($correoCoord);
+            }
+            $mail->send(new SendOrdenCompraVehicle($orden, 'correccion', $comentarios));
+        }
+
+        return $this->respond(true, 'Notificación de corrección enviada correctamente.');
+    }
+
+    /**
+     * Envía correo al Solicitante cuando la Coordinación de Compras rechaza la orden durante la etapa de revisión.
+     */
+    public function mailOrdenRechazoRevision(int $ordenId, string $comentarios)
+    {
+        $orden = VehiclesOrdenesServicio::with(self::ORDEN_RELATIONS)->findOrFail($ordenId);
+        $coordCompras = $this->getOneEmpleadoxPuesto('Coordinador de compras');
+        // $correoCoord = optional($coordCompras)->correo_institucional;
+        $correoCoord = null;
+        $correoSolicitante = optional($orden->solicitante)->correo_institucional;
+
+        $destinatario = $correoSolicitante ?: $correoCoord;
+        if ($destinatario) {
+            $mail = Mail::to($destinatario);
+            if ($correoSolicitante && $correoCoord) {
+                $mail->cc($correoCoord);
+            }
+            $mail->send(new SendOrdenCompraVehicle($orden, 'rechazo_revision', $comentarios));
+        }
+
+        return $this->respond(true, 'Notificación de rechazo en revisión enviada correctamente.');
     }
 
     /**
@@ -1055,52 +1273,36 @@ class OCServiceVehicleController extends ApiController
         $correoSolicitante = optional($solicitante)->correo_institucional;
         $mailable = new SendOrdenAutorizacion($ordenPrincipal, $ordenesCargadas);
 
+        $dirAdmin = $this->getOneEmpleadoxPuesto('Director administrativo');
+        $coordCompras = $this->getOneEmpleadoxPuesto('Coordinador de compras');
+        // $correoDir = optional($dirAdmin)->correo_institucional;
+        $correoDir = null;
+        // $correoCoord = optional($coordCompras)->correo_institucional;
+        $correoCoord = null;
+
         if (!$aut) {
-            if ($correoSolicitante) {
-                Mail::to($correoSolicitante)->send($mailable);
-            }
-        } else {
-            $dirAdmin = Empleado::whereHas('puesto', function ($q) {
-                $q->where('nombre', 'Director Administrativo');
-            })->whereHas('estatus', function ($q) {
-                $q->where('nombre', 'Activo');
-            })->first();
-
-            $coordCompras = Empleado::whereHas('puesto', function ($q) {
-                $q->where('nombre', 'Coordinador de compras');
-            })->whereHas('estatus', function ($q) {
-                $q->where('nombre', 'Activo');
-            })->first();
-
-            $correoDir = null; // Mantener null según entorno actual
-            // $correoCoord = optional($coordCompras)->correo_institucional;
-            $correoCoord = null;
-
-            if ($correoDir) {
-                $mail = Mail::to($correoDir);
-                if ($correoSolicitante) {
-                    $mail->cc($correoSolicitante);
-                }
-                if ($correoCoord) {
+            $destinatario = $correoSolicitante ?: $correoCoord;
+            if ($destinatario) {
+                $mail = Mail::to($destinatario);
+                if ($correoSolicitante && $correoCoord && $correoCoord !== $correoSolicitante) {
                     $mail->cc($correoCoord);
                 }
                 $mail->send($mailable);
-            } elseif ($correoCoord) {
-                $mail = Mail::to($correoCoord);
-                if ($correoSolicitante) {
-                    $mail->cc($correoSolicitante);
+            }
+        } else {
+            $destinatario = $correoSolicitante ?: ($correoCoord ?: $correoDir);
+            if ($destinatario) {
+                $mail = Mail::to($destinatario);
+                if ($correoSolicitante && $correoCoord && $correoCoord !== $correoSolicitante) {
+                    $mail->cc($correoCoord);
+                }
+                if ($correoDir && $correoDir !== $correoSolicitante) {
+                    $mail->cc($correoDir);
                 }
                 $mail->send($mailable);
-            } elseif ($correoSolicitante) {
-                Mail::to($correoSolicitante)->send($mailable);
             }
         }
 
         return $this->respond(true, 'Autorización enviada correctamente.');
-    }
-
-    public function mailOrdenAutorizacion(int $ordenId, bool $aut)
-    {
-        return $this->mailOrdenesAutorizadas([$ordenId], $aut);
     }
 }

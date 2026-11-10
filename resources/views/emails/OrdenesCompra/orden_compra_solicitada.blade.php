@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitud de Orden de Compra #{{ $orden->id }}</title>
+    <title>Orden de Compra #{{ $orden->id }}</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
@@ -17,7 +17,7 @@
         }
 
         .container {
-            max-width: 760px;
+            max-width: 780px;
             margin: 0 auto;
             background-color: #ffffff;
             border-radius: 10px;
@@ -33,6 +33,18 @@
             text-align: left;
         }
 
+        .header.header-revision {
+            background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%);
+        }
+
+        .header.header-correccion {
+            background: linear-gradient(135deg, #9f1239 0%, #e11d48 100%);
+        }
+
+        .header.header-rechazo {
+            background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+        }
+
         .header h1 {
             margin: 0 0 6px 0;
             font-size: 22px;
@@ -43,12 +55,13 @@
         .header p {
             margin: 0;
             font-size: 14px;
-            color: #bae6fd;
+            color: #f8fafc;
+            opacity: 0.95;
         }
 
         .badge-folio {
             display: inline-block;
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.22);
             padding: 4px 10px;
             border-radius: 6px;
             font-size: 13px;
@@ -228,6 +241,26 @@
             margin-top: 2px;
         }
 
+        .badge-valido {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .badge-vigente {
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .badge-caducada {
+            background-color: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
         .text-center {
             text-align: center;
         }
@@ -270,6 +303,9 @@
 
 <body>
     @php
+        $tipo = $tipo ?? 'solicitado';
+        $comentarios = $comentarios ?? null;
+
         $kmEvento = $orden->detalles?->firstWhere('km_evento', '!=', null)?->km_evento 
             ?? $orden->detalles?->max('km_evento');
 
@@ -281,21 +317,96 @@
             $rin = $d->llanta_rin ?? '';
             return "{$srvId}_{$desc}_{$anchura}_{$altura}_{$rin}";
         }) : collect();
+
+        // Configuración de textos por tipo de notificación
+        $headerClass = '';
+        $tituloEncabezado = 'Nueva Solicitud de Orden de Compra';
+        $subtituloEncabezado = 'Se ha registrado una nueva orden de servicio con cotizaciones comparativas para su revisión y autorización.';
+        $estatusLabel = $orden->estatus?->nombre ?? 'En Proceso';
+
+        switch ($tipo) {
+            case 'revision':
+                $headerClass = 'header-revision';
+                $tituloEncabezado = 'Nueva Solicitud de Orden de Compra para Revisión';
+                $subtituloEncabezado = 'Se ha registrado una nueva orden de compra para servicio de unidad y requiere su revisión en Coordinación de Compras.';
+                $estatusLabel = 'En Revisión';
+                break;
+            case 'corregida':
+                $headerClass = 'header-revision';
+                $tituloEncabezado = 'Orden de Compra Corregida para Revisión';
+                $subtituloEncabezado = 'El solicitante ha actualizado los datos y/o cotizaciones de la orden de compra y se encuentra nuevamente lista para su revisión en Coordinación de Compras.';
+                $estatusLabel = 'En Revisión (Corregida)';
+                break;
+            case 'correccion':
+                $headerClass = 'header-correccion';
+                $tituloEncabezado = 'Orden de Compra Requiere Corrección';
+                $subtituloEncabezado = 'La Coordinación de Compras ha revisado la orden de compra y solicita correcciones antes de proceder con su autorización.';
+                $estatusLabel = 'A Corregir';
+                break;
+            case 'rechazo_revision':
+                $headerClass = 'header-rechazo';
+                $tituloEncabezado = 'Orden de Compra No Aprobada en Revisión';
+                $subtituloEncabezado = 'La Coordinación de Compras ha determinado no aprobar la orden de compra en su etapa de revisión.';
+                $estatusLabel = 'No Autorizado (Rechazado en Revisión)';
+                break;
+            case 'solicitado':
+            default:
+                $headerClass = '';
+                $tituloEncabezado = 'Solicitud de Orden de Compra para Autorización';
+                $subtituloEncabezado = 'La Coordinación de Compras ha revisado y pre-autorizado la orden de compra. Se encuentra lista para su autorización definitiva por la Dirección Administrativa.';
+                $estatusLabel = 'Solicitado (Pendiente de Autorización)';
+                break;
+        }
     @endphp
 
     <div class="container">
         <!-- Encabezado -->
-        <div class="header">
-            <h1>Nueva Solicitud de Orden de Compra</h1>
-            <p>Se ha registrado una nueva orden de servicio con cotizaciones comparativas para su revisión y autorización.</p>
+        <div class="header {{ $headerClass }}">
+            <h1>{{ $tituloEncabezado }}</h1>
+            <p>{{ $subtituloEncabezado }}</p>
             <div class="badge-folio">
-                Orden #{{ $orden->id }} &bull; Unidad: {{ $orden->vehicle?->placas ?? 'S/P' }} &bull; Estatus: Solicitado
+                Orden #{{ $orden->id }} &bull; Unidad: {{ $orden->vehicle?->placas ?? 'S/P' }} &bull; Estatus: {{ $estatusLabel }}
             </div>
         </div>
 
         <div class="content">
+            <!-- Llamado de Comentarios u Observaciones si existen -->
+            @if(!empty($comentarios))
+                @if($tipo === 'correccion')
+                    <div style="background-color: #fff1f2; border: 1px solid #fecdd3; border-left: 5px solid #e11d48; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;">
+                        <div style="font-size: 13px; font-weight: 700; color: #9f1239; margin-bottom: 6px; text-transform: uppercase;">
+                            ⚠️ Observaciones y Motivo de Corrección (Coordinación de Compras):
+                        </div>
+                        <div style="font-size: 14px; color: #881337; line-height: 1.5; font-weight: 600;">
+                            {{ $comentarios }}
+                        </div>
+                        <div style="font-size: 12px; color: #9f1239; margin-top: 8px;">
+                            Por favor ingresa al sistema corporativo, realiza las modificaciones indicadas en la orden y guárdala para que pase nuevamente a revisión.
+                        </div>
+                    </div>
+                @elseif($tipo === 'rechazo_revision')
+                    <div style="background-color: #fef2f2; border: 1px solid #fee2e2; border-left: 5px solid #dc2626; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;">
+                        <div style="font-size: 13px; font-weight: 700; color: #991b1b; margin-bottom: 6px; text-transform: uppercase;">
+                            ❌ Motivo del Rechazo en Revisión (Coordinación de Compras):
+                        </div>
+                        <div style="font-size: 14px; color: #7f1d1d; line-height: 1.5; font-weight: 600;">
+                            {{ $comentarios }}
+                        </div>
+                    </div>
+                @elseif($tipo === 'solicitado')
+                    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;">
+                        <div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 6px; text-transform: uppercase;">
+                            ✅ Observaciones de Pre-autorización (Coordinación de Compras):
+                        </div>
+                        <div style="font-size: 14px; color: #14532d; line-height: 1.5; font-weight: 600;">
+                            {{ $comentarios }}
+                        </div>
+                    </div>
+                @endif
+            @endif
+
             <p class="intro">
-                Estimado(a), se ha generado una nueva solicitud de compra/servicio en el sistema. A continuación se presentan los datos de la unidad y el desglose de los conceptos con sus cotizaciones comparativas:
+                Estimado(a), a continuación se presentan los datos de la unidad vehicular y el desglose de los conceptos solicitados con sus cotizaciones comparativas:
             </p>
 
             <!-- Datos de la Unidad / Vehículo -->
@@ -417,20 +528,29 @@
                     <table class="quotes-table">
                         <thead>
                             <tr>
-                                <th width="10%">Opción</th>
-                                <th width="30%">Proveedor / Taller</th>
-                                <th width="7%" class="text-center">Cant.</th>
-                                <th width="12%" class="text-right">P. Unitario</th>
-                                <th width="12%" class="text-right">Subtotal</th>
-                                <th width="12%" class="text-right">IVA</th>
-                                <th width="17%" class="text-right">Total</th>
+                                <th width="8%">Opción</th>
+                                <th width="28%">Proveedor / Taller</th>
+                                <th width="14%">Válido Hasta</th>
+                                <th width="6%" class="text-center">Cant.</th>
+                                <th width="11%" class="text-right">P. Unitario</th>
+                                <th width="11%" class="text-right">Subtotal</th>
+                                <th width="10%" class="text-right">IVA</th>
+                                <th width="12%" class="text-right">Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($grupo as $qIdx => $cot)
+                                @php
+                                    $isVigente = true;
+                                    $validoHastaFormatted = null;
+                                    if (!empty($cot->valido_hasta)) {
+                                        $validoHastaFormatted = \Carbon\Carbon::parse($cot->valido_hasta)->format('d/m/Y');
+                                        $isVigente = \Carbon\Carbon::parse($cot->valido_hasta)->endOfDay()->isFuture();
+                                    }
+                                @endphp
                                 <tr>
                                     <td>
-                                        <span class="badge-quote-num">Opción #{{ $qIdx + 1 }}</span>
+                                        <span class="badge-quote-num">#{{ $qIdx + 1 }}</span>
                                     </td>
                                     <td>
                                         <strong>{{ $cot->proveedor?->nombre ?? 'Sin proveedor' }}</strong>
@@ -445,6 +565,15 @@
                                                 <span class="fiscal-badge" title="Uso CFDI">Uso: {{ $cot->usoCfdi->clave }}</span>
                                             @endif
                                         </div>
+                                    </td>
+                                    <td>
+                                        @if($validoHastaFormatted)
+                                            <span class="badge-valido {{ $isVigente ? 'badge-vigente' : 'badge-caducada' }}">
+                                                {{ $validoHastaFormatted }} ({{ $isVigente ? 'Vigente' : 'Caducada' }})
+                                            </span>
+                                        @else
+                                            <span style="color: #94a3b8; font-size: 11px;">No especificado</span>
+                                        @endif
                                     </td>
                                     <td class="text-center font-mono">{{ $cot->cantidad ?? 1 }}</td>
                                     <td class="text-right">
@@ -468,9 +597,17 @@
 
             <!-- Banner Informativo del Estado de la Orden -->
             <div class="status-callout">
-                <strong>Estatus actual:</strong> Pendiente de Autorización.<br>
+                <strong>Estatus actual:</strong> {{ $estatusLabel }}.<br>
                 <span style="font-size: 12px;">
-                    El monto definitivo y el/los proveedores asignados se confirmarán al momento de la autorización en el sistema. Si se seleccionan cotizaciones de distintos proveedores, el sistema generará automáticamente las órdenes de compra independientes correspondientes bajo el mismo folio de autorización.
+                    @if($tipo === 'revision' || $tipo === 'corregida')
+                        La orden se encuentra en revisión por Coordinación de Compras. Una vez verificada, pasará a pre-autorización para su autorización final por la Dirección Administrativa.
+                    @elseif($tipo === 'correccion')
+                        La orden requiere modificaciones por parte del solicitante antes de poder ser autorizada.
+                    @elseif($tipo === 'rechazo_revision')
+                        La orden no fue aprobada en su proceso de revisión.
+                    @else
+                        El monto definitivo y el/los proveedores asignados se confirmarán al momento de la autorización final en el sistema por la Dirección Administrativa.
+                    @endif
                 </span>
             </div>
 

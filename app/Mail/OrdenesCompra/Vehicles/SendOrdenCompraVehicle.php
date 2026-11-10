@@ -17,13 +17,21 @@ class SendOrdenCompraVehicle extends Mailable
     use Queueable, SerializesModels;
 
     public $orden;
+    public string $tipo;
+    public ?string $comentarios;
 
     /**
      * Create a new message instance.
+     *
+     * @param mixed $orden
+     * @param string $tipo 'revision' | 'solicitado' | 'correccion' | 'rechazo_revision' | 'corregida'
+     * @param string|null $comentarios
      */
-    public function __construct($orden)
+    public function __construct($orden, string $tipo = 'solicitado', ?string $comentarios = null)
     {
         $this->orden = $orden;
+        $this->tipo = $tipo;
+        $this->comentarios = $comentarios;
     }
 
     /**
@@ -32,8 +40,19 @@ class SendOrdenCompraVehicle extends Mailable
     public function envelope(): Envelope
     {
         $placas = $this->orden->vehicle?->placas ?? 'S/P';
+        $folio = $this->orden->id ?? '';
+
+        $subject = match ($this->tipo) {
+            'revision' => "Nueva Solicitud de Orden de Compra para Revisión #{$folio} - {$placas}",
+            'corregida' => "Orden de Compra Corregida para Revisión #{$folio} - {$placas}",
+            'correccion' => "Orden de Compra Requiere Corrección #{$folio} - {$placas}",
+            'rechazo_revision' => "Orden de Compra No Aprobada en Revisión #{$folio} - {$placas}",
+            'solicitado' => "Solicitud de Orden de Compra para Autorización #{$folio} - {$placas}",
+            default => "Solicitud de Orden de Compra #{$folio} - {$placas}",
+        };
+
         return new Envelope(
-            subject: 'Solicitud de Orden de Compra #' . ($this->orden->id ?? '') . ' - ' . $placas,
+            subject: $subject,
         );
     }
 
@@ -44,6 +63,11 @@ class SendOrdenCompraVehicle extends Mailable
     {
         return new Content(
             view: 'emails.OrdenesCompra.orden_compra_solicitada',
+            with: [
+                'orden' => $this->orden,
+                'tipo' => $this->tipo,
+                'comentarios' => $this->comentarios,
+            ],
         );
     }
 
