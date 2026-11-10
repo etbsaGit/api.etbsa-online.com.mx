@@ -744,13 +744,6 @@ class OCServiceVehicleController extends ApiController
                 return $this->respondNotFound('Orden de compra no encontrada.');
             }
 
-            $estatusActualNombre = mb_strtolower(trim($orden->estatus?->nombre ?? ''));
-            if ($data['autorizado'] && ($estatusActualNombre === 'en revisión' || $estatusActualNombre === 'en revision')) {
-                return response()->json([
-                    'message' => 'Esta orden de compra se encuentra en estatus "En Revisión". Debe ser revisada y pre-autorizada por la Coordinación de Compras antes de la autorización final.'
-                ], 422);
-            }
-
             $estatusAutorizado = $this->getEstatusDB('Autorizado', 'servicio-unidad');
             $estatusNoAutorizado = $this->getEstatusDB('No Autorizado', 'servicio-unidad');
 
