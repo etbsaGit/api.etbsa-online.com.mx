@@ -398,6 +398,90 @@ class OCGasolinaVehicleController extends ApiController
     }
 
     /**
+     * Autorizar múltiples solicitudes de dispersión de gasolina de golpe.
+     */
+    public function autorizarMasivo(Request $request)
+    {
+        $data = $request->validate([
+            'solicitudes' => ['required', 'array', 'min:1'],
+            'solicitudes.*.id' => ['required', 'integer', 'exists:vehicles_dispersion_gasolina,id'],
+            'solicitudes.*.lts_dispersados' => ['nullable', 'integer', 'min:1'],
+            'comentarios' => ['nullable', 'string'],
+        ], [
+            'solicitudes.required' => 'Debe seleccionar al menos una solicitud.',
+            'solicitudes.min' => 'Debe seleccionar al menos una solicitud.',
+            'solicitudes.*.id.exists' => 'Una o más solicitudes no existen en el sistema.',
+        ]);
+
+        $estatus = Estatus::where('nombre', 'Por dispersar')->where('tipo_estatus', 'servicio-unidad')->first();
+        if (!$estatus) {
+            return response()->json([
+                'message' => 'No se encontró el estatus "Por dispersar" para servicio-unidad.'
+            ], 500);
+        }
+
+        $estatusSolicitado = Estatus::where('nombre', 'Solicitado')->where('tipo_estatus', 'servicio-unidad')->first();
+        $solicitadoId = $estatusSolicitado ? (int) $estatusSolicitado->id : null;
+
+        $estatusId = $estatus->id;
+        $comentarioGeneral = !empty($data['comentarios']) ? trim($data['comentarios']) : null;
+        $successIds = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($data['solicitudes'] as $item) {
+                $dispersion = VehiclesDispersionGasolina::find($item['id']);
+                if (!$dispersion) {
+                    continue;
+                }
+
+                // Sólo autorizar solicitudes que estén en estatus Solicitado
+                if ($solicitadoId && (int) $dispersion->estatus_id !== $solicitadoId) {
+                    continue;
+                }
+
+                $ltsDispersados = isset($item['lts_dispersados']) && (int) $item['lts_dispersados'] > 0
+                    ? (int) $item['lts_dispersados']
+                    : (int) ($dispersion->lts_solicitados ?? 0);
+
+                $dispersion->update([
+                    'estatus_id' => $estatusId,
+                    'lts_dispersados' => $ltsDispersados,
+                ]);
+
+                $comentarioBitacora = $comentarioGeneral
+                    ?: "Solicitud autorizada de forma masiva ({$ltsDispersados} Lts autorizados para dispersión)";
+
+                $this->insertBitacora($dispersion->id, $estatusId, $comentarioBitacora);
+                $successIds[] = $dispersion->id;
+            }
+
+            DB::commit();
+
+            // Despachar correos de notificación en background
+            foreach ($successIds as $dispId) {
+                dispatch(function () use ($dispId) {
+                    try {
+                        $this->mailDispersionAutorizacion($dispId, true);
+                    } catch (\Throwable $e) {
+                        \Log::error("Error enviando correo de autorización masiva de gasolina #{$dispId}: " . $e->getMessage());
+                    }
+                })->afterResponse();
+            }
+
+            return $this->respond(
+                ['ids_autorizados' => $successIds],
+                count($successIds) . ' solicitud(es) de gasolina autorizada(s) correctamente.'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al procesar autorizaciones masivas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Marcar solicitud como dispersada (Coordinación de Compras).
      */
     public function marcarDispersada(int $id)

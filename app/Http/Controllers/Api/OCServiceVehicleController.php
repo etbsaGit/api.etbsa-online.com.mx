@@ -610,7 +610,7 @@ class OCServiceVehicleController extends ApiController
      */
     public function getOneEmpleadoxPuesto(string $puesto)
     {
-        $empleado = Empleado::whereHas('puesto', function ($q) {
+        $empleado = Empleado::whereHas('puesto', function ($q) use ($puesto) {
             $q->where('nombre', $puesto);
         })->whereHas('estatus', function ($q) {
             $q->where('nombre', 'Activo');
