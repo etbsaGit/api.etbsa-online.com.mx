@@ -79,25 +79,7 @@ class VehiclesDispersionGasolina extends Model
         if (!empty($filters['search'])) {
             $search = trim($filters['search']);
             $query->where(function (Builder $q) use ($search) {
-                $q->where('id', 'LIKE', "%{$search}%")
-                    ->orWhere('notas', 'LIKE', "%{$search}%")
-                    ->orWhere('km_evento', 'LIKE', "%{$search}%")
-                    ->orWhereHas('vehicle', function (Builder $vq) use ($search) {
-                        $vq->where('placas', 'LIKE', "%{$search}%")
-                            ->orWhere('serie', 'LIKE', "%{$search}%");
-                    })
-                    ->orWhereHas('solicitante', function (Builder $sq) use ($search) {
-                        $sq->where('nombre', 'LIKE', "%{$search}%")
-                            ->orWhere('segundo_nombre', 'LIKE', "%{$search}%")
-                            ->orWhere('apellido_paterno', 'LIKE', "%{$search}%")
-                            ->orWhere('apellido_materno', 'LIKE', "%{$search}%");
-                    })
-                    ->orWhereHas('sucursalCargo', function (Builder $sucQ) use ($search) {
-                        $sucQ->where('nombre', 'LIKE', "%{$search}%");
-                    })
-                    ->orWhereHas('departamentoCargo', function (Builder $depQ) use ($search) {
-                        $depQ->where('nombre', 'LIKE', "%{$search}%");
-                    });
+                $q->where('id', 'LIKE', "%{$search}%");
             });
         }
 

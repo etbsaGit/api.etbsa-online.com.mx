@@ -18,6 +18,9 @@ use App\Http\Requests\OrdenCompra\Vehicle\OCGasolinaVehicleRequest;
 use App\Mail\OrdenesCompra\Vehicles\SendGasAutorizacion;
 use App\Mail\OrdenesCompra\Vehicles\SendGasDispersada;
 use App\Mail\OrdenesCompra\Vehicles\SendGasSolicitud;
+use App\Models\User;
+use App\Services\NotificationService;
+use Illuminate\Support\Facades\Auth;
 
 class OCGasolinaVehicleController extends ApiController
 {
@@ -213,6 +216,7 @@ class OCGasolinaVehicleController extends ApiController
             dispatch(function () use ($dispersionId) {
                 try {
                     $this->mailSolicitudGasolina($dispersionId);
+                    $this->sendPushNotificacionSolicitud($dispersionId);
                 } catch (\Throwable $e) {
                     \Log::error("Error enviando correo de gasolina para solicitud #{$dispersionId}: " . $e->getMessage());
                 }
@@ -320,13 +324,13 @@ class OCGasolinaVehicleController extends ApiController
             'dispersion_id' => ['required', 'integer', 'exists:vehicles_dispersion_gasolina,id'],
             'autorizado' => ['required', 'boolean'],
             'lts_dispersados' => [
-                Rule::requiredIf(fn () => filter_var($request->input('autorizado'), FILTER_VALIDATE_BOOLEAN) === true),
+                Rule::requiredIf(fn() => filter_var($request->input('autorizado'), FILTER_VALIDATE_BOOLEAN) === true),
                 'nullable',
                 'integer',
                 'min:1',
             ],
             'comentarios' => [
-                Rule::requiredIf(fn () => filter_var($request->input('autorizado'), FILTER_VALIDATE_BOOLEAN) === false),
+                Rule::requiredIf(fn() => filter_var($request->input('autorizado'), FILTER_VALIDATE_BOOLEAN) === false),
                 'nullable',
                 'string',
             ],
@@ -375,6 +379,10 @@ class OCGasolinaVehicleController extends ApiController
             dispatch(function () use ($dispersionId, $autorizado) {
                 try {
                     $this->mailDispersionAutorizacion($dispersionId, $autorizado);
+                    $this->sendPushNotificacionAutorizacion($dispersionId);
+                    if ($autorizado === true) {
+                        $this->sendPushNotificacionToCC($dispersionId);
+                    }
                 } catch (\Throwable $e) {
                     \Log::error("Error enviando correo de autorización de gasolina #{$dispersionId}: " . $e->getMessage());
                 }
@@ -463,6 +471,7 @@ class OCGasolinaVehicleController extends ApiController
                 dispatch(function () use ($dispId) {
                     try {
                         $this->mailDispersionAutorizacion($dispId, true);
+                        $this->sendPushNotificacionAutorizacion($dispId);
                     } catch (\Throwable $e) {
                         \Log::error("Error enviando correo de autorización masiva de gasolina #{$dispId}: " . $e->getMessage());
                     }
@@ -503,6 +512,7 @@ class OCGasolinaVehicleController extends ApiController
             dispatch(function () use ($dispersionId) {
                 try {
                     $this->mailGasolinaDispersada($dispersionId);
+                    $this->sendPushNotificacionDispersada($dispersionId);
                 } catch (\Throwable $e) {
                     \Log::error("Error enviando correo de gasolina dispersada #{$dispersionId}: " . $e->getMessage());
                 }
@@ -533,20 +543,20 @@ class OCGasolinaVehicleController extends ApiController
 
         $maxKmsGasolina = $vehicles->isNotEmpty()
             ? DB::table('vehicles_dispersion_gasolina')
-                ->whereIn('vehicle_id', $vehicleIds)
-                ->whereNotNull('km_evento')
-                ->groupBy('vehicle_id')
-                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
-                ->pluck('ultimo_km', 'vehicle_id')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->whereNotNull('km_evento')
+            ->groupBy('vehicle_id')
+            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id')
             : collect();
 
         $maxKmsServicios = $vehicles->isNotEmpty()
             ? DB::table('vehicles_detalles_servicio')
-                ->whereIn('vehicle_id', $vehicleIds)
-                ->whereNotNull('km_evento')
-                ->groupBy('vehicle_id')
-                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
-                ->pluck('ultimo_km', 'vehicle_id')
+            ->whereIn('vehicle_id', $vehicleIds)
+            ->whereNotNull('km_evento')
+            ->groupBy('vehicle_id')
+            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+            ->pluck('ultimo_km', 'vehicle_id')
             : collect();
 
         $vehicles->each(function ($v) use ($maxKmsGasolina, $maxKmsServicios) {
@@ -623,23 +633,39 @@ class OCGasolinaVehicleController extends ApiController
         })->whereHas('estatus', function ($q) {
             $q->where('nombre', 'Activo');
         })->first();
+        $coordCompras = Empleado::whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Coordinador de compras');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
         $solicitante = $orden->solicitante;
 
-        // $correoDir = optional($dirAdmin)->correo_institucional;
-        $correoDir = null;
+        $correoDir = optional($dirAdmin)->correo_institucional;
+        // $correoDir = null;
+        $correoCoord = optional($coordCompras)->correo_institucional;
+        // $correoCoord = null;
         $correoSolicitante = optional($solicitante)->correo_institucional;
 
         if ($correoDir) {
             $mail = Mail::to($correoDir);
-            if ($correoSolicitante) {
-                $mail->cc($correoSolicitante);
+            $cc = collect([$correoSolicitante, $correoCoord])
+                ->filter()
+                ->reject(fn($email) => $email === $correoDir)
+                ->unique()
+                ->values()
+                ->all();
+            if (!empty($cc)) {
+                $mail->cc($cc);
             }
             $mail->send(new SendGasSolicitud($orden));
-        } else {
-            if ($correoSolicitante) {
-                $mail = Mail::to($correoSolicitante);
-                $mail->send(new SendGasSolicitud($orden));
+        } elseif ($correoSolicitante) {
+            $mail = Mail::to($correoSolicitante);
+            if ($correoCoord && $correoCoord !== $correoSolicitante) {
+                $mail->cc($correoCoord);
             }
+            $mail->send(new SendGasSolicitud($orden));
+        } elseif ($correoCoord) {
+            Mail::to($correoCoord)->send(new SendGasSolicitud($orden));
         }
         return $this->respond(true, 'Solicitud de gasolina enviada correctamente.');
     }
@@ -668,10 +694,10 @@ class OCGasolinaVehicleController extends ApiController
                 $q->where('nombre', 'Activo');
             })->first();
 
-            // $correoDir = optional($dirAdmin)->correo_institucional;
-            $correoDir = null;
-            // $correoCoord = optional($coordCompras)->correo_institucional;
-            $correoCoord = null;
+            $correoDir = optional($dirAdmin)->correo_institucional;
+            // $correoDir = null;
+            $correoCoord = optional($coordCompras)->correo_institucional;
+            // $correoCoord = null;
 
             if ($correoDir) {
                 $mail = Mail::to($correoDir);
@@ -711,5 +737,129 @@ class OCGasolinaVehicleController extends ApiController
         }
 
         return $this->respond(true, 'Notificación de dispersión enviada al solicitante correctamente.');
+    }
+
+    public function sendPushNotificacionSolicitud($dispersionId)
+    {
+        $dispersion = VehiclesDispersionGasolina::findOrFail($dispersionId);
+
+        $dirAdmin = Empleado::with('user')->whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Director Administrativo');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+
+        $coordCompras = Empleado::with('user')->whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Coordinador de compras');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+
+        $users = collect([
+            $dirAdmin?->user,
+            $coordCompras?->user,
+        ])->filter()->unique('id');
+
+        if ($users->isEmpty()) {
+            return;
+        }
+
+        $createdBy = $dispersion->solicitante?->user?->id;
+
+        NotificationService::sendMany(
+            users: $users,
+            payload: [
+                'created_by' => $createdBy,
+                'module' => 'gasolina',
+                'type' => 'gasolina',
+                'title' => 'Nueva solicitud de gasolina',
+                'body' => "Se ha generado una nueva solicitud de dispersión de gasolina.",
+                'data' => [
+                    'type' => 'gasolina',
+                    'resource' => $dispersion->id,
+                ],
+            ]
+        );
+    }
+
+    public function sendPushNotificacionAutorizacion($dispersionId)
+    {
+        $dispersion = VehiclesDispersionGasolina::findOrFail($dispersionId);
+        $solicitante = $dispersion->solicitante?->user;
+        if (!$solicitante) {
+            return;
+        }
+
+        $userId = auth()->id() ?? $dispersion->registrado_por;
+        NotificationService::send(
+            user: $solicitante,
+            payload: [
+                'created_by' => $userId,
+                'module' => 'gasolina',
+                'type' => 'gasolina',
+                'title' => 'Actualización en el estatus de la Solicitud de Gasolina',
+                'body' => "Se ha actualizado el estatus de la solicitud de dispersión de gasolina. Ingresa para más información.",
+                'data' => [
+                    'type' => 'gasolina',
+                    'resource' => $dispersion->id,
+                ],
+            ]
+        );
+    }
+
+    public function sendPushNotificacionToCC($dispersionId)
+    {
+        $dispersion = VehiclesDispersionGasolina::findOrFail($dispersionId);
+        $userId = auth()->id() ?? $dispersion->registrado_por;
+        $coordCompras = Empleado::whereHas('puesto', function ($q) {
+            $q->where('nombre', 'Coordinador de compras');
+        })->whereHas('estatus', function ($q) {
+            $q->where('nombre', 'Activo');
+        })->first();
+
+        $coordUser = $coordCompras?->user;
+        if (!$coordUser) {
+            return;
+        }
+
+        NotificationService::send(
+            user: $coordUser,
+            payload: [
+                'created_by' => $userId,
+                'module' => 'gasolina',
+                'type' => 'gasolina',
+                'title' => 'Nueva Dispersión de Gasolina autorizada',
+                'body' => "Se ha autorizado una dispersión de gasolina. Ingresa para dar seguimiento a la dispersión.",
+                'data' => [
+                    'type' => 'gasolina',
+                    'resource' => $dispersion->id,
+                ],
+            ]
+        );
+    }
+
+    public function sendPushNotificacionDispersada($dispersionId)
+    {
+        $dispersion = VehiclesDispersionGasolina::findOrFail($dispersionId);
+        $userId = auth()->id() ?? $dispersion->registrado_por;
+        $solicitante = $dispersion->solicitante?->user;
+        if (!$solicitante) {
+            return;
+        }
+
+        NotificationService::send(
+            user: $solicitante,
+            payload: [
+                'created_by' => $userId,
+                'module' => 'gasolina',
+                'type' => 'gasolina',
+                'title' => 'Dispersión de gasolina autorizada',
+                'body' => "Se ha dispersado tu carga de gasolina. Ingresa para más detalles.",
+                'data' => [
+                    'type' => 'gasolina',
+                    'resource' => $dispersion->id,
+                ],
+            ]
+        );
     }
 }

@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\OCServiceVehicleController;
 use App\Http\Controllers\Api\OCGasolinaVehicleController;
 use App\Http\Controllers\Api\UsedDocController;
 use App\Http\Controllers\Api\VehicleController;
+use App\Http\Controllers\Api\VehicleCatalogoController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\ProspectController;
@@ -408,6 +409,10 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('vehicle/export-services/{vehicle}', [VehicleController::class, 'exportServices']);
     Route::put('vehicle/baja/{vehicle}', [VehicleController::class, 'baja']);
     Route::put('vehicle/activar/{vehicle}', [VehicleController::class, 'activar']);
+    Route::get('vehicle/catalogos/{tipo}', [VehicleCatalogoController::class, 'index']);
+    Route::post('vehicle/catalogos/{tipo}', [VehicleCatalogoController::class, 'store']);
+    Route::put('vehicle/catalogos/{tipo}/{id}', [VehicleCatalogoController::class, 'update']);
+    Route::delete('vehicle/catalogos/{tipo}/{id}', [VehicleCatalogoController::class, 'destroy']);
     Route::apiResource('vehicle', VehicleController::class);
 
     //--------------------EmpleadosContact--------------------
