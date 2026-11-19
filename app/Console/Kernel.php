@@ -42,6 +42,14 @@ class Kernel extends ConsoleKernel
             ->timezone('America/Mexico_City')
             ->withoutOverlapping(60)
             ->onOneServer();
+
+        // Genera solicitudes de dispersión de gasolina automáticas ya autorizadas cada lunes a las 8:00 AM
+        $schedule->command('gasolina:generar-dispersiones-automaticas')
+            ->thursdays()
+            ->at('08:00')
+            ->timezone('America/Mexico_City')
+            ->withoutOverlapping(60)
+            ->onOneServer();
     }
 
     /**

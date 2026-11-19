@@ -396,9 +396,15 @@
                 <div>
                     <span class="field-label">PROVEEDOR:</span>
                     <span class="field-value" style="font-weight: bold; font-size: 8.5px;">
-                        {{ $proveedor?->nombre ?: 'NO ASIGNADO' }}
+                        {{ $proveedor?->razon_social ?: ($proveedor?->nombre ?: 'NO ASIGNADO') }}
                     </span>
                 </div>
+                @if(!empty($proveedor?->rfc))
+                <div style="margin-top: 2px;">
+                    <span class="field-label">RFC:</span>
+                    <span class="field-value">{{ $proveedor->rfc }}</span>
+                </div>
+                @endif
                 <div style="margin-top: 3px;">
                     <span class="field-label">DOMICILIO:</span>
                     <span class="field-value">{{ $proveedor?->domicilio ?: '-' }}</span>

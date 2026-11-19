@@ -18,7 +18,7 @@ use App\Models\VehiclesOrdenesServicio;
 use App\Models\VehiclesDetallesServicio;
 use App\Models\VehiclesServiciosCat;
 use App\Models\VehiclesTipoServicio;
-use App\Models\VehiclesServicioProveedores;
+use App\Models\Proveedores;
 use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
 use App\Models\VehiclesOrdenesBitacora;
@@ -476,8 +476,8 @@ class OCServiceVehicleController extends ApiController
         $tipoCode = (str_contains($tipoNombre, 'refaccion') || str_contains($tipoNombre, 'refacción')) ? 'REF' : 'SER';
 
         // Obtener nombre del proveedor limpio
-        $proveedor = VehiclesServicioProveedores::find($proveedorId);
-        $provNombre = $proveedor ? Str::slug($proveedor->nombre, '_') : 'PROV_' . $proveedorId;
+        $proveedor = Proveedores::find($proveedorId);
+        $provNombre = $proveedor ? Str::slug($proveedor->razon_social ?? $proveedor->nombre, '_') : 'PROV_' . $proveedorId;
 
         $ocFolio = !empty($ordenCompra) ? $ordenCompra : (string) $ordenId;
         $fileName = "{$ocFolio}_{$tipoCode}_{$provNombre}_cotizacion{$cotizacionIndex}.pdf";
@@ -1039,7 +1039,7 @@ class OCServiceVehicleController extends ApiController
                 $q->where('nombre', 'Activo');
             })->orderBy('apellido_paterno', 'asc')
                 ->get()->each->setAppends(['nombreCompleto']),
-            'proveedores' => VehiclesServicioProveedores::orderBy('nombre', 'asc')->get(),
+            'proveedores' => Proveedores::orderBy('razon_social', 'asc')->get(),
             'tipos_servicio' => VehiclesTipoServicio::with('servicios')->where('nombre', '!=', 'Gasolina')
                 ->orderBy('nombre', 'asc')
                 ->get(),

@@ -553,7 +553,7 @@
                                         <span class="badge-quote-num">#{{ $qIdx + 1 }}</span>
                                     </td>
                                     <td>
-                                        <strong>{{ $cot->proveedor?->nombre ?? 'Sin proveedor' }}</strong>
+                                        <strong>{{ $cot->proveedor?->razon_social ?? ($cot->proveedor?->nombre ?? 'Sin proveedor') }}</strong>
                                         <div style="margin-top: 2px;">
                                             @if($cot->formaPago)
                                                 <span class="fiscal-badge" title="Forma de Pago">FP: {{ $cot->formaPago->clave }} - {{ $cot->formaPago->nombre }}</span>

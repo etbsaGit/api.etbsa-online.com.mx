@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\OCGasolinaVehicleController;
 use App\Http\Controllers\Api\UsedDocController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\VehicleCatalogoController;
+use App\Http\Controllers\Api\ProveedoresController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
 use App\Http\Controllers\Api\ProspectController;
@@ -461,10 +462,21 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::apiResource('service', OCServiceVehicleController::class);
     Route::apiResource('serviceArchive', ServiceArchiveController::class);
 
+    //--------------------Proveedores Autorizados--------------------
+    Route::post('proveedores', [ProveedoresController::class, 'index']);
+    Route::get('proveedor/forms', [ProveedoresController::class, 'getforms']);
+    Route::post('proveedor/check-rfc', [ProveedoresController::class, 'checkRfc']);
+    Route::post('proveedor/{id}/documento', [ProveedoresController::class, 'uploadDocumento']);
+    Route::put('proveedor-doc/{id}/status', [ProveedoresController::class, 'changeDocStatus']);
+    Route::delete('proveedor-doc/{id}', [ProveedoresController::class, 'deleteDocumento']);
+    Route::apiResource('proveedor', ProveedoresController::class);
+
     //--------------------OC Service Gasolina--------------------
     Route::post('gasolinas', [OCGasolinaVehicleController::class, 'index']);
     Route::post('gasolinas/auth', [OCGasolinaVehicleController::class, 'myIndex']);
     Route::get('gasolina/forms', [OCGasolinaVehicleController::class, 'getforms']);
+    Route::get('gasolina/automatica', [OCGasolinaVehicleController::class, 'getAutomaticas']);
+    Route::post('gasolina/automatica', [OCGasolinaVehicleController::class, 'saveAutomaticas']);
     Route::post('gasolina/{id}/cotizacion', [OCGasolinaVehicleController::class, 'uploadCotizacion']);
     Route::post('gasolina/autorizar', [OCGasolinaVehicleController::class, 'autorizarOrdenCompra']);
     Route::post('gasolina/autorizar-masivo', [OCGasolinaVehicleController::class, 'autorizarMasivo']);

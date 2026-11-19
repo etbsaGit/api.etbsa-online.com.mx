@@ -53,7 +53,7 @@ class VehiclesDetallesServicio extends Model
 
     public function proveedor()
     {
-        return $this->belongsTo(VehiclesServicioProveedores::class, 'proveedor_id');
+        return $this->belongsTo(Proveedores::class, 'proveedor_id');
     }
 
     public function formaPago()

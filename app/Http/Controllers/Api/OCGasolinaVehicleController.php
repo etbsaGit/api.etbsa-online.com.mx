@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\Vehicle;
 use App\Models\Empleado;
 use App\Models\Estatus;
+use App\Models\VehiclesDispersionAutomatica;
 use App\Models\VehiclesDispersionGasolina;
 use App\Models\VehiclesGasolinaBitacora;
 use App\Models\VehiclesSucCargoA;
@@ -203,6 +204,7 @@ class OCGasolinaVehicleController extends ApiController
                 'notas' => $validated['notas'] ?? 'Dispersión de gasolina para unidad',
                 'estatus_id' => $estatus_id,
                 'is_urgente' => (bool) ($validated['is_urgente'] ?? false),
+                'is_automatica' => false,
             ]);
 
             $bitacora = $this->insertBitacora($dispersion->id, $estatus_id, 'Solicitud de dispersión de gasolina creada');
@@ -640,10 +642,10 @@ class OCGasolinaVehicleController extends ApiController
         })->first();
         $solicitante = $orden->solicitante;
 
-        $correoDir = optional($dirAdmin)->correo_institucional;
-        // $correoDir = null;
-        $correoCoord = optional($coordCompras)->correo_institucional;
-        // $correoCoord = null;
+        // $correoDir = optional($dirAdmin)->correo_institucional;
+        $correoDir = null;
+        // $correoCoord = optional($coordCompras)->correo_institucional;
+        $correoCoord = null;
         $correoSolicitante = optional($solicitante)->correo_institucional;
 
         if ($correoDir) {
@@ -694,10 +696,10 @@ class OCGasolinaVehicleController extends ApiController
                 $q->where('nombre', 'Activo');
             })->first();
 
-            $correoDir = optional($dirAdmin)->correo_institucional;
-            // $correoDir = null;
-            $correoCoord = optional($coordCompras)->correo_institucional;
-            // $correoCoord = null;
+            // $correoDir = optional($dirAdmin)->correo_institucional;
+            $correoDir = null;
+            // $correoCoord = optional($coordCompras)->correo_institucional;
+            $correoCoord = null;
 
             if ($correoDir) {
                 $mail = Mail::to($correoDir);
@@ -861,5 +863,73 @@ class OCGasolinaVehicleController extends ApiController
                 ],
             ]
         );
+    }
+
+    /**
+     * Lista las unidades configuradas para dispersión automática semanal.
+     */
+    public function getAutomaticas()
+    {
+        $items = VehiclesDispersionAutomatica::with([
+            'vehicle.estatus',
+            'vehicle.sucursal',
+            'vehicle.departamento',
+            'vehicle.linea',
+        ])
+            ->orderBy('id', 'asc')
+            ->get();
+
+        return $this->respond($items);
+    }
+
+    /**
+     * Sincroniza la configuración de unidades y litros para dispersión automática semanal.
+     */
+    public function saveAutomaticas(Request $request)
+    {
+        $data = $request->validate([
+            'items' => ['present', 'array'],
+            'items.*.vehicle_id' => ['required', 'integer', 'distinct', 'exists:vehicles,id'],
+            'items.*.lts_cargar' => ['required', 'integer', 'min:1'],
+        ], [
+            'items.present' => 'La lista de unidades es obligatoria.',
+            'items.array' => 'El formato de unidades es inválido.',
+            'items.*.vehicle_id.required' => 'Cada fila debe tener una unidad seleccionada.',
+            'items.*.vehicle_id.distinct' => 'No puede repetir la misma unidad en la configuración.',
+            'items.*.vehicle_id.exists' => 'Una de las unidades seleccionadas no existe.',
+            'items.*.lts_cargar.required' => 'Debe indicar los litros a cargar para cada unidad.',
+            'items.*.lts_cargar.integer' => 'Los litros a cargar deben ser un número entero.',
+            'items.*.lts_cargar.min' => 'Los litros a cargar deben ser al menos 1.',
+        ]);
+
+        $items = collect($data['items']);
+
+        DB::transaction(function () use ($items) {
+            $vehicleIds = $items->pluck('vehicle_id')->map(fn($id) => (int) $id)->all();
+
+            if (empty($vehicleIds)) {
+                VehiclesDispersionAutomatica::query()->delete();
+            } else {
+                VehiclesDispersionAutomatica::whereNotIn('vehicle_id', $vehicleIds)->delete();
+            }
+
+            foreach ($items as $item) {
+                VehiclesDispersionAutomatica::updateOrCreate(
+                    ['vehicle_id' => (int) $item['vehicle_id']],
+                    ['lts_cargar' => (int) $item['lts_cargar']]
+                );
+            }
+        });
+
+        $saved = VehiclesDispersionAutomatica::with([
+            'vehicle.estatus',
+            'vehicle.sucursal',
+            'vehicle.departamento',
+            'vehicle.linea',
+        ])
+            ->orderBy('id', 'asc')
+            ->get();
+
+        return $this->respond($saved, 'Configuración de dispersión automática guardada correctamente.');
     }
 }

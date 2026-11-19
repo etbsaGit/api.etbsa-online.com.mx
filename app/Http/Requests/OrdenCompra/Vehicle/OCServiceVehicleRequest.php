@@ -47,7 +47,7 @@ class OCServiceVehicleRequest extends FormRequest
             'orden_compra' => ['nullable', 'string', 'max:255'],
             'fecha_elaboracion' => ['required', 'date'],
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
-            'proveedor_id' => ['nullable', 'integer', 'exists:vehicles_servicio_proveedores,id'],
+            'proveedor_id' => ['nullable', 'integer', 'exists:proveedores,id'],
             'solicitante_id' => ['nullable', 'integer', 'exists:empleados,id'],
             'suc_cargo_id' => ['nullable', 'integer', 'exists:vehicles_suc_cargo_a,id'],
             'depto_cargo_id' => ['nullable', 'integer', 'exists:vehicles_depto_cargo_a,id'],
@@ -67,7 +67,7 @@ class OCServiceVehicleRequest extends FormRequest
 
             'detalles' => ['required', 'array', 'min:1'],
             'detalles.*.servicio_id' => ['required', 'integer', 'exists:vehicles_servicios_cat,id'],
-            'detalles.*.proveedor_id' => ['required', 'integer', 'exists:vehicles_servicio_proveedores,id'],
+            'detalles.*.proveedor_id' => ['required', 'integer', 'exists:proveedores,id'],
             'detalles.*.valido_hasta' => ['required', 'date'],
             'detalles.*.vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'detalles.*.km_evento' => [

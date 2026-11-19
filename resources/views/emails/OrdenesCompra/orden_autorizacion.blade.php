@@ -535,7 +535,7 @@
                         <td class="info-card" colspan="2">
                             <div class="info-label">Proveedor / Taller Autorizado</div>
                             <div class="info-value" style="font-weight: 700; color: #065f46;">
-                                {{ $orden->proveedor->nombre }}
+                                {{ $orden->proveedor?->razon_social ?? $orden->proveedor?->nombre }}
                             </div>
                         </td>
                     </tr>
@@ -566,7 +566,7 @@
                                     </td>
                                     <td align="right">
                                         <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Proveedor:</span>
-                                        <strong style="color: #065f46; font-size: 13px;">{{ $oc->proveedor?->nombre ?? 'Sin proveedor' }}</strong>
+                                        <strong style="color: #065f46; font-size: 13px;">{{ $oc->proveedor?->razon_social ?? ($oc->proveedor?->nombre ?? 'Sin proveedor') }}</strong>
                                     </td>
                                 </tr>
                             </table>
@@ -682,7 +682,7 @@
                                     <tr>
                                         <td><strong>OC #{{ $o->id }}</strong></td>
                                         <td class="font-mono">{{ $o->orden_compra ?? $o->id }}</td>
-                                        <td>{{ $o->proveedor?->nombre ?? 'Sin proveedor' }}</td>
+                                        <td>{{ $o->proveedor?->razon_social ?? ($o->proveedor?->nombre ?? 'Sin proveedor') }}</td>
                                         <td class="text-center">{{ $o->detalles ? count($o->detalles) : 0 }}</td>
                                         <td class="text-right font-mono" style="font-weight: 600;">
                                             ${{ number_format($o->detalles ? $o->detalles->sum('total') : 0, 2) }}

@@ -22,7 +22,7 @@ use App\Models\VehiclesOrdenesServicio;
 use App\Models\VehiclesDetallesServicio;
 use App\Models\VehiclesServiciosCat;
 use App\Models\VehiclesTipoServicio;
-use App\Models\VehiclesServicioProveedores;
+use App\Models\Proveedores;
 use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
 use Illuminate\Support\Facades\DB;
@@ -382,7 +382,7 @@ class VehicleController extends ApiController
                 'modelos' => VehiclesModelos::orderBy('nombre')->get(),
                 'tipos' => VehiclesTipos::orderBy('nombre')->get(),
                 'empleados' => $empleados,
-                'proveedores' => VehiclesServicioProveedores::orderBy('nombre')->get(),
+                'proveedores' => Proveedores::orderBy('razon_social')->get(),
                 'tipos_servicio' => VehiclesTipoServicio::with('servicios')
                     ->where('nombre', '!=', 'Gasolina')
                     ->orderBy('nombre')

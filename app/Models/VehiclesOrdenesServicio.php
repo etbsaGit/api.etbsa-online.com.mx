@@ -34,7 +34,7 @@ class VehiclesOrdenesServicio extends Model
 
     public function proveedor()
     {
-        return $this->belongsTo(VehiclesServicioProveedores::class, 'proveedor_id');
+        return $this->belongsTo(Proveedores::class, 'proveedor_id');
     }
 
     public function solicitante()
@@ -91,7 +91,8 @@ class VehiclesOrdenesServicio extends Model
                             });
                     })
                     ->orWhereHas('proveedor', function (Builder $pq) use ($search) {
-                        $pq->where('nombre', 'LIKE', "%{$search}%");
+                        $pq->where('razon_social', 'LIKE', "%{$search}%")
+                            ->orWhere('rfc', 'LIKE', "%{$search}%");
                     })
                     ->orWhereHas('solicitante', function (Builder $sq) use ($search) {
                         $sq->where('nombre', 'LIKE', "%{$search}%")

@@ -266,7 +266,7 @@ class VehiclesGeneralDashboardExport
                     continue;
                 }
 
-                $proveedorNombre = $det->proveedor?->nombre ?? $orden->proveedor?->nombre ?? 'No especificado';
+                $proveedorNombre = $det->proveedor?->razon_social ?? $det->proveedor?->nombre ?? $orden->proveedor?->razon_social ?? $orden->proveedor?->nombre ?? 'No especificado';
                 $vehDesc = trim(($veh?->marca?->nombre ?? '') . ' ' . ($veh?->modelo?->nombre ?? ''));
                 if (empty($vehDesc)) {
                     $vehDesc = $veh?->tipo?->nombre ?? 'Unidad';

@@ -73,7 +73,7 @@ class VehicleServicesExport
                     'servicio' => $servicio?->nombre ?? 'Servicio general',
                     'descripcion' => $det->descripcion ?? '',
                     'km_evento' => $det->km_evento !== null ? (int) $det->km_evento : null,
-                    'proveedor' => $orden->proveedor?->nombre ?? 'No especificado',
+                    'proveedor' => $det->proveedor?->razon_social ?? $det->proveedor?->nombre ?? $orden->proveedor?->razon_social ?? $orden->proveedor?->nombre ?? 'No especificado',
                     'sucursal_cargo' => $orden->sucursalCargo?->nombre ?? '-',
                     'depto_cargo' => $orden->departamentoCargo?->nombre ?? '-',
                     'solicitante' => $orden->solicitante?->nombreCompleto ?? '-',

@@ -25,10 +25,12 @@ class VehiclesDispersionGasolina extends Model
         'notas',
         'estatus_id',
         'is_urgente',
+        'is_automatica',
     ];
 
     protected $casts = [
         'is_urgente' => 'boolean',
+        'is_automatica' => 'boolean',
         'lts_solicitados' => 'integer',
         'lts_dispersados' => 'integer',
         'km_evento' => 'integer',
