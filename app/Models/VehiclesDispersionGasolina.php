@@ -22,18 +22,19 @@ class VehiclesDispersionGasolina extends Model
         'lts_solicitados',
         'lts_dispersados',
         'km_evento',
+        'fecha_requerida',
+        'recorrido_url',
         'notas',
         'estatus_id',
-        'is_urgente',
         'is_automatica',
     ];
 
     protected $casts = [
-        'is_urgente' => 'boolean',
         'is_automatica' => 'boolean',
         'lts_solicitados' => 'integer',
         'lts_dispersados' => 'integer',
         'km_evento' => 'integer',
+        'fecha_requerida' => 'datetime',
     ];
 
     // -Relations-
@@ -116,10 +117,6 @@ class VehiclesDispersionGasolina extends Model
             } else {
                 $query->where('estatus_id', $filters['estatus_id']);
             }
-        }
-
-        if (isset($filters['is_urgente']) && $filters['is_urgente'] !== '' && $filters['is_urgente'] !== null) {
-            $query->where('is_urgente', filter_var($filters['is_urgente'], FILTER_VALIDATE_BOOLEAN));
         }
 
         if (!empty($filters['fecha_desde'])) {

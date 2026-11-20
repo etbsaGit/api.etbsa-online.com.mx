@@ -201,9 +201,10 @@ class OCGasolinaVehicleController extends ApiController
                 'lts_solicitados' => (int) $validated['lts_solicitados'],
                 'lts_dispersados' => isset($validated['lts_dispersados']) ? (int) $validated['lts_dispersados'] : null,
                 'km_evento' => (int) $validated['km_evento'],
+                'fecha_requerida' => $validated['fecha_requerida'],
+                'recorrido_url' => $validated['recorrido_url'],
                 'notas' => $validated['notas'] ?? 'Dispersión de gasolina para unidad',
                 'estatus_id' => $estatus_id,
-                'is_urgente' => (bool) ($validated['is_urgente'] ?? false),
                 'is_automatica' => false,
             ]);
 
@@ -267,8 +268,9 @@ class OCGasolinaVehicleController extends ApiController
                     ? (int) $validated['lts_dispersados']
                     : $dispersion->lts_dispersados,
                 'km_evento' => (int) $validated['km_evento'],
+                'fecha_requerida' => $validated['fecha_requerida'] ?? $dispersion->fecha_requerida,
+                'recorrido_url' => $validated['recorrido_url'] ?? $dispersion->recorrido_url,
                 'notas' => $validated['notas'] ?? $dispersion->notas,
-                'is_urgente' => isset($validated['is_urgente']) ? (bool) $validated['is_urgente'] : $dispersion->is_urgente,
             ]);
 
             $bitacora = $this->insertBitacora(

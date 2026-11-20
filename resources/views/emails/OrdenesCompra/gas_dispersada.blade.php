@@ -33,9 +33,6 @@
                             </h2>
                             <p style="margin: 4px 0 0 0; font-size: 13px; color: #f1f5f9;">
                                 Estatus actual: <strong>{{ optional($orden->estatus)->nombre ?? 'Actualizado' }}</strong>
-                                @if($orden->is_urgente)
-                                    &bull; <strong>URGENTE</strong>
-                                @endif
                             </p>
                         </td>
                     </tr>
@@ -88,6 +85,24 @@
                                     <td style="border-bottom: 1px solid #e0e0e0;"><strong>Fecha de Solicitud:</strong></td>
                                     <td style="border-bottom: 1px solid #e0e0e0;">{{ optional($orden->created_at)->format('d/m/Y H:i') }}</td>
                                 </tr>
+                                @if($orden->fecha_requerida)
+                                    <tr>
+                                        <td style="border-bottom: 1px solid #e0e0e0;"><strong>Fecha y Hora Requerida:</strong></td>
+                                        <td style="border-bottom: 1px solid #e0e0e0; font-weight: bold; color: #0284c7;">
+                                            {{ \Carbon\Carbon::parse($orden->fecha_requerida)->format('d/m/Y h:i A') }}
+                                        </td>
+                                    </tr>
+                                @endif
+                                @if($orden->recorrido_url)
+                                    <tr>
+                                        <td style="border-bottom: 1px solid #e0e0e0;"><strong>Recorrido (Google Maps):</strong></td>
+                                        <td style="border-bottom: 1px solid #e0e0e0;">
+                                            <a href="{{ $orden->recorrido_url }}" target="_blank" style="color: #0284c7; font-weight: bold; text-decoration: underline;">
+                                                Ver recorrido en Google Maps
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endif
                                 <tr style="background-color: #f8fafc;">
                                     <td style="border-bottom: 1px solid #e0e0e0;"><strong>Unidad / Vehículo:</strong></td>
                                     <td style="border-bottom: 1px solid #e0e0e0;">

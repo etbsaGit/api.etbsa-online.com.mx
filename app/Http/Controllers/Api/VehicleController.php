@@ -87,6 +87,7 @@ class VehicleController extends ApiController
             'marca',
             'modelo',
             'tipo',
+            'documentosVigentes',
         ])->paginate(10);
 
         $this->optimizeVehicleEmpleados($paginated->getCollection());
@@ -129,6 +130,8 @@ class VehicleController extends ApiController
             'dispersionesGasolina.sucursalCargo',
             'dispersionesGasolina.departamentoCargo',
             'dispersionesGasolina.estatus',
+            'documentos.registrador:id,name',
+            'documentosVigentes',
         ]);
 
         $this->optimizeVehicleEmpleados($vehicle);
@@ -261,6 +264,8 @@ class VehicleController extends ApiController
             'dispersionesGasolina.sucursalCargo',
             'dispersionesGasolina.departamentoCargo',
             'dispersionesGasolina.estatus',
+            'documentos.registrador:id,name',
+            'documentosVigentes',
         ]);
 
         $this->optimizeVehicleEmpleados($vehicle);
@@ -291,6 +296,7 @@ class VehicleController extends ApiController
             'estatus:id,nombre,color',
             'responsable:id,nombre,segundo_nombre,apellido_paterno,apellido_materno,vehicle_id',
             'empleados:empleados.id,empleados.nombre,empleados.segundo_nombre,empleados.apellido_paterno,empleados.apellido_materno,empleados.vehicle_id',
+            'documentosVigentes',
         ])
             ->orderBy('placas', 'asc')
             ->get();

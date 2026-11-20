@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('vehicles_dispersion_gasolina', function (Blueprint $table) {
-            $table->boolean('is_automatica')->default(false)->after('is_urgente');
+            $table->boolean('is_automatica')->default(false)->after('estatus_id');
         });
     }
 

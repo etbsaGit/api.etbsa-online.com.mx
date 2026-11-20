@@ -23,7 +23,6 @@ return new class extends Migration
             $table->integer('km_evento');
             $table->text('notas')->nullable();
             $table->foreignId('estatus_id')->constrained('estatus');
-            $table->boolean('is_urgente')->default(false);
             $table->timestamps();
         });
     }

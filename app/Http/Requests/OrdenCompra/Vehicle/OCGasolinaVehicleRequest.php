@@ -28,7 +28,6 @@ class OCGasolinaVehicleRequest extends FormRequest
             'lts_solicitados' => $this->input('lts_solicitados') ?? $this->input('cantidad') ?? ($primerDetalle['cantidad'] ?? null),
             'km_evento' => $this->input('km_evento') ?? ($primerDetalle['km_evento'] ?? null),
             'notas' => $this->input('notas') ?? $this->input('descripcion') ?? ($primerDetalle['descripcion'] ?? null),
-            'is_urgente' => filter_var($this->input('is_urgente', false), FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 
@@ -76,9 +75,10 @@ class OCGasolinaVehicleRequest extends FormRequest
                     }
                 },
             ],
-            'notas' => ['nullable', 'required_if:is_urgente,true', 'string'],
+            'fecha_requerida' => ['required', 'date'],
+            'recorrido_url' => ['required', 'string', 'url'],
+            'notas' => ['nullable', 'string'],
             'estatus_id' => ['nullable', 'integer', 'exists:estatus,id'],
-            'is_urgente' => ['nullable', 'boolean'],
         ];
     }
 
@@ -98,7 +98,10 @@ class OCGasolinaVehicleRequest extends FormRequest
             'km_evento.required' => 'El kilometraje es obligatorio',
             'km_evento.numeric' => 'El kilometraje debe ser un valor numérico',
             'km_evento.min' => 'El kilometraje no puede ser negativo',
-            'notas.required_if' => 'Las notas u observaciones son obligatorias cuando la dispersión es urgente',
+            'fecha_requerida.required' => 'La fecha y hora en que se necesita la dispersión es obligatoria',
+            'fecha_requerida.date' => 'Ingrese una fecha y hora válida para la dispersión',
+            'recorrido_url.required' => 'La URL del recorrido en Google Maps es obligatoria',
+            'recorrido_url.url' => 'Ingrese una URL válida para el recorrido de Google Maps (ej. https://maps.app.goo.gl/...)',
         ];
     }
 

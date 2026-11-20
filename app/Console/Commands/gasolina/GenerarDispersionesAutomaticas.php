@@ -98,9 +98,10 @@ class GenerarDispersionesAutomaticas extends Command
                     'lts_solicitados' => $lts,
                     'lts_dispersados' => $lts,
                     'km_evento' => $kmEvento ?? 0,
+                    'fecha_requerida' => null,
+                    'recorrido_url' => null,
                     'notas' => 'Dispersión automática semanal (Lunes 8:00 AM)',
                     'estatus_id' => $estatusPorDispersar->id,
-                    'is_urgente' => false,
                     'is_automatica' => true,
                 ]);
 

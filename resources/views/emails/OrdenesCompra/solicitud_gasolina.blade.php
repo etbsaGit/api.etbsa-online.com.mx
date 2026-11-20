@@ -57,18 +57,6 @@
             margin-top: 8px;
         }
 
-        .badge-urgente {
-            display: inline-block;
-            background-color: #ef4444;
-            color: #ffffff;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 8px;
-            margin-left: 6px;
-        }
-
         .content {
             padding: 24px 28px;
         }
@@ -181,9 +169,6 @@
                 <span class="badge-folio">
                     Solicitud #{{ $orden->id }} &bull; Gasolina
                 </span>
-                @if($orden->is_urgente)
-                    <span class="badge-urgente">URGENTE</span>
-                @endif
             </div>
         </div>
 
@@ -270,6 +255,26 @@
                         <div class="info-label">Fecha de Registro</div>
                         <div class="info-value">
                             {{ $orden->created_at ? \Carbon\Carbon::parse($orden->created_at)->format('d/m/Y h:i A') : 'N/A' }}
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-card" width="50%">
+                        <div class="info-label">Fecha y Hora Requerida de Dispersión</div>
+                        <div class="info-value" style="color: #0284c7; font-weight: 700;">
+                            {{ $orden->fecha_requerida ? \Carbon\Carbon::parse($orden->fecha_requerida)->format('d/m/Y h:i A') : 'No especificada' }}
+                        </div>
+                    </td>
+                    <td class="info-card" width="50%">
+                        <div class="info-label">Recorrido (Google Maps)</div>
+                        <div class="info-value">
+                            @if($orden->recorrido_url)
+                                <a href="{{ $orden->recorrido_url }}" target="_blank" style="color: #0284c7; text-decoration: underline; font-weight: 700;">
+                                    Ver recorrido en Google Maps
+                                </a>
+                            @else
+                                No especificado
+                            @endif
                         </div>
                     </td>
                 </tr>

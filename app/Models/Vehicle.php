@@ -50,6 +50,57 @@ class Vehicle extends Model
             unset($filters['search']);
         }
 
+        if (!empty($filters['estatus_expediente'])) {
+            $estatusExp = $filters['estatus_expediente'];
+            $hoy = now()->toDateString();
+            $en30Dias = now()->addDays(30)->toDateString();
+
+            if ($estatusExp === 'vencido') {
+                $query->whereHas('documentosVigentes', function ($q) use ($hoy) {
+                    $q->whereNotNull('fecha_vencimiento')
+                        ->whereDate('fecha_vencimiento', '<', $hoy);
+                });
+            } elseif ($estatusExp === 'por_vencer') {
+                $query->whereHas('documentosVigentes', function ($q) use ($hoy, $en30Dias) {
+                    $q->whereNotNull('fecha_vencimiento')
+                        ->whereDate('fecha_vencimiento', '>=', $hoy)
+                        ->whereDate('fecha_vencimiento', '<=', $en30Dias);
+                });
+            } elseif ($estatusExp === 'incompleto') {
+                $query->where(function ($q) {
+                    foreach (['seguro', 'tarjeta_circulacion', 'verificacion'] as $tipoDoc) {
+                        $q->orWhereDoesntHave('documentosVigentes', function ($qDoc) use ($tipoDoc) {
+                            $qDoc->where('tipo_documento', $tipoDoc);
+                        });
+                    }
+                });
+            } elseif ($estatusExp === 'al_corriente') {
+                foreach (['seguro', 'tarjeta_circulacion', 'verificacion'] as $tipoDoc) {
+                    $query->whereHas('documentosVigentes', function ($qDoc) use ($tipoDoc, $en30Dias) {
+                        $qDoc->where('tipo_documento', $tipoDoc)
+                            ->where(function ($qFecha) use ($en30Dias) {
+                                $qFecha->whereNull('fecha_vencimiento')
+                                    ->orWhereDate('fecha_vencimiento', '>', $en30Dias);
+                            });
+                    });
+                }
+            } elseif ($estatusExp === 'atencion') {
+                $query->where(function ($q) use ($en30Dias) {
+                    $q->whereHas('documentosVigentes', function ($qDoc) use ($en30Dias) {
+                        $qDoc->whereNotNull('fecha_vencimiento')
+                            ->whereDate('fecha_vencimiento', '<=', $en30Dias);
+                    });
+                    foreach (['seguro', 'tarjeta_circulacion', 'verificacion'] as $tipoDoc) {
+                        $q->orWhereDoesntHave('documentosVigentes', function ($qDoc) use ($tipoDoc) {
+                            $qDoc->where('tipo_documento', $tipoDoc);
+                        });
+                    }
+                });
+            }
+
+            unset($filters['estatus_expediente']);
+        }
+
         return $this->scopeFilterSearch($query, $filters);
     }
 
@@ -121,5 +172,20 @@ class Vehicle extends Model
     public function tipo()
     {
         return $this->belongsTo(VehiclesTipos::class, 'tipo_id', 'id');
+    }
+
+    public function documentos()
+    {
+        return $this->hasMany(VehiclesDocumentos::class, 'vehicle_id')
+            ->orderBy('es_vigente', 'desc')
+            ->orderBy('fecha_emision', 'desc')
+            ->orderBy('id', 'desc');
+    }
+
+    public function documentosVigentes()
+    {
+        return $this->hasMany(VehiclesDocumentos::class, 'vehicle_id')
+            ->where('es_vigente', true)
+            ->orderBy('id', 'desc');
     }
 }

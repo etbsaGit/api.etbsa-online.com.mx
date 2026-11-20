@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\OCGasolinaVehicleController;
 use App\Http\Controllers\Api\UsedDocController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\VehicleCatalogoController;
+use App\Http\Controllers\Api\VehicleDocumentoController;
 use App\Http\Controllers\Api\ProveedoresController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
@@ -414,6 +415,9 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('vehicle/catalogos/{tipo}', [VehicleCatalogoController::class, 'store']);
     Route::put('vehicle/catalogos/{tipo}/{id}', [VehicleCatalogoController::class, 'update']);
     Route::delete('vehicle/catalogos/{tipo}/{id}', [VehicleCatalogoController::class, 'destroy']);
+    Route::get('vehicle/{vehicle}/documentos', [VehicleDocumentoController::class, 'index']);
+    Route::put('vehicleDocumento/{vehicleDocumento}/vigente', [VehicleDocumentoController::class, 'marcarVigente']);
+    Route::apiResource('vehicleDocumento', VehicleDocumentoController::class)->except(['index']);
     Route::apiResource('vehicle', VehicleController::class);
 
     //--------------------EmpleadosContact--------------------
