@@ -110,8 +110,8 @@
                                         @if(optional($orden->vehicle)->serie)
                                             (Serie: {{ $orden->vehicle->serie }})
                                         @endif
-                                        @if(optional(optional($orden->vehicle)->estatus)->nombre)
-                                            - {{ $orden->vehicle->estatus->nombre }}
+                                        @if(optional($orden->vehicle)->nombre_unidad)
+                                            - {{ $orden->vehicle->nombre_unidad }}
                                         @endif
                                     </td>
                                 </tr>

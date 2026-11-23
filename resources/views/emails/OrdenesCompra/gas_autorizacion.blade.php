@@ -315,8 +315,8 @@
                         <div class="info-value">{{ $orden->vehicle?->departamento?->nombre ?? 'N/A' }}</div>
                     </td>
                     <td class="info-card" colspan="2">
-                        <div class="info-label">Tipo de Vehículo</div>
-                        <div class="info-value">{{ $orden->vehicle?->estatus?->nombre ?? 'No definido' }}</div>
+                        <div class="info-label">Unidad (Marca / Modelo / Tipo / Versión)</div>
+                        <div class="info-value">{{ $orden->vehicle?->nombre_unidad ?? 'No definido' }}</div>
                     </td>
                 </tr>
             </table>

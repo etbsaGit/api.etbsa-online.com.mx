@@ -27,6 +27,33 @@ class Vehicle extends Model
         'anio',
     ];
 
+    protected $appends = ['nombre_unidad'];
+
+    public function getNombreUnidadAttribute(): string
+    {
+        $marca = $this->relationLoaded('marca') ? ($this->marca?->nombre ?? '') : ($this->marca_id ? ($this->marca?->nombre ?? '') : '');
+        $modelo = $this->relationLoaded('modelo') ? ($this->modelo?->nombre ?? '') : ($this->modelo_id ? ($this->modelo?->nombre ?? '') : '');
+        $tipo = $this->relationLoaded('tipo') ? ($this->tipo?->nombre ?? '') : ($this->tipo_id ? ($this->tipo?->nombre ?? '') : '');
+        $version = trim((string) ($this->version ?? ''));
+
+        $parts = array_filter([
+            trim((string) $marca),
+            trim((string) $modelo),
+            trim((string) $tipo),
+            $version,
+        ], fn($val) => $val !== '');
+
+        if (!empty($parts)) {
+            return implode(' ', $parts);
+        }
+
+        if ($this->relationLoaded('estatus') && $this->estatus?->nombre) {
+            return $this->estatus->nombre;
+        }
+
+        return 'Unidad';
+    }
+
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)
     {

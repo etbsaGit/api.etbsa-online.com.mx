@@ -22,6 +22,7 @@ class VehiclesDispersionGasolina extends Model
         'lts_solicitados',
         'lts_dispersados',
         'km_evento',
+        'foto_km_url',
         'fecha_requerida',
         'recorrido_url',
         'notas',

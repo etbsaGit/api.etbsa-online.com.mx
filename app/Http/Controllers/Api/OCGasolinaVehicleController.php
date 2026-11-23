@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\GasolinaDispersionExport;
 use App\Models\Vehicle;
 use App\Models\Empleado;
 use App\Models\Estatus;
@@ -10,9 +11,13 @@ use App\Models\VehiclesDispersionGasolina;
 use App\Models\VehiclesGasolinaBitacora;
 use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\OrdenCompra\Vehicle\OCGasolinaVehicleRequest;
@@ -27,6 +32,9 @@ class OCGasolinaVehicleController extends ApiController
 {
     private const DISPERSION_RELATIONS = [
         'vehicle.estatus',
+        'vehicle.marca',
+        'vehicle.modelo',
+        'vehicle.tipo',
         'vehicle.sucursal',
         'vehicle.departamento',
         'vehicle.linea',
@@ -156,7 +164,7 @@ class OCGasolinaVehicleController extends ApiController
             ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
             ->pluck('ultimo_km', 'vehicle_id');
 
-        $assignedVehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea'])
+        $assignedVehicles = Vehicle::with(['estatus', 'marca', 'modelo', 'tipo', 'sucursal', 'departamento', 'linea'])
             ->whereIn('id', $vehicleIds)
             ->get()
             ->map(function ($v) use ($maxKmsGasolina, $maxKmsServicios) {
@@ -208,6 +216,12 @@ class OCGasolinaVehicleController extends ApiController
                 'is_automatica' => false,
             ]);
 
+            $fotoInput = $request->file('foto_km') ?? $request->input('foto_km');
+            if (!empty($fotoInput)) {
+                $fotoKmUrl = $this->saveFotoKmToS3($fotoInput, $dispersion->id, (int) $validated['vehicle_id']);
+                $dispersion->update(['foto_km_url' => $fotoKmUrl]);
+            }
+
             $bitacora = $this->insertBitacora($dispersion->id, $estatus_id, 'Solicitud de dispersión de gasolina creada');
             if (!$bitacora) {
                 throw new \Exception('Error al insertar la bitácora');
@@ -257,7 +271,19 @@ class OCGasolinaVehicleController extends ApiController
         $dispersion = VehiclesDispersionGasolina::findOrFail($id);
         $validated = $request->validated();
 
-        $orden = DB::transaction(function () use ($dispersion, $validated) {
+        $orden = DB::transaction(function () use ($request, $dispersion, $validated) {
+            $fotoKmUrl = $dispersion->foto_km_url;
+            $fotoInput = $request->file('foto_km') ?? $request->input('foto_km');
+            $removeFoto = filter_var($request->input('remove_foto_km', false), FILTER_VALIDATE_BOOLEAN);
+
+            if (!empty($fotoInput)) {
+                $this->deleteFotoKmFromS3($dispersion->foto_km_url);
+                $fotoKmUrl = $this->saveFotoKmToS3($fotoInput, $dispersion->id, (int) $validated['vehicle_id']);
+            } elseif ($removeFoto && !empty($dispersion->foto_km_url)) {
+                $this->deleteFotoKmFromS3($dispersion->foto_km_url);
+                $fotoKmUrl = null;
+            }
+
             $dispersion->update([
                 'vehicle_id' => $validated['vehicle_id'],
                 'solicitado_por' => $validated['solicitado_por'] ?? $dispersion->solicitado_por,
@@ -268,6 +294,7 @@ class OCGasolinaVehicleController extends ApiController
                     ? (int) $validated['lts_dispersados']
                     : $dispersion->lts_dispersados,
                 'km_evento' => (int) $validated['km_evento'],
+                'foto_km_url' => $fotoKmUrl,
                 'fecha_requerida' => $validated['fecha_requerida'] ?? $dispersion->fecha_requerida,
                 'recorrido_url' => $validated['recorrido_url'] ?? $dispersion->recorrido_url,
                 'notas' => $validated['notas'] ?? $dispersion->notas,
@@ -298,6 +325,9 @@ class OCGasolinaVehicleController extends ApiController
         $dispersion = VehiclesDispersionGasolina::findOrFail($id);
 
         DB::transaction(function () use ($dispersion) {
+            if (!empty($dispersion->foto_km_url)) {
+                $this->deleteFotoKmFromS3($dispersion->foto_km_url);
+            }
             $dispersion->bitacora()->delete();
             $dispersion->delete();
         });
@@ -313,6 +343,86 @@ class OCGasolinaVehicleController extends ApiController
             'user_id' => auth()->user()->id,
             'comentarios' => $comentarios,
         ]);
+    }
+
+    /**
+     * Guarda la foto temporal del kilometraje (PNG o JPG) en S3 y retorna su URL pública.
+     */
+    private function saveFotoKmToS3($fotoInput, int $dispersionId, int $vehicleId): string
+    {
+        $folder = "ordenes_compra/gasolina_km_temp/vehicle_{$vehicleId}";
+        $timestamp = now()->format('Ymd_His');
+        $random = Str::random(6);
+
+        if ($fotoInput instanceof UploadedFile) {
+            $ext = strtolower($fotoInput->getClientOriginalExtension() ?: '');
+            $mime = strtolower($fotoInput->getMimeType() ?: '');
+            $validExts = ['png', 'jpg', 'jpeg'];
+            $validMimes = ['image/png', 'image/jpeg', 'image/jpg'];
+
+            if (!in_array($ext, $validExts, true) && !in_array($mime, $validMimes, true)) {
+                throw new \Exception('La foto del kilometraje solo puede estar en formato PNG o JPG.');
+            }
+
+            $finalExt = $ext === 'png' || $mime === 'image/png' ? 'png' : 'jpg';
+            $fileName = "km_disp_{$dispersionId}_{$timestamp}_{$random}.{$finalExt}";
+            $path = Storage::disk('s3')->putFileAs($folder, $fotoInput, $fileName);
+
+            return Storage::disk('s3')->url($path);
+        }
+
+        if (is_string($fotoInput)) {
+            if (!preg_match('/^data:image\/(png|jpeg|jpg);base64,/i', $fotoInput, $matches)) {
+                throw new \Exception('La foto del kilometraje debe ser una imagen válida en formato PNG o JPG.');
+            }
+
+            $subtype = strtolower($matches[1]);
+            $finalExt = $subtype === 'png' ? 'png' : 'jpg';
+
+            $data = substr($fotoInput, strpos($fotoInput, ',') + 1);
+            $decoded = base64_decode($data);
+            if ($decoded === false) {
+                throw new \Exception('No se pudo decodificar la imagen del kilometraje.');
+            }
+
+            $fileName = "km_disp_{$dispersionId}_{$timestamp}_{$random}.{$finalExt}";
+            $filePath = "{$folder}/{$fileName}";
+
+            Storage::disk('s3')->put($filePath, $decoded);
+
+            return Storage::disk('s3')->url($filePath);
+        }
+
+        throw new \Exception('Formato de imagen de kilometraje no soportado.');
+    }
+
+    /**
+     * Elimina la foto temporal del kilometraje de S3.
+     */
+    private function deleteFotoKmFromS3(?string $urlOrPath): void
+    {
+        if (empty($urlOrPath)) {
+            return;
+        }
+
+        try {
+            $relativePath = $urlOrPath;
+            $pos = strpos($urlOrPath, 'ordenes_compra/');
+            if ($pos !== false) {
+                $relativePath = substr($urlOrPath, $pos);
+            } elseif (str_starts_with($urlOrPath, 'http://') || str_starts_with($urlOrPath, 'https://')) {
+                $relativePath = ltrim((string) parse_url($urlOrPath, PHP_URL_PATH), '/');
+            } else {
+                $relativePath = ltrim($urlOrPath, '/');
+            }
+
+            $relativePath = urldecode(explode('?', $relativePath)[0]);
+            if (!empty($relativePath) && Storage::disk('s3')->exists($relativePath)) {
+                Storage::disk('s3')->delete($relativePath);
+            }
+        } catch (\Throwable $e) {
+            \Log::error("Error eliminando foto de kilometraje en S3 ({$urlOrPath}): " . $e->getMessage());
+        }
     }
 
     /**
@@ -364,10 +474,17 @@ class OCGasolinaVehicleController extends ApiController
                 ? (int) ($data['lts_dispersados'] ?? $dispersion->lts_solicitados)
                 : null;
 
+            $oldFotoUrl = $dispersion->foto_km_url;
+
             $dispersion->update([
                 'estatus_id' => $estatusId,
                 'lts_dispersados' => $ltsDispersados,
+                'foto_km_url' => null,
             ]);
+
+            if (!empty($oldFotoUrl)) {
+                $this->deleteFotoKmFromS3($oldFotoUrl);
+            }
 
             $comentarioBitacora = !empty($data['comentarios'])
                 ? trim($data['comentarios'])
@@ -456,10 +573,17 @@ class OCGasolinaVehicleController extends ApiController
                     ? (int) $item['lts_dispersados']
                     : (int) ($dispersion->lts_solicitados ?? 0);
 
+                $oldFotoUrl = $dispersion->foto_km_url;
+
                 $dispersion->update([
                     'estatus_id' => $estatusId,
                     'lts_dispersados' => $ltsDispersados,
+                    'foto_km_url' => null,
                 ]);
+
+                if (!empty($oldFotoUrl)) {
+                    $this->deleteFotoKmFromS3($oldFotoUrl);
+                }
 
                 $comentarioBitacora = $comentarioGeneral
                     ?: "Solicitud autorizada de forma masiva ({$ltsDispersados} Lts autorizados para dispersión)";
@@ -539,7 +663,7 @@ class OCGasolinaVehicleController extends ApiController
      */
     public function getforms()
     {
-        $vehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea', 'empleados'])
+        $vehicles = Vehicle::with(['estatus', 'marca', 'modelo', 'tipo', 'sucursal', 'departamento', 'linea', 'empleados'])
             ->orderBy('placas', 'asc')
             ->get();
 
@@ -874,6 +998,9 @@ class OCGasolinaVehicleController extends ApiController
     {
         $items = VehiclesDispersionAutomatica::with([
             'vehicle.estatus',
+            'vehicle.marca',
+            'vehicle.modelo',
+            'vehicle.tipo',
             'vehicle.sucursal',
             'vehicle.departamento',
             'vehicle.linea',
@@ -925,6 +1052,9 @@ class OCGasolinaVehicleController extends ApiController
 
         $saved = VehiclesDispersionAutomatica::with([
             'vehicle.estatus',
+            'vehicle.marca',
+            'vehicle.modelo',
+            'vehicle.tipo',
             'vehicle.sucursal',
             'vehicle.departamento',
             'vehicle.linea',
@@ -933,5 +1063,71 @@ class OCGasolinaVehicleController extends ApiController
             ->get();
 
         return $this->respond($saved, 'Configuración de dispersión automática guardada correctamente.');
+    }
+
+    /**
+     * Exporta reporte en Excel de las dispersiones y rutas registradas filtradas por:
+     * esta_semana, semana_anterior o rango de fechas personalizado.
+     */
+    public function exportExcel(Request $request)
+    {
+        $filters = $request->all();
+        $periodo = $request->input('periodo', 'esta_semana');
+        $now = Carbon::now('America/Mexico_City');
+
+        if ($periodo === 'esta_semana') {
+            $start = $now->copy()->startOfWeek(Carbon::MONDAY);
+            $end = $now->copy()->endOfWeek(Carbon::SUNDAY);
+            $filters['fecha_desde'] = $start->toDateString();
+            $filters['fecha_hasta'] = $end->toDateString();
+            $periodoLabel = 'Esta Semana (' . $start->format('d/m/Y') . ' al ' . $end->format('d/m/Y') . ')';
+        } elseif ($periodo === 'semana_anterior') {
+            $start = $now->copy()->subWeek()->startOfWeek(Carbon::MONDAY);
+            $end = $now->copy()->subWeek()->endOfWeek(Carbon::SUNDAY);
+            $filters['fecha_desde'] = $start->toDateString();
+            $filters['fecha_hasta'] = $end->toDateString();
+            $periodoLabel = 'Semana Anterior (' . $start->format('d/m/Y') . ' al ' . $end->format('d/m/Y') . ')';
+        } else {
+            $desde = $request->input('fecha_desde');
+            $hasta = $request->input('fecha_hasta');
+            $filters['fecha_desde'] = $desde;
+            $filters['fecha_hasta'] = $hasta;
+            $desdeFmt = $desde ? Carbon::parse($desde)->format('d/m/Y') : 'Inicio';
+            $hastaFmt = $hasta ? Carbon::parse($hasta)->format('d/m/Y') : 'Hoy';
+            $periodoLabel = "Rango de Fechas ({$desdeFmt} al {$hastaFmt})";
+        }
+
+        if (filter_var($request->input('only_my_unit', false), FILTER_VALIDATE_BOOLEAN)) {
+            $empleado = $request->user()?->empleado;
+            if ($empleado) {
+                $vehicleIds = $empleado->vehicles()->pluck('vehicles.id')->toArray();
+                if ($empleado->vehicle_id && !in_array((int) $empleado->vehicle_id, array_map('intval', $vehicleIds), true)) {
+                    $vehicleIds[] = (int) $empleado->vehicle_id;
+                }
+                if (empty($filters['vehicle_id'])) {
+                    $filters['vehicle_ids'] = $vehicleIds;
+                }
+                $filters['solicitado_por'] = $empleado->id;
+            }
+        }
+
+        $ordenes = VehiclesDispersionGasolina::filter($filters)
+            ->with(self::DISPERSION_RELATIONS)
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $this->optimizeDispersionEmpleados($ordenes);
+
+        $exporter = new GasolinaDispersionExport($ordenes, $periodoLabel);
+        $rawXlsx = $exporter->generateRawXlsx();
+
+        $dateStr = $now->format('Y-m-d');
+
+        return $this->respond([
+            'file_name' => "Reporte_Dispersiones_Gasolina_{$dateStr}.xlsx",
+            'file_base64' => base64_encode($rawXlsx),
+            'total_registros' => $ordenes->count(),
+        ]);
     }
 }

@@ -479,6 +479,7 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::post('gasolinas', [OCGasolinaVehicleController::class, 'index']);
     Route::post('gasolinas/auth', [OCGasolinaVehicleController::class, 'myIndex']);
     Route::get('gasolina/forms', [OCGasolinaVehicleController::class, 'getforms']);
+    Route::post('gasolina/export-excel', [OCGasolinaVehicleController::class, 'exportExcel']);
     Route::get('gasolina/automatica', [OCGasolinaVehicleController::class, 'getAutomaticas']);
     Route::post('gasolina/automatica', [OCGasolinaVehicleController::class, 'saveAutomaticas']);
     Route::post('gasolina/{id}/cotizacion', [OCGasolinaVehicleController::class, 'uploadCotizacion']);

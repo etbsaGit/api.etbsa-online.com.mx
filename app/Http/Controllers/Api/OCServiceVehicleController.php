@@ -37,6 +37,9 @@ class OCServiceVehicleController extends ApiController
 
     private const ORDEN_RELATIONS = [
         'vehicle.estatus',
+        'vehicle.marca',
+        'vehicle.modelo',
+        'vehicle.tipo',
         'vehicle.sucursal',
         'vehicle.departamento',
         'vehicle.linea',
@@ -164,7 +167,7 @@ class OCServiceVehicleController extends ApiController
             ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
             ->pluck('ultimo_km', 'vehicle_id');
 
-        $assignedVehicles = Vehicle::with(['estatus', 'sucursal', 'departamento', 'linea'])
+        $assignedVehicles = Vehicle::with(['estatus', 'marca', 'modelo', 'tipo', 'sucursal', 'departamento', 'linea'])
             ->whereIn('id', $vehicleIds)
             ->get()
             ->map(function ($v) use ($maxKmsServicios, $maxKmsGasolina) {
@@ -929,6 +932,9 @@ class OCServiceVehicleController extends ApiController
     {
         $orden = VehiclesOrdenesServicio::with([
             'vehicle.estatus',
+            'vehicle.marca',
+            'vehicle.modelo',
+            'vehicle.tipo',
             'vehicle.sucursal',
             'vehicle.departamento',
             'vehicle.linea',
@@ -998,7 +1004,7 @@ class OCServiceVehicleController extends ApiController
      */
     public function getforms()
     {
-        $vehicles = Vehicle::with(['empleados', 'estatus'])->whereHas('estatus', function ($q) {
+        $vehicles = Vehicle::with(['empleados', 'estatus', 'marca', 'modelo', 'tipo', 'sucursal', 'departamento', 'linea'])->whereHas('estatus', function ($q) {
             $q->where('activo', 1);
         })->orderby('placas', 'asc')->get();
 

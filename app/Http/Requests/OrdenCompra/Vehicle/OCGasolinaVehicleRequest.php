@@ -77,6 +77,8 @@ class OCGasolinaVehicleRequest extends FormRequest
             ],
             'fecha_requerida' => ['required', 'date'],
             'recorrido_url' => ['required', 'string', 'url'],
+            'foto_km' => ['nullable'],
+            'remove_foto_km' => ['nullable', 'boolean'],
             'notas' => ['nullable', 'string'],
             'estatus_id' => ['nullable', 'integer', 'exists:estatus,id'],
         ];
