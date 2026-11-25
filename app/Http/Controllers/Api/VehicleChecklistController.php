@@ -507,10 +507,10 @@ class VehicleChecklistController extends ApiController
             $q->where('nombre', 'Activo');
         })->first();
 
-        // $correoDir = optional($dirAdmin)->correo_institucional ?: optional($dirAdmin?->user)->email;
-        $correoDir = 'munozchristian@etbsa.com.mx';
-        // $correoCoord = optional($coordCompras)->correo_institucional ?: optional($coordCompras?->user)->email;
-        $correoCoord = null;
+        $correoDir = optional($dirAdmin)->correo_institucional ?: optional($dirAdmin?->user)->email;
+        // $correoDir = 'munozchristian@etbsa.com.mx';
+        $correoCoord = optional($coordCompras)->correo_institucional ?: optional($coordCompras?->user)->email;
+        // $correoCoord = null;
 
         $recipients = collect([$correoDir, $correoCoord])
             ->filter(fn($email) => !empty($email))

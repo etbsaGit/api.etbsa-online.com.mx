@@ -768,10 +768,10 @@ class OCGasolinaVehicleController extends ApiController
         })->first();
         $solicitante = $orden->solicitante;
 
-        // $correoDir = optional($dirAdmin)->correo_institucional;
-        $correoDir = null;
-        // $correoCoord = optional($coordCompras)->correo_institucional;
-        $correoCoord = null;
+        $correoDir = optional($dirAdmin)->correo_institucional;
+        // $correoDir = null;
+        $correoCoord = optional($coordCompras)->correo_institucional;
+        // $correoCoord = null;
         $correoSolicitante = optional($solicitante)->correo_institucional;
 
         if ($correoDir) {
@@ -822,10 +822,10 @@ class OCGasolinaVehicleController extends ApiController
                 $q->where('nombre', 'Activo');
             })->first();
 
-            // $correoDir = optional($dirAdmin)->correo_institucional;
-            $correoDir = null;
-            // $correoCoord = optional($coordCompras)->correo_institucional;
-            $correoCoord = null;
+            $correoDir = optional($dirAdmin)->correo_institucional;
+            // $correoDir = null;
+            $correoCoord = optional($coordCompras)->correo_institucional;
+            // $correoCoord = null;
 
             if ($correoDir) {
                 $mail = Mail::to($correoDir);

@@ -168,8 +168,8 @@ class TrackingAutorizacionController extends ApiController
         $tracking = Tracking::findOrFail($trackingId);
         $notificado = $tracking->notificado->user;
 
-        $title="";
-        $body="";
+        $title = "";
+        $body = "";
         if ($situacion === 'Para Asignar') {
             $title = "Pedido Autorizado por Dirección Comercial";
             $body = "El pedido #" . $tracking->folio . " ha sido autorizado.";
@@ -234,7 +234,7 @@ class TrackingAutorizacionController extends ApiController
             $solicitante = $tracking->vendedor;
             $notificado = $tracking->notificar_a;
 
-            $correo_pruebas = 'munozchristian@etbsa.com.mx';
+            // $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
             $correos = [
                 'notificado' => $notificado->correo_institucional,
@@ -320,7 +320,7 @@ class TrackingAutorizacionController extends ApiController
         $correoNotificado = optional($notificado)->correo_institucional;
         $correoSolicitante = optional($solicitante)->correo_institucional;
         $correoDirComercial = optional($dirComercial)->correo_institucional;
-        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+        // $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
         $mail = Mail::to($correoDirComercial);
         if ($correoNotificado) {
@@ -531,12 +531,12 @@ class TrackingAutorizacionController extends ApiController
             $solicitante = $tracking->vendedor;
             $notificado = $tracking->notificar_a;
 
-            $correo_pruebas = 'munozchristian@etbsa.com.mx';
+            // $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
             $correos = [
                 'notificado' => $notificado->correo_institucional,
                 'solicitante' => $solicitante->correo_institucional,
-                $correo_pruebas
+                // $correo_pruebas
             ];
 
             foreach ($correos as $to_email) {

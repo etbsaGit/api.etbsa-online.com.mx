@@ -662,7 +662,7 @@ class TrackingController extends ApiController
         // Usamos optional() para que si el modelo es null, no truene, solo regrese null
         $correoNotificado = optional($notificado)->correo_institucional;
         $correoSolicitante = optional($solicitante)->correo_institucional;
-        $correo_pruebas = 'munozchristian@etbsa.com.mx';
+        // $correo_pruebas = 'munozchristian@etbsa.com.mx';
 
         $mail = Mail::to($correoNotificado);
 

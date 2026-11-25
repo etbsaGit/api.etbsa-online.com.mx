@@ -561,8 +561,8 @@ class ProveedoresController extends ApiController
                 $q->where('nombre', 'Activo');
             })->first();
 
-            // $correoCoord = optional($coordCompras)->correo_institucional;
-            $correoCoord = 'munozchristian@etbsa-online.com.mx';
+            $correoCoord = optional($coordCompras)->correo_institucional;
+            // $correoCoord = 'munozchristian@etbsa-online.com.mx';
 
             if (empty($correoCoord)) {
                 Log::warning('No se pudo enviar notificación de nuevo proveedor: correo de Coordinador de compras no encontrado.', [
@@ -619,8 +619,8 @@ class ProveedoresController extends ApiController
                 $q->where('nombre', 'Activo');
             })->first();
 
-            // $correoCoord = optional($coordCompras)->correo_institucional;
-            $correoCoord = 'munozchristian@etbsa-online.com.mx';
+            $correoCoord = optional($coordCompras)->correo_institucional;
+            // $correoCoord = 'munozchristian@etbsa-online.com.mx';
 
             if (empty($correoCoord)) {
                 Log::warning('No se pudo enviar notificación de documento subido: correo de Coordinador de compras no encontrado.', [
