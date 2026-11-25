@@ -215,4 +215,10 @@ class Vehicle extends Model
             ->where('es_vigente', true)
             ->orderBy('id', 'desc');
     }
+    public function checklist()
+    {
+        return $this->hasMany(VehiclesChecklist::class, 'vehicle_id')
+            ->orderBy('fecha_revision', 'desc')
+            ->orderBy('id', 'desc');
+    }
 }

@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\UsedDocController;
 use App\Http\Controllers\Api\VehicleController;
 use App\Http\Controllers\Api\VehicleCatalogoController;
 use App\Http\Controllers\Api\VehicleDocumentoController;
+use App\Http\Controllers\Api\VehicleChecklistController;
 use App\Http\Controllers\Api\ProveedoresController;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\EmpleadoController;
@@ -418,6 +419,12 @@ Route::middleware(['auth:sanctum', 'cors'])->group(function () {
     Route::get('vehicle/{vehicle}/documentos', [VehicleDocumentoController::class, 'index']);
     Route::put('vehicleDocumento/{vehicleDocumento}/vigente', [VehicleDocumentoController::class, 'marcarVigente']);
     Route::apiResource('vehicleDocumento', VehicleDocumentoController::class)->except(['index']);
+
+    //--------------------Vehicle Checklist (Revisión de Flotillas)--------------------
+    Route::post('vehiclesChecklists', [VehicleChecklistController::class, 'index']);
+    Route::get('vehicleChecklist/forms', [VehicleChecklistController::class, 'getforms']);
+    Route::apiResource('vehicleChecklist', VehicleChecklistController::class);
+
     Route::apiResource('vehicle', VehicleController::class);
 
     //--------------------EmpleadosContact--------------------
