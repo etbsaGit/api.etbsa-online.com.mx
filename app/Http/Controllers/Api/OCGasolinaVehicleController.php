@@ -96,7 +96,7 @@ class OCGasolinaVehicleController extends ApiController
     }
 
     /**
-     * Lista paginada de Dispersiones de Gasolina únicamente de las unidades asignadas al empleado autenticado.
+     * Lista paginada de Dispersiones de Gasolina realizadas por el usuario/empleado autenticado.
      */
     public function myIndex(Request $request)
     {
@@ -111,7 +111,7 @@ class OCGasolinaVehicleController extends ApiController
             }
         }
 
-        if (empty($vehicleIds)) {
+        if (!$empleado) {
             return $this->respond([
                 'data' => [],
                 'current_page' => 1,
@@ -131,16 +131,13 @@ class OCGasolinaVehicleController extends ApiController
         }
 
         $filters = $request->all();
-        if (!empty($filters['vehicle_id']) && in_array((int) $filters['vehicle_id'], array_map('intval', $vehicleIds), true)) {
+        if (!empty($filters['vehicle_id'])) {
             $filters['vehicle_id'] = (int) $filters['vehicle_id'];
         } else {
             unset($filters['vehicle_id']);
-            $filters['vehicle_ids'] = $vehicleIds;
         }
-
-        if ($empleado) {
-            $filters['solicitado_por'] = $empleado->id;
-        }
+        unset($filters['vehicle_ids']);
+        $filters['solicitado_por'] = $empleado->id;
 
         $ordenes = VehiclesDispersionGasolina::filter($filters)
             ->with(self::DISPERSION_RELATIONS)
@@ -150,34 +147,37 @@ class OCGasolinaVehicleController extends ApiController
 
         $this->optimizeDispersionEmpleados($ordenes->getCollection());
 
-        $maxKmsGasolina = DB::table('vehicles_dispersion_gasolina')
-            ->whereIn('vehicle_id', $vehicleIds)
-            ->whereNotNull('km_evento')
-            ->groupBy('vehicle_id')
-            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
-            ->pluck('ultimo_km', 'vehicle_id');
+        $assignedVehicles = collect();
+        if (!empty($vehicleIds)) {
+            $maxKmsGasolina = DB::table('vehicles_dispersion_gasolina')
+                ->whereIn('vehicle_id', $vehicleIds)
+                ->whereNotNull('km_evento')
+                ->groupBy('vehicle_id')
+                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+                ->pluck('ultimo_km', 'vehicle_id');
 
-        $maxKmsServicios = DB::table('vehicles_detalles_servicio')
-            ->whereIn('vehicle_id', $vehicleIds)
-            ->whereNotNull('km_evento')
-            ->groupBy('vehicle_id')
-            ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
-            ->pluck('ultimo_km', 'vehicle_id');
+            $maxKmsServicios = DB::table('vehicles_detalles_servicio')
+                ->whereIn('vehicle_id', $vehicleIds)
+                ->whereNotNull('km_evento')
+                ->groupBy('vehicle_id')
+                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+                ->pluck('ultimo_km', 'vehicle_id');
 
-        $assignedVehicles = Vehicle::with(['estatus', 'marca', 'modelo', 'tipo', 'sucursal', 'departamento', 'linea'])
-            ->whereIn('id', $vehicleIds)
-            ->get()
-            ->map(function ($v) use ($maxKmsGasolina, $maxKmsServicios) {
-                $kmGas = isset($maxKmsGasolina[$v->id]) ? (int) $maxKmsGasolina[$v->id] : 0;
-                $kmServ = isset($maxKmsServicios[$v->id]) ? (int) $maxKmsServicios[$v->id] : 0;
-                $v->ultimo_km = max($kmGas, $kmServ);
-                return $v;
-            });
+            $assignedVehicles = Vehicle::with(['estatus', 'marca', 'modelo', 'tipo', 'sucursal', 'departamento', 'linea'])
+                ->whereIn('id', $vehicleIds)
+                ->get()
+                ->map(function ($v) use ($maxKmsGasolina, $maxKmsServicios) {
+                    $kmGas = isset($maxKmsGasolina[$v->id]) ? (int) $maxKmsGasolina[$v->id] : 0;
+                    $kmServ = isset($maxKmsServicios[$v->id]) ? (int) $maxKmsServicios[$v->id] : 0;
+                    $v->ultimo_km = max($kmGas, $kmServ);
+                    return $v;
+                });
+        }
 
         $response = $ordenes->toArray();
         $response['assigned_vehicle'] = $assignedVehicles->first();
         $response['assigned_vehicles'] = $assignedVehicles;
-        $response['status_counts'] = $this->getEstatusCounts($vehicleIds, $empleado?->id);
+        $response['status_counts'] = $this->getEstatusCounts(null, $empleado->id);
 
         return $this->respond($response);
     }
@@ -1100,13 +1100,7 @@ class OCGasolinaVehicleController extends ApiController
         if (filter_var($request->input('only_my_unit', false), FILTER_VALIDATE_BOOLEAN)) {
             $empleado = $request->user()?->empleado;
             if ($empleado) {
-                $vehicleIds = $empleado->vehicles()->pluck('vehicles.id')->toArray();
-                if ($empleado->vehicle_id && !in_array((int) $empleado->vehicle_id, array_map('intval', $vehicleIds), true)) {
-                    $vehicleIds[] = (int) $empleado->vehicle_id;
-                }
-                if (empty($filters['vehicle_id'])) {
-                    $filters['vehicle_ids'] = $vehicleIds;
-                }
+                unset($filters['vehicle_ids']);
                 $filters['solicitado_por'] = $empleado->id;
             }
         }

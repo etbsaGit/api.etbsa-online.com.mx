@@ -4,11 +4,14 @@ namespace App\Console\Commands\Gasolina;
 
 use App\Models\Empleado;
 use App\Models\Estatus;
+use App\Models\Sucursal;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehiclesDeptoCargoA;
 use App\Models\VehiclesDispersionAutomatica;
 use App\Models\VehiclesDispersionGasolina;
 use App\Models\VehiclesGasolinaBitacora;
+use App\Models\VehiclesSucCargoA;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -82,10 +85,13 @@ class GenerarDispersionesAutomaticas extends Command
 
                 $vehiculo = Vehicle::find($vehicleId);
                 $resplonsableUnidad = $vehiculo?->responsable ?? $config->vehicle?->empleados?->first();
-                $sucursalResponsable = $resplonsableUnidad?->sucursal_id;
-                $deptoResponsable = $resplonsableUnidad?->departamento_id;
-                $sucursalVehiculo = $vehiculo?->sucursal_id;
-                $deptoVehiculo = $vehiculo?->departamento_id;
+                $sucursalResponsable = $resplonsableUnidad?->sucursal->nombre;
+                $deptoResponsable = $resplonsableUnidad?->departamento->nombre;
+                $sucursalVehiculo = $vehiculo?->sucursal->nombre;
+                $deptoVehiculo = $vehiculo?->departamento->nombre;
+
+                $sucCargo = VehiclesSucCargoA::where('nombre', $sucursalResponsable)->value('id') ?? VehiclesSucCargoA::where('nombre', $sucursalVehiculo)->value('id');
+                $deptoCargo = VehiclesDeptoCargoA::where('nombre', $deptoResponsable)->value('id') ?? VehiclesDeptoCargoA::where('nombre', $deptoVehiculo)->value('id');
 
                 $lts = (int) $config->lts_cargar;
 
@@ -93,8 +99,8 @@ class GenerarDispersionesAutomaticas extends Command
                     'vehicle_id' => $vehicleId,
                     'solicitado_por' => $resplonsableUnidad->id,
                     'registrado_por' => $bitacoraUserId,
-                    'suc_cargo_id' => $sucursalResponsable ?? $sucursalVehiculo,
-                    'depto_cargo_id' => $deptoResponsable ?? $deptoVehiculo,
+                    'suc_cargo_id' => $sucCargo,
+                    'depto_cargo_id' => $deptoCargo,
                     'lts_solicitados' => $lts,
                     'lts_dispersados' => $lts,
                     'km_evento' => $kmEvento ?? 0,

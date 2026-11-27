@@ -45,7 +45,7 @@ class Kernel extends ConsoleKernel
 
         // Genera solicitudes de dispersión de gasolina automáticas ya autorizadas cada lunes a las 8:00 AM
         $schedule->command('gasolina:generar-dispersiones-automaticas')
-            ->thursdays()
+            ->mondays()
             ->at('08:00')
             ->timezone('America/Mexico_City')
             ->withoutOverlapping(60)
