@@ -3,6 +3,7 @@
 namespace App\Http\Requests\OrdenCompra\Vehicle;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -56,6 +57,14 @@ class OCGasolinaVehicleRequest extends FormRequest
             $ultimoKm = max($ultimoKmGasolina, $ultimoKmServicios);
         }
 
+        $existingFotoKmUrl = null;
+        if (!empty($ignoreId)) {
+            $existingFotoKmUrl = DB::table('vehicles_dispersion_gasolina')
+                ->where('id', $ignoreId)
+                ->value('foto_km_url');
+        }
+        $removeFotoKm = filter_var($this->input('remove_foto_km', false), FILTER_VALIDATE_BOOLEAN);
+
         return [
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
             'solicitado_por' => ['nullable', 'integer', 'exists:empleados,id'],
@@ -76,11 +85,20 @@ class OCGasolinaVehicleRequest extends FormRequest
                 },
             ],
             'fecha_requerida' => ['required', 'date'],
-            'recorrido_url' => ['required', 'string', 'url'],
-            'foto_km' => ['nullable'],
+            'recorrido_url' => ['nullable', 'string', 'url'],
+            'foto_km' => [
+                Rule::requiredIf(fn() => empty($ignoreId) || empty($existingFotoKmUrl) || $removeFotoKm),
+                'nullable',
+            ],
             'remove_foto_km' => ['nullable', 'boolean'],
-            'notas' => ['nullable', 'string'],
+            'notas' => [
+                Rule::requiredIf(fn() => is_array($this->input('notificados_ids')) && count(array_filter($this->input('notificados_ids'))) > 0),
+                'nullable',
+                'string',
+            ],
             'estatus_id' => ['nullable', 'integer', 'exists:estatus,id'],
+            'notificados_ids' => ['nullable', 'array'],
+            'notificados_ids.*' => ['integer', 'exists:empleados,id'],
         ];
     }
 
@@ -100,10 +118,12 @@ class OCGasolinaVehicleRequest extends FormRequest
             'km_evento.required' => 'El kilometraje es obligatorio',
             'km_evento.numeric' => 'El kilometraje debe ser un valor numérico',
             'km_evento.min' => 'El kilometraje no puede ser negativo',
-            'fecha_requerida.required' => 'La fecha y hora en que se necesita la dispersión es obligatoria',
-            'fecha_requerida.date' => 'Ingrese una fecha y hora válida para la dispersión',
+            'fecha_requerida.required' => 'La fecha en que se necesita la dispersión es obligatoria',
+            'fecha_requerida.date' => 'Ingrese una fecha válida para la dispersión',
             'recorrido_url.required' => 'La URL del recorrido en Google Maps es obligatoria',
             'recorrido_url.url' => 'Ingrese una URL válida para el recorrido de Google Maps (ej. https://maps.app.goo.gl/...)',
+            'foto_km.required' => 'La foto del kilometraje real es obligatoria',
+            'notas.required' => 'Debe ingresar una nota o comentario cuando selecciona empleados a notificar',
         ];
     }
 

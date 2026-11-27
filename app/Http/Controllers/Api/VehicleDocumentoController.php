@@ -15,6 +15,28 @@ use App\Http\Requests\Vehicle\UpdateVehicleDocumentoRequest;
 
 class VehicleDocumentoController extends ApiController
 {
+    private const REGISTRADOR_RELATIONS = [
+        'registrador:id,name,email',
+        'registrador.empleado:id,user_id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
+    ];
+
+    private function optimizeDocumentoRegistrador($items): void
+    {
+        $collection = $items instanceof \Illuminate\Support\Collection ? $items : collect([$items]);
+        $empAppends = ['nombreCompleto', 'apellidoCompleto'];
+
+        foreach ($collection as $doc) {
+            if (!$doc) {
+                continue;
+            }
+            if ($doc->relationLoaded('registrador') && $doc->registrador) {
+                if ($doc->registrador->relationLoaded('empleado') && $doc->registrador->empleado) {
+                    $doc->registrador->empleado->setAppends($empAppends);
+                }
+            }
+        }
+    }
+
     /**
      * Lista todos los documentos del expediente de un vehículo
      * (tanto los vigentes por categoría como el historial completo).
@@ -22,11 +44,13 @@ class VehicleDocumentoController extends ApiController
     public function index(Request $request, Vehicle $vehicle)
     {
         $documentos = VehiclesDocumentos::where('vehicle_id', $vehicle->id)
-            ->with('registrador:id,name')
+            ->with(self::REGISTRADOR_RELATIONS)
             ->orderBy('es_vigente', 'desc')
             ->orderBy('fecha_emision', 'desc')
             ->orderBy('id', 'desc')
             ->get();
+
+        $this->optimizeDocumentoRegistrador($documentos);
 
         $vigentes = [
             'seguro' => $documentos->first(fn ($d) => $d->tipo_documento === 'seguro' && $d->es_vigente),
@@ -87,7 +111,8 @@ class VehicleDocumentoController extends ApiController
 
             DB::commit();
 
-            $documento->load('registrador:id,name');
+            $documento->load(self::REGISTRADOR_RELATIONS);
+            $this->optimizeDocumentoRegistrador($documento);
 
             return $this->respondCreated($documento, 'Documento guardado correctamente en el expediente.');
         } catch (\Throwable $e) {
@@ -101,7 +126,8 @@ class VehicleDocumentoController extends ApiController
      */
     public function show(VehiclesDocumentos $vehicleDocumento)
     {
-        $vehicleDocumento->load(['vehicle', 'registrador:id,name']);
+        $vehicleDocumento->load(array_merge(['vehicle'], self::REGISTRADOR_RELATIONS));
+        $this->optimizeDocumentoRegistrador($vehicleDocumento);
         return $this->respond($vehicleDocumento);
     }
 
@@ -161,7 +187,8 @@ class VehicleDocumentoController extends ApiController
 
             DB::commit();
 
-            $vehicleDocumento->load('registrador:id,name');
+            $vehicleDocumento->load(self::REGISTRADOR_RELATIONS);
+            $this->optimizeDocumentoRegistrador($vehicleDocumento);
 
             return $this->respond($vehicleDocumento, 'Documento actualizado correctamente.');
         } catch (\Throwable $e) {
@@ -186,7 +213,8 @@ class VehicleDocumentoController extends ApiController
 
             DB::commit();
 
-            $vehicleDocumento->load('registrador:id,name');
+            $vehicleDocumento->load(self::REGISTRADOR_RELATIONS);
+            $this->optimizeDocumentoRegistrador($vehicleDocumento);
 
             return $this->respond($vehicleDocumento, 'Documento establecido como vigente.');
         } catch (\Throwable $e) {

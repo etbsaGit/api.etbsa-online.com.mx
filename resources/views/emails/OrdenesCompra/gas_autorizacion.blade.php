@@ -340,9 +340,9 @@
                 </tr>
                 <tr>
                     <td class="info-card" width="50%">
-                        <div class="info-label">Fecha y Hora Requerida de Dispersión</div>
+                        <div class="info-label">Fecha Requerida de Dispersión</div>
                         <div class="info-value" style="color: #0284c7; font-weight: 700;">
-                            {{ $orden->fecha_requerida ? \Carbon\Carbon::parse($orden->fecha_requerida)->format('d/m/Y h:i A') : 'No especificada' }}
+                            {{ $orden->fecha_requerida ? \Carbon\Carbon::parse($orden->fecha_requerida)->format('d/m/Y') : 'No especificada' }}
                         </div>
                     </td>
                     <td class="info-card" width="50%">

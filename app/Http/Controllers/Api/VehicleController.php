@@ -68,6 +68,20 @@ class VehicleController extends ApiController
                     }
                 }
             }
+            if ($vehicle->relationLoaded('documentos') && $vehicle->documentos) {
+                foreach ($vehicle->documentos as $doc) {
+                    if ($doc->relationLoaded('registrador') && $doc->registrador && $doc->registrador->relationLoaded('empleado') && $doc->registrador->empleado) {
+                        $doc->registrador->empleado->setAppends($empAppends);
+                    }
+                }
+            }
+            if ($vehicle->relationLoaded('documentosVigentes') && $vehicle->documentosVigentes) {
+                foreach ($vehicle->documentosVigentes as $doc) {
+                    if ($doc->relationLoaded('registrador') && $doc->registrador && $doc->registrador->relationLoaded('empleado') && $doc->registrador->empleado) {
+                        $doc->registrador->empleado->setAppends($empAppends);
+                    }
+                }
+            }
         }
     }
 
@@ -87,12 +101,130 @@ class VehicleController extends ApiController
             'marca',
             'modelo',
             'tipo',
-            'documentosVigentes',
+            'documentosVigentes.registrador:id,name,email',
+            'documentosVigentes.registrador.empleado:id,user_id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
         ])->paginate(10);
 
         $this->optimizeVehicleEmpleados($paginated->getCollection());
 
         return $this->respond($paginated);
+    }
+
+    /**
+     * Lista las unidades asignadas al empleado autenticado (como responsable o usuario).
+     */
+    public function myVehicles(Request $request)
+    {
+        $user = $request->user();
+        $empleado = $user?->empleado;
+
+        $now = \Carbon\Carbon::now();
+        $currentQuarter = (int) $now->quarter;
+        $currentYear = (int) $now->year;
+
+        if (!$empleado) {
+            return $this->respond([
+                'data' => [],
+                'fecha_actual' => $now->toDateString(),
+                'trimestre_actual' => $currentQuarter,
+                'anio_actual' => $currentYear,
+                'documentos_checklist' => \App\Http\Controllers\Api\VehicleChecklistController::REQUIRED_DOCUMENTS,
+            ]);
+        }
+
+        $vehicleIds = $empleado->vehicles()->pluck('vehicles.id')->toArray();
+        if ($empleado->vehicle_id && !in_array((int) $empleado->vehicle_id, array_map('intval', $vehicleIds), true)) {
+            $vehicleIds[] = (int) $empleado->vehicle_id;
+        }
+
+        if (empty($vehicleIds)) {
+            return $this->respond([
+                'data' => [],
+                'fecha_actual' => $now->toDateString(),
+                'trimestre_actual' => $currentQuarter,
+                'anio_actual' => $currentYear,
+                'documentos_checklist' => \App\Http\Controllers\Api\VehicleChecklistController::REQUIRED_DOCUMENTS,
+            ]);
+        }
+
+        $filters = $request->all();
+
+        $vehicles = Vehicle::filter($filters)
+            ->whereIn('id', $vehicleIds)
+            ->with([
+                'departamento',
+                'linea',
+                'sucursal',
+                'estatus',
+                'responsable:id,nombre,segundo_nombre,apellido_paterno,apellido_materno,vehicle_id',
+                'empleados:empleados.id,empleados.nombre,empleados.segundo_nombre,empleados.apellido_paterno,empleados.apellido_materno,empleados.vehicle_id',
+                'marca',
+                'modelo',
+                'tipo',
+                'documentosVigentes.registrador:id,name,email',
+                'documentosVigentes.registrador.empleado:id,user_id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
+                'checklist' => function ($q) use ($currentQuarter, $currentYear) {
+                    $q->where('trimestre_revision', $currentQuarter)
+                        ->whereYear('fecha_revision', $currentYear)
+                        ->with([
+                            'verificador:id,name,email',
+                            'verificador.empleado:id,user_id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
+                            'detalles',
+                        ])
+                        ->orderBy('fecha_revision', 'desc')
+                        ->orderBy('id', 'desc');
+                },
+            ])
+            ->orderBy('placas', 'asc')
+            ->get();
+
+        $this->optimizeVehicleEmpleados($vehicles);
+
+        $empAppends = ['nombreCompleto', 'apellidoCompleto'];
+        foreach ($vehicles as $vehicle) {
+            $currentChecklist = $vehicle->relationLoaded('checklist') ? $vehicle->checklist->first() : null;
+            if ($currentChecklist && $currentChecklist->relationLoaded('verificador') && $currentChecklist->verificador) {
+                if ($currentChecklist->verificador->relationLoaded('empleado') && $currentChecklist->verificador->empleado) {
+                    $currentChecklist->verificador->empleado->setAppends($empAppends);
+                }
+            }
+            $vehicle->checklist_trimestre_actual = $currentChecklist;
+            $vehicle->revisado_trimestre_actual = $currentChecklist !== null;
+        }
+
+        $loadedIds = $vehicles->pluck('id');
+
+        $maxKmsGasolina = $loadedIds->isNotEmpty()
+            ? DB::table('vehicles_dispersion_gasolina')
+                ->whereIn('vehicle_id', $loadedIds)
+                ->whereNotNull('km_evento')
+                ->groupBy('vehicle_id')
+                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+                ->pluck('ultimo_km', 'vehicle_id')
+            : collect();
+
+        $maxKmsServicios = $loadedIds->isNotEmpty()
+            ? DB::table('vehicles_detalles_servicio')
+                ->whereIn('vehicle_id', $loadedIds)
+                ->whereNotNull('km_evento')
+                ->groupBy('vehicle_id')
+                ->select('vehicle_id', DB::raw('MAX(km_evento) as ultimo_km'))
+                ->pluck('ultimo_km', 'vehicle_id')
+            : collect();
+
+        $vehicles->each(function ($v) use ($maxKmsGasolina, $maxKmsServicios) {
+            $kmGas = isset($maxKmsGasolina[$v->id]) ? (int) $maxKmsGasolina[$v->id] : 0;
+            $kmServ = isset($maxKmsServicios[$v->id]) ? (int) $maxKmsServicios[$v->id] : 0;
+            $v->ultimo_km = max($kmGas, $kmServ);
+        });
+
+        return $this->respond([
+            'data' => $vehicles,
+            'fecha_actual' => $now->toDateString(),
+            'trimestre_actual' => $currentQuarter,
+            'anio_actual' => $currentYear,
+            'documentos_checklist' => \App\Http\Controllers\Api\VehicleChecklistController::REQUIRED_DOCUMENTS,
+        ]);
     }
 
     /**
@@ -130,8 +262,10 @@ class VehicleController extends ApiController
             'dispersionesGasolina.sucursalCargo',
             'dispersionesGasolina.departamentoCargo',
             'dispersionesGasolina.estatus',
-            'documentos.registrador:id,name',
-            'documentosVigentes',
+            'documentos.registrador:id,name,email',
+            'documentos.registrador.empleado:id,user_id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
+            'documentosVigentes.registrador:id,name,email',
+            'documentosVigentes.registrador.empleado:id,user_id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
         ]);
 
         $this->optimizeVehicleEmpleados($vehicle);
@@ -267,8 +401,10 @@ class VehicleController extends ApiController
             'dispersionesGasolina.sucursalCargo',
             'dispersionesGasolina.departamentoCargo',
             'dispersionesGasolina.estatus',
-            'documentos.registrador:id,name',
-            'documentosVigentes',
+            'documentos.registrador:id,name,email',
+            'documentos.registrador.empleado:id,user_id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
+            'documentosVigentes.registrador:id,name,email',
+            'documentosVigentes.registrador.empleado:id,user_id,nombre,segundo_nombre,apellido_paterno,apellido_materno',
         ]);
 
         $this->optimizeVehicleEmpleados($vehicle);

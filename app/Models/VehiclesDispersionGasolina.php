@@ -76,6 +76,11 @@ class VehiclesDispersionGasolina extends Model
             ->with('estatus')
             ->orderBy('created_at', 'desc');
     }
+    public function notificados()
+    {
+        return $this->hasMany(VehiclesDispersionNotificados::class, 'dispersion_id')
+            ->with('notificado');
+    }
 
     // -Scope-
     public function scopeFilter(Builder $query, array $filters)

@@ -87,9 +87,9 @@
                                 </tr>
                                 @if($orden->fecha_requerida)
                                     <tr>
-                                        <td style="border-bottom: 1px solid #e0e0e0;"><strong>Fecha y Hora Requerida:</strong></td>
+                                        <td style="border-bottom: 1px solid #e0e0e0;"><strong>Fecha Requerida:</strong></td>
                                         <td style="border-bottom: 1px solid #e0e0e0; font-weight: bold; color: #0284c7;">
-                                            {{ \Carbon\Carbon::parse($orden->fecha_requerida)->format('d/m/Y h:i A') }}
+                                            {{ \Carbon\Carbon::parse($orden->fecha_requerida)->format('d/m/Y') }}
                                         </td>
                                     </tr>
                                 @endif

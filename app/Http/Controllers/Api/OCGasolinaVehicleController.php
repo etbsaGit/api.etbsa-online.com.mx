@@ -8,6 +8,7 @@ use App\Models\Empleado;
 use App\Models\Estatus;
 use App\Models\VehiclesDispersionAutomatica;
 use App\Models\VehiclesDispersionGasolina;
+use App\Models\VehiclesDispersionNotificados;
 use App\Models\VehiclesGasolinaBitacora;
 use App\Models\VehiclesSucCargoA;
 use App\Models\VehiclesDeptoCargoA;
@@ -23,6 +24,7 @@ use App\Http\Controllers\ApiController;
 use App\Http\Requests\OrdenCompra\Vehicle\OCGasolinaVehicleRequest;
 use App\Mail\OrdenesCompra\Vehicles\SendGasAutorizacion;
 use App\Mail\OrdenesCompra\Vehicles\SendGasDispersada;
+use App\Mail\OrdenesCompra\Vehicles\SendGasNotificado;
 use App\Mail\OrdenesCompra\Vehicles\SendGasSolicitud;
 use App\Models\User;
 use App\Services\NotificationService;
@@ -45,6 +47,7 @@ class OCGasolinaVehicleController extends ApiController
         'estatus',
         'bitacora.user.empleado',
         'bitacora.estatus',
+        'notificados.notificado',
     ];
 
     /**
@@ -68,6 +71,13 @@ class OCGasolinaVehicleController extends ApiController
                 foreach ($disp->bitacora as $bit) {
                     if ($bit->relationLoaded('user') && $bit->user && $bit->user->relationLoaded('empleado') && $bit->user->empleado) {
                         $bit->user->empleado->setAppends(['nombreCompleto', 'apellidoCompleto']);
+                    }
+                }
+            }
+            if ($disp->relationLoaded('notificados') && $disp->notificados) {
+                foreach ($disp->notificados as $not) {
+                    if ($not->relationLoaded('notificado') && $not->notificado) {
+                        $not->notificado->setAppends(['nombreCompleto', 'apellidoCompleto']);
                     }
                 }
             }
@@ -210,7 +220,7 @@ class OCGasolinaVehicleController extends ApiController
                 'lts_dispersados' => isset($validated['lts_dispersados']) ? (int) $validated['lts_dispersados'] : null,
                 'km_evento' => (int) $validated['km_evento'],
                 'fecha_requerida' => $validated['fecha_requerida'],
-                'recorrido_url' => $validated['recorrido_url'],
+                'recorrido_url' => $validated['recorrido_url'] ?? null,
                 'notas' => $validated['notas'] ?? 'Dispersión de gasolina para unidad',
                 'estatus_id' => $estatus_id,
                 'is_automatica' => false,
@@ -220,6 +230,16 @@ class OCGasolinaVehicleController extends ApiController
             if (!empty($fotoInput)) {
                 $fotoKmUrl = $this->saveFotoKmToS3($fotoInput, $dispersion->id, (int) $validated['vehicle_id']);
                 $dispersion->update(['foto_km_url' => $fotoKmUrl]);
+            }
+
+            if (!empty($validated['notificados_ids']) && is_array($validated['notificados_ids'])) {
+                $uniqueNotificados = array_unique(array_filter(array_map('intval', $validated['notificados_ids'])));
+                foreach ($uniqueNotificados as $notificadoId) {
+                    VehiclesDispersionNotificados::create([
+                        'dispersion_id' => $dispersion->id,
+                        'notificado_id' => $notificadoId,
+                    ]);
+                }
             }
 
             $bitacora = $this->insertBitacora($dispersion->id, $estatus_id, 'Solicitud de dispersión de gasolina creada');
@@ -233,7 +253,8 @@ class OCGasolinaVehicleController extends ApiController
             dispatch(function () use ($dispersionId) {
                 try {
                     $this->mailSolicitudGasolina($dispersionId);
-                    $this->sendPushNotificacionSolicitud($dispersionId);
+                    $this->mailNotificadosGasolina($dispersionId);
+                    // $this->sendPushNotificacionSolicitud($dispersionId);
                 } catch (\Throwable $e) {
                     \Log::error("Error enviando correo de gasolina para solicitud #{$dispersionId}: " . $e->getMessage());
                 }
@@ -296,9 +317,22 @@ class OCGasolinaVehicleController extends ApiController
                 'km_evento' => (int) $validated['km_evento'],
                 'foto_km_url' => $fotoKmUrl,
                 'fecha_requerida' => $validated['fecha_requerida'] ?? $dispersion->fecha_requerida,
-                'recorrido_url' => $validated['recorrido_url'] ?? $dispersion->recorrido_url,
+                'recorrido_url' => array_key_exists('recorrido_url', $validated)
+                    ? $validated['recorrido_url']
+                    : $dispersion->recorrido_url,
                 'notas' => $validated['notas'] ?? $dispersion->notas,
             ]);
+
+            if (array_key_exists('notificados_ids', $validated) && is_array($validated['notificados_ids'])) {
+                $dispersion->notificados()->delete();
+                $uniqueNotificados = array_unique(array_filter(array_map('intval', $validated['notificados_ids'])));
+                foreach ($uniqueNotificados as $notificadoId) {
+                    VehiclesDispersionNotificados::create([
+                        'dispersion_id' => $dispersion->id,
+                        'notificado_id' => $notificadoId,
+                    ]);
+                }
+            }
 
             $bitacora = $this->insertBitacora(
                 $dispersion->id,
@@ -328,6 +362,7 @@ class OCGasolinaVehicleController extends ApiController
             if (!empty($dispersion->foto_km_url)) {
                 $this->deleteFotoKmFromS3($dispersion->foto_km_url);
             }
+            $dispersion->notificados()->delete();
             $dispersion->bitacora()->delete();
             $dispersion->delete();
         });
@@ -768,10 +803,10 @@ class OCGasolinaVehicleController extends ApiController
         })->first();
         $solicitante = $orden->solicitante;
 
-        $correoDir = optional($dirAdmin)->correo_institucional;
-        // $correoDir = null;
-        $correoCoord = optional($coordCompras)->correo_institucional;
-        // $correoCoord = null;
+        // $correoDir = optional($dirAdmin)->correo_institucional;
+        $correoDir = null;
+        // $correoCoord = optional($coordCompras)->correo_institucional;
+        $correoCoord = null;
         $correoSolicitante = optional($solicitante)->correo_institucional;
 
         if ($correoDir) {
@@ -796,6 +831,31 @@ class OCGasolinaVehicleController extends ApiController
             Mail::to($correoCoord)->send(new SendGasSolicitud($orden));
         }
         return $this->respond(true, 'Solicitud de gasolina enviada correctamente.');
+    }
+
+    public function mailNotificadosGasolina(int $dispersionId)
+    {
+        $orden = VehiclesDispersionGasolina::findOrFail($dispersionId);
+        $orden->load(self::DISPERSION_RELATIONS);
+
+        $correosNotificados = collect($orden->notificados ?? [])
+            ->map(fn($item) => $item->notificado?->correo_institucional)
+            ->filter(fn($email) => !empty($email) && is_string($email))
+            ->map(fn($email) => trim($email))
+            ->unique()
+            ->values()
+            ->all();
+
+        if (!empty($correosNotificados)) {
+            $to = array_shift($correosNotificados);
+            $mail = Mail::to($to);
+            if (!empty($correosNotificados)) {
+                $mail->cc($correosNotificados);
+            }
+            $mail->send(new SendGasNotificado($orden));
+        }
+
+        return $this->respond(true, 'Notificación a empleados enviada correctamente.');
     }
 
     public function mailDispersionAutorizacion(int $dispersionId, bool $aut)
