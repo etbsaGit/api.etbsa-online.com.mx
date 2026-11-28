@@ -36,6 +36,7 @@ class PutRequest extends FormRequest
             'tipo_id' => ['required', 'integer', 'exists:vehicles_tipos,id'],
             'version' => ['nullable', 'string', 'max:255'],
             'anio' => ['required', 'integer'],
+            'edenred_id' => ['nullable', 'integer', Rule::unique('vehicles', 'edenred_id')->ignore($this->route('vehicle')->id)],
         ];
     }
 
@@ -46,6 +47,8 @@ class PutRequest extends FormRequest
             'placas.unique' => 'La placa ya existe',
             'serie.required' => 'La serie es obligatoria',
             'serie.unique' => 'La serie ya existe',
+            'edenred_id.integer' => 'El ID de Edenred debe ser un número entero',
+            'edenred_id.unique' => 'El ID de Edenred ya está asignado a otro vehículo',
             'departamento_id.required' => 'El departamento es obligatorio',
             'linea_id.required' => 'La linea es obligatoria',
             'sucursal_id.required' => 'La sucursal es obligatoria',

@@ -25,6 +25,7 @@ class Vehicle extends Model
         'tipo_id',
         'version',
         'anio',
+        'edenred_id'
     ];
 
     protected $appends = ['nombre_unidad'];
@@ -62,6 +63,7 @@ class Vehicle extends Model
             $query->where(function ($q) use ($search) {
                 $q->where('placas', 'LIKE', '%' . $search . '%')
                     ->orWhere('serie', 'LIKE', '%' . $search . '%')
+                    ->orWhere('edenred_id', 'LIKE', '%' . $search . '%')
                     ->orWhere('version', 'LIKE', '%' . $search . '%')
                     ->orWhere('anio', 'LIKE', '%' . $search . '%')
                     ->orWhereHas('marca', function ($qMarca) use ($search) {
